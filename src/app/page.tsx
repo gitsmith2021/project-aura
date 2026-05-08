@@ -1,65 +1,140 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { AddInstitutionModal } from "@/components/dashboard/AddInstitutionModal";
+import { CollegeDashboard } from "@/components/dashboard/CollegeDashboard";
+import { SessionSummaryModal } from "@/components/analytics/SessionSummaryModal";
+import { Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
+
+type College = {
+  id: string;
+  name: string;
+  studentsCount: number;
+  staffCount: number;
+  departmentsCount: number;
+};
+
+export default function Dashboard() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [colleges, setColleges] = useState<College[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
+
+  const fetchColleges = async () => {
+    setLoading(true);
+    const supabase = createClient();
+
+    const { data: tenants, error } = await supabase
+      .from('tenants')
+      .select(`*, students:profiles!tenant_id(count), staff:profiles!tenant_id(count), departments(count)`)
+      .eq('students.role', 'STUDENT')
+      .eq('staff.role', 'STAFF')
+      .order('name', { ascending: true });
+
+    if (error) { console.error("Error fetching colleges:", error); setLoading(false); return; }
+
+    const enriched = (tenants ?? []).map((t: any) => ({
+      ...t,
+      studentsCount: t.students?.[0]?.count || 0,
+      staffCount:    t.staff?.[0]?.count    || 0,
+      departmentsCount: t.departments?.[0]?.count || 0,
+    }));
+
+    setColleges(enriched);
+    if (enriched.length > 0 && !activeTab) {
+      setActiveTab(enriched[0].id);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchColleges();
+
+    const supabase = createClient();
+    const sub = supabase
+      .channel('dashboard-tenants')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tenants' }, fetchColleges)
+      .subscribe();
+
+    return () => { supabase.removeChannel(sub); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const activeCollege = colleges.find(c => c.id === activeTab);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <DashboardLayout>
+      <div className="w-full h-[calc(100vh-56px)] flex flex-col overflow-hidden">
+
+        {/* ── Tab Bar ── */}
+        <div className="shrink-0 bg-white border-b border-slate-200 px-5 flex items-center justify-between gap-4">
+          <div className="flex items-end gap-0 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {loading ? (
+              <div className="flex gap-3 py-3">
+                {[1,2,3].map(i => (
+                  <div key={i} className="h-8 w-28 bg-slate-100 rounded-md animate-pulse" />
+                ))}
+              </div>
+            ) : colleges.map(college => (
+              <button
+                key={college.id}
+                onClick={() => setActiveTab(college.id)}
+                className={`relative whitespace-nowrap px-5 py-3.5 text-xs font-semibold transition-colors border-b-2 -mb-px ${
+                  activeTab === college.id
+                    ? 'border-violet-600 text-violet-700 bg-violet-50/50'
+                    : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                }`}
+              >
+                {college.name}
+              </button>
+            ))}
+            {!loading && colleges.length === 0 && (
+              <p className="text-xs text-slate-400 py-3.5 px-2">No institutions yet.</p>
+            )}
+          </div>
+
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 text-white text-xs font-semibold rounded-lg hover:bg-violet-700 transition-colors"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            <Plus size={13} strokeWidth={2.5} /> Register Institution
+          </button>
+        </div>
+
+        {/* ── Per-college dashboard ── */}
+        <div className="flex-1 overflow-hidden">
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600" />
+            </div>
+          ) : activeCollege ? (
+            <CollegeDashboard
+              college={activeCollege}
+              onViewReport={setSelectedScheduleId}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full gap-3 text-slate-500">
+              <p className="text-sm text-slate-400">No institution selected.</p>
+            </div>
+          )}
         </div>
-      </main>
-    </div>
+      </div>
+
+      <AddInstitutionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={fetchColleges}
+      />
+
+      {selectedScheduleId && (
+        <SessionSummaryModal
+          scheduleId={selectedScheduleId}
+          onClose={() => setSelectedScheduleId(null)}
+        />
+      )}
+    </DashboardLayout>
   );
 }
