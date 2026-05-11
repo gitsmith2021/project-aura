@@ -9,8 +9,8 @@ export async function updateSession(request: NextRequest) {
   });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // <-- FIXED: Changed from PUBLISHABLE_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://nsaheksysxinemtjcako.supabase.co",
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_0QZApyONjzPE8uplpbaOlA_9gdWwQZ0", // <-- FIXED: Changed from PUBLISHABLE_KEY
     {
       cookies: {
         getAll() {
