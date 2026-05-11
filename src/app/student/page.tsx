@@ -41,7 +41,7 @@ export default function StudentPortalPage() {
 
             {/* Placeholder for other stats (e.g. Classes Attended) */}
             <div className="bg-gray-800/40 border border-gray-800/60 rounded-xl p-6 shadow-sm flex flex-col justify-between min-h-[140px]">
-               <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Classes Attended</span>
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
                   <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -56,7 +56,7 @@ export default function StudentPortalPage() {
 
             {/* Placeholder for other stats (e.g. Missed Classes) */}
             <div className="bg-gray-800/40 border border-gray-800/60 rounded-xl p-6 shadow-sm flex flex-col justify-between min-h-[140px]">
-               <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Missed Classes</span>
                 <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
                   <svg className="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -88,26 +88,26 @@ export default function StudentPortalPage() {
           </div>
 
           <div className="rounded-xl border border-gray-800/60 bg-gray-900/40 p-6 shadow-md backdrop-blur-sm min-h-[300px]">
-             {/* List View Skeleton */}
-             <div className="animate-pulse space-y-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-gray-800/40 border border-gray-800/60">
-                    <div className="flex items-center gap-4">
-                      {/* Date / Icon placeholder */}
-                      <div className="w-12 h-12 rounded-lg bg-gray-700/50 shrink-0"></div>
-                      
-                      {/* Text lines placeholder */}
-                      <div className="flex flex-col space-y-2 w-48">
-                        <div className="h-4 bg-gray-700/50 rounded w-full"></div>
-                        <div className="h-3 bg-gray-700/30 rounded w-2/3"></div>
-                      </div>
-                    </div>
+            {/* List View Skeleton */}
+            <div className="animate-pulse space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-gray-800/40 border border-gray-800/60">
+                  <div className="flex items-center gap-4">
+                    {/* Date / Icon placeholder */}
+                    <div className="w-12 h-12 rounded-lg bg-gray-700/50 shrink-0"></div>
 
-                    {/* Status Badge Placeholder */}
-                    <div className="h-6 w-20 bg-gray-700/40 rounded-full"></div>
+                    {/* Text lines placeholder */}
+                    <div className="flex flex-col space-y-2 w-48">
+                      <div className="h-4 bg-gray-700/50 rounded w-full"></div>
+                      <div className="h-3 bg-gray-700/30 rounded w-2/3"></div>
+                    </div>
                   </div>
-                ))}
-             </div>
+
+                  {/* Status Badge Placeholder */}
+                  <div className="h-6 w-20 bg-gray-700/40 rounded-full"></div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
