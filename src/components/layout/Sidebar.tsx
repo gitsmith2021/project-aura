@@ -34,7 +34,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
         <NavItem href="/departments" icon={<Layers size={18} />} label="Departments" active={pathname === "/departments" || pathname.startsWith("/departments/")} isCollapsed={isCollapsed} />
         <NavItem href="/users/staff" icon={<Users size={18} />} label="Staff" active={pathname === "/users/staff" || pathname === "/users"} isCollapsed={isCollapsed} />
         <NavItem href="/users/students" icon={<GraduationCap size={18} />} label="Students" active={pathname === "/users/students"} isCollapsed={isCollapsed} />
-        <NavItem href="/programs" icon={<Calendar size={18} />} label="Schedules" active={pathname === "/programs"} isCollapsed={isCollapsed} />
+        <NavItem href="/schedules" icon={<Calendar size={18} />} label="Schedules" active={pathname === "/schedules"} isCollapsed={isCollapsed} />
         <NavItem href="/settings" icon={<Settings size={18} />} label="Settings" active={pathname === '/settings'} isCollapsed={isCollapsed} />
       </nav>
     </aside>
