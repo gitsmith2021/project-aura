@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, Mail, Phone, MoreVertical } from "lucide-react";
+import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundingBadge";
 
 interface StaffMember {
   id: string;
@@ -7,7 +8,7 @@ interface StaffMember {
   email: string | null;
   phone?: string | null;
   role: string;
-  department?: { name: string } | null;
+  department?: { name: string; funding_type?: string | null } | null;
 }
 
 export function StaffDirectory({ staff }: { staff: StaffMember[] }) {
@@ -57,8 +58,9 @@ export function StaffDirectory({ staff }: { staff: StaffMember[] }) {
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-slate-900 truncate">{member.full_name}</p>
                   {member.department?.name && (
-                    <p className="text-[10px] text-violet-600 font-medium truncate mt-0.5">
-                      {member.department.name}
+                    <p className="text-[10px] text-violet-600 font-medium mt-0.5 flex items-center gap-1 min-w-0 flex-wrap">
+                      <span className="truncate">{member.department.name}</span>
+                      <DepartmentFundingBadge fundingType={member.department.funding_type} />
                     </p>
                   )}
                   <div className="flex items-center gap-3 mt-0.5">

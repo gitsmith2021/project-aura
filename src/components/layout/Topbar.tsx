@@ -22,22 +22,28 @@ export function Topbar({ isSidebarCollapsed, toggleSidebar, breadcrumb }: { isSi
   };
 
   return (
-    <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sticky top-0 z-10">
-      <div className="flex items-center gap-3 text-sm font-medium text-slate-500">
+    <header className="h-14 min-w-0 max-w-full bg-white border-b border-slate-200 flex items-center justify-between gap-3 px-4 sticky top-0 z-10">
+      <div className="flex min-w-0 flex-1 items-center gap-3 text-sm font-medium text-slate-500">
         <button 
           onClick={toggleSidebar}
           className="p-1.5 hover:bg-slate-100 rounded-md text-slate-600 transition-colors"
         >
           <Menu size={18} />
         </button>
-        <div className="flex items-center text-xs">
-          <span className="hover:text-slate-900 cursor-pointer transition-colors">AURA</span>
-          <span className="mx-2 text-slate-300">/</span>
-          {breadcrumb ? breadcrumb : <span className="text-slate-900">Command Center</span>}
+        <div className="flex min-w-0 items-center overflow-x-hidden text-xs">
+          <span className="shrink-0 hover:text-slate-900 cursor-pointer transition-colors">AURA</span>
+          <span className="mx-2 shrink-0 text-slate-300">/</span>
+          {breadcrumb ? (
+            <span className="flex min-w-0 flex-1 items-center overflow-hidden">
+              {breadcrumb}
+            </span>
+          ) : (
+            <span className="truncate text-slate-900">Command Center</span>
+          )}
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-md transition-colors">
           <Bell size={16} />
         </button>

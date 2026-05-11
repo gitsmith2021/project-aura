@@ -3,18 +3,39 @@
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { randomDeptColorKey } from "@/lib/deptColors";
+import { getDeptColor, DEPT_COLOR_PALETTE, randomDeptColorKey } from "@/lib/deptColors";
+import { getDeptIcon } from "@/lib/deptIcons";
+import { normalizeFundingType, type DepartmentFundingType } from "@/lib/deptFunding";
+
+export type DepartmentEditPayload = {
+  id: string;
+  name: string;
+  session_type: string | null;
+  funding_type: string | null;
+  color: string | null;
+};
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   tenantId: string;
   onSuccess: () => void;
+  /** When set, updates this department instead of creating a new one */
+  departmentToEdit?: DepartmentEditPayload | null;
 };
 
-export function AddDepartmentModal({ isOpen, onClose, tenantId, onSuccess }: Props) {
+export function AddDepartmentModal({
+  isOpen,
+  onClose,
+  tenantId,
+  onSuccess,
+  departmentToEdit = null,
+}: Props) {
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState('');
+  const [sessionType, setSessionType] = useState<'NORMAL' | 'DAY' | 'EVENING'>('NORMAL');
+  const [fundingType, setFundingType] = useState<DepartmentFundingType>('AIDED');
+  const [color, setColor] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -24,12 +45,27 @@ export function AddDepartmentModal({ isOpen, onClose, tenantId, onSuccess }: Pro
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
-      setName('');
+      if (departmentToEdit) {
+        setName(departmentToEdit.name);
+        const st = departmentToEdit.session_type;
+        setSessionType(
+          st === "DAY" || st === "EVENING" ? st : "NORMAL"
+        );
+        setFundingType(normalizeFundingType(departmentToEdit.funding_type));
+        setColor(departmentToEdit.color || randomDeptColorKey());
+      } else {
+        setName("");
+        setSessionType("NORMAL");
+        setFundingType("AIDED");
+        setColor(randomDeptColorKey());
+      }
     } else {
       document.body.style.overflow = "unset";
     }
-    return () => { document.body.style.overflow = "unset"; };
-  }, [isOpen]);
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen, departmentToEdit]);
 
   if (!mounted) return null;
 
@@ -39,20 +75,40 @@ export function AddDepartmentModal({ isOpen, onClose, tenantId, onSuccess }: Pro
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.from('departments').insert([
-      { name, tenant_id: tenantId, color: randomDeptColorKey() }
-    ]);
+    const error = departmentToEdit
+      ? (
+          await supabase
+            .from("departments")
+            .update({ name, session_type: sessionType, funding_type: fundingType, color })
+            .eq("id", departmentToEdit.id)
+            .eq("tenant_id", tenantId)
+        ).error
+      : (
+          await supabase.from("departments").insert([
+            {
+              name,
+              tenant_id: tenantId,
+              color,
+              session_type: sessionType,
+              funding_type: fundingType,
+            },
+          ])
+        ).error;
 
     setLoading(false);
 
     if (error) {
-      console.error('Error inserting department:', error);
-      alert('Failed to save department: ' + error.message);
+      console.error("Error saving department:", error);
+      alert("Failed to save department: " + error.message);
     } else {
       onSuccess();
       onClose();
     }
   };
+
+  const isEdit = Boolean(departmentToEdit);
+  const Icon = getDeptIcon(name);
+  const activeColorTone = getDeptColor(color);
 
   return (
     <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-200 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
@@ -64,8 +120,12 @@ export function AddDepartmentModal({ isOpen, onClose, tenantId, onSuccess }: Pro
       <div className={`relative w-full max-w-sm h-full bg-white flex flex-col transform transition-transform duration-300 ease-out border-l border-slate-200 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-white">
           <div>
-            <h2 className="text-base font-semibold text-slate-900 tracking-tight">Add Department</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Create a new department for this college.</p>
+            <h2 className="text-base font-semibold text-slate-900 tracking-tight">
+              {isEdit ? "Edit Department" : "Add Department"}
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {isEdit ? "Update department details." : "Create a new department for this college."}
+            </p>
           </div>
           <button 
             onClick={onClose}
@@ -76,20 +136,87 @@ export function AddDepartmentModal({ isOpen, onClose, tenantId, onSuccess }: Pro
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 bg-slate-50">
-          <form id="add-dept-form" onSubmit={handleSubmit} className="space-y-4">
+          <form id={isEdit ? "edit-dept-form" : "add-dept-form"} onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1">
               <label htmlFor="dept_name" className="block text-xs font-medium text-slate-700">
                 Department Name
               </label>
-              <input 
-                type="text" 
-                id="dept_name" 
-                value={name}
-                onChange={e => setName(e.target.value)}
-                placeholder="e.g. Anatomy" 
-                required
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border"
+                  style={{ 
+                    backgroundColor: activeColorTone.bg, 
+                    borderColor: activeColorTone.border,
+                    color: activeColorTone.hex
+                  }}
+                  title="Dynamic icon based on department name"
+                >
+                  <Icon size={20} strokeWidth={2.5} />
+                </div>
+                <input 
+                  type="text" 
+                  id="dept_name" 
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="e.g. Anatomy" 
+                  required
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5 pt-2">
+              <label className="block text-xs font-medium text-slate-700">
+                Department Color
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {DEPT_COLOR_PALETTE.map((p) => (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={() => setColor(p.key)}
+                    className={`w-6 h-6 rounded-full border transition-transform ${color === p.key ? 'scale-110 ring-2 ring-offset-1' : 'hover:scale-110'}`}
+                    style={{
+                      background: `linear-gradient(135deg, ${p.bg}, ${p.bg2})`,
+                      borderColor: p.border,
+                      ringColor: p.hex
+                    }}
+                    title={p.key}
+                    aria-label={`Select ${p.key} color`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="dept_session_type" className="block text-xs font-medium text-slate-700">
+                College Session Type
+              </label>
+              <select
+                id="dept_session_type"
+                value={sessionType}
+                onChange={e => setSessionType(e.target.value as 'NORMAL' | 'DAY' | 'EVENING')}
                 className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs"
-              />
+              >
+                <option value="NORMAL">General Shift</option>
+                <option value="DAY">Day Shift 1</option>
+                <option value="EVENING">Evening Shift 2</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="dept_funding_type" className="block text-xs font-medium text-slate-700">
+                Funding
+              </label>
+              <select
+                id="dept_funding_type"
+                value={fundingType}
+                onChange={e => setFundingType(e.target.value as DepartmentFundingType)}
+                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs"
+              >
+                <option value="AIDED">Aided</option>
+                <option value="SELF_FINANCING">Self-Financing</option>
+              </select>
             </div>
           </form>
         </div>
@@ -104,12 +231,12 @@ export function AddDepartmentModal({ isOpen, onClose, tenantId, onSuccess }: Pro
           </button>
           <button 
             type="submit" 
-            form="add-dept-form"
+            form={isEdit ? "edit-dept-form" : "add-dept-form"}
             disabled={loading}
             className="px-3 py-1.5 text-xs font-medium text-white bg-purple-600 border border-purple-700 rounded-md hover:bg-purple-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></span> : null}
-            Create
+            {isEdit ? "Save changes" : "Create"}
           </button>
         </div>
       </div>

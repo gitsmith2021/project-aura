@@ -22,16 +22,16 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-      <div className="px-6 pt-3 pb-6 w-full flex flex-col h-[calc(100vh-56px)] overflow-hidden bg-slate-50/50">
-        <div className="mb-4 shrink-0 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Platform Settings</h1>
-            <p className="text-xs text-slate-500 mt-0.5">Manage global configurations across all institutions under your group.</p>
+      <div className="px-6 pt-2 pb-4 w-full flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden bg-slate-50/50">
+        <div className="mb-3 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-tight">Platform Settings</h1>
+            <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">Global configuration for institutions in your group.</p>
           </div>
           <button 
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-xs font-semibold shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-xs font-semibold shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isSaving ? (
               <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

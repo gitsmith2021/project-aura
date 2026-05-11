@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Users, Settings, Building2, BookOpen } from "lucide-react";
+import { LayoutDashboard, Users, Settings, Building2, Calendar, GraduationCap, Layers, Landmark } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -23,9 +23,18 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
       </div>
       
       <nav className="flex-1 py-4 space-y-1 overflow-y-auto px-2">
-        <NavItem href="/" icon={<LayoutDashboard size={18} />} label="Dashboard" active={pathname === '/' || pathname.startsWith('/institutions')} isCollapsed={isCollapsed} />
-        <NavItem href="/users" icon={<Users size={18} />} label="Users & Roles" active={pathname === '/users'} isCollapsed={isCollapsed} />
-        <NavItem href="/programs" icon={<BookOpen size={18} />} label="Programs" active={pathname === '/programs'} isCollapsed={isCollapsed} />
+        <NavItem href="/" icon={<LayoutDashboard size={18} />} label="Dashboard" active={pathname === "/"} isCollapsed={isCollapsed} />
+        <NavItem
+          href="/institutions"
+          icon={<Landmark size={18} />}
+          label="Institutions"
+          active={pathname === "/institutions" || pathname.startsWith("/institutions/")}
+          isCollapsed={isCollapsed}
+        />
+        <NavItem href="/departments" icon={<Layers size={18} />} label="Departments" active={pathname === "/departments" || pathname.startsWith("/departments/")} isCollapsed={isCollapsed} />
+        <NavItem href="/users/staff" icon={<Users size={18} />} label="Staff" active={pathname === "/users/staff" || pathname === "/users"} isCollapsed={isCollapsed} />
+        <NavItem href="/users/students" icon={<GraduationCap size={18} />} label="Students" active={pathname === "/users/students"} isCollapsed={isCollapsed} />
+        <NavItem href="/programs" icon={<Calendar size={18} />} label="Schedules" active={pathname === "/programs"} isCollapsed={isCollapsed} />
         <NavItem href="/settings" icon={<Settings size={18} />} label="Settings" active={pathname === '/settings'} isCollapsed={isCollapsed} />
       </nav>
     </aside>

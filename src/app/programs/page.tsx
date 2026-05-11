@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { ScrollableTabBar } from "@/components/layout/ScrollableTabBar";
 import { createClient } from "@/utils/supabase/client";
 import {
-  Plus, ChevronLeft, ChevronRight, BookOpen,
+  Plus, BookOpen,
   Building2, Clock, Users, BookMarked, AlertTriangle, Printer, ChevronDown, X,
 } from "lucide-react";
 import { AddClassModal } from "@/components/programs/AddClassModal";
 import { ScheduleCalendar, type ClassEntry } from "@/components/programs/ScheduleCalendar";
 import { CurrentClassWidget } from "@/components/dashboard/CurrentClassWidget";
+import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundingBadge";
 
 type Tenant = { id: string; name: string };
-type Department = { id: string; name: string; tenant_id: string };
+type Department = { id: string; name: string; tenant_id: string; funding_type?: string | null };
 
 const TAB_ACTIVE = [
   "border-violet-500 text-violet-700",
@@ -55,20 +57,12 @@ export default function ProgramsPage() {
   const [modalDefaults, setModalDefaults] = useState<{ day?: string; startTime?: string }>({});
   const [editingClass, setEditingClass] = useState<ClassEntry | null>(null);
 
-  const tabsRef = useRef<HTMLDivElement>(null);
-  const [showLeft, setShowLeft] = useState(false);
-  const [showRight, setShowRight] = useState(false);
-
-  const masterTabsRef = useRef<HTMLDivElement>(null);
-  const [showMasterLeft, setShowMasterLeft] = useState(false);
-  const [showMasterRight, setShowMasterRight] = useState(false);
-
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchAll = useCallback(async () => {
     const supabase = createClient();
     const [{ data: tData }, { data: dData }, { data: sData }] = await Promise.all([
       supabase.from("tenants").select("id, name").order("name"),
-      supabase.from("departments").select("id, name, tenant_id").order("name"),
+      supabase.from("departments").select("id, name, tenant_id, funding_type").order("name"),
       supabase.from("schedules")
         .select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, tenant_id, profiles(full_name)")
         .order("start_time"),
@@ -174,43 +168,6 @@ export default function ProgramsPage() {
 
   const conflictCount = conflictingStaff.size;
 
-  // ── Tab scroll ─────────────────────────────────────────────────────────────
-  const checkScroll = useCallback(() => {
-    const el = tabsRef.current;
-    if (!el) return;
-    setShowLeft(el.scrollLeft > 4);
-    setShowRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
-  }, []);
-
-  const checkMasterScroll = useCallback(() => {
-    const el = masterTabsRef.current;
-    if (!el) return;
-    setShowMasterLeft(el.scrollLeft > 4);
-    setShowMasterRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
-  }, []);
-
-  useEffect(() => {
-    checkScroll();
-    const el = tabsRef.current;
-    el?.addEventListener("scroll", checkScroll);
-    window.addEventListener("resize", checkScroll);
-    return () => { el?.removeEventListener("scroll", checkScroll); window.removeEventListener("resize", checkScroll); };
-  }, [departments, checkScroll]);
-
-  useEffect(() => {
-    checkMasterScroll();
-    const el = masterTabsRef.current;
-    el?.addEventListener("scroll", checkMasterScroll);
-    window.addEventListener("resize", checkMasterScroll);
-    return () => { el?.removeEventListener("scroll", checkMasterScroll); window.removeEventListener("resize", checkMasterScroll); };
-  }, [tenants, checkMasterScroll]);
-
-  const scrollTabs = (dir: "left" | "right") =>
-    tabsRef.current?.scrollBy({ left: dir === "left" ? -220 : 220, behavior: "smooth" });
-
-  const scrollMasterTabs = (dir: "left" | "right") =>
-    masterTabsRef.current?.scrollBy({ left: dir === "left" ? -220 : 220, behavior: "smooth" });
-
   // ── Handlers ───────────────────────────────────────────────────────────────
   const openAddModal = (day?: string, hour?: number) => {
     setEditingClass(null);
@@ -230,54 +187,34 @@ export default function ProgramsPage() {
 
   return (
     <DashboardLayout>
-      <div className="px-6 pt-3 pb-2 w-full relative flex flex-col h-[calc(100vh-56px)] overflow-hidden">
+      <div className="relative flex h-[calc(100vh-56px)] min-h-0 min-w-0 max-w-full flex-col overflow-hidden px-6 pt-2 pb-2">
 
-        {/* Master Tabs for Institutions */}
-        <div className="relative flex items-stretch border-b border-slate-200 mb-4 shrink-0">
-          {/* Left scroll arrow */}
-          {showMasterLeft && (
-            <button onClick={() => scrollMasterTabs("left")}
-              className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 bg-gradient-to-r from-slate-50 via-slate-50/90 to-transparent">
-              <div className="w-5 h-5 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center">
-                <ChevronLeft size={12} className="text-slate-600" />
-              </div>
-            </button>
-          )}
-
-          <div ref={masterTabsRef} className="flex overflow-x-auto flex-1 custom-scrollbar" style={{ scrollbarWidth: "none" }}>
+        <div className="mb-3 min-w-0 shrink-0 border-b border-slate-200">
+          <ScrollableTabBar innerClassName="items-stretch gap-0">
             {tenants.map((t) => (
               <button
                 key={t.id}
+                type="button"
                 onClick={() => setSelectedTenantId(t.id)}
-                className={`px-5 py-2.5 text-xs font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                className={`shrink-0 whitespace-nowrap px-5 py-2.5 text-xs font-semibold transition-colors border-b-2 ${
                   selectedTenantId === t.id
-                    ? "border-violet-600 text-violet-700 bg-violet-50/50"
-                    : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
+                    ? "border-violet-600 bg-violet-50/50 text-violet-700"
+                    : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800"
                 }`}
               >
                 {t.name}
               </button>
             ))}
-          </div>
-
-          {/* Right scroll arrow */}
-          {showMasterRight && (
-            <button onClick={() => scrollMasterTabs("right")}
-              className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-3 bg-gradient-to-l from-slate-50/90 to-transparent">
-              <div className="w-5 h-5 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center">
-                <ChevronRight size={12} className="text-slate-600" />
-              </div>
-            </button>
-          )}
+          </ScrollableTabBar>
         </div>
 
         {/* ── Page Header ── */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3 shrink-0">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Programs &amp; Schedules</h1>
+        <div className="mb-2 flex min-w-0 shrink-0 flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-wrap items-center gap-3">
+            <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-tight">Schedules Planner</h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
             {/* Live Sessions Button */}
             <button 
               onClick={() => setIsLivePanelOpen(true)}
@@ -304,94 +241,108 @@ export default function ProgramsPage() {
           </div>
         </div>
 
-        {/* ── Tabs + Staff Filter (single row) ── */}
-        <div className="relative flex items-stretch border-b border-slate-200 mb-4 shrink-0">
-          {/* Left scroll arrow */}
-          {showLeft && (
-            <button onClick={() => scrollTabs("left")}
-              className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 bg-gradient-to-r from-slate-50 via-slate-50/90 to-transparent">
-              <div className="w-5 h-5 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center">
-                <ChevronLeft size={12} className="text-slate-600" />
-              </div>
-            </button>
-          )}
-
-          {/* Scrollable department tabs */}
-          <div ref={tabsRef} className="flex overflow-x-auto flex-1" style={{ scrollbarWidth: "none" }}>
-            {departments.map((dept, i) => {
-              const isActive = selectedDeptId === dept.id;
-              const classCount = institutionClasses.filter(c => c.department_id === dept.id).length;
-              return (
-                <button key={dept.id} onClick={() => setSelectedDeptId(dept.id)}
-                  className={`flex-shrink-0 px-5 py-2.5 text-xs font-medium border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 ${isActive ? `${TAB_ACTIVE[i % TAB_ACTIVE.length]} -mb-px` : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"}`}>
-                  {dept.name}
-                  <span className={`px-1.5 py-px rounded-full text-[10px] font-semibold ${isActive ? "bg-current/10" : "bg-slate-100 text-slate-400"}`}>
-                    {classCount}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Right scroll arrow */}
-          {showRight && (
-            <button onClick={() => scrollTabs("right")}
-              className="absolute right-[120px] top-0 bottom-0 z-10 flex items-center pl-3 bg-gradient-to-l from-slate-50/90 to-transparent">
-              <div className="w-5 h-5 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center">
-                <ChevronRight size={12} className="text-slate-600" />
-              </div>
-            </button>
-          )}
-
-          {/* Right side: Staff filter + optional conflict badge */}
-          <div className="flex items-center gap-2 pl-3 pr-1 py-1.5 border-l border-slate-200 bg-white flex-shrink-0">
-            {/* Conflict badge (compact) */}
-            {conflictCount > 0 && (
-              <div title={`${Array.from(conflictingStaff.values()).join(", ")} double-booked`}
-                className="flex items-center gap-1 px-2 py-1 bg-amber-50 border border-amber-200 rounded text-[10px] font-semibold text-amber-700 cursor-default whitespace-nowrap">
-                <AlertTriangle size={11} className="text-amber-500" />
-                {conflictCount} conflict{conflictCount > 1 ? "s" : ""}
-              </div>
-            )}
-
-            {/* Staff filter pill */}
-            <div className="relative">
-              <button
-                onClick={() => setStaffDropdownOpen(v => !v)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 border rounded text-[11px] font-medium transition-colors whitespace-nowrap ${staffFilter ? "border-violet-400 bg-violet-50 text-violet-700" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}
-              >
-                <Users size={11} />
-                {activeStaffName ?? "All Staff"}
-                {staffFilter
-                  ? <span onClick={e => { e.stopPropagation(); setStaffFilter(""); }} className="ml-0.5 font-bold opacity-60 hover:opacity-100">×</span>
-                  : <ChevronDown size={10} className="opacity-50 ml-0.5" />
-                }
-              </button>
-              {staffDropdownOpen && (
-                <div className="absolute right-0 top-full mt-1 w-52 bg-white border border-slate-200 rounded-md shadow-xl z-40 py-1 max-h-56 overflow-y-auto">
-                  <p className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Filter by Staff</p>
-                  {staffList.map(s => (
-                    <button key={s.id} onClick={() => { setStaffFilter(s.id); setStaffDropdownOpen(false); }}
-                      className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${staffFilter === s.id ? "bg-violet-50 text-violet-700 font-medium" : "text-slate-700 hover:bg-slate-50"}`}>
-                      {s.name}
-                    </button>
-                  ))}
-                  {staffList.length === 0 && <p className="px-3 py-2 text-xs text-slate-400">No staff assigned yet.</p>}
-                  {staffFilter && (
-                    <button onClick={() => { setStaffFilter(""); setStaffDropdownOpen(false); }}
-                      className="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 border-t border-slate-100 mt-1">
-                      Clear filter
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col lg:flex-row flex-1 min-h-0 gap-6">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-6 lg:flex-row">
           {/* ── Calendar ── */}
           <div className="flex-1 flex flex-col min-w-0 pb-2 min-h-0">
+            <div className="mb-3 shrink-0 min-w-0 w-full border-b border-slate-200">
+              <ScrollableTabBar
+                grow={false}
+                innerClassName="items-stretch gap-0"
+                trailing={
+                  <div className="flex flex-shrink-0 items-center gap-2 border-l border-slate-200 bg-white py-1.5 pl-3 pr-1">
+                    {conflictCount > 0 && (
+                      <div
+                        title={`${Array.from(conflictingStaff.values()).join(", ")} double-booked`}
+                        className="flex cursor-default items-center gap-1 whitespace-nowrap rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-semibold text-amber-700"
+                      >
+                        <AlertTriangle size={11} className="text-amber-500" />
+                        {conflictCount} conflict{conflictCount > 1 ? "s" : ""}
+                      </div>
+                    )}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setStaffDropdownOpen((v) => !v)}
+                        className={`flex items-center gap-1.5 rounded border px-2.5 py-1 text-[11px] font-medium transition-colors whitespace-nowrap ${staffFilter ? "border-violet-400 bg-violet-50 text-violet-700" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700"}`}
+                      >
+                        <Users size={11} />
+                        {activeStaffName ?? "All Staff"}
+                        {staffFilter ? (
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setStaffFilter("");
+                            }}
+                            className="ml-0.5 font-bold opacity-60 hover:opacity-100"
+                          >
+                            ×
+                          </span>
+                        ) : (
+                          <ChevronDown size={10} className="ml-0.5 opacity-50" />
+                        )}
+                      </button>
+                      {staffDropdownOpen && (
+                        <div className="absolute right-0 top-full z-40 mt-1 max-h-56 w-52 overflow-y-auto rounded-md border border-slate-200 bg-white py-1 shadow-xl">
+                          <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Filter by Staff</p>
+                          {staffList.map((s) => (
+                            <button
+                              key={s.id}
+                              type="button"
+                              onClick={() => {
+                                setStaffFilter(s.id);
+                                setStaffDropdownOpen(false);
+                              }}
+                              className={`w-full px-3 py-1.5 text-left text-xs transition-colors ${staffFilter === s.id ? "bg-violet-50 font-medium text-violet-700" : "text-slate-700 hover:bg-slate-50"}`}
+                            >
+                              {s.name}
+                            </button>
+                          ))}
+                          {staffList.length === 0 && <p className="px-3 py-2 text-xs text-slate-400">No staff assigned yet.</p>}
+                          {staffFilter && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setStaffFilter("");
+                                setStaffDropdownOpen(false);
+                              }}
+                              className="mt-1 w-full border-t border-slate-100 px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50"
+                            >
+                              Clear filter
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                }
+              >
+                {departments.map((dept, i) => {
+                  const isActive = selectedDeptId === dept.id;
+                  const classCount = institutionClasses.filter((c) => c.department_id === dept.id).length;
+                  return (
+                    <button
+                      key={dept.id}
+                      type="button"
+                      onClick={() => setSelectedDeptId(dept.id)}
+                      className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-5 py-2.5 text-xs font-medium transition-all ${
+                        isActive
+                          ? `${TAB_ACTIVE[i % TAB_ACTIVE.length]} -mb-px`
+                          : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                      }`}
+                    >
+                      <span>{dept.name}</span>
+                      <DepartmentFundingBadge fundingType={dept.funding_type} className="shrink-0" />
+                      <span
+                        className={`shrink-0 rounded-full px-1.5 py-px text-[10px] font-semibold ${isActive ? "bg-current/10" : "bg-slate-100 text-slate-400"}`}
+                      >
+                        {classCount}
+                      </span>
+                    </button>
+                  );
+                })}
+              </ScrollableTabBar>
+            </div>
+
             {loading ? (
               <div className="flex justify-center py-20">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600" />

@@ -5,9 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { SessionSummaryModal } from "@/components/analytics/SessionSummaryModal";
-import { 
-  ChevronLeft, Clock, User, CheckCircle2, Circle, 
-  Wifi, ShieldCheck, Users, X, Download, MessageSquare, AlertCircle, FileText, LogOut
+import {
+  ChevronLeft, Clock, User, Circle,
+  ShieldCheck, Users, LogOut,
 } from "lucide-react";
 
 type Student = {
@@ -68,14 +68,28 @@ export default function SessionPage() {
         console.error("Error fetching students:", studentsError);
       } else if (studentsData) {
         setStudents(studentsData);
-        // Initialize attendance to false (Pending) for all students
         const initialAttendance: Record<string, boolean> = {};
-        studentsData.forEach(s => {
+        studentsData.forEach((s) => {
           initialAttendance[s.id] = false;
         });
+
+        const { data: attRows, error: attErr } = await supabase
+          .from("attendance")
+          .select("student_id, status")
+          .eq("schedule_id", scheduleId)
+          .eq("status", "present");
+
+        if (attErr) {
+          console.error("Error fetching attendance:", attErr);
+        } else {
+          attRows?.forEach((row) => {
+            initialAttendance[row.student_id] = true;
+          });
+        }
+
         setAttendance(initialAttendance);
       }
-      
+
       setLoading(false);
     };
 
@@ -84,25 +98,35 @@ export default function SessionPage() {
     }
   }, [scheduleId]);
 
-  const simulateNFCTap = () => {
-    // Find students who are still pending
-    const pendingStudentIds = Object.keys(attendance).filter(id => !attendance[id]);
-    
-    if (pendingStudentIds.length === 0) {
-      alert("All students are already marked present!");
-      return;
-    }
-    
-    // Pick a random pending student
-    const randomIndex = Math.floor(Math.random() * pendingStudentIds.length);
-    const randomStudentId = pendingStudentIds[randomIndex];
-    
-    // Mark as present
-    setAttendance(prev => ({
-      ...prev,
-      [randomStudentId]: true
-    }));
-  };
+  useEffect(() => {
+    if (!scheduleId || students.length === 0) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`session_attendance_${scheduleId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "attendance",
+          filter: `schedule_id=eq.${scheduleId}`,
+        },
+        (payload) => {
+          if (payload.new.status === "present") {
+            setAttendance((prev) => ({
+              ...prev,
+              [payload.new.student_id as string]: true,
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [scheduleId, students.length]);
 
   const handleEndSession = async () => {
     const supabase = createClient();
@@ -158,21 +182,19 @@ export default function SessionPage() {
   const presentCount = Object.values(attendance).filter(Boolean).length;
   const totalCount = students.length;
   const attendancePercentage = totalCount === 0 ? 0 : Math.round((presentCount / totalCount) * 100);
-  const missingStudents = students.filter(s => !attendance[s.id]);
-
   return (
     <DashboardLayout>
-      <div className="p-6 w-full">
-        
+      <div className="px-6 pt-4 pb-4 w-full h-[calc(100vh-56px)] min-h-0 flex flex-col overflow-hidden">
         {/* Header */}
-        <button 
+        <button
+          type="button"
           onClick={() => router.push("/")}
-          className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors mb-4 text-sm font-medium"
+          className="flex items-center gap-1 text-slate-500 hover:text-slate-800 transition-colors mb-3 shrink-0 text-sm font-medium"
         >
           <ChevronLeft size={16} /> Back to Dashboard
         </button>
 
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-6">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 mb-4 shrink-0">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -211,29 +233,22 @@ export default function SessionPage() {
         </div>
 
         {/* Action Bar */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4 shrink-0 gap-3">
           <h2 className="text-lg font-bold text-slate-900">Student Roster</h2>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={simulateNFCTap}
-              className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg font-semibold shadow-sm transition-all active:scale-95"
-            >
-              <Wifi size={16} />
-              Simulate NFC Tap
-            </button>
-            <button
-              onClick={handleEndSession}
-              className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white px-4 py-2 rounded-lg font-semibold shadow-sm shadow-red-500/20 transition-all active:scale-95"
-            >
-              <LogOut size={16} />
-              <span className="hidden sm:inline">End & Summarize Session</span>
-              <span className="sm:hidden">End Session</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleEndSession}
+            className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white px-4 py-2 rounded-lg font-semibold shadow-sm shadow-red-500/20 transition-all active:scale-95 shrink-0"
+          >
+            <LogOut size={16} />
+            <span className="hidden sm:inline">End & Summarize Session</span>
+            <span className="sm:hidden">End Session</span>
+          </button>
         </div>
 
         {/* Student Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-2">
           {students.map(student => {
             const isPresent = attendance[student.id];
             return (
@@ -279,10 +294,11 @@ export default function SessionPage() {
           })}
           
           {students.length === 0 && (
-            <div className="col-span-full py-12 text-center text-slate-500 bg-white rounded-xl border border-slate-200 border-dashed">
+            <div className="col-span-full py-12 text-center text-slate-500 bg-white rounded-xl border border-slate-200 border-dashed min-h-[40vh] flex items-center justify-center">
               No students found in this department.
             </div>
           )}
+          </div>
         </div>
 
         {/* Summary Modal Overlay */}

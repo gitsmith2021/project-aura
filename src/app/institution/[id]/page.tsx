@@ -188,7 +188,7 @@ async function DepartmentsDataLoader({ institutionId, activeShift }: { instituti
   // 1. Fetch departments
   const { data: departments, error } = await supabase
     .from('departments')
-    .select('id, name, color')
+    .select('id, name, color, funding_type')
     .eq('tenant_id', institutionId)
     .order('name');
     

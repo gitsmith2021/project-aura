@@ -19,8 +19,8 @@ interface ShiftOption {
 const SHIFT_OPTIONS: ShiftOption[] = [
   {
     key: "NORMAL",
-    label: "Normal Schedule",
-    shortLabel: "Normal",
+    label: "General Shift",
+    shortLabel: "General",
     param: "NORMAL",
     icon: <CalendarDays size={14} strokeWidth={2.2} />,
     color: "#7c3aed",
@@ -28,8 +28,8 @@ const SHIFT_OPTIONS: ShiftOption[] = [
   },
   {
     key: "DAY",
-    label: "Day College (Shift I)",
-    shortLabel: "Day · I",
+    label: "Day Shift 1",
+    shortLabel: "Day · 1",
     param: "DAY",
     icon: <Sun size={14} strokeWidth={2.2} />,
     color: "#d97706",
@@ -37,8 +37,8 @@ const SHIFT_OPTIONS: ShiftOption[] = [
   },
   {
     key: "EVENING",
-    label: "Evening College (Shift II)",
-    shortLabel: "Eve · II",
+    label: "Evening Shift 2",
+    shortLabel: "Eve · 2",
     param: "EVENING",
     icon: <Moon size={14} strokeWidth={2.2} />,
     color: "#2563eb",
@@ -147,7 +147,7 @@ export function ShiftGateway() {
         }}
       >
         {activeOption.icon}
-        <span>{activeOption.key === "NORMAL" ? "All Shifts" : activeOption.shortLabel}</span>
+        <span>{activeOption.label}</span>
       </div>
 
       <style jsx>{`

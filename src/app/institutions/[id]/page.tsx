@@ -4,13 +4,15 @@ import { useEffect, useState, use, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { createClient } from "@/utils/supabase/client";
-import { Plus, ArrowLeft, Building2 } from "lucide-react";
+import { Plus, ArrowLeft, Building2, Pencil } from "lucide-react";
 import Link from "next/link";
-import { AddDepartmentModal } from "@/components/dashboard/AddDepartmentModal";
+import { AddDepartmentModal, type DepartmentEditPayload } from "@/components/dashboard/AddDepartmentModal";
+import { EditInstitutionModal, type TenantEditPayload } from "@/components/dashboard/EditInstitutionModal";
 import { DepartmentHeatmap } from "@/components/dashboard/DepartmentHeatmap";
 import { StaffDirectory } from "@/components/dashboard/StaffDirectory";
 import { getDeptColor } from "@/lib/deptColors";
 import { ShiftGateway, type ShiftKey } from "@/components/institution/ShiftGateway";
+import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundingBadge";
 
 type Department = {
   id: string;
@@ -18,12 +20,15 @@ type Department = {
   tenant_id: string;
   studentsCount: number;
   color: string | null;
+  session_type: string | null;
+  funding_type: string | null;
 };
 
 type College = {
   id: string;
   name: string;
-  college_type: string;
+  college_type: string | null;
+  subdomain?: string | null;
 };
 
 type StaffMember = {
@@ -33,7 +38,7 @@ type StaffMember = {
   phone?: string | null;
   role: string;
   department_id: string | null;
-  department?: { name: string } | null;
+  department?: { name: string; funding_type?: string | null } | null;
 };
 
 export default function InstitutionPage({ params }: { params: Promise<{ id: string }> }) {
@@ -47,6 +52,19 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [departmentToEdit, setDepartmentToEdit] = useState<DepartmentEditPayload | null>(null);
+  const [editInstitutionOpen, setEditInstitutionOpen] = useState(false);
+
+  const formatSessionType = (sessionType: string | null) => {
+    switch (sessionType) {
+      case "DAY":
+        return "Day Shift 1";
+      case "EVENING":
+        return "Evening Shift 2";
+      default:
+        return "General Shift";
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -63,20 +81,41 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
       setCollege(collegeData);
     }
     
-    // Fetch Departments with student counts
+    // Fetch departments first. Do not filter by joined students, otherwise
+    // newly created departments with 0 students are hidden.
     const { data: deptData, error: deptError } = await supabase
       .from('departments')
-      .select(`id, name, tenant_id, color, students:profiles!department_id(count)`)
+      .select('id, name, tenant_id, color, session_type, funding_type')
       .eq('tenant_id', collegeId)
-      .eq('students.role', 'STUDENT');
+      .order('name', { ascending: true });
+
+    const { data: studentRows, error: studentError } = await supabase
+      .from('profiles')
+      .select('department_id')
+      .eq('tenant_id', collegeId)
+      .eq('role', 'STUDENT')
+      .not('department_id', 'is', null);
       
     if (!deptError && deptData) {
-      const enrichedDepts = deptData.map((d: any) => ({
+      const studentCountByDepartment = new Map<string, number>();
+      const filteredDepartments = deptData.filter((d: any) => (d.session_type ?? 'NORMAL') === activeShift);
+
+      if (!studentError && studentRows) {
+        for (const row of studentRows) {
+          const deptId = row.department_id as string | null;
+          if (!deptId) continue;
+          studentCountByDepartment.set(deptId, (studentCountByDepartment.get(deptId) ?? 0) + 1);
+        }
+      }
+
+      const enrichedDepts = filteredDepartments.map((d: any) => ({
         id: d.id,
         name: d.name,
         tenant_id: d.tenant_id,
         color: d.color ?? 'violet',
-        studentsCount: d.students?.[0]?.count || 0
+        session_type: d.session_type ?? 'NORMAL',
+        funding_type: d.funding_type ?? 'AIDED',
+        studentsCount: studentCountByDepartment.get(d.id) ?? 0
       }));
       setDepartments(enrichedDepts);
     }
@@ -84,7 +123,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
     // Fetch Staff with department name
     const { data: staffData, error: staffError } = await supabase
       .from('profiles')
-      .select('id, full_name, email, phone, role, department_id, department:departments(name)')
+      .select('id, full_name, email, phone, role, department_id, department:departments(name, funding_type)')
       .eq('tenant_id', collegeId)
       .eq('role', 'STAFF')
       .order('full_name', { ascending: true });
@@ -98,7 +137,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     fetchData();
-  }, [collegeId]);
+  }, [collegeId, activeShift]);
 
   const breadcrumb = (
     <>
@@ -110,10 +149,10 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
 
   return (
     <DashboardLayout breadcrumb={breadcrumb}>
-      <div className="px-5 pt-4 pb-2 w-full h-[calc(100vh-56px)] flex flex-col overflow-hidden">
-        <div className="flex flex-col h-full overflow-hidden">
+      <div className="px-5 pt-2 pb-2 w-full h-[calc(100vh-56px)] min-h-0 flex flex-col overflow-hidden">
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
           
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 shrink-0">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2 shrink-0">
             <div>
               <Link href="/" className="inline-flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-purple-600 mb-1 transition-colors uppercase tracking-wider font-semibold">
                 <ArrowLeft size={12} /> Back to Command Center
@@ -121,12 +160,28 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
               {loading ? (
                 <div className="h-6 bg-slate-200 rounded w-48 animate-pulse mt-1"></div>
               ) : (
-                <h1 className="text-xl font-bold text-slate-900 tracking-tight">{college?.name}</h1>
+                <div className="flex items-center gap-1.5 min-w-0 mt-0.5">
+                  <h1 className="text-lg font-bold text-slate-900 tracking-tight truncate">{college?.name}</h1>
+                  <button
+                    type="button"
+                    onClick={() => setEditInstitutionOpen(true)}
+                    disabled={!college}
+                    title="Edit institution"
+                    aria-label="Edit institution"
+                    className="shrink-0 p-1 rounded-md text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  >
+                    <Pencil size={16} strokeWidth={2.25} />
+                  </button>
+                </div>
               )}
             </div>
-            
-            <button 
-              onClick={() => setIsModalOpen(true)}
+
+            <button
+              type="button"
+              onClick={() => {
+                setDepartmentToEdit(null);
+                setIsModalOpen(true);
+              }}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white text-xs font-semibold rounded-lg hover:bg-purple-700 transition-colors shrink-0"
             >
               <Plus size={13} strokeWidth={2.5} />
@@ -141,37 +196,73 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
             </Suspense>
           </div>
 
-          <div className="custom-scrollbar flex-1 pb-4 pr-1.5">
+          <div className="custom-scrollbar flex-1 min-h-0 overflow-y-auto pb-4 pr-1.5">
             {loading ? (
-              <div className="flex justify-center py-20">
+              <div className="flex justify-center py-20 min-h-[50vh]">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
               </div>
             ) : college ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 h-full">
+              <div className="min-h-full grid grid-cols-1 lg:grid-cols-3 lg:grid-rows-1 gap-5 lg:items-stretch lg:auto-rows-[minmax(0,1fr)]">
                 {/* Left Column: Dept List & Heatmap */}
-                <div className="lg:col-span-2 flex flex-col gap-5">
-                  <div className="bg-white/75 backdrop-blur-sm rounded-xl border border-slate-100/90 p-5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+                <div className="lg:col-span-2 flex flex-col gap-5 min-h-0 lg:h-full">
+                  <div className="bg-white/75 backdrop-blur-sm rounded-xl border border-slate-100/90 p-5 shadow-[0_1px_8px_rgba(0,0,0,0.04)] shrink-0">
                     <h2 className="text-sm font-semibold text-slate-900 mb-4">All Departments</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {departments.map(dept => {
                         const c = getDeptColor(dept.color);
                         return (
-                          <Link
-                            href={`/institutions/${collegeId}/department/${dept.id}`}
+                          <div
                             key={dept.id}
-                            className="relative overflow-hidden p-3 rounded-xl flex items-center justify-between group transition-all hover:shadow-md hover:-translate-y-px cursor-pointer border"
+                            className="relative overflow-hidden p-3 rounded-xl flex items-center gap-2 sm:gap-3 transition-all hover:shadow-md hover:-translate-y-px border group"
                             style={{ background: `linear-gradient(135deg, ${c.bg} 0%, ${c.bg2} 100%)`, borderColor: c.border }}
                           >
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg flex items-center justify-center border" style={{ background: c.bg2, borderColor: c.border }}>
+                            <Link
+                              href={`/institutions/${collegeId}/department/${dept.id}`}
+                              className="flex items-center gap-3 min-w-0 flex-1 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-violet-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                            >
+                              <div className="w-8 h-8 rounded-lg flex items-center justify-center border shrink-0" style={{ background: c.bg2, borderColor: c.border }}>
                                 <Building2 className="w-4 h-4" style={{ color: c.hex }} />
                               </div>
-                              <span className="text-xs font-semibold" style={{ color: c.text }}>{dept.name}</span>
+                              <div className="flex flex-col min-w-0 gap-0.5">
+                                <span className="flex items-center gap-1.5 min-w-0">
+                                  <span className="text-xs font-semibold truncate" style={{ color: c.text }}>{dept.name}</span>
+                                  <DepartmentFundingBadge fundingType={dept.funding_type} />
+                                </span>
+                                <span className="text-[10px] opacity-80 truncate" style={{ color: c.text }}>
+                                  {formatSessionType(dept.session_type)}
+                                </span>
+                              </div>
+                            </Link>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <div className="text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap" style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}>
+                                {dept.studentsCount} students
+                              </div>
+                              <button
+                                type="button"
+                                title="Edit department"
+                                aria-label={`Edit ${dept.name}`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setDepartmentToEdit({
+                                    id: dept.id,
+                                    name: dept.name,
+                                    session_type: dept.session_type,
+                                    funding_type: dept.funding_type,
+                                  });
+                                  setIsModalOpen(true);
+                                }}
+                                className="p-1.5 rounded-lg border transition-all shrink-0 hover:brightness-95 active:scale-95"
+                                style={{
+                                  color: c.text,
+                                  borderColor: c.border,
+                                  background: c.bg2,
+                                }}
+                              >
+                                <Pencil size={14} strokeWidth={2.25} />
+                              </button>
                             </div>
-                            <div className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}>
-                              {dept.studentsCount} students
-                            </div>
-                          </Link>
+                          </div>
                         );
                       })}
                       {departments.length === 0 && (
@@ -182,11 +273,13 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
                     </div>
                   </div>
 
-                  <DepartmentHeatmap departments={departments} />
+                  <div className="flex-1 flex flex-col min-h-[200px] lg:min-h-0 min-w-0">
+                    <DepartmentHeatmap departments={departments} />
+                  </div>
                 </div>
 
                 {/* Right Column: Staff Directory */}
-                <div className="lg:col-span-1 h-[600px] lg:h-auto">
+                <div className="lg:col-span-1 flex flex-col min-h-[320px] lg:min-h-0 lg:h-full min-w-0">
                   <StaffDirectory staff={staff} />
                 </div>
               </div>
@@ -198,11 +291,31 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
 
-      <AddDepartmentModal 
+      <AddDepartmentModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setDepartmentToEdit(null);
+        }}
         tenantId={collegeId}
         onSuccess={fetchData}
+        departmentToEdit={departmentToEdit}
+      />
+
+      <EditInstitutionModal
+        isOpen={editInstitutionOpen}
+        onClose={() => setEditInstitutionOpen(false)}
+        onSuccess={fetchData}
+        tenant={
+          college
+            ? ({
+                id: college.id,
+                name: college.name,
+                college_type: college.college_type,
+                subdomain: college.subdomain ?? null,
+              } satisfies TenantEditPayload)
+            : null
+        }
       />
     </DashboardLayout>
   );

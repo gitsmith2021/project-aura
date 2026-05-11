@@ -11,7 +11,9 @@ export function DashboardLayout({ children, breadcrumb }: { children: React.Reac
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-900 text-sm">
       <Sidebar isCollapsed={isSidebarCollapsed} />
       
-      <main className={`flex-1 transition-all duration-300 flex flex-col ${isSidebarCollapsed ? 'ml-16' : 'ml-56'}`}>
+      <main
+        className={`min-w-0 max-w-full flex-1 overflow-x-hidden transition-all duration-300 flex flex-col ${isSidebarCollapsed ? "ml-16" : "ml-56"}`}
+      >
         <Topbar 
           isSidebarCollapsed={isSidebarCollapsed} 
           toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 

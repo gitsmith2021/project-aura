@@ -8,6 +8,7 @@ import {
   ThumbsUp, ThumbsDown, User
 } from "lucide-react";
 import { getDeptColor } from "@/lib/deptColors";
+import { fundingTypeShortLabel } from "@/lib/deptFunding";
 import Link from "next/link";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -29,6 +30,7 @@ type Department = {
   studentsCount: number;
   staffCount: number;
   color: string | null;
+  funding_type: string | null;
 };
 
 type StaffRecord = {
@@ -379,7 +381,7 @@ export function CollegeDashboard({
       const [{ data: depts }, { data: sessionsData }] = await Promise.all([
         supabase
           .from("departments")
-          .select("id, name, color, students:profiles!department_id(count), staff:profiles!department_id(count)")
+          .select("id, name, color, funding_type, students:profiles!department_id(count), staff:profiles!department_id(count)")
           .eq("tenant_id", college.id)
           .eq("students.role", "STUDENT")
           .eq("staff.role", "STAFF"),
@@ -396,6 +398,7 @@ export function CollegeDashboard({
           id: d.id,
           name: d.name,
           color: d.color ?? 'violet',
+          funding_type: d.funding_type ?? 'AIDED',
           studentsCount: d.students?.[0]?.count || 0,
           staffCount:    d.staff?.[0]?.count    || 0,
         })));
@@ -416,13 +419,17 @@ export function CollegeDashboard({
   // Chart data
   const deptBarData = [...departments]
     .sort((a, b) => b.studentsCount - a.studentsCount)
-    .map(d => ({
-      name: d.name.length > 12 ? d.name.substring(0, 12) + "…" : d.name,
-      Students: d.studentsCount,
-      Staff: d.staffCount,
-      color: getDeptColor(d.color).hex,
-      staffColor: getDeptColor(d.color).bg2,
-    }));
+    .map(d => {
+      const short = d.name.length > 12 ? d.name.substring(0, 12) + "…" : d.name;
+      const tag = fundingTypeShortLabel(d.funding_type);
+      return {
+        name: `${short} · ${tag}`,
+        Students: d.studentsCount,
+        Staff: d.staffCount,
+        color: getDeptColor(d.color).hex,
+        staffColor: getDeptColor(d.color).bg2,
+      };
+    });
 
   const ratioData = [
     { name: "Students", value: college.studentsCount },
@@ -430,8 +437,8 @@ export function CollegeDashboard({
   ];
 
   return (
-    <div className="h-full overflow-y-auto custom-scrollbar px-5 pt-5 pb-6">
-      <div className="max-w-7xl mx-auto space-y-5">
+    <div className="h-full min-h-0 overflow-y-auto custom-scrollbar px-5 pt-5 pb-6 flex flex-col">
+      <div className="max-w-7xl mx-auto w-full flex flex-col gap-5 flex-1 min-h-full">
 
         {/* ── College title + link ── */}
         <div className="flex items-center justify-between">
@@ -537,7 +544,7 @@ export function CollegeDashboard({
                   <ResponsiveContainer width="100%" height={180}>
                 <BarChart data={deptBarData} barGap={4} layout="vertical" margin={{ left: 0, right: 16 }}>
                   <XAxis type="number" tick={{ fontSize: 10, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} width={90} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} width={118} />
                   <Tooltip content={<DarkTooltip />} cursor={{ fill: "rgba(0,0,0,0.03)" }} />
                   <Bar dataKey="Students" radius={[0,4,4,0]} barSize={10}>
                     {deptBarData.map((entry, i) => (
@@ -581,6 +588,7 @@ export function CollegeDashboard({
           </div>
         </div>
 
+        <div className="flex-1 min-h-[1px] shrink-0" aria-hidden />
       </div>
     </div>
   );

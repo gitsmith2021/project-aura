@@ -3,14 +3,18 @@
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { fundingTypeShortLabel } from "@/lib/deptFunding";
+import { studentProgramLabel, yearOptionsForProgram, type StudentProgram } from "@/lib/studentProgram";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  /** When opening from Staff vs Students page */
+  defaultRole?: "STAFF" | "STUDENT";
 };
 
-export function AddPersonModal({ isOpen, onClose, onSuccess }: Props) {
+export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAFF" }: Props) {
   const [mounted, setMounted] = useState(false);
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState<'STAFF' | 'STUDENT'>('STAFF');
@@ -18,8 +22,10 @@ export function AddPersonModal({ isOpen, onClose, onSuccess }: Props) {
   const [departmentId, setDepartmentId] = useState('');
   
   const [tenants, setTenants] = useState<{id: string, name: string}[]>([]);
-  const [departments, setDepartments] = useState<{id: string, name: string}[]>([]);
+  const [departments, setDepartments] = useState<{ id: string; name: string; funding_type?: string | null }[]>([]);
   
+  const [studentProgram, setStudentProgram] = useState<StudentProgram>("UG");
+  const [studentYear, setStudentYear] = useState(1);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -37,7 +43,7 @@ export function AddPersonModal({ isOpen, onClose, onSuccess }: Props) {
     if (tenantId) {
       const fetchDepts = async () => {
         const supabase = createClient();
-        const { data } = await supabase.from('departments').select('id, name').eq('tenant_id', tenantId).order('name');
+        const { data } = await supabase.from('departments').select('id, name, funding_type').eq('tenant_id', tenantId).order('name');
         if (data) setDepartments(data);
       };
       fetchDepts();
@@ -51,14 +57,16 @@ export function AddPersonModal({ isOpen, onClose, onSuccess }: Props) {
     if (isOpen) {
       document.body.style.overflow = "hidden";
       setFullName('');
-      setRole('STAFF');
+      setRole(defaultRole);
       setTenantId('');
       setDepartmentId('');
+      setStudentProgram("UG");
+      setStudentYear(1);
     } else {
       document.body.style.overflow = "unset";
     }
     return () => { document.body.style.overflow = "unset"; };
-  }, [isOpen]);
+  }, [isOpen, defaultRole]);
 
   if (!mounted) return null;
 
@@ -68,9 +76,15 @@ export function AddPersonModal({ isOpen, onClose, onSuccess }: Props) {
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.from('profiles').insert([
-      { full_name: fullName, role, tenant_id: tenantId, department_id: departmentId }
-    ]);
+    const row: Record<string, unknown> = {
+      full_name: fullName,
+      role,
+      tenant_id: tenantId,
+      department_id: departmentId,
+      student_program: role === "STUDENT" ? studentProgram : null,
+      student_year: role === "STUDENT" ? studentYear : null,
+    };
+    const { error } = await supabase.from('profiles').insert([row]);
 
     setLoading(false);
 
@@ -122,7 +136,14 @@ export function AddPersonModal({ isOpen, onClose, onSuccess }: Props) {
               <label className="block text-xs font-medium text-slate-700">Role</label>
               <select 
                 value={role}
-                onChange={e => setRole(e.target.value as 'STAFF' | 'STUDENT')}
+                onChange={e => {
+                  const r = e.target.value as 'STAFF' | 'STUDENT';
+                  setRole(r);
+                  if (r === 'STAFF') {
+                    setStudentProgram('UG');
+                    setStudentYear(1);
+                  }
+                }}
                 required
                 className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs appearance-none"
               >
@@ -130,6 +151,39 @@ export function AddPersonModal({ isOpen, onClose, onSuccess }: Props) {
                 <option value="STUDENT">Student</option>
               </select>
             </div>
+
+            {role === "STUDENT" && (
+              <>
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-slate-700">Program</label>
+                  <select
+                    value={studentProgram}
+                    onChange={(e) => {
+                      const p = e.target.value as StudentProgram;
+                      setStudentProgram(p);
+                      const opts = yearOptionsForProgram(p);
+                      setStudentYear((y) => (opts.includes(y) ? y : opts[0]));
+                    }}
+                    className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs appearance-none"
+                  >
+                    <option value="UG">{studentProgramLabel("UG")}</option>
+                    <option value="PG">{studentProgramLabel("PG")}</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-slate-700">Study year</label>
+                  <select
+                    value={studentYear}
+                    onChange={(e) => setStudentYear(Number(e.target.value))}
+                    className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs appearance-none"
+                  >
+                    {yearOptionsForProgram(studentProgram).map((y) => (
+                      <option key={y} value={y}>Year {y}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
 
             <div className="space-y-1">
               <label className="block text-xs font-medium text-slate-700">Institution</label>
@@ -156,7 +210,11 @@ export function AddPersonModal({ isOpen, onClose, onSuccess }: Props) {
                 <option value="" disabled>
                   {!tenantId ? 'Select an institution first...' : departments.length === 0 ? 'No departments available' : 'Select department...'}
                 </option>
-                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>
+                    {d.name} ({fundingTypeShortLabel(d.funding_type)})
+                  </option>
+                ))}
               </select>
             </div>
           </form>

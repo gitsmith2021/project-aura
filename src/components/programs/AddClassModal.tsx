@@ -3,8 +3,9 @@
 import { X, BookOpen } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { fundingTypeShortLabel } from "@/lib/deptFunding";
 
-type Department = { id: string; name: string; tenant_id: string };
+type Department = { id: string; name: string; tenant_id: string; funding_type?: string | null };
 type StaffMember = { id: string; full_name: string };
 
 type Props = {
@@ -54,7 +55,7 @@ export function AddClassModal({ isOpen, onClose, onSuccess, defaultDepartmentId,
     document.body.style.overflow = "hidden";
 
     // Fetch departments scoped to this institution
-    const deptQuery = supabase.from("departments").select("id, name, tenant_id").order("name");
+    const deptQuery = supabase.from("departments").select("id, name, tenant_id, funding_type").order("name");
     if (tenantId) deptQuery.eq("tenant_id", tenantId);
     deptQuery.then(({ data }) => {
       if (data) setDepartments(data as Department[]);
@@ -148,7 +149,9 @@ export function AddClassModal({ isOpen, onClose, onSuccess, defaultDepartmentId,
               >
                 <option value="" disabled>Select department...</option>
                 {departments.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
+                  <option key={d.id} value={d.id}>
+                    {d.name} ({fundingTypeShortLabel(d.funding_type)})
+                  </option>
                 ))}
               </select>
             </div>
@@ -156,7 +159,7 @@ export function AddClassModal({ isOpen, onClose, onSuccess, defaultDepartmentId,
             {/* Subject — free-text input matching your existing schema */}
             <div className="space-y-1">
               <label htmlFor="cls_subject" className="block text-xs font-medium text-slate-700">
-                Course <span className="text-red-500">*</span>
+                Subject Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"

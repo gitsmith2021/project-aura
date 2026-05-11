@@ -1,133 +1,25 @@
 "use client";
 
-import { useEffect, useState, use, useCallback, useRef } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { createClient } from "@/utils/supabase/client";
-import { ArrowLeft, Clock, Video, User, PlayCircle, Terminal, X, CheckCircle2, Wifi } from "lucide-react";
+import { ArrowLeft, ClipboardCheck, Clock, Video, User, PlayCircle, Pencil } from "lucide-react";
 import Link from "next/link";
 import { StaffDirectory } from "@/components/dashboard/StaffDirectory";
+import { AddDepartmentModal } from "@/components/dashboard/AddDepartmentModal";
+import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundingBadge";
+import { AttendanceSlideOver } from "@/components/dashboard/AttendanceSlideOver";
 import { SessionSummaryModal } from "@/components/analytics/SessionSummaryModal";
 import { FileText } from "lucide-react";
 
-// ─── Web Audio success chime ─────────────────────────────────────────────────
-function playSuccessChime() {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const notes = [
-      { freq: 783.99, start: 0,    dur: 0.12 }, // G5
-      { freq: 987.77, start: 0.09, dur: 0.14 }, // B5
-      { freq: 1318.5, start: 0.18, dur: 0.22 }, // E6
-    ];
-    notes.forEach(({ freq, start, dur }) => {
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0, ctx.currentTime + start);
-      gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
-      osc.start(ctx.currentTime + start);
-      osc.stop(ctx.currentTime + start + dur + 0.05);
-    });
-  } catch { /* unsupported */ }
-}
-
-// ─── Tap Card Button ─────────────────────────────────────────────────────────
-type TapState = 'idle' | 'scanning' | 'success';
-type Ripple   = { id: number; x: number; y: number };
-
-function TapCardButton({ studentId, scheduleId, tenantId, isCheckedIn, justScanned }: {
-  studentId: string;
-  scheduleId: string;
-  tenantId: string;
-  isCheckedIn: boolean;
-  justScanned: boolean;
-}) {
-  const [status, setStatus] = useState<TapState>(isCheckedIn ? 'success' : 'idle');
-  const [pressed, setPressed] = useState(false);
-  const [ripples, setRipples] = useState<Ripple[]>([]);
-  const btnRef = useRef<HTMLButtonElement>(null);
-
-  // Sync if realtime marks this student as checked-in before they tap locally
-  useEffect(() => {
-    if (isCheckedIn && status === 'idle') setStatus('success');
-  }, [isCheckedIn]);
-
-  const addRipple = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const btn  = btnRef.current;
-    if (!btn) return;
-    const rect = btn.getBoundingClientRect();
-    const id   = Date.now();
-    setRipples(prev => [...prev, { id, x: e.clientX - rect.left, y: e.clientY - rect.top }]);
-    setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
-  };
-
-  const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (status !== 'idle') return;
-    addRipple(e);
-    setStatus('scanning');
-    try {
-      await fetch('/api/attendance/pulse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ student_id: studentId, schedule_id: scheduleId, tenant_id: tenantId }),
-      });
-      playSuccessChime();
-      setStatus('success');
-    } catch {
-      setStatus('idle'); // roll back on error
-    }
-  };
-
-  if (status === 'success') {
-    return (
-      <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-500 select-none ${
-        justScanned
-          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-105'
-          : 'bg-emerald-100 text-emerald-700'
-      }`}>
-        <CheckCircle2 size={12} />
-        {justScanned ? 'Just Scanned!' : 'Present'}
-      </div>
-    );
-  }
-
-  return (
-    <button
-      ref={btnRef}
-      onMouseDown={() => setPressed(true)}
-      onMouseUp={() => setPressed(false)}
-      onMouseLeave={() => setPressed(false)}
-      onClick={handleClick}
-      disabled={status === 'scanning'}
-      className={`relative overflow-hidden px-3 py-1.5 text-[10px] font-bold rounded-lg border select-none transition-all duration-150
-        ${status === 'scanning'
-          ? 'border-slate-300 bg-slate-50 text-slate-400 cursor-wait'
-          : 'border-slate-300 bg-white text-slate-700 hover:border-purple-400 hover:text-purple-700 hover:bg-purple-50/40 hover:shadow-sm'
-        }
-        ${pressed ? 'scale-95' : 'scale-100'}
-      `}
-    >
-      {/* Ripple layer */}
-      {ripples.map(r => (
-        <span key={r.id} className="ripple-effect" style={{ left: r.x, top: r.y }} />
-      ))}
-      {status === 'scanning' ? (
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-          Scanning…
-        </span>
-      ) : (
-        <span className="flex items-center gap-1.5"><Wifi size={11} /> Tap Card</span>
-      )}
-    </button>
-  );
-}
-
 type College    = { id: string; name: string };
-type Department = { id: string; name: string; tenant_id: string };
+type Department = {
+  id: string;
+  name: string;
+  tenant_id: string;
+  session_type?: string | null;
+  funding_type?: string | null;
+};
 type StaffMember = { id: string; full_name: string; email: string | null; phone?: string | null; role: string };
 type Schedule   = { id: string; start_time: string; end_time: string; status?: string; subject: { name: string; color: string }; staff: { full_name: string } };
 
@@ -292,13 +184,13 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
   const [loading, setLoading]       = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   
-  // Hardware Bridge State
-  const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
   const [checkedInIds, setCheckedInIds] = useState<Set<string>>(new Set());
   const [justScannedId, setJustScannedId] = useState<string | null>(null);
   
   // Summary Modal State
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
+  const [attendanceOpen, setAttendanceOpen] = useState(false);
+  const [deptModalOpen, setDeptModalOpen] = useState(false);
 
   // Tick every second for countdown precision
   useEffect(() => {
@@ -401,58 +293,79 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
       <span className="mx-2 text-slate-300">/</span>
       <Link href={`/institutions/${collegeId}`} className="hover:text-slate-900 transition-colors">{college?.name || "College"}</Link>
       <span className="mx-2 text-slate-300">/</span>
-      <span className="text-slate-900 font-semibold">{department?.name || "Loading..."}</span>
+      <span className="inline-flex items-center gap-1.5 text-slate-900 font-semibold min-w-0">
+        <span className="truncate">{department?.name || "Loading..."}</span>
+        {department?.name ? <DepartmentFundingBadge fundingType={department.funding_type} /> : null}
+      </span>
     </>
   );
 
   return (
     <DashboardLayout breadcrumb={breadcrumb}>
-      <div className="px-5 pt-4 pb-2 w-full h-[calc(100vh-56px)] flex flex-col overflow-hidden">
-        <div className="flex flex-col h-full overflow-hidden">
+      <div className="px-5 pt-4 pb-2 w-full h-[calc(100vh-56px)] min-h-0 flex flex-col overflow-hidden">
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
 
-          <div className="flex items-center justify-between mb-4 shrink-0">
-            <div>
+          <div className="flex items-center justify-between mb-4 shrink-0 gap-3">
+            <div className="min-w-0">
               <Link href={`/institutions/${collegeId}`} className="inline-flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-purple-600 mb-1 transition-colors uppercase tracking-wider font-semibold">
                 <ArrowLeft size={12} /> Back to {college?.name || "College"}
               </Link>
-              {loading
-                ? <div className="h-6 bg-slate-200 rounded w-48 animate-pulse mt-1" />
-                : <h1 className="text-xl font-bold text-slate-900 tracking-tight">{department?.name}</h1>
-              }
+              {loading ? (
+                <div className="h-6 bg-slate-200 rounded w-48 animate-pulse mt-1" />
+              ) : (
+                <div className="flex items-center gap-2 min-w-0 mt-0.5">
+                  <h1 className="text-xl font-bold text-slate-900 tracking-tight truncate">{department?.name}</h1>
+                  {department ? <DepartmentFundingBadge fundingType={department.funding_type} className="shrink-0" /> : null}
+                  <button
+                    type="button"
+                    onClick={() => setDeptModalOpen(true)}
+                    disabled={!department}
+                    title="Edit department"
+                    aria-label="Edit department"
+                    className="shrink-0 p-1 rounded-md text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                  >
+                    <Pencil size={16} strokeWidth={2.25} />
+                  </button>
+                </div>
+              )}
             </div>
-            
+
             <button
-              onClick={() => setIsDevToolsOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 text-white text-xs font-semibold rounded-lg hover:bg-slate-900 transition-colors shrink-0 shadow-sm"
+              type="button"
+              onClick={() => setAttendanceOpen(true)}
+              className="inline-flex items-center gap-2 shrink-0 rounded-xl border border-violet-200 bg-white px-3.5 py-2 text-xs font-semibold text-violet-700 shadow-sm hover:border-violet-300 hover:bg-violet-50/80 transition-colors"
             >
-              <Terminal size={13} strokeWidth={2.5} /> Dev Tools
+              <ClipboardCheck size={15} className="text-violet-600" strokeWidth={2} />
+              Attendance
             </button>
           </div>
 
-          <div className="custom-scrollbar flex-1 pb-4 pr-1.5 overflow-y-auto">
+          <div className="custom-scrollbar flex-1 min-h-0 overflow-y-auto pb-4 pr-1.5">
             {loading ? (
-              <div className="flex justify-center py-20">
+              <div className="flex justify-center py-20 min-h-[50vh]">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
               </div>
             ) : department ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <div className="min-h-full grid grid-cols-1 lg:grid-cols-3 lg:grid-rows-1 gap-5 lg:items-stretch lg:auto-rows-[minmax(0,1fr)]">
 
                 {/* Left column */}
-                <div className="lg:col-span-2 flex flex-col gap-5">
+                <div className="lg:col-span-2 flex flex-col gap-5 min-h-0 lg:h-full">
 
                   {/* Hero card — transitions via key swap + aura-fade-in */}
-                  {activeClass
-                    ? <ActiveSessionCard key="active" activeClass={activeClass} formatTimeFn={formatTime} checkedInCount={checkedInIds.size} totalStudents={students.length} />
-                    : <WaitingForPulse key="idle" nextClass={nextClass} now={currentTime} formatTimeFn={formatTime} />
-                  }
+                  <div className="shrink-0">
+                    {activeClass
+                      ? <ActiveSessionCard key="active" activeClass={activeClass} formatTimeFn={formatTime} checkedInCount={checkedInIds.size} totalStudents={students.length} />
+                      : <WaitingForPulse key="idle" nextClass={nextClass} now={currentTime} formatTimeFn={formatTime} />
+                    }
+                  </div>
 
-                  {/* Today's schedule */}
-                  <div className="bg-white/75 backdrop-blur-sm rounded-xl border border-slate-100/90 p-5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-                    <h2 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  {/* Today's schedule — grows to fill remaining column height */}
+                  <div className="bg-white/75 backdrop-blur-sm rounded-xl border border-slate-100/90 shadow-[0_1px_8px_rgba(0,0,0,0.04)] flex flex-col flex-1 min-h-[200px] lg:min-h-0 overflow-hidden">
+                    <h2 className="text-sm font-semibold text-slate-900 shrink-0 px-5 pt-5 pb-3 flex items-center gap-2 border-b border-slate-100/80">
                       <Clock className="w-4 h-4 text-purple-600" /> Today's Schedule
                     </h2>
 
-                    <div className="space-y-3">
+                    <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-5 py-4 space-y-3">
                       {schedules.length > 0 ? schedules.map(schedule => {
                         const isActive = schedule.id === activeClass?.id;
                         const isPast   = schedule.status === 'completed' || nowStr >= schedule.end_time;
@@ -509,7 +422,7 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
                 </div>
 
                 {/* Right column: Staff Directory */}
-                <div className="lg:col-span-1 h-[600px] lg:h-auto">
+                <div className="lg:col-span-1 flex flex-col min-h-[320px] lg:min-h-0 lg:h-full min-w-0">
                   <StaffDirectory staff={staff} />
                 </div>
 
@@ -521,90 +434,25 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
 
         </div>
       </div>
-      {/* Dev Tools Drawer */}
-      {isDevToolsOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onClick={() => setIsDevToolsOpen(false)} />
-          <div className="relative w-80 bg-white h-full shadow-2xl border-l border-slate-200 flex flex-col animate-in slide-in-from-right">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-              <div>
-                <h3 className="font-bold text-slate-800 flex items-center gap-2"><Terminal size={16} className="text-purple-600" /> Hardware Simulator</h3>
-                <p className="text-[10px] text-slate-500 mt-0.5">Simulate ESP32 RFID taps</p>
-              </div>
-              <button onClick={() => setIsDevToolsOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-md transition-colors">
-                <X size={16} />
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-              {!activeClass ? (
-                <div className="text-center py-10">
-                  <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Clock className="text-slate-400 w-5 h-5" />
-                  </div>
-                  <p className="text-sm font-semibold text-slate-700">No Active Session</p>
-                  <p className="text-xs text-slate-500 mt-1">Wait for a class to start before simulating attendance.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-3">
-                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Target Session</p>
-                    <p className="text-sm font-bold text-emerald-900">{activeClass.subject.name}</p>
-                    <p className="text-xs text-emerald-700 mt-0.5">{activeClass.id}</p>
-                  </div>
-                  
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs font-bold text-slate-900">Student Roster</p>
-                      <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-                        {checkedInIds.size} / {students.length} in
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      {students.map(student => {
-                        const isCheckedIn  = checkedInIds.has(student.id);
-                        const justScanned  = justScannedId === student.id;
-                        return (
-                          <div
-                            key={student.id}
-                            className={`flex items-center justify-between p-2.5 rounded-lg border transition-colors duration-300 ${
-                              justScanned
-                                ? 'scan-highlight border-emerald-300'
-                                : isCheckedIn
-                                  ? 'bg-slate-50/80 border-slate-200'
-                                  : 'bg-white border-slate-200 shadow-sm'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5 flex-1 min-w-0 pr-3">
-                              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors duration-300 ${
-                                isCheckedIn ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'
-                              }`}>
-                                {student.full_name.split(' ').map((n: string) => n[0]).slice(0, 2).join('')}
-                              </div>
-                              <div className="min-w-0">
-                                <p className={`text-xs font-semibold truncate transition-colors ${isCheckedIn ? 'text-slate-500' : 'text-slate-800'}`}>{student.full_name}</p>
-                                <p className="text-[9px] text-slate-400 font-mono">…{student.id.split('-')[0]}</p>
-                              </div>
-                            </div>
-                            <TapCardButton
-                              studentId={student.id}
-                              scheduleId={activeClass.id}
-                              tenantId={collegeId}
-                              isCheckedIn={isCheckedIn}
-                              justScanned={justScanned}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      
+      <AttendanceSlideOver isOpen={attendanceOpen} onClose={() => setAttendanceOpen(false)} />
+
+      <AddDepartmentModal
+        isOpen={deptModalOpen}
+        onClose={() => setDeptModalOpen(false)}
+        tenantId={collegeId}
+        onSuccess={fetchData}
+        departmentToEdit={
+          department
+            ? {
+                id: department.id,
+                name: department.name,
+                session_type: department.session_type ?? null,
+                funding_type: department.funding_type ?? null,
+              }
+            : null
+        }
+      />
+
       {/* Session Summary Modal Overlay */}
       {selectedScheduleId && (
         <SessionSummaryModal

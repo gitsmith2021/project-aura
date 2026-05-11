@@ -1,6 +1,7 @@
 "use client";
 
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
+import { ScrollableTabBar } from "@/components/layout/ScrollableTabBar";
 import { AddInstitutionModal } from "@/components/dashboard/AddInstitutionModal";
 import { CollegeDashboard } from "@/components/dashboard/CollegeDashboard";
 import { SessionSummaryModal } from "@/components/analytics/SessionSummaryModal";
@@ -67,45 +68,47 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="w-full h-[calc(100vh-56px)] flex flex-col overflow-hidden">
+      <div className="w-full h-[calc(100vh-56px)] min-h-0 flex flex-col overflow-hidden">
 
         {/* ── Tab Bar ── */}
-        <div className="shrink-0 bg-white border-b border-slate-200 px-5 flex items-center justify-between gap-4">
-          <div className="flex items-end gap-0 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-5 min-w-0">
+          <ScrollableTabBar className="min-w-0 flex-1" innerClassName="items-end gap-0">
             {loading ? (
-              <div className="flex gap-3 py-3">
-                {[1,2,3].map(i => (
-                  <div key={i} className="h-8 w-28 bg-slate-100 rounded-md animate-pulse" />
+              <div className="flex gap-3 py-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-8 w-28 shrink-0 rounded-md bg-slate-100 animate-pulse" />
                 ))}
               </div>
-            ) : colleges.map(college => (
-              <button
-                key={college.id}
-                onClick={() => setActiveTab(college.id)}
-                className={`relative whitespace-nowrap px-5 py-3.5 text-xs font-semibold transition-colors border-b-2 -mb-px ${
-                  activeTab === college.id
-                    ? 'border-violet-600 text-violet-700 bg-violet-50/50'
-                    : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                }`}
-              >
-                {college.name}
-              </button>
-            ))}
-            {!loading && colleges.length === 0 && (
-              <p className="text-xs text-slate-400 py-3.5 px-2">No institutions yet.</p>
+            ) : colleges.length === 0 ? (
+              <p className="whitespace-nowrap px-2 py-2.5 text-xs text-slate-400">No institutions yet.</p>
+            ) : (
+              colleges.map((college) => (
+                <button
+                  key={college.id}
+                  type="button"
+                  onClick={() => setActiveTab(college.id)}
+                  className={`relative shrink-0 whitespace-nowrap px-5 py-2.5 text-xs font-semibold transition-colors border-b-2 -mb-px ${
+                    activeTab === college.id
+                      ? "border-violet-600 bg-violet-50/50 text-violet-700"
+                      : "border-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-800"
+                  }`}
+                >
+                  {college.name}
+                </button>
+              ))
             )}
-          </div>
+          </ScrollableTabBar>
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 text-white text-xs font-semibold rounded-lg hover:bg-violet-700 transition-colors"
+            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-violet-700"
           >
             <Plus size={13} strokeWidth={2.5} /> Register Institution
           </button>
         </div>
 
         {/* ── Per-college dashboard ── */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600" />

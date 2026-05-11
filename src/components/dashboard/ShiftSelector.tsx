@@ -4,9 +4,9 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
 
 const SHIFTS = [
-  { id: 'NORMAL', label: 'Regular' },
-  { id: 'DAY', label: 'Day College / Shift I' },
-  { id: 'EVENING', label: 'Evening College / Shift II' },
+  { id: 'NORMAL', label: 'General Shift' },
+  { id: 'DAY', label: 'Day Shift 1' },
+  { id: 'EVENING', label: 'Evening Shift 2' },
 ];
 
 export function ShiftSelector() {

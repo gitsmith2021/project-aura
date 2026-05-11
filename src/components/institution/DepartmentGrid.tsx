@@ -1,10 +1,12 @@
 import React from 'react';
+import { DepartmentFundingBadge } from '@/components/departments/DepartmentFundingBadge';
 
 export interface Department {
   id: string;
   name: string;
   color?: string;
   studentCount?: number;
+  funding_type?: string | null;
 }
 
 interface DepartmentGridProps {
@@ -33,10 +35,13 @@ export function DepartmentGrid({ departments, activeShift }: DepartmentGridProps
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {departments.map((dept) => (
         <div key={dept.id} className="group flex flex-col p-5 rounded-xl border border-gray-800 bg-gray-900/40 hover:bg-gray-800/80 transition-all duration-200">
-          <div className="flex justify-between items-start mb-4">
-            <h3 className="font-semibold text-gray-100 text-lg group-hover:text-white transition-colors line-clamp-1 mr-4">
-              {dept.name}
-            </h3>
+          <div className="flex justify-between items-start mb-4 gap-2">
+            <div className="flex items-center gap-2 min-w-0 mr-2">
+              <h3 className="font-semibold text-gray-100 text-lg group-hover:text-white transition-colors truncate">
+                {dept.name}
+              </h3>
+              <DepartmentFundingBadge variant="dark" fundingType={dept.funding_type} className="shrink-0" />
+            </div>
             {/* Live Status */}
             <span className="shrink-0 inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
