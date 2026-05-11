@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 async function run() {
   const sql = `
@@ -71,7 +71,7 @@ CREATE POLICY "attendance: authenticated can update" ON public.attendance FOR UP
 DROP POLICY IF EXISTS "attendance: authenticated can delete" ON public.attendance;
 CREATE POLICY "attendance: authenticated can delete" ON public.attendance FOR DELETE TO authenticated USING (true);
   `;
-  
+
   // Since we can't run raw SQL from the client without an RPC, 
   // I will just provide the exact SQL block for the user to copy.
 }

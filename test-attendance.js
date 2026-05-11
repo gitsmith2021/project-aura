@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 async function run() {
   const sql = `
@@ -23,7 +23,7 @@ async function run() {
 
     alter publication supabase_realtime add table public.attendance;
   `;
-  
+
   // We can't run raw SQL from supabase-js client directly without an RPC function.
   // I'll create a migration file and maybe the user has to run it.
   // Wait, I can use the supabase CLI if I link it, or I can just use the service role key?

@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 async function run() {
   console.log("Fetching Biotechnology department...");
@@ -53,7 +53,7 @@ async function run() {
       })
       .select()
       .single();
-      
+
     if (newSubErr) {
       console.error("Error creating subject:", newSubErr);
       return;
@@ -66,15 +66,15 @@ async function run() {
   // Use today's day of week
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const today = days[new Date().getDay()];
-  
+
   // Calculate current time to make it "Live Now"
   const now = new Date();
   const startHour = String(now.getHours()).padStart(2, '0');
   const startMin = String(now.getMinutes()).padStart(2, '0');
-  
+
   // End time is 2 hours from now
   const endHour = String((now.getHours() + 2) % 24).padStart(2, '0');
-  
+
   const startTime = `${startHour}:${startMin}:00`;
   const endTime = `${endHour}:${startMin}:00`;
 
