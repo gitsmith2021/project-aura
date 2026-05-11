@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function updateSession(request: NextRequest) {
+// 1. Next.js strictly requires the function to be named 'middleware'
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request: {
       headers: request.headers,
@@ -10,7 +11,7 @@ export async function updateSession(request: NextRequest) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // <-- FIXED: Changed from PUBLISHABLE_KEY
     {
       cookies: {
         getAll() {
@@ -49,3 +50,10 @@ export async function updateSession(request: NextRequest) {
 
   return supabaseResponse;
 }
+
+// 2. CRITICAL: This tells Next.js NOT to run auth checks on images and CSS
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+};
