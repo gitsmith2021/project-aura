@@ -19,6 +19,7 @@ type Department = {
   tenant_id: string;
   session_type?: string | null;
   funding_type?: string | null;
+  color?: string | null;
 };
 type StaffMember = { id: string; full_name: string; email: string | null; phone?: string | null; role: string };
 type Schedule   = { id: string; start_time: string; end_time: string; status?: string; subject: { name: string; color: string }; staff: { full_name: string } };
@@ -448,6 +449,7 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
                 name: department.name,
                 session_type: department.session_type ?? null,
                 funding_type: department.funding_type ?? null,
+                color: department.color ?? null,
               }
             : null
         }

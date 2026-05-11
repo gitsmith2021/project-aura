@@ -249,6 +249,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
                                     name: dept.name,
                                     session_type: dept.session_type,
                                     funding_type: dept.funding_type,
+                                    color: dept.color,
                                   });
                                   setIsModalOpen(true);
                                 }}

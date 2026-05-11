@@ -179,8 +179,8 @@ export function AddDepartmentModal({
                     style={{
                       background: `linear-gradient(135deg, ${p.bg}, ${p.bg2})`,
                       borderColor: p.border,
-                      ringColor: p.hex
-                    }}
+                      "--tw-ring-color": p.hex
+                    } as React.CSSProperties}
                     title={p.key}
                     aria-label={`Select ${p.key} color`}
                   />
