@@ -5,7 +5,7 @@ const supabaseKey = 'sb_publishable_0QZApyONjzPE8uplpbaOlA_9gdWwQZ0';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function test() {
-  const { data, error } = await supabase.from('tenants').select('*').limit(1);
+  const { data, error } = await supabase.from('institutions').select('*').limit(1);
   console.log(data ? Object.keys(data[0]) : error);
 }
 test();
