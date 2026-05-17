@@ -1,11 +1,16 @@
 "use client";
 
-import { LayoutDashboard, Users, Settings, Building2, Calendar, GraduationCap, Layers, Landmark } from "lucide-react";
+import { LayoutDashboard, Users, Settings, Building2, Calendar, GraduationCap, Layers, Landmark, Wallet } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const pathname = usePathname();
+
+  // Extract institution ID from /institutions/[id]/... to build finance href
+  const institutionMatch = pathname.match(/^\/institutions\/([^/]+)/);
+  const institutionId = institutionMatch?.[1];
+  const financeHref = institutionId ? `/institutions/${institutionId}/finance` : "/finance";
 
   return (
     <aside 
@@ -35,6 +40,13 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
         <NavItem href="/users/staff" icon={<Users size={18} />} label="Staff" active={pathname === "/users/staff" || pathname === "/users"} isCollapsed={isCollapsed} />
         <NavItem href="/users/students" icon={<GraduationCap size={18} />} label="Students" active={pathname === "/users/students"} isCollapsed={isCollapsed} />
         <NavItem href="/schedules" icon={<Calendar size={18} />} label="Schedules" active={pathname === "/schedules"} isCollapsed={isCollapsed} />
+        <NavItem
+          href={financeHref}
+          icon={<Wallet size={18} />}
+          label="Finance"
+          active={pathname === "/finance" || pathname.includes("/finance")}
+          isCollapsed={isCollapsed}
+        />
         <NavItem href="/settings" icon={<Settings size={18} />} label="Settings" active={pathname === '/settings'} isCollapsed={isCollapsed} />
       </nav>
     </aside>

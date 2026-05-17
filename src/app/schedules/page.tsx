@@ -6,12 +6,13 @@ import { ScrollableTabBar } from "@/components/layout/ScrollableTabBar";
 import { createClient } from "@/utils/supabase/client";
 import {
   Plus, BookOpen,
-  Building2, Clock, Users, BookMarked, AlertTriangle, Printer, ChevronDown, X,
+  Building2, Clock, Users, BookMarked, AlertTriangle, Printer, ChevronDown, X, Wand2,
 } from "lucide-react";
 import { AddClassModal } from "@/components/programs/AddClassModal";
 import { ScheduleCalendar, type ClassEntry } from "@/components/programs/ScheduleCalendar";
 import { CurrentClassWidget } from "@/components/dashboard/CurrentClassWidget";
 import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundingBadge";
+import { AutoSchedulerButton } from "@/components/schedules/AutoSchedulerButton";
 
 type Tenant = { id: string; name: string };
 type Department = { id: string; name: string; tenant_id: string; funding_type?: string | null };
@@ -54,6 +55,7 @@ export default function SchedulesPage() {
   const [staffDropdownOpen, setStaffDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLivePanelOpen, setIsLivePanelOpen] = useState(false);
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
   const [modalDefaults, setModalDefaults] = useState<{ day?: string; startTime?: string }>({});
   const [editingClass, setEditingClass] = useState<ClassEntry | null>(null);
 
@@ -215,8 +217,17 @@ export default function SchedulesPage() {
           </div>
 
           <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+            {/* AI Auto Scheduler Button */}
+            <button
+              onClick={() => setIsAiPanelOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-50 border border-violet-200 text-violet-700 text-xs font-semibold rounded-md hover:bg-violet-100 transition-colors shadow-sm"
+            >
+              <Wand2 size={13} />
+              AI Auto Scheduler
+            </button>
+
             {/* Live Sessions Button */}
-            <button 
+            <button
               onClick={() => setIsLivePanelOpen(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-md hover:bg-emerald-100 transition-colors shadow-sm"
             >
@@ -420,6 +431,37 @@ export default function SchedulesPage() {
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
               <CurrentClassWidget tenantId={selectedTenantId} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Slide-out Panel for AI Auto Scheduler */}
+      {isAiPanelOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/20 backdrop-blur-sm transition-all">
+          <div className="w-full max-w-sm bg-slate-50 h-full shadow-2xl border-l border-slate-200 flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2.5">
+                  <span className="flex items-center justify-center w-7 h-7 rounded-lg bg-violet-100 text-violet-600 shrink-0">
+                    <Wand2 size={15} />
+                  </span>
+                  AI Auto-Scheduler
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Generates a conflict-free weekly timetable
+                </p>
+              </div>
+              <button
+                onClick={() => setIsAiPanelOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+              <AutoSchedulerButton tenantId={selectedTenantId} />
             </div>
           </div>
         </div>

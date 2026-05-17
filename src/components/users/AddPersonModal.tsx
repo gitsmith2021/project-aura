@@ -77,6 +77,7 @@ export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAF
 
     const supabase = createClient();
     const row: Record<string, unknown> = {
+      id: crypto.randomUUID(),
       full_name: fullName,
       role,
       tenant_id: tenantId,

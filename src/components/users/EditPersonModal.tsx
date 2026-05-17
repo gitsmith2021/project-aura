@@ -105,7 +105,7 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
     setLoading(false);
 
     if (error) {
-      console.error("Error updating profile:", error);
+      console.error("Error updating profile:", error.message ?? error);
       alert("Failed to update person: " + error.message);
     } else {
       onSuccess();
