@@ -110,7 +110,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
       const enrichedDepts = filteredDepartments.map((d: any) => ({
         id: d.id,
         name: d.name,
-        tenant_id: d.tenant_id,
+        institution_id: d.institution_id,
         color: d.color ?? 'violet',
         session_type: d.session_type ?? 'NORMAL',
         funding_type: d.funding_type ?? 'AIDED',

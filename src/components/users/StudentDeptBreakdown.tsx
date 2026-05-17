@@ -11,7 +11,7 @@ type DeptTone = ReturnType<typeof getDeptColor>;
 export type StudentPerson = {
   id: string;
   department_id: string | null;
-  tenant_id: string;
+  institution_id: string;
   student_program?: string | null;
   student_year?: number | null;
 };
@@ -19,7 +19,7 @@ export type StudentPerson = {
 type Props = {
   tenantId: string;
   students: StudentPerson[];
-  departments: { id: string; name: string; tenant_id: string; funding_type?: string | null; color?: string | null }[];
+  departments: { id: string; name: string; institution_id: string; funding_type?: string | null; color?: string | null }[];
   activeKey: string | null;
   onSelectSegment: (key: string | null, deptId: string | null, program: StudentProgram | null, year: number | null) => void;
 };
@@ -86,14 +86,14 @@ function YearPill({
 }
 
 export function StudentDeptBreakdown({ tenantId, students, departments, activeKey, onSelectSegment }: Props) {
-  const depts = useMemo(() => departments.filter((d) => d.tenant_id === tenantId), [departments, tenantId]);
+  const depts = useMemo(() => departments.filter((d) => d.institution_id === tenantId), [departments, tenantId]);
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
     const key = (deptId: string, program: StudentProgram, year: number) => `${deptId}:${program}:${year}`;
 
     for (const s of students) {
-      if (s.tenant_id !== tenantId) continue;
+      if (s.institution_id !== tenantId) continue;
       const prog = s.student_program as StudentProgram | null | undefined;
       const yr = s.student_year;
       if (!s.department_id || !prog || yr == null) continue;

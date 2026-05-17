@@ -57,7 +57,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
   const [departments, setDepartments] = useState<{
     id: string;
     name: string;
-    tenant_id: string;
+    institution_id: string;
     funding_type?: string | null;
     color?: string | null;
   }[]>([]);
@@ -90,7 +90,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
         setSelectedTenantId((prev) => prev || data[0].id);
       }
     });
-    supabase.from("departments").select("id, name, tenant_id, funding_type, color").order("name").then(({ data }) => {
+    supabase.from("departments").select("id, name, institution_id, funding_type, color").order("name").then(({ data }) => {
       if (data) setDepartments(data);
     });
   }, []);
@@ -100,7 +100,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
   }, [search, filterDeptId, selectedTenantId, filterProgram, filterYearNum, role, staffLayoutMode]);
 
   const filteredDepts = useMemo(
-    () => departments.filter((d) => d.tenant_id === selectedTenantId),
+    () => departments.filter((d) => d.institution_id === selectedTenantId),
     [departments, selectedTenantId]
   );
 
