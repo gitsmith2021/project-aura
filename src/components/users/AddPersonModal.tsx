@@ -114,7 +114,6 @@ export function AddPersonModal({
     const supabase = createClient();
     const targetTable = role === "STAFF" ? "staff" : "students";
     const row: Record<string, unknown> = {
-      id: crypto.randomUUID(),
       full_name: fullName,
       institution_id: tenantId,
       department_id: departmentId,
@@ -126,8 +125,8 @@ export function AddPersonModal({
     setLoading(false);
 
     if (error) {
-      console.error('Error inserting person:', error);
-      alert('Failed to save person: ' + error.message);
+      console.error('Error inserting person:', error.code, error.message, error.details, error.hint);
+      alert('Failed to save person: ' + (error.message || error.code || JSON.stringify(error)));
     } else {
       onSuccess();
       onClose();
