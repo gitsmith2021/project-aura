@@ -134,7 +134,6 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
           full_name,
           email,
           phone,
-          role: "STAFF",
           institution_id: tenantId,
           department_id: deptId,
         });
@@ -165,7 +164,6 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
         full_name,
         email,
         phone,
-        role: "STUDENT",
         institution_id: tenantId,
         department_id: deptId,
         student_program: program,

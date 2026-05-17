@@ -44,7 +44,6 @@ export async function registerUser(prevState: any, formData: FormData) {
       .insert([{
         full_name: fullName,
         email: email,
-        role: mappedRole,
         institution_id: currentTenantId
       }])
       .select("id")

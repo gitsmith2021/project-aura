@@ -116,7 +116,6 @@ export function AddPersonModal({
     const row: Record<string, unknown> = {
       id: crypto.randomUUID(),
       full_name: fullName,
-      role,
       institution_id: tenantId,
       department_id: departmentId,
       student_program: role === "STUDENT" ? studentProgram : null,
