@@ -124,7 +124,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
 
   const studentsInTenantCount = useMemo(() => {
     if (role !== "STUDENT") return 0;
-    return people.filter((p) => p.institution_id === selectedTenantId && profileMatchesRole(p, "STUDENT")).length;
+    return people.filter((p) => p.institution_id === selectedTenantId).length;
   }, [people, selectedTenantId, role]);
 
   const studentCohortFiltersActive =
@@ -140,7 +140,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
 
   const filtered = useMemo(() => {
     return people.filter((p) => {
-      if (p.institution_id !== selectedTenantId || !profileMatchesRole(p, role)) return false;
+      if (p.institution_id !== selectedTenantId) return false;
       if (filterDeptId && p.department_id !== filterDeptId) return false;
       if (role === "STUDENT") {
         if (filterProgram && (p.student_program as StudentProgram | null) !== filterProgram) return false;
@@ -363,7 +363,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
           <div className="flex flex-col flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-0.5 gap-3 pb-4">
             <StudentDeptBreakdown
               tenantId={selectedTenantId}
-              students={people.filter((p) => profileMatchesRole(p, "STUDENT"))}
+              students={people}
               departments={departments}
               activeKey={segmentActiveKey}
               onSelectSegment={onBreakdownSelect}
