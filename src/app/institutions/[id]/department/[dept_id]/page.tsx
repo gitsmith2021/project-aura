@@ -16,7 +16,7 @@ type College    = { id: string; name: string };
 type Department = {
   id: string;
   name: string;
-  tenant_id: string;
+  institution_id: string;
   session_type?: string | null;
   funding_type?: string | null;
   color?: string | null;
@@ -204,10 +204,10 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
     const supabase = createClient();
 
     const [{ data: collegeData }, { data: deptData }, { data: staffData }, { data: studentData }] = await Promise.all([
-      supabase.from('tenants').select('id, name').eq('id', collegeId).single(),
+      supabase.from('institutions').select('id, name').eq('id', collegeId).single(),
       supabase.from('departments').select('*').eq('id', deptId).single(),
-      supabase.from('profiles').select('*').eq('department_id', deptId).eq('role', 'STAFF').order('full_name'),
-      supabase.from('profiles').select('id, full_name').eq('department_id', deptId).eq('role', 'STUDENT').order('full_name'),
+      supabase.from('staff').select('*').eq('department_id', deptId).order('full_name'),
+      supabase.from('students').select('id, full_name').eq('department_id', deptId).order('full_name'),
     ]);
 
     if (collegeData) setCollege(collegeData);
@@ -218,7 +218,7 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
     const today = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
     const { data: scheduleData } = await supabase
       .from('schedules')
-      .select('id, start_time, end_time, status, subject_name, staff:profiles(full_name)')
+      .select('id, start_time, end_time, status, subject_name, staff:staff(full_name)')
       .eq('department_id', deptId)
       .eq('day_of_week', today)
       .order('start_time');
@@ -236,14 +236,16 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Derive active / next from currentTime (recomputed every second)
+  // Derive active / next from currentTime (recomputed every second).
+  // Using const + find() instead of let + for-loop so TypeScript's control-flow
+  // analysis keeps the Schedule | null type stable inside map/filter callbacks.
   const nowStr = toHHMM(currentTime);
-  let activeClass: Schedule | null = null;
-  let nextClass:   Schedule | null = null;
-  for (const s of schedules) {
-    if (s.status !== 'completed' && nowStr >= s.start_time && nowStr < s.end_time) { activeClass = s; }
-    else if (s.status !== 'completed' && nowStr < s.start_time && !nextClass)       { nextClass = s; }
-  }
+  const activeClass: Schedule | null = schedules.find(
+    s => s.status !== 'completed' && nowStr >= s.start_time && nowStr < s.end_time,
+  ) ?? null;
+  const nextClass: Schedule | null = schedules.find(
+    s => s.status !== 'completed' && nowStr < s.start_time,
+  ) ?? null;
 
   // Fetch attendance for active class
   useEffect(() => {

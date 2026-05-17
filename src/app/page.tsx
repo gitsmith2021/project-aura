@@ -29,10 +29,8 @@ export default function Dashboard() {
     const supabase = createClient();
 
     const { data: tenants, error } = await supabase
-      .from('tenants')
-      .select(`*, students:profiles!tenant_id(count), staff:profiles!tenant_id(count), departments(count)`)
-      .eq('students.role', 'STUDENT')
-      .eq('staff.role', 'STAFF')
+      .from('institutions')
+      .select(`*, students:students!institution_id(count), staff:staff!institution_id(count), departments(count)`)
       .order('name', { ascending: true });
 
     if (error) { console.error("Error fetching colleges:", error); setLoading(false); return; }
@@ -56,8 +54,8 @@ export default function Dashboard() {
 
     const supabase = createClient();
     const sub = supabase
-      .channel('dashboard-tenants')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tenants' }, fetchColleges)
+      .channel('dashboard-institutions')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'institutions' }, fetchColleges)
       .subscribe();
 
     return () => { supabase.removeChannel(sub); };

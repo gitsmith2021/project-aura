@@ -35,7 +35,7 @@ export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAF
 
   const fetchTenants = async () => {
     const supabase = createClient();
-    const { data } = await supabase.from('tenants').select('id, name').order('name');
+    const { data } = await supabase.from('institutions').select('id, name').order('name');
     if (data) setTenants(data);
   };
 
@@ -43,7 +43,7 @@ export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAF
     if (tenantId) {
       const fetchDepts = async () => {
         const supabase = createClient();
-        const { data } = await supabase.from('departments').select('id, name, funding_type').eq('tenant_id', tenantId).order('name');
+        const { data } = await supabase.from('departments').select('id, name, funding_type').eq('institution_id', tenantId).order('name');
         if (data) setDepartments(data);
       };
       fetchDepts();
@@ -76,16 +76,17 @@ export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAF
     setLoading(true);
 
     const supabase = createClient();
+    const targetTable = role === "STAFF" ? "staff" : "students";
     const row: Record<string, unknown> = {
       id: crypto.randomUUID(),
       full_name: fullName,
       role,
-      tenant_id: tenantId,
+      institution_id: tenantId,
       department_id: departmentId,
       student_program: role === "STUDENT" ? studentProgram : null,
       student_year: role === "STUDENT" ? studentYear : null,
     };
-    const { error } = await supabase.from('profiles').insert([row]);
+    const { error } = await supabase.from(targetTable).insert([row]);
 
     setLoading(false);
 

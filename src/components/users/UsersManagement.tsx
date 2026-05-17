@@ -20,13 +20,13 @@ export type UsersManagementPerson = {
   full_name: string;
   role: "STAFF" | "STUDENT";
   department_id: string | null;
-  tenant_id: string;
+  institution_id: string;
   email?: string | null;
   phone?: string | null;
   student_program?: string | null;
   student_year?: number | null;
   departments: { name: string; funding_type?: string | null } | null;
-  tenants: { name: string } | null;
+  institutions: { name: string } | null;
 };
 
 const PAGE_SIZE = 10;
@@ -72,9 +72,10 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
   const fetchPeople = async () => {
     setLoading(true);
     const supabase = createClient();
+    const table = role === "STAFF" ? "staff" : "students";
     const { data, error } = await supabase
-      .from("profiles")
-      .select("*, departments(name, funding_type), tenants(name)")
+      .from(table)
+      .select("*, departments(name, funding_type), institutions(name)")
       .order("full_name", { ascending: true });
     if (!error && data) setPeople(data as UsersManagementPerson[]);
     setLoading(false);
@@ -83,7 +84,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
   useEffect(() => {
     fetchPeople();
     const supabase = createClient();
-    supabase.from("tenants").select("id, name").order("name").then(({ data }) => {
+    supabase.from("institutions").select("id, name").order("name").then(({ data }) => {
       if (data && data.length > 0) {
         setTenants(data);
         setSelectedTenantId((prev) => prev || data[0].id);
@@ -123,7 +124,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
 
   const studentsInTenantCount = useMemo(() => {
     if (role !== "STUDENT") return 0;
-    return people.filter((p) => p.tenant_id === selectedTenantId && profileMatchesRole(p, "STUDENT")).length;
+    return people.filter((p) => p.institution_id === selectedTenantId && profileMatchesRole(p, "STUDENT")).length;
   }, [people, selectedTenantId, role]);
 
   const studentCohortFiltersActive =
@@ -139,7 +140,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
 
   const filtered = useMemo(() => {
     return people.filter((p) => {
-      if (p.tenant_id !== selectedTenantId || !profileMatchesRole(p, role)) return false;
+      if (p.institution_id !== selectedTenantId || !profileMatchesRole(p, role)) return false;
       if (filterDeptId && p.department_id !== filterDeptId) return false;
       if (role === "STUDENT") {
         if (filterProgram && (p.student_program as StudentProgram | null) !== filterProgram) return false;
@@ -570,7 +571,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                               <span className="text-slate-400">No department</span>
                             )}
                           </div>
-                          <p className="text-[10px] text-slate-400 mt-1 truncate">{person.tenants?.name ?? "—"}</p>
+                          <p className="text-[10px] text-slate-400 mt-1 truncate">{person.institutions?.name ?? "—"}</p>
                         </div>
                       </div>
                       <button
@@ -583,7 +584,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                             id: person.id,
                             full_name: person.full_name,
                             role: person.role,
-                            tenant_id: person.tenant_id,
+                            institution_id: person.institution_id,
                             department_id: person.department_id,
                             email: person.email,
                             phone: person.phone,
@@ -656,7 +657,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                           <td className="px-4 py-3 text-slate-600 text-xs">{person.student_year ?? "—"}</td>
                         </>
                       )}
-                      <td className="px-4 py-3 text-slate-600 text-xs">{person.tenants?.name || "N/A"}</td>
+                      <td className="px-4 py-3 text-slate-600 text-xs">{person.institutions?.name || "N/A"}</td>
                       <td className="px-4 py-3 text-right">
                         <button
                           type="button"
@@ -668,7 +669,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                               id: person.id,
                               full_name: person.full_name,
                               role: person.role,
-                              tenant_id: person.tenant_id,
+                              institution_id: person.institution_id,
                               department_id: person.department_id,
                               email: person.email,
                               phone: person.phone,

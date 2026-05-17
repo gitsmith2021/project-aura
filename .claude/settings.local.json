@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"d:\\\\Aura-Project\\\\project-aura\\\\src\\\\actions\" -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object Name)",
+      "Bash(New-Item -ItemType Directory -Force -Path \"D:\\\\Aura-Project\\\\project-aura\\\\src\\\\actions\")",
+      "Bash(Out-Null)",
+      "Bash(New-Item -ItemType Directory -Force -Path \"D:\\\\Aura-Project\\\\project-aura\\\\src\\\\components\\\\schedules\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"D:\\\\Aura-Project\\\\project-aura\\\\src\\\\actions\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"D:\\\\Aura-Project\\\\project-aura\\\\src\\\\components\\\\schedules\")"
+    ]
+  }
+}

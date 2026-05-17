@@ -176,45 +176,45 @@ export default function FinancePage({
         { data: recentFees },
         { data: recentExpenses },
       ] = await Promise.all([
-        supabase.from("tenants").select("name").eq("id", tenantId).single(),
+        supabase.from("institutions").select("name").eq("id", tenantId).single(),
 
         supabase.from("fee_payments")
           .select("amount_paid, student_id")
-          .eq("tenant_id", tenantId)
+          .eq("institution_id", tenantId)
           .eq("payment_status", "completed")
           .gte("paid_at", monthStart),
 
         supabase.from("fee_payments")
           .select("amount_paid, student_id")
-          .eq("tenant_id", tenantId)
+          .eq("institution_id", tenantId)
           .eq("payment_status", "pending"),
 
         supabase.from("expenses")
           .select("amount")
-          .eq("tenant_id", tenantId)
+          .eq("institution_id", tenantId)
           .gte("expense_date", monthStartDate),
 
         supabase.from("salary_disbursements")
           .select("amount_disbursed")
-          .eq("tenant_id", tenantId)
+          .eq("institution_id", tenantId)
           .eq("month", currentMonth)
           .eq("status", "processed"),
 
         supabase.from("salary_disbursements")
           .select("amount_disbursed, staff_id")
-          .eq("tenant_id", tenantId)
+          .eq("institution_id", tenantId)
           .eq("month", currentMonth)
           .eq("status", "pending"),
 
         supabase.from("fee_payments")
           .select("id, amount_paid, payment_status, paid_at, payment_mode")
-          .eq("tenant_id", tenantId)
+          .eq("institution_id", tenantId)
           .order("created_at", { ascending: false })
           .limit(5),
 
         supabase.from("expenses")
           .select("id, amount, description, category, expense_date, payment_mode")
-          .eq("tenant_id", tenantId)
+          .eq("institution_id", tenantId)
           .order("created_at", { ascending: false })
           .limit(5),
       ]);

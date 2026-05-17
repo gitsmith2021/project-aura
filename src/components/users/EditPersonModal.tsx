@@ -10,7 +10,7 @@ export type PersonEditPayload = {
   id: string;
   full_name: string;
   role: "STAFF" | "STUDENT";
-  tenant_id: string;
+  institution_id: string;
   department_id: string;
   email?: string | null;
   phone?: string | null;
@@ -58,15 +58,15 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
     supabase
       .from("departments")
       .select("id, name, funding_type")
-      .eq("tenant_id", person.tenant_id)
+      .eq("institution_id", person.institution_id)
       .order("name")
       .then(({ data }) => {
         if (data) setDepartments(data);
       });
     supabase
-      .from("tenants")
+      .from("institutions")
       .select("name")
-      .eq("id", person.tenant_id)
+      .eq("id", person.institution_id)
       .single()
       .then(({ data }) => {
         if (data?.name) setTenantName(data.name);
@@ -96,11 +96,12 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
         ? { student_program: studentProgram, student_year: studentYear }
         : { student_program: null, student_year: null };
 
+    const targetTable = person.role === "STAFF" ? "staff" : "students";
     const { error } = await supabase
-      .from("profiles")
+      .from(targetTable)
       .update({ ...base, ...studentPatch })
       .eq("id", person.id)
-      .eq("tenant_id", person.tenant_id);
+      .eq("institution_id", person.institution_id);
 
     setLoading(false);
 

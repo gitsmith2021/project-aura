@@ -50,14 +50,13 @@ export function RecordPaymentPanel({ isOpen, tenantId, onClose, onSuccess }: Pro
 
     const supabase = createClient();
     Promise.all([
-      supabase.from("profiles")
+      supabase.from("students")
         .select("id, full_name")
-        .eq("tenant_id", tenantId)
-        .eq("role", "STUDENT")
+        .eq("institution_id", tenantId)
         .order("full_name"),
       supabase.from("fee_structures")
         .select("id, name, amount, fee_type")
-        .eq("tenant_id", tenantId)
+        .eq("institution_id", tenantId)
         .eq("is_active", true)
         .order("name"),
     ]).then(([{ data: students }, { data: fees }]) => {
@@ -90,7 +89,7 @@ export function RecordPaymentPanel({ isOpen, tenantId, onClose, onSuccess }: Pro
 
     const supabase = createClient();
     const { error } = await supabase.from("fee_payments").insert([{
-      tenant_id:        tenantId,
+      institution_id:   tenantId,
       student_id:       studentId,
       fee_structure_id: feeStructureId || null,
       amount_paid:      parseFloat(amountPaid),

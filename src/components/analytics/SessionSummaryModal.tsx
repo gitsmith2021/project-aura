@@ -35,7 +35,7 @@ export function SessionSummaryModal({ scheduleId, onClose }: SessionSummaryModal
       
       const { data: scheduleData, error: scheduleError } = await supabase
         .from("schedules")
-        .select("id, start_time, end_time, department_id, subject_name, staff:profiles(full_name)")
+        .select("id, start_time, end_time, department_id, subject_name, staff:staff(full_name)")
         .eq("id", scheduleId)
         .single();
         
@@ -50,10 +50,9 @@ export function SessionSummaryModal({ scheduleId, onClose }: SessionSummaryModal
       setSchedule(scheduleData as unknown as Schedule);
 
       const { data: studentsData, error: studentsError } = await supabase
-        .from("profiles")
+        .from("students")
         .select("id, full_name")
         .eq("department_id", scheduleData.department_id)
-        .eq("role", "STUDENT")
         .order("full_name");
         
       if (studentsError) {

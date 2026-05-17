@@ -66,8 +66,8 @@ export async function POST(request: Request) {
   }
 
   const { data: staffProfile, error: staffErr } = await supabase
-    .from("profiles")
-    .select("id, tenant_id, role")
+    .from("staff")
+    .select("id, institution_id, role")
     .eq("id", device.profile_id)
     .maybeSingle();
 
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid staff profile on device" }, { status: 403 });
   }
 
-  if (staffProfile.tenant_id !== device.tenant_id || staffProfile.role !== "STAFF") {
+  if (staffProfile.institution_id !== device.tenant_id || staffProfile.role !== "STAFF") {
     return NextResponse.json({ error: "Device profile is not authorized staff for tenant" }, { status: 403 });
   }
 
@@ -90,8 +90,8 @@ export async function POST(request: Request) {
   }
 
   const { data: student, error: studentErr } = await supabase
-    .from("profiles")
-    .select("id, tenant_id, department_id, role")
+    .from("students")
+    .select("id, institution_id, department_id, role")
     .eq("id", student_id)
     .maybeSingle();
 
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unknown learner profile" }, { status: 404 });
   }
 
-  if (student.tenant_id !== device.tenant_id || student.role !== "STUDENT") {
+  if (student.institution_id !== device.tenant_id || student.role !== "STUDENT") {
     return NextResponse.json({ error: "Learner not in tenant or not a student" }, { status: 403 });
   }
 
@@ -120,11 +120,11 @@ export async function POST(request: Request) {
 
     const { data: subjectDept, error: subjectDeptErr } = await supabase
       .from("departments")
-      .select("id, tenant_id")
+      .select("id, institution_id")
       .eq("id", subjectRow.department_id)
       .maybeSingle();
 
-    if (subjectDeptErr || !subjectDept || subjectDept.tenant_id !== device.tenant_id) {
+    if (subjectDeptErr || !subjectDept || subjectDept.institution_id !== device.tenant_id) {
       return NextResponse.json({ error: "Subject does not belong to this tenant" }, { status: 403 });
     }
 

@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { fundingTypeShortLabel } from "@/lib/deptFunding";
 
-type Department = { id: string; name: string; tenant_id: string; funding_type?: string | null };
+type Department = { id: string; name: string; institution_id: string; funding_type?: string | null };
 type StaffMember = { id: string; full_name: string };
 
 type Props = {
@@ -55,15 +55,15 @@ export function AddClassModal({ isOpen, onClose, onSuccess, defaultDepartmentId,
     document.body.style.overflow = "hidden";
 
     // Fetch departments scoped to this institution
-    const deptQuery = supabase.from("departments").select("id, name, tenant_id, funding_type").order("name");
-    if (tenantId) deptQuery.eq("tenant_id", tenantId);
+    const deptQuery = supabase.from("departments").select("id, name, institution_id, funding_type").order("name");
+    if (tenantId) deptQuery.eq("institution_id", tenantId);
     deptQuery.then(({ data }) => {
       if (data) setDepartments(data as Department[]);
     });
 
     // Fetch STAFF scoped to this institution only
-    const staffQuery = supabase.from("profiles").select("id, full_name").eq("role", "STAFF").order("full_name");
-    if (tenantId) staffQuery.eq("tenant_id", tenantId);
+    const staffQuery = supabase.from("staff").select("id, full_name").order("full_name");
+    if (tenantId) staffQuery.eq("institution_id", tenantId);
     staffQuery.then(({ data }) => {
       if (data) setStaffList(data as StaffMember[]);
     });
@@ -84,7 +84,7 @@ export function AddClassModal({ isOpen, onClose, onSuccess, defaultDepartmentId,
     const { error } = await supabase.from("schedules").insert([
       {
         department_id: departmentId,
-        tenant_id: selectedDept?.tenant_id ?? null,
+        tenant_id: selectedDept?.institution_id ?? null,
         subject_name: subjectName.trim(),
         staff_id: staffId,
         day_of_week: day,

@@ -5,7 +5,7 @@
 
   create table if not exists draft_schedules (
     id            uuid        primary key default gen_random_uuid(),
-    tenant_id     uuid        not null references tenants(id)     on delete cascade,
+    institution_id uuid       not null references institutions(id) on delete cascade,
     department_id uuid        not null references departments(id)  on delete cascade,
     academic_year text        not null,
     schedule_data jsonb       not null,
@@ -73,7 +73,7 @@ export type SchedulerResult =
   | { success: false; error: string };
 
 export async function generateDepartmentSchedule(
-  tenantId: string,
+  institutionId: string,
   departmentId: string,
   academicYear: string,
 ): Promise<SchedulerResult> {
@@ -83,11 +83,10 @@ export async function generateDepartmentSchedule(
 
     // ── Step A: Fetch active staff for this department ───────────────────
     const { data: staffRows, error: staffError } = await supabase
-      .from("profiles")
+      .from("staff")
       .select("id, full_name, max_hours_per_week")
-      .eq("tenant_id", tenantId)
-      .eq("department_id", departmentId)
-      .eq("role", "STAFF");
+      .eq("institution_id", institutionId)
+      .eq("department_id", departmentId);
 
     if (staffError) {
       return { success: false, error: `Failed to fetch staff: ${staffError.message}` };
@@ -148,7 +147,7 @@ export async function generateDepartmentSchedule(
     const { data: draft, error: insertError } = await supabase
       .from("draft_schedules")
       .insert({
-        tenant_id: tenantId,
+        institution_id: institutionId,
         department_id: departmentId,
         academic_year: academicYear,
         schedule_data: solverResponse,

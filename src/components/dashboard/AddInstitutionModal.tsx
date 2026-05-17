@@ -41,7 +41,7 @@ export function AddInstitutionModal({ isOpen, onClose, onSuccess }: Props) {
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.from('tenants').insert([
+    const { error } = await supabase.from('institutions').insert([
       { name, college_type: type, subdomain, status: 'Active' }
     ]);
 

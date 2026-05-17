@@ -37,14 +37,15 @@ export async function registerUser(prevState: any, formData: FormData) {
 
     const currentTenantId = authData[0].tenant_id;
 
-    // 2. Insert into profiles
+    // 2. Insert into staff or students depending on role
+    const targetTable = mappedRole === "STAFF" ? "staff" : "students";
     const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .insert([{ 
-        full_name: fullName, 
-        email: email, 
-        role: mappedRole, 
-        tenant_id: currentTenantId 
+      .from(targetTable)
+      .insert([{
+        full_name: fullName,
+        email: email,
+        role: mappedRole,
+        institution_id: currentTenantId
       }])
       .select("id")
       .single();
@@ -53,12 +54,12 @@ export async function registerUser(prevState: any, formData: FormData) {
       return { error: `Failed to create profile: ${profileError.message}`, success: false };
     }
 
-    // 3. Insert into tenant_users
+    // 3. Insert into institution_members
     const { error: tenantUserError } = await supabase
-      .from("tenant_users")
+      .from("institution_members")
       .insert([{
         profile_id: profile.id,
-        tenant_id: currentTenantId,
+        institution_id: currentTenantId,
         role: mappedRole
       }]);
 

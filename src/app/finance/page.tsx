@@ -10,7 +10,7 @@ export default async function FinanceRedirectPage() {
   if (!user) redirect("/login");
 
   const { data } = await supabase
-    .from("tenants")
+    .from("institutions")
     .select("id")
     .order("name")
     .limit(1)

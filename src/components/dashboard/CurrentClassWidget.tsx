@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { PlayCircle, Clock, User, Building2 } from "lucide-react";
+import { PlayCircle, Clock, User } from "lucide-react";
 import Link from "next/link";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -16,11 +16,14 @@ export function CurrentClassWidget({ tenantId }: { tenantId?: string }) {
       const supabase = createClient();
       const now = new Date();
       const today = DAY_NAMES[now.getDay()];
-      const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+      const hh = now.getHours().toString().padStart(2, "0");
+      const mm = now.getMinutes().toString().padStart(2, "0");
+      const currentTime = `${hh}:${mm}:00`;
 
+      // Step 1 — fetch active schedule rows (no join, avoids FK ambiguity issues)
       let query = supabase
         .from("schedules")
-        .select("id, subject_name, start_time, end_time, profiles(full_name), tenants(name)")
+        .select("id, subject_name, start_time, end_time, staff_id")
         .eq("day_of_week", today)
         .lte("start_time", currentTime)
         .gt("end_time", currentTime)
@@ -30,19 +33,45 @@ export function CurrentClassWidget({ tenantId }: { tenantId?: string }) {
         query = query.eq("tenant_id", tenantId);
       }
 
-      const { data, error } = await query;
+      const { data: scheduleData, error: scheduleError } = await query;
 
-      if (error) {
-        console.error("Error fetching current classes:", error);
-      } else {
-        setActiveClasses(data || []);
+      if (scheduleError) {
+        console.error("Error fetching current classes:", scheduleError.message ?? scheduleError);
+        setLoading(false);
+        return;
       }
+
+      const rows = scheduleData ?? [];
+
+      if (rows.length === 0) {
+        setActiveClasses([]);
+        setLoading(false);
+        return;
+      }
+
+      // Step 2 — bulk-resolve staff names with a simple .in() query
+      const staffIds = [...new Set(rows.map((r) => r.staff_id).filter(Boolean))] as string[];
+      let staffMap: Record<string, string> = {};
+
+      if (staffIds.length > 0) {
+        const { data: staffData } = await supabase
+          .from("staff")
+          .select("id, full_name")
+          .in("id", staffIds);
+
+        if (staffData) {
+          staffMap = Object.fromEntries(staffData.map((s) => [s.id, s.full_name]));
+        }
+      }
+
+      setActiveClasses(
+        rows.map((r) => ({ ...r, staffName: staffMap[r.staff_id] ?? null })),
+      );
       setLoading(false);
     };
 
     fetchCurrentClasses();
-    
-    // Refresh every minute
+
     const interval = setInterval(fetchCurrentClasses, 60000);
     return () => clearInterval(interval);
   }, [tenantId]);
@@ -98,12 +127,8 @@ export function CurrentClassWidget({ tenantId }: { tenantId?: string }) {
           
           <div className="flex flex-col gap-1.5 text-slate-600 text-[11px] mb-4">
             <div className="flex items-center gap-1.5">
-              <Building2 size={12} className="text-slate-400 shrink-0" />
-              <span className="truncate font-medium">{activeClass.tenants?.name || "Unknown Institution"}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
               <User size={12} className="text-slate-400 shrink-0" />
-              <span className="truncate">{activeClass.profiles?.full_name || "Unknown Teacher"}</span>
+              <span className="truncate">{activeClass.staffName ?? "Unknown Teacher"}</span>
             </div>
           </div>
 

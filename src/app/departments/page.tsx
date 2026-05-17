@@ -14,7 +14,7 @@ import { ExternalLink, LayoutGrid, Pencil, Plus, Table2 } from "lucide-react";
 type DeptRow = {
   id: string;
   name: string;
-  tenant_id: string;
+  institution_id: string;
   color: string | null;
   session_type: string | null;
   funding_type: string | null;
@@ -54,10 +54,10 @@ export default function DepartmentsPage() {
     const [{ data: deptRows, error: deptErr }, { data: profileRows }] = await Promise.all([
       supabase
         .from("departments")
-        .select("id, name, tenant_id, color, session_type, funding_type")
-        .eq("tenant_id", selectedTenantId)
+        .select("id, name, institution_id, color, session_type, funding_type")
+        .eq("institution_id", selectedTenantId)
         .order("name", { ascending: true }),
-      supabase.from("profiles").select("department_id").eq("tenant_id", selectedTenantId).eq("role", "STUDENT"),
+      supabase.from("students").select("department_id").eq("institution_id", selectedTenantId),
     ]);
 
     if (!deptErr && deptRows) setDepartments(deptRows as DeptRow[]);
@@ -78,7 +78,7 @@ export default function DepartmentsPage() {
   useEffect(() => {
     const supabase = createClient();
     supabase
-      .from("tenants")
+      .from("institutions")
       .select("id, name")
       .order("name")
       .then(({ data }) => {

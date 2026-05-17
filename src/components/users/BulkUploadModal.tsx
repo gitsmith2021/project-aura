@@ -12,7 +12,7 @@ type Props = {
   role: "STAFF" | "STUDENT";
   tenantId: string;
   tenantName: string;
-  departments: { id: string; name: string; tenant_id: string }[];
+  departments: { id: string; name: string; institution_id: string }[];
 };
 
 function parseCsvLine(line: string): string[] {
@@ -56,7 +56,7 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
 
   const deptByName = useMemo(() => {
     const m = new Map<string, string>();
-    for (const d of departments.filter((x) => x.tenant_id === tenantId)) {
+    for (const d of departments.filter((x) => x.institution_id === tenantId)) {
       m.set(d.name.trim().toLowerCase(), d.id);
     }
     return m;
@@ -135,7 +135,7 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
           email,
           phone,
           role: "STAFF",
-          tenant_id: tenantId,
+          institution_id: tenantId,
           department_id: deptId,
         });
         continue;
@@ -166,7 +166,7 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
         email,
         phone,
         role: "STUDENT",
-        tenant_id: tenantId,
+        institution_id: tenantId,
         department_id: deptId,
         student_program: program,
         student_year: year,
@@ -187,7 +187,7 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
     let inserted = 0;
     for (let i = 0; i < payloads.length; i += chunk) {
       const slice = payloads.slice(i, i + chunk);
-      const { error } = await supabase.from("profiles").insert(slice);
+      const { error } = await supabase.from(role === "STAFF" ? "staff" : "students").insert(slice);
       if (error) {
         setLog((prev) => [...prev, `Batch ${Math.floor(i / chunk) + 1} failed: ${error.message}`]);
         setBusy(false);

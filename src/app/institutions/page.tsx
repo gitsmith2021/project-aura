@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AddInstitutionModal } from "@/components/dashboard/AddInstitutionModal";
-import { EditInstitutionModal, type TenantEditPayload } from "@/components/dashboard/EditInstitutionModal";
+import { EditInstitutionModal, type InstitutionEditPayload } from "@/components/dashboard/EditInstitutionModal";
 import { createClient } from "@/utils/supabase/client";
 import { Building2, ExternalLink, GraduationCap, LayoutGrid, Pencil, Plus, Table2, Users } from "lucide-react";
 
@@ -24,16 +24,14 @@ export default function InstitutionsPage() {
   const [layoutMode, setLayoutMode] = useState<"grid" | "table">("grid");
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [tenantToEdit, setTenantToEdit] = useState<TenantEditPayload | null>(null);
+  const [tenantToEdit, setTenantToEdit] = useState<InstitutionEditPayload | null>(null);
 
   const fetchInstitutions = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
     const { data: tenants, error } = await supabase
-      .from("tenants")
-      .select(`*, students:profiles!tenant_id(count), staff:profiles!tenant_id(count), departments(count)`)
-      .eq("students.role", "STUDENT")
-      .eq("staff.role", "STAFF")
+      .from("institutions")
+      .select(`*, students:students!institution_id(count), staff:staff!institution_id(count), departments(count)`)
       .order("name", { ascending: true });
 
     if (error) {
@@ -62,7 +60,7 @@ export default function InstitutionsPage() {
     const supabase = createClient();
     const sub = supabase
       .channel("institutions-list")
-      .on("postgres_changes", { event: "*", schema: "public", table: "tenants" }, fetchInstitutions)
+      .on("postgres_changes", { event: "*", schema: "public", table: "institutions" }, fetchInstitutions)
       .subscribe();
     return () => {
       supabase.removeChannel(sub);

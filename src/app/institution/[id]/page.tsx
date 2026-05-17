@@ -20,7 +20,7 @@ export default async function InstitutionDashboardPage({ params, searchParams }:
 
   // Fetch the actual institution name
   const { data: tenant } = await supabase
-    .from('tenants')
+    .from('institutions')
     .select('name')
     .eq('id', institutionId)
     .single();
@@ -147,17 +147,15 @@ async function StatsCards({ institutionId, activeShift }: { institutionId: strin
   if (activeDeptIds.length > 0) {
     const [{ count: students }, { count: staff }] = await Promise.all([
       supabase
-        .from('tenant_users')
-        .select('profile_id', { count: 'exact', head: true })
-        .eq('tenant_id', institutionId)
-        .in('department_id', activeDeptIds)
-        .eq('role', 'STUDENT'),
+        .from('students')
+        .select('id', { count: 'exact', head: true })
+        .eq('institution_id', institutionId)
+        .in('department_id', activeDeptIds),
       supabase
-        .from('tenant_users')
-        .select('profile_id', { count: 'exact', head: true })
-        .eq('tenant_id', institutionId)
+        .from('staff')
+        .select('id', { count: 'exact', head: true })
+        .eq('institution_id', institutionId)
         .in('department_id', activeDeptIds)
-        .eq('role', 'STAFF')
     ]);
     studentCount = students || 0;
     staffCount = staff || 0;
@@ -189,7 +187,7 @@ async function DepartmentsDataLoader({ institutionId, activeShift }: { instituti
   const { data: departments, error } = await supabase
     .from('departments')
     .select('id, name, color, funding_type')
-    .eq('tenant_id', institutionId)
+    .eq('institution_id', institutionId)
     .order('name');
     
   if (error || !departments || departments.length === 0) {
@@ -222,11 +220,10 @@ async function DepartmentsDataLoader({ institutionId, activeShift }: { instituti
 
   // 3. Count students only for the active departments
   const { data: students } = await supabase
-    .from('tenant_users')
+    .from('students')
     .select('department_id')
-    .eq('tenant_id', institutionId)
-    .in('department_id', activeDeptIds)
-    .eq('role', 'STUDENT');
+    .eq('institution_id', institutionId)
+    .in('department_id', activeDeptIds);
 
   const deptStudentCounts = new Map<string, number>();
   if (students) {
@@ -273,17 +270,12 @@ async function FacultyDirectoryLoader({ institutionId, activeShift }: { institut
     );
   }
 
-  // Fetch staff who are either explicitly in the schedules, or belong to the active departments
+  // Fetch staff who belong to the active departments
   const { data: staff, error } = await supabase
-    .from('tenant_users')
-    .select(`
-      id,
-      profile_id,
-      profiles ( full_name )
-    `)
-    .eq('tenant_id', institutionId)
-    .in('department_id', activeDeptIds)
-    .eq('role', 'STAFF');
+    .from('staff')
+    .select('id, full_name')
+    .eq('institution_id', institutionId)
+    .in('department_id', activeDeptIds);
 
   if (error || !staff || staff.length === 0) {
     return (
@@ -301,10 +293,10 @@ async function FacultyDirectoryLoader({ institutionId, activeShift }: { institut
       {staff.map((s: any) => (
          <div key={s.id} className="flex items-center gap-3 bg-gray-800/40 p-3 rounded-lg border border-gray-800/60 hover:bg-gray-800/80 transition-colors">
             <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-semibold border border-indigo-500/30 shrink-0">
-               {s.profiles?.full_name?.charAt(0) || '?'}
+               {s.full_name?.charAt(0) || '?'}
             </div>
             <div className="flex flex-col">
-              <span className="text-gray-200 font-medium">{s.profiles?.full_name || 'Unknown Faculty'}</span>
+              <span className="text-gray-200 font-medium">{s.full_name || 'Unknown Faculty'}</span>
               <span className="text-xs text-gray-500">Active Faculty</span>
             </div>
          </div>

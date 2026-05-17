@@ -15,7 +15,7 @@ import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundi
 import { AutoSchedulerButton } from "@/components/schedules/AutoSchedulerButton";
 
 type Tenant = { id: string; name: string };
-type Department = { id: string; name: string; tenant_id: string; funding_type?: string | null };
+type Department = { id: string; name: string; institution_id: string; funding_type?: string | null };
 
 const TAB_ACTIVE = [
   "border-violet-500 text-violet-700",
@@ -63,10 +63,10 @@ export default function SchedulesPage() {
   const fetchAll = useCallback(async () => {
     const supabase = createClient();
     const [{ data: tData }, { data: dData }, { data: sData }] = await Promise.all([
-      supabase.from("tenants").select("id, name").order("name"),
-      supabase.from("departments").select("id, name, tenant_id, funding_type").order("name"),
+      supabase.from("institutions").select("id, name").order("name"),
+      supabase.from("departments").select("id, name, institution_id, funding_type").order("name"),
       supabase.from("schedules")
-        .select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, tenant_id, profiles(full_name)")
+        .select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, tenant_id, staff(full_name)")
         .order("start_time"),
     ]);
     if (tData?.length) { setTenants(tData); setSelectedTenantId(p => p || tData[0].id); }
@@ -79,7 +79,7 @@ export default function SchedulesPage() {
     const supabase = createClient();
     const { data } = await supabase
       .from("schedules")
-      .select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, tenant_id, profiles(full_name)")
+      .select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, tenant_id, staff(full_name)")
       .order("start_time");
     if (data) setClasses(data as unknown as ClassEntry[]);
   }, []);
@@ -88,7 +88,7 @@ export default function SchedulesPage() {
 
   // ── Derived data ───────────────────────────────────────────────────────────
   const departments = useMemo(
-    () => selectedTenantId ? allDepts.filter(d => d.tenant_id === selectedTenantId) : allDepts,
+    () => selectedTenantId ? allDepts.filter(d => d.institution_id === selectedTenantId) : allDepts,
     [allDepts, selectedTenantId]
   );
 

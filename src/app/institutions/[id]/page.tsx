@@ -7,7 +7,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Plus, ArrowLeft, Building2, Pencil } from "lucide-react";
 import Link from "next/link";
 import { AddDepartmentModal, type DepartmentEditPayload } from "@/components/dashboard/AddDepartmentModal";
-import { EditInstitutionModal, type TenantEditPayload } from "@/components/dashboard/EditInstitutionModal";
+import { EditInstitutionModal, type InstitutionEditPayload } from "@/components/dashboard/EditInstitutionModal";
 import { DepartmentHeatmap } from "@/components/dashboard/DepartmentHeatmap";
 import { StaffDirectory } from "@/components/dashboard/StaffDirectory";
 import { getDeptColor } from "@/lib/deptColors";
@@ -17,7 +17,7 @@ import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundi
 type Department = {
   id: string;
   name: string;
-  tenant_id: string;
+  institution_id: string;
   studentsCount: number;
   color: string | null;
   session_type: string | null;
@@ -72,7 +72,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
     
     // Fetch College
     const { data: collegeData, error: collegeError } = await supabase
-      .from('tenants')
+      .from('institutions')
       .select('*')
       .eq('id', collegeId)
       .single();
@@ -85,15 +85,14 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
     // newly created departments with 0 students are hidden.
     const { data: deptData, error: deptError } = await supabase
       .from('departments')
-      .select('id, name, tenant_id, color, session_type, funding_type')
-      .eq('tenant_id', collegeId)
+      .select('id, name, institution_id, color, session_type, funding_type')
+      .eq('institution_id', collegeId)
       .order('name', { ascending: true });
 
     const { data: studentRows, error: studentError } = await supabase
-      .from('profiles')
+      .from('students')
       .select('department_id')
-      .eq('tenant_id', collegeId)
-      .eq('role', 'STUDENT')
+      .eq('institution_id', collegeId)
       .not('department_id', 'is', null);
       
     if (!deptError && deptData) {
@@ -122,10 +121,9 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
 
     // Fetch Staff with department name
     const { data: staffData, error: staffError } = await supabase
-      .from('profiles')
+      .from('staff')
       .select('id, full_name, email, phone, role, department_id, department:departments(name, funding_type)')
-      .eq('tenant_id', collegeId)
-      .eq('role', 'STAFF')
+      .eq('institution_id', collegeId)
       .order('full_name', { ascending: true });
 
     if (!staffError && staffData) {
@@ -314,7 +312,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
                 name: college.name,
                 college_type: college.college_type,
                 subdomain: college.subdomain ?? null,
-              } satisfies TenantEditPayload)
+              } satisfies InstitutionEditPayload)
             : null
         }
       />

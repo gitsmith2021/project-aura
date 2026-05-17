@@ -1,0 +1,29 @@
+I used npm run dev and it ran inside vs code's terminal.. As you know, we have built a python engine for schedules.. So should I need to add a new terminal and run python too.. if so, can you give me the command in terminal?
+
+1. Open a Second Terminal
+In your VS Code terminal panel (where Next.js is currently running), look at the top right corner of that panel and click the + icon. This opens a fresh, parallel terminal tab.
+
+2. Navigate and Activate
+In this new terminal, you need to step into the Python folder and wake up your isolated virtual environment. Run these two commands one after the other:
+
+Bash
+
+cd aura-scheduler-engine
+.\venv\Scripts\activate
+
+
+(You will know it worked when you see (venv) appear at the very beginning of your command line prompt).
+
+3. Fire the Engine
+Now, command the FastAPI server to start listening for requests from Next.js:
+
+Bash
+
+uvicorn main:app --reload
+
+
+The "All Systems Go" Check
+
+When you hit enter, you should see a message saying INFO: Application startup complete and that it's running on http://127.0.0.1:8000.
+
+Now you have Next.js running on Port 3000 handling your beautiful UI, and Python running on Port 8000 ready to crunch the scheduling math. You are fully locked, loaded, and ready to test!

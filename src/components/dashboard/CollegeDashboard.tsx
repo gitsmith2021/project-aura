@@ -122,10 +122,9 @@ function StaffAttendanceCard({ tenantId }: { tenantId: string }) {
 
     // Fetch all staff for this tenant
     const { data: staffList } = await supabase
-      .from("profiles")
+      .from("staff")
       .select("id, full_name")
-      .eq("tenant_id", tenantId)
-      .eq("role", "STAFF")
+      .eq("institution_id", tenantId)
       .order("full_name");
 
     if (!staffList) { setLoading(false); return; }
@@ -134,7 +133,7 @@ function StaffAttendanceCard({ tenantId }: { tenantId: string }) {
     const { data: attendanceRecords } = await supabase
       .from("staff_attendance")
       .select("staff_id, status")
-      .eq("tenant_id", tenantId)
+      .eq("institution_id", tenantId)
       .eq("date", dateStr);
 
     const map: Record<string, "present" | "absent" | "on_leave"> = {};
@@ -250,8 +249,8 @@ function ActionRequiredCard({ tenantId }: { tenantId: string }) {
     const supabase = createClient();
     const { data } = await supabase
       .from("leave_requests")
-      .select("id, leave_date, reason, status, staff:profiles(full_name, id)")
-      .eq("tenant_id", tenantId)
+      .select("id, leave_date, reason, status, staff:staff(full_name, id)")
+      .eq("institution_id", tenantId)
       .order("created_at", { ascending: false })
       .limit(10);
 
@@ -381,14 +380,12 @@ export function CollegeDashboard({
       const [{ data: depts }, { data: sessionsData }] = await Promise.all([
         supabase
           .from("departments")
-          .select("id, name, color, funding_type, students:profiles!department_id(count), staff:profiles!department_id(count)")
-          .eq("tenant_id", college.id)
-          .eq("students.role", "STUDENT")
-          .eq("staff.role", "STAFF"),
+          .select("id, name, color, funding_type, students:students!department_id(count), staff:staff!department_id(count)")
+          .eq("institution_id", college.id),
         supabase
           .from("schedules")
-          .select("id, subject_name, start_time, end_time, status, staff:profiles(full_name)")
-          .eq("tenant_id", college.id)
+          .select("id, subject_name, start_time, end_time, status, staff:staff(full_name)")
+          .eq("institution_id", college.id)
           .eq("day_of_week", today)
           .order("start_time"),
       ]);

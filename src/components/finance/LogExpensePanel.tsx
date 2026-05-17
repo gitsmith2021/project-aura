@@ -53,7 +53,7 @@ export function LogExpensePanel({ isOpen, tenantId, onClose, onSuccess }: Props)
     supabase
       .from("departments")
       .select("id, name")
-      .eq("tenant_id", tenantId)
+      .eq("institution_id", tenantId)
       .order("name")
       .then(({ data }) => { if (data) setDepartments(data); });
 
@@ -75,7 +75,7 @@ export function LogExpensePanel({ isOpen, tenantId, onClose, onSuccess }: Props)
 
     const supabase = createClient();
     const { error } = await supabase.from("expenses").insert([{
-      tenant_id:      tenantId,
+      institution_id: tenantId,
       department_id:  departmentId || null,
       category,
       description:    description.trim(),

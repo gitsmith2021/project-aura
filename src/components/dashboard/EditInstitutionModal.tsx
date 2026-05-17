@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 
-export type TenantEditPayload = {
+export type InstitutionEditPayload = {
   id: string;
   name: string;
   college_type: string | null;
@@ -15,7 +15,7 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  tenant: TenantEditPayload | null;
+  tenant: InstitutionEditPayload | null;
 };
 
 export function EditInstitutionModal({ isOpen, onClose, onSuccess, tenant }: Props) {
@@ -50,7 +50,7 @@ export function EditInstitutionModal({ isOpen, onClose, onSuccess, tenant }: Pro
 
     const supabase = createClient();
     const { error } = await supabase
-      .from("tenants")
+      .from("institutions")
       .update({ name, college_type: type })
       .eq("id", tenant.id);
 
