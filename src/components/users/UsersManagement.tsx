@@ -757,6 +757,10 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchPeople}
         defaultRole={role}
+        defaultTenantId={selectedTenantId}
+        defaultDepartmentId={filterDeptId || undefined}
+        defaultProgram={(filterProgram as StudentProgram) || undefined}
+        defaultYear={filterYearNum ?? undefined}
       />
 
       <BulkUploadModal

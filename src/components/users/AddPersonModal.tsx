@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { fundingTypeShortLabel } from "@/lib/deptFunding";
 import { studentProgramLabel, yearOptionsForProgram, type StudentProgram } from "@/lib/studentProgram";
@@ -12,21 +12,41 @@ type Props = {
   onSuccess: () => void;
   /** When opening from Staff vs Students page */
   defaultRole?: "STAFF" | "STUDENT";
+  /** Pre-select the active institution tab */
+  defaultTenantId?: string;
+  /** Pre-select a department (e.g. from cohort grid selection) */
+  defaultDepartmentId?: string;
+  /** Pre-select program (UG/PG) */
+  defaultProgram?: StudentProgram;
+  /** Pre-select study year */
+  defaultYear?: number;
 };
 
-export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAFF" }: Props) {
+export function AddPersonModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  defaultRole = "STAFF",
+  defaultTenantId,
+  defaultDepartmentId,
+  defaultProgram,
+  defaultYear,
+}: Props) {
   const [mounted, setMounted] = useState(false);
   const [fullName, setFullName] = useState('');
   const [role, setRole] = useState<'STAFF' | 'STUDENT'>('STAFF');
   const [tenantId, setTenantId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
-  
+
   const [tenants, setTenants] = useState<{id: string, name: string}[]>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string; funding_type?: string | null }[]>([]);
-  
+
   const [studentProgram, setStudentProgram] = useState<StudentProgram>("UG");
   const [studentYear, setStudentYear] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  // Holds the dept id to restore after async dept fetch completes
+  const pendingDeptRef = useRef<string>("");
 
   useEffect(() => {
     setMounted(true);
@@ -43,13 +63,26 @@ export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAF
     if (tenantId) {
       const fetchDepts = async () => {
         const supabase = createClient();
-        const { data } = await supabase.from('departments').select('id, name, funding_type').eq('institution_id', tenantId).order('name');
-        if (data) setDepartments(data);
+        const { data } = await supabase
+          .from('departments')
+          .select('id, name, funding_type')
+          .eq('institution_id', tenantId)
+          .order('name');
+        if (data) {
+          setDepartments(data);
+          // Restore the pending default dept (set before async fetch ran)
+          if (pendingDeptRef.current) {
+            setDepartmentId(pendingDeptRef.current);
+            pendingDeptRef.current = "";
+          } else {
+            setDepartmentId('');
+          }
+        }
       };
       fetchDepts();
-      setDepartmentId(''); // Reset department when tenant changes
     } else {
       setDepartments([]);
+      setDepartmentId('');
     }
   }, [tenantId]);
 
@@ -58,15 +91,18 @@ export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAF
       document.body.style.overflow = "hidden";
       setFullName('');
       setRole(defaultRole);
-      setTenantId('');
-      setDepartmentId('');
-      setStudentProgram("UG");
-      setStudentYear(1);
+
+      // Store pending dept before setting tenantId (which triggers async dept load)
+      pendingDeptRef.current = defaultDepartmentId || '';
+
+      setTenantId(defaultTenantId || '');
+      setStudentProgram(defaultProgram || "UG");
+      setStudentYear(defaultYear ?? 1);
     } else {
       document.body.style.overflow = "unset";
     }
     return () => { document.body.style.overflow = "unset"; };
-  }, [isOpen, defaultRole]);
+  }, [isOpen, defaultRole, defaultTenantId, defaultDepartmentId, defaultProgram, defaultYear]);
 
   if (!mounted) return null;
 
@@ -101,18 +137,18 @@ export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAF
 
   return (
     <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-200 ${isOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
-      <div 
-        className={`fixed inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0'}`} 
+      <div
+        className={`fixed inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
         onClick={onClose}
       />
-      
+
       <div className={`relative w-full max-w-sm h-full bg-white flex flex-col transform transition-transform duration-300 ease-out border-l border-slate-200 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-white">
           <div>
             <h2 className="text-base font-semibold text-slate-900 tracking-tight">Add Person</h2>
             <p className="text-xs text-slate-500 mt-0.5">Register a new staff or student.</p>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
           >
@@ -124,19 +160,19 @@ export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAF
           <form id="add-person-form" onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1">
               <label className="block text-xs font-medium text-slate-700">Full Name</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={fullName}
                 onChange={e => setFullName(e.target.value)}
-                placeholder="John Doe" 
+                placeholder="John Doe"
                 required
                 className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs"
               />
             </div>
-            
+
             <div className="space-y-1">
               <label className="block text-xs font-medium text-slate-700">Role</label>
-              <select 
+              <select
                 value={role}
                 onChange={e => {
                   const r = e.target.value as 'STAFF' | 'STUDENT';
@@ -189,9 +225,12 @@ export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAF
 
             <div className="space-y-1">
               <label className="block text-xs font-medium text-slate-700">Institution</label>
-              <select 
+              <select
                 value={tenantId}
-                onChange={e => setTenantId(e.target.value)}
+                onChange={e => {
+                  pendingDeptRef.current = "";
+                  setTenantId(e.target.value);
+                }}
                 required
                 className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs appearance-none"
               >
@@ -202,7 +241,7 @@ export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAF
 
             <div className="space-y-1">
               <label className="block text-xs font-medium text-slate-700">Department</label>
-              <select 
+              <select
                 value={departmentId}
                 onChange={e => setDepartmentId(e.target.value)}
                 required
@@ -223,15 +262,15 @@ export function AddPersonModal({ isOpen, onClose, onSuccess, defaultRole = "STAF
         </div>
 
         <div className="p-4 border-t border-slate-100 bg-white flex justify-end gap-2">
-          <button 
+          <button
             type="button"
             onClick={onClose}
             className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50 hover:text-slate-900 transition-colors"
           >
             Cancel
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             form="add-person-form"
             disabled={loading}
             className="px-3 py-1.5 text-xs font-medium text-white bg-purple-600 border border-purple-700 rounded-md hover:bg-purple-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
