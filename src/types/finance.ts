@@ -49,3 +49,71 @@ export type FeeStructurePayload = {
   institution_id: string;
   department_id?: string | null;
 };
+
+// ── Salary ────────────────────────────────────────────────────────────────────
+
+export type SalaryStructure = {
+  id: string;
+  institution_id: string;
+  staff_id: string;
+  basic_salary: number;
+  hra: number;
+  ta: number;
+  da: number;
+  other_allowances: number;
+  pf_deduction: number;
+  esi_deduction: number;
+  tds_deduction: number;
+  other_deductions: number;
+  net_salary: number;
+  effective_from: string;
+  effective_to: string | null;
+  is_active: boolean;
+  staff: {
+    full_name: string;
+    title: string | null;
+    designation: string | null;
+    department_id: string | null;
+    departments: { name: string } | null;
+  } | null;
+};
+
+export type DisbursementStatus = 'pending' | 'processed' | 'failed' | 'on_hold';
+export type DisbursementMode   = 'bank_transfer' | 'cheque' | 'cash' | 'neft' | 'rtgs';
+
+export type SalaryDisbursement = {
+  id: string;
+  institution_id: string;
+  staff_id: string;
+  salary_structure_id: string | null;
+  month: string;
+  amount_disbursed: number;
+  payment_mode: DisbursementMode;
+  status: DisbursementStatus;
+  disbursed_at: string | null;
+  transaction_ref: string | null;
+  remarks: string | null;
+  staff: {
+    full_name: string;
+    title: string | null;
+    designation: string | null;
+  } | null;
+};
+
+export type SalarySummary = {
+  totalStaff: number;
+  structuresSetup: number;
+  pendingDisbursements: number;
+  processedDisbursements: number;
+  totalPayroll: number;
+  totalDisbursed: number;
+};
+
+export type StaffWithoutSalary = {
+  id: string;
+  full_name: string;
+  title: string | null;
+  designation: string | null;
+  department_id: string | null;
+  departments: { name: string } | null;
+};
