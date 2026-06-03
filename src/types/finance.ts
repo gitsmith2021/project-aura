@@ -117,3 +117,54 @@ export type StaffWithoutSalary = {
   department_id: string | null;
   departments: { name: string } | null;
 };
+
+// ── Expenses ──────────────────────────────────────────────────────────────────
+
+export type ExpenseCategory =
+  | 'utilities' | 'maintenance' | 'vendor' | 'events'
+  | 'stationery' | 'infrastructure' | 'it' | 'other';
+
+export type ExpensePaymentMode = 'cash' | 'upi' | 'bank_transfer' | 'cheque' | 'card';
+
+export type Expense = {
+  id: string;
+  institution_id: string;
+  department_id: string | null;
+  category: ExpenseCategory;
+  description: string;
+  amount: number;
+  payment_mode: ExpensePaymentMode;
+  vendor_name: string | null;
+  receipt_url: string | null;
+  expense_date: string;
+  notes: string | null;
+  created_at: string;
+  departments: { name: string } | null;
+};
+
+export type Budget = {
+  id: string;
+  institution_id: string;
+  department_id: string | null;
+  category: string;
+  academic_year: string;
+  allocated_amount: number;
+  departments: { name: string } | null;
+};
+
+export type BudgetVsActual = {
+  category: string;
+  department_name: string;
+  allocated: number;
+  actual_spent: number;
+  remaining: number;
+  utilisation_pct: number;
+};
+
+export type ExpenseSummary = {
+  totalExpenses: number;
+  totalExpensesAllTime: number;
+  byCategory: Record<ExpenseCategory, number>;
+  byDepartment: { department_name: string; total: number }[];
+  topVendors: { vendor_name: string; total: number; count: number }[];
+};
