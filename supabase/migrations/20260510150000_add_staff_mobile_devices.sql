@@ -1,5 +1,7 @@
+DROP TABLE IF EXISTS public.devices CASCADE;
+
 -- Registered staff mobile NFC readers (tenant-scoped).
-CREATE TABLE IF NOT EXISTS public.devices (
+CREATE TABLE public.devices (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   device_uid  text NOT NULL UNIQUE,
   tenant_id   uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
@@ -9,8 +11,8 @@ CREATE TABLE IF NOT EXISTS public.devices (
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS devices_tenant_id_idx ON public.devices (tenant_id);
-CREATE INDEX IF NOT EXISTS devices_profile_id_idx ON public.devices (profile_id);
+CREATE INDEX devices_tenant_id_idx ON public.devices (tenant_id);
+CREATE INDEX devices_profile_id_idx ON public.devices (profile_id);
 
 ALTER TABLE public.devices ENABLE ROW LEVEL SECURITY;
 

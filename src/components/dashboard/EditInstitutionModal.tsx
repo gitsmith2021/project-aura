@@ -4,11 +4,20 @@ import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 
+type SessionTypeKey = "NORMAL" | "DAY" | "EVENING";
+
+const SESSION_OPTIONS: { key: SessionTypeKey; label: string; sub: string }[] = [
+  { key: "NORMAL", label: "General Shift",   sub: "9 AM – 4 PM" },
+  { key: "DAY",    label: "Day Shift 1",     sub: "8:15 AM – 1:15 PM" },
+  { key: "EVENING",label: "Evening Shift 2", sub: "1:30 PM – 6:30 PM" },
+];
+
 export type InstitutionEditPayload = {
   id: string;
   name: string;
   college_type: string | null;
   subdomain: string | null;
+  session_types: string[] | null;
 };
 
 type Props = {
@@ -22,6 +31,7 @@ export function EditInstitutionModal({ isOpen, onClose, onSuccess, tenant }: Pro
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState("");
+  const [sessionTypes, setSessionTypes] = useState<SessionTypeKey[]>(["NORMAL"]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -33,6 +43,10 @@ export function EditInstitutionModal({ isOpen, onClose, onSuccess, tenant }: Pro
       document.body.style.overflow = "hidden";
       setName(tenant.name);
       setType(tenant.college_type || "");
+      const st = (tenant.session_types ?? ["NORMAL"]).filter(
+        (k): k is SessionTypeKey => ["NORMAL", "DAY", "EVENING"].includes(k)
+      );
+      setSessionTypes(st.length > 0 ? st : ["NORMAL"]);
     } else if (!isOpen) {
       document.body.style.overflow = "unset";
     }
@@ -40,6 +54,12 @@ export function EditInstitutionModal({ isOpen, onClose, onSuccess, tenant }: Pro
       document.body.style.overflow = "unset";
     };
   }, [isOpen, tenant]);
+
+  function toggleSession(key: SessionTypeKey) {
+    setSessionTypes(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+  }
 
   if (!mounted) return null;
 
@@ -51,7 +71,7 @@ export function EditInstitutionModal({ isOpen, onClose, onSuccess, tenant }: Pro
     const supabase = createClient();
     const { error } = await supabase
       .from("institutions")
-      .update({ name, college_type: type })
+      .update({ name, college_type: type, session_types: sessionTypes })
       .eq("id", tenant.id);
 
     setLoading(false);
@@ -147,6 +167,42 @@ export function EditInstitutionModal({ isOpen, onClose, onSuccess, tenant }: Pro
               </div>
               <p className="text-[10px] text-slate-400">Subdomain is fixed after creation.</p>
             </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-medium text-slate-700">
+                College Session Types
+                <span className="ml-1 text-slate-400 font-normal">(select all that apply)</span>
+              </label>
+              <div className="space-y-2">
+                {SESSION_OPTIONS.map(({ key, label, sub }) => {
+                  const checked = sessionTypes.includes(key);
+                  return (
+                    <label
+                      key={key}
+                      className={`flex items-center gap-3 p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                        checked
+                          ? "bg-violet-50 border-violet-300"
+                          : "bg-white border-slate-200 hover:border-slate-300"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleSession(key)}
+                        className="w-3.5 h-3.5 rounded accent-violet-600 shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <p className={`text-xs font-medium leading-tight ${checked ? "text-violet-800" : "text-slate-700"}`}>{label}</p>
+                        <p className="text-[10px] text-slate-400 leading-tight">{sub}</p>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+              {sessionTypes.length === 0 && (
+                <p className="text-[10px] text-red-500">Select at least one session type.</p>
+              )}
+            </div>
           </form>
         </div>
 
@@ -161,7 +217,7 @@ export function EditInstitutionModal({ isOpen, onClose, onSuccess, tenant }: Pro
           <button
             type="submit"
             form="edit-college-form"
-            disabled={loading}
+            disabled={loading || sessionTypes.length === 0}
             className="px-3 py-1.5 text-xs font-medium text-white bg-purple-600 border border-purple-700 rounded-md hover:bg-purple-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-white" /> : null}

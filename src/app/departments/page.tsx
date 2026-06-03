@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { ScrollableTabBar } from "@/components/layout/ScrollableTabBar";
+import { InstitutionTabBar } from "@/components/layout/InstitutionTabBar";
 import { createClient } from "@/utils/supabase/client";
 import { AddDepartmentModal, type DepartmentEditPayload } from "@/components/dashboard/AddDepartmentModal";
 import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundingBadge";
@@ -20,6 +20,8 @@ type DeptRow = {
   funding_type: string | null;
 };
 
+type CountMap = Map<string, number>;
+
 function formatSessionType(sessionType: string | null) {
   switch (sessionType) {
     case "DAY":
@@ -32,10 +34,11 @@ function formatSessionType(sessionType: string | null) {
 }
 
 export default function DepartmentsPage() {
-  const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
+  const [tenants, setTenants] = useState<{ id: string; name: string; session_types?: string[] | null }[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState("");
   const [departments, setDepartments] = useState<DeptRow[]>([]);
-  const [studentCountByDept, setStudentCountByDept] = useState<Map<string, number>>(new Map());
+  const [studentCountByDept, setStudentCountByDept] = useState<CountMap>(new Map());
+  const [staffCountByDept, setStaffCountByDept] = useState<CountMap>(new Map());
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [departmentToEdit, setDepartmentToEdit] = useState<DepartmentEditPayload | null>(null);
@@ -51,27 +54,31 @@ export default function DepartmentsPage() {
     setLoading(true);
     const supabase = createClient();
 
-    const [{ data: deptRows, error: deptErr }, { data: profileRows }] = await Promise.all([
+    const [{ data: deptRows, error: deptErr }, { data: studentRows }, { data: staffRows }] = await Promise.all([
       supabase
         .from("departments")
         .select("id, name, institution_id, color, session_type, funding_type")
         .eq("institution_id", selectedTenantId)
         .order("name", { ascending: true }),
       supabase.from("students").select("department_id").eq("institution_id", selectedTenantId),
+      supabase.from("staff").select("department_id").eq("institution_id", selectedTenantId),
     ]);
 
     if (!deptErr && deptRows) setDepartments(deptRows as DeptRow[]);
     else setDepartments([]);
 
-    const counts = new Map<string, number>();
-    if (profileRows) {
-      for (const row of profileRows) {
-        const id = row.department_id as string | null;
+    const tally = (rows: { department_id: string | null }[] | null): CountMap => {
+      const m = new Map<string, number>();
+      if (!rows) return m;
+      for (const row of rows) {
+        const id = row.department_id;
         if (!id) continue;
-        counts.set(id, (counts.get(id) ?? 0) + 1);
+        m.set(id, (m.get(id) ?? 0) + 1);
       }
-    }
-    setStudentCountByDept(counts);
+      return m;
+    };
+    setStudentCountByDept(tally(studentRows));
+    setStaffCountByDept(tally(staffRows));
     setLoading(false);
   }, [selectedTenantId]);
 
@@ -79,7 +86,7 @@ export default function DepartmentsPage() {
     const supabase = createClient();
     supabase
       .from("institutions")
-      .select("id, name")
+      .select("id, name, session_types")
       .order("name")
       .then(({ data }) => {
         if (data?.length) {
@@ -117,24 +124,13 @@ export default function DepartmentsPage() {
   return (
     <DashboardLayout>
       <div className="px-6 pt-2 pb-4 w-full flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
-        <div className="mb-3 shrink-0 border-b border-slate-200">
-          <ScrollableTabBar innerClassName="items-stretch gap-0">
-            {tenants.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setSelectedTenantId(t.id)}
-                className={`shrink-0 whitespace-nowrap px-5 py-2.5 text-xs font-semibold transition-colors border-b-2 ${
-                  selectedTenantId === t.id
-                    ? "border-violet-600 bg-violet-50/50 text-violet-700"
-                    : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800"
-                }`}
-              >
-                {t.name}
-              </button>
-            ))}
-          </ScrollableTabBar>
-        </div>
+        <InstitutionTabBar
+          institutions={tenants}
+          selectedId={selectedTenantId}
+          onSelect={setSelectedTenantId}
+          loading={tenants.length === 0}
+          className="-mx-6 px-6 bg-white dark:bg-slate-900"
+        />
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3 shrink-0">
           <div className="min-w-0">
@@ -146,7 +142,7 @@ export default function DepartmentsPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2 justify-end shrink-0">
             <div
-              className="flex rounded-lg border border-slate-200 bg-slate-100/90 p-0.5 shrink-0"
+              className="flex rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100/90 dark:bg-slate-800 p-0.5 shrink-0"
               role="group"
               aria-label="Layout"
             >
@@ -155,8 +151,8 @@ export default function DepartmentsPage() {
                 onClick={() => setLayoutMode("grid")}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                   layoutMode === "grid"
-                    ? "bg-white text-violet-700 shadow-sm border border-slate-200/80"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-400 shadow-sm border border-slate-200/80 dark:border-slate-600"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
                 }`}
               >
                 <LayoutGrid size={14} strokeWidth={2.25} />
@@ -167,8 +163,8 @@ export default function DepartmentsPage() {
                 onClick={() => setLayoutMode("table")}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                   layoutMode === "table"
-                    ? "bg-white text-violet-700 shadow-sm border border-slate-200/80"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-400 shadow-sm border border-slate-200/80 dark:border-slate-600"
+                    : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
                 }`}
               >
                 <Table2 size={14} strokeWidth={2.25} />
@@ -194,15 +190,16 @@ export default function DepartmentsPage() {
             ) : departments.length === 0 ? (
               <p className="text-center text-xs text-slate-500 py-16">No departments yet. Add one to get started.</p>
             ) : layoutMode === "grid" ? (
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 pb-2">
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 pb-2">
                 {departments.map((d) => {
                   const c = getDeptColor(d.color);
-                  const n = studentCountByDept.get(d.id) ?? 0;
+                  const students = studentCountByDept.get(d.id) ?? 0;
+                  const staff = staffCountByDept.get(d.id) ?? 0;
                   const Icon = getDeptIcon(d.name);
                   return (
                     <article
                       key={d.id}
-                      className="rounded-xl border px-3 py-3 shadow-[0_1px_8px_rgba(0,0,0,0.04)] flex flex-col gap-3 transition-all hover:shadow-md hover:-translate-y-px"
+                      className="rounded-xl border px-3 py-3 shadow-[0_1px_8px_rgba(0,0,0,0.04)] flex flex-col gap-2.5 transition-all hover:shadow-md hover:-translate-y-px"
                       style={{
                         background: `linear-gradient(135deg, ${c.bg} 0%, ${c.bg2} 100%)`,
                         borderColor: c.border,
@@ -219,37 +216,40 @@ export default function DepartmentsPage() {
                           <p className="text-[13px] font-semibold leading-tight truncate" style={{ color: c.text }}>
                             {d.name}
                           </p>
-                          <p className="text-[11px] mt-1 opacity-80" style={{ color: c.text }}>
+                          <p className="text-[11px] mt-0.5 opacity-70" style={{ color: c.text }}>
                             {formatSessionType(d.session_type)}
                           </p>
                         </div>
-                        <DepartmentFundingBadge fundingType={d.funding_type} className="shrink-0" />
+                        <div className="flex items-center gap-1 shrink-0">
+                          <DepartmentFundingBadge fundingType={d.funding_type} />
+                          <Link
+                            href={`/institutions/${selectedTenantId}/department/${d.id}`}
+                            title="Open"
+                            className="w-7 h-7 rounded-md border bg-white/80 dark:bg-slate-700/80 hover:bg-white dark:hover:bg-slate-700 flex items-center justify-center transition-colors"
+                            style={{ borderColor: c.border }}
+                          >
+                            <ExternalLink size={13} style={{ color: c.text }} />
+                          </Link>
+                          <button
+                            type="button"
+                            title="Edit"
+                            onClick={() => openEdit(d)}
+                            className="w-7 h-7 rounded-md border bg-white/80 dark:bg-slate-700/80 hover:bg-white dark:hover:bg-slate-700 flex items-center justify-center transition-colors"
+                            style={{ borderColor: c.border }}
+                          >
+                            <Pencil size={13} style={{ color: c.text }} />
+                          </button>
+                        </div>
                       </header>
-                      <div className="flex items-center justify-between gap-2 text-[11px]" style={{ color: c.text }}>
-                        <span className="opacity-80">Students</span>
-                        <span className="font-bold tabular-nums">{n}</span>
-                      </div>
-                      <span
-                        className="inline-block w-full h-2 rounded-md border"
-                        style={{ background: `linear-gradient(90deg, ${c.bg}, ${c.bg2})`, borderColor: c.border }}
-                        title={c.hex}
-                      />
-                      <div className="flex items-center gap-2 pt-1">
-                        <Link
-                          href={`/institutions/${selectedTenantId}/department/${d.id}`}
-                          className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border bg-white/90 text-[11px] font-semibold border-white/60 text-slate-700 hover:bg-white"
-                        >
-                          <ExternalLink size={12} />
-                          Open
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => openEdit(d)}
-                          className="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border bg-white/90 text-[11px] font-semibold border-white/60 text-slate-700 hover:bg-white"
-                        >
-                          <Pencil size={12} />
-                          Edit
-                        </button>
+                      <div className="flex flex-col gap-1.5 text-[11px]" style={{ color: c.text }}>
+                        <div className="flex items-center justify-between">
+                          <span className="opacity-70">Students</span>
+                          <span className="font-bold tabular-nums">{students}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="opacity-70">Staff</span>
+                          <span className="font-bold tabular-nums">{staff}</span>
+                        </div>
                       </div>
                     </article>
                   );
@@ -264,13 +264,15 @@ export default function DepartmentsPage() {
                   <th className="px-4 py-3 text-xs font-semibold text-slate-900">Funding</th>
                   <th className="px-4 py-3 text-xs font-semibold text-slate-900 w-16">Color</th>
                   <th className="px-4 py-3 text-xs font-semibold text-slate-900 text-right">Students</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-900 text-right w-[140px]">Actions</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-900 text-right">Staff</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-900 text-right w-20">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {departments.map((d) => {
                     const c = getDeptColor(d.color);
-                    const n = studentCountByDept.get(d.id) ?? 0;
+                    const students = studentCountByDept.get(d.id) ?? 0;
+                    const staff = staffCountByDept.get(d.id) ?? 0;
                     const Icon = getDeptIcon(d.name);
                     return (
                       <tr key={d.id} className="hover:bg-slate-50/80">
@@ -296,23 +298,24 @@ export default function DepartmentsPage() {
                             title={c.hex}
                           />
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-700 text-right tabular-nums font-medium">{n}</td>
+                        <td className="px-4 py-3 text-xs text-slate-700 text-right tabular-nums font-medium">{students}</td>
+                        <td className="px-4 py-3 text-xs text-slate-700 text-right tabular-nums font-medium">{staff}</td>
                         <td className="px-4 py-3 text-right">
                           <div className="inline-flex items-center gap-1 justify-end">
                             <Link
                               href={`/institutions/${selectedTenantId}/department/${d.id}`}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 text-[11px] font-medium text-slate-600 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50/50"
+                              title="Open"
+                              className="w-7 h-7 inline-flex items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50/50 transition-colors"
                             >
-                              <ExternalLink size={12} />
-                              Open
+                              <ExternalLink size={13} />
                             </Link>
                             <button
                               type="button"
+                              title="Edit"
                               onClick={() => openEdit(d)}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 text-[11px] font-medium text-slate-600 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50/50"
+                              className="w-7 h-7 inline-flex items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50/50 transition-colors"
                             >
-                              <Pencil size={12} />
-                              Edit
+                              <Pencil size={13} />
                             </button>
                           </div>
                         </td>
@@ -334,6 +337,7 @@ export default function DepartmentsPage() {
         tenantId={selectedTenantId}
         onSuccess={fetchDepartments}
         departmentToEdit={departmentToEdit}
+        allowedSessionTypes={tenants.find(t => t.id === selectedTenantId)?.session_types ?? undefined}
       />
     </DashboardLayout>
   );

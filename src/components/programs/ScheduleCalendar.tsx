@@ -25,8 +25,9 @@ function isLive(cls: { day_of_week: string; start_time: string; end_time: string
 }
 
 import {
-  Clock, MoreVertical, Plus, Copy, Pencil, Trash2,
+  Clock, Plus, Copy, Pencil, Trash2,
   ChevronLeft, ChevronRight, Home, CalendarDays,
+  User, AlertTriangle,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -39,7 +40,7 @@ export type ClassEntry = {
   subject_name: string;
   staff_id: string;
   tenant_id: string | null;
-  profiles: { full_name: string } | null;
+  staff: { full_name: string } | null;
 };
 
 type ViewMode = "week" | "work-week" | "day";
@@ -111,10 +112,12 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{ day: string; hour: number } | null>(null);
   const [hoveredCell, setHoveredCell] = useState<{ day: string; hour: number } | null>(null);
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [pendingChanges, setPendingChanges] = useState<Map<string, PendingChange>>(new Map());
   const [saving, setSaving] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [popoverOpenId, setPopoverOpenId] = useState<string | null>(null);
+  const [popoverPos, setPopoverPos] = useState({ top: 0, left: 0 });
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const didDrag = useRef(false);
   const itemsRef = useRef(items);
   const resizeRef = useRef<{ id: string; startY: number; origEndH: number; startH: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -202,15 +205,15 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
     setPendingChanges(new Map());
   };
 
-  // Close menu on outside click
+  // Close popover on outside click
   useEffect(() => {
-    if (!openMenuId) return;
+    if (!popoverOpenId) return;
     const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpenMenuId(null);
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) setPopoverOpenId(null);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [openMenuId]);
+  }, [popoverOpenId]);
 
   // Week dates
   const monday = getWeekMonday(weekOffset);
@@ -229,6 +232,7 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
 
   // ── Drag ──────────────────────────────────────────────────────────────────
   const onDragStart = (e: React.DragEvent, id: string) => {
+    didDrag.current = true;
     setDraggingId(id); e.dataTransfer.setData("text/plain", id); e.dataTransfer.effectAllowed = "move";
   };
   const onDrop = (e: React.DragEvent, day: string, hour: number) => {
@@ -276,46 +280,46 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
 
   // ── Duplicate ─────────────────────────────────────────────────────────────
   const handleDuplicate = async (cls: ClassEntry) => {
-    setOpenMenuId(null);
-    const { id, profiles, ...rest } = cls;
-    const { data } = await supabase.from("schedules").insert([rest]).select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, tenant_id, profiles(full_name)").single();
+    setPopoverOpenId(null);
+    const { id, staff, ...rest } = cls;
+    const { data } = await supabase.from("schedules").insert([rest]).select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, tenant_id, staff(full_name)").single();
     if (data) setItems(prev => [...prev, data as unknown as ClassEntry]);
   };
 
   // ── Delete ────────────────────────────────────────────────────────────────
   const handleDelete = async (id: string) => {
-    setOpenMenuId(null);
+    setPopoverOpenId(null);
     setItems(prev => prev.filter(c => c.id !== id));
     await supabase.from("schedules").delete().eq("id", id);
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col h-full">
 
       {/* ── Navigation Bar ── */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 bg-white gap-3 flex-wrap shrink-0">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 gap-3 flex-wrap shrink-0">
         {/* Left: Home + date range + nav */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => { setWeekOffset(0); setDayOffset(0); }}
             title="Go to today"
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
           >
             <Home size={14} />
           </button>
 
-          <div className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-slate-200 text-xs font-semibold text-slate-700 bg-white min-w-[180px]">
+          <div className="flex items-center gap-1 px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 min-w-[180px]">
             <CalendarDays size={13} className="text-violet-500 mr-1" />
             {rangeStr}
           </div>
 
           <button onClick={() => view === "day" ? setDayOffset(d => d - 1) : setWeekOffset(o => o - 1)}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
             <ChevronLeft size={14} />
           </button>
           <button onClick={() => view === "day" ? setDayOffset(d => d + 1) : setWeekOffset(o => o + 1)}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors">
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
             <ChevronRight size={14} />
           </button>
         </div>
@@ -363,14 +367,14 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
       <div ref={scrollRef} className="overflow-auto custom-scrollbar flex-1 relative">
         <div style={{ minWidth: view === "day" ? 400 : 700 }}>
           {/* Day headers — compact */}
-          <div className="grid sticky top-0 z-10 bg-white border-b border-slate-200"
+          <div className="grid sticky top-0 z-10 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700"
             style={{ gridTemplateColumns: `64px repeat(${activeDays.length}, 1fr)` }}>
-            <div className="bg-slate-50 border-r border-slate-200" style={{ height: 44 }} />
+            <div className="bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700" style={{ height: 44 }} />
             {activeDays.map((day, i) => {
               const date = activeDates[i];
               const today = date && isToday(date);
               return (
-                <div key={day} className="flex items-center justify-center gap-2 bg-slate-50 border-r border-slate-200 last:border-r-0" style={{ height: 44 }}>
+                <div key={day} className="flex items-center justify-center gap-2 bg-slate-50 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 last:border-r-0" style={{ height: 44 }}>
                   <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{day.slice(0, 3)}</span>
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${today ? "bg-violet-600 text-white" : "text-slate-700"}`}>
                     {date?.getDate() ?? "—"}
@@ -383,9 +387,9 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
           {/* Hour rows */}
           <div className="flex relative">
             {/* Time labels */}
-            <div className="w-16 flex-shrink-0 border-r border-slate-200 bg-slate-50">
+            <div className="w-16 flex-shrink-0 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
               {HOURS.map(h => (
-                <div key={h} className="flex items-start justify-end pr-2 pt-2 border-b border-slate-200" style={{ height: HOUR_H }}>
+                <div key={h} className="flex items-start justify-end pr-2 pt-2 border-b border-slate-200 dark:border-slate-700" style={{ height: HOUR_H }}>
                   <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap">{fmtHour(h)}</span>
                 </div>
               ))}
@@ -411,7 +415,7 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
             {activeDays.map(day => {
               const dayItems = items.filter(c => c.day_of_week === day);
               return (
-                <div key={day} className="flex-1 relative border-r border-slate-200 last:border-r-0"
+                <div key={day} className="flex-1 relative border-r border-slate-200 dark:border-slate-700 last:border-r-0"
                   style={{ height: HOURS.length * HOUR_H }}>
 
                   {/* Drop + hover zones */}
@@ -422,8 +426,8 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
 
                     return (
                       <div key={hour}
-                        className={`absolute w-full border-b border-dashed border-slate-200 transition-all duration-150 ease-in-out ${
-                          isTarget ? "bg-violet-100/60" : isHovered && !hasEvents ? "bg-violet-50/70" : ""
+                        className={`absolute w-full border-b border-dashed border-slate-200 dark:border-slate-700 transition-all duration-150 ease-in-out ${
+                          isTarget ? "bg-violet-100/60 dark:bg-violet-900/20" : isHovered && !hasEvents ? "bg-violet-50/70 dark:bg-violet-900/10" : ""
                         }`}
                         style={{ top: (hour - 8) * HOUR_H, height: HOUR_H }}
                         onMouseEnter={() => setHoveredCell({ day, hour })}
@@ -453,23 +457,35 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
                     const height = Math.max((eh - sh) * HOUR_H - 4, 36);
                     const c = getColor(cls.subject_name);
                     const isDragging = draggingId === cls.id;
-                    const menuOpen = openMenuId === cls.id;
                     const live = isLive(cls, now);
                     const hasConflict = conflictIds.has(cls.id);
+                    const popoverOpen = popoverOpenId === cls.id;
 
                     return (
                       <div key={cls.id} draggable
                         onDragStart={e => onDragStart(e, cls.id)}
-                        onDragEnd={() => { setDraggingId(null); setDropTarget(null); }}
-                        className={`absolute left-1 right-1 rounded-md border-l-4 ${c.border} ${c.bg} cursor-grab active:cursor-grabbing group select-none ${
+                        onDragEnd={() => { didDrag.current = false; setDraggingId(null); setDropTarget(null); }}
+                        onClick={e => {
+                          if (didDrag.current) { didDrag.current = false; return; }
+                          e.stopPropagation();
+                          const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                          const popW = 216;
+                          const left = window.innerWidth - rect.right > popW + 16
+                            ? rect.right + 8
+                            : rect.left - popW - 8;
+                          const top = Math.min(rect.top, window.innerHeight - 200);
+                          setPopoverPos({ top, left });
+                          setPopoverOpenId(prev => prev === cls.id ? null : cls.id);
+                        }}
+                        className={`absolute left-1 right-1 rounded-md border-l-4 ${c.border} ${c.bg} cursor-pointer group select-none ${
                           isDragging ? "opacity-30" : "shadow-sm hover:shadow-md hover:-translate-y-px"
                         } transition-all ${
-                          hasConflict ? "ring-1 ring-red-400 ring-offset-0 animate-conflict-pulse bg-red-50/80" : live ? "ring-2 ring-emerald-400 ring-offset-1" : ""
-                        }`}
-                        style={{ top: top + 2, height, zIndex: isDragging ? 0 : menuOpen ? 30 : 2 }}
-                        title={hasConflict ? `Scheduling conflict: ${cls.profiles?.full_name ?? "this staff member"} has overlapping classes on ${cls.day_of_week}` : undefined}
+                          hasConflict ? "ring-1 ring-red-400 ring-offset-0 bg-red-50/80" : live ? "ring-2 ring-emerald-400 ring-offset-1" : ""
+                        } ${popoverOpen ? "ring-2 ring-violet-400 ring-offset-1" : ""}`}
+                        style={{ top: top + 2, height, zIndex: isDragging ? 0 : popoverOpen ? 30 : 2 }}
                       >
-                        <div className="px-2 pt-1.5 pb-4 h-full flex flex-col overflow-hidden">
+                        {/* Card body */}
+                        <div className="px-2 pt-1.5 pb-4 h-full flex flex-col overflow-hidden pointer-events-none">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <p className={`text-[11px] font-semibold leading-tight truncate ${c.text}`}>{cls.subject_name}</p>
                             {live && (
@@ -479,54 +495,88 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
                               </span>
                             )}
                           </div>
-                          {height > 46 && (
-                            <div className={`flex items-center gap-1 mt-0.5 opacity-70 ${c.text}`}>
-                              <Clock size={8} />
-                              <span className="text-[9px] whitespace-nowrap">{fmtTime(cls.start_time)} – {fmtTime(cls.end_time)}</span>
-                            </div>
-                          )}
-                          {height > 62 && cls.profiles?.full_name && (
-                            <p className="text-[9px] mt-0.5 text-slate-500 truncate">{cls.profiles.full_name}</p>
+                          {height > 40 && (
+                            <p className={`text-[10px] mt-0.5 truncate opacity-75 ${c.text}`}>
+                              {cls.staff?.full_name ?? "—"}
+                            </p>
                           )}
                         </div>
-
-                        {/* ⋮ menu button */}
-                        <button
-                          onMouseDown={e => e.stopPropagation()}
-                          onClick={e => { e.stopPropagation(); setOpenMenuId(menuOpen ? null : cls.id); }}
-                          className={`absolute top-1 right-1 w-5 h-5 rounded flex items-center justify-center transition-opacity ${menuOpen ? "opacity-100 bg-white/90" : "opacity-0 group-hover:opacity-100 bg-white/80"} hover:bg-white border border-slate-200 z-10`}
-                        >
-                          <MoreVertical size={10} className={c.text} />
-                        </button>
-
-
-
-                        {/* Context menu */}
-                        {menuOpen && (
-                          <div ref={menuRef}
-                            className="absolute right-0 top-6 w-36 bg-white border border-slate-200 rounded-lg shadow-xl z-50 py-1 overflow-hidden"
-                            onMouseDown={e => e.stopPropagation()}>
-                            <button onClick={() => { setOpenMenuId(null); onEdit(cls); }}
-                              className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 transition-colors">
-                              <Pencil size={12} className="text-slate-400" /> Edit
-                            </button>
-                            <button onClick={() => handleDuplicate(cls)}
-                              className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 transition-colors">
-                              <Copy size={12} className="text-slate-400" /> Duplicate
-                            </button>
-                            <div className="border-t border-slate-100 my-0.5" />
-                            <button onClick={() => handleDelete(cls.id)}
-                              className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 transition-colors">
-                              <Trash2 size={12} className="text-red-400" /> Delete
-                            </button>
-                          </div>
-                        )}
 
                         {/* Resize handle */}
                         <div
                           className="absolute bottom-0 left-0 right-0 h-3 cursor-s-resize flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                          onMouseDown={e => onResizeMouseDown(e, cls)}>
+                          onMouseDown={e => { e.stopPropagation(); onResizeMouseDown(e, cls); }}>
                           <div className={`w-10 h-[3px] rounded-full ${c.bar} opacity-60`} />
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Popover — rendered per column, fixed-positioned */}
+                  {dayItems.map(cls => {
+                    if (popoverOpenId !== cls.id) return null;
+                    const c = getColor(cls.subject_name);
+                    const hasConflict = conflictIds.has(cls.id);
+                    return (
+                      <div key={`pop-${cls.id}`}
+                        ref={popoverRef}
+                        className="fixed z-[200] w-54 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl overflow-hidden"
+                        style={{ top: popoverPos.top, left: popoverPos.left, width: 216 }}
+                        onMouseDown={e => e.stopPropagation()}
+                      >
+                        {/* Color bar */}
+                        <div className={`h-1 ${c.bar}`} />
+                        <div className="p-3 space-y-2.5">
+                          {/* Subject + time */}
+                          <div>
+                            <p className={`text-xs font-bold ${c.text}`}>{cls.subject_name}</p>
+                            <div className={`flex items-center gap-1 mt-0.5 opacity-70 ${c.text}`}>
+                              <Clock size={9} />
+                              <span className="text-[10px]">{fmtTime(cls.start_time)} – {fmtTime(cls.end_time)}</span>
+                            </div>
+                          </div>
+
+                          {/* Staff */}
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                              <User size={11} className="text-slate-500" />
+                            </div>
+                            <p className="text-[11px] text-slate-700 truncate">
+                              {cls.staff?.full_name ?? <span className="text-slate-400 italic">No staff assigned</span>}
+                            </p>
+                          </div>
+
+                          {/* Conflict warning */}
+                          {hasConflict && (
+                            <div className="flex items-center gap-1.5 px-2 py-1.5 bg-red-50 border border-red-100 rounded-md">
+                              <AlertTriangle size={10} className="text-red-500 shrink-0" />
+                              <span className="text-[10px] text-red-600">Scheduling conflict</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action row */}
+                        <div className="flex border-t border-slate-100">
+                          <button
+                            onClick={() => { setPopoverOpenId(null); onEdit(cls); }}
+                            className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] text-slate-600 hover:bg-slate-50 transition-colors"
+                          >
+                            <Pencil size={11} /> Edit
+                          </button>
+                          <div className="w-px bg-slate-100" />
+                          <button
+                            onClick={() => { setPopoverOpenId(null); handleDuplicate(cls); }}
+                            className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] text-slate-600 hover:bg-slate-50 transition-colors"
+                          >
+                            <Copy size={11} /> Duplicate
+                          </button>
+                          <div className="w-px bg-slate-100" />
+                          <button
+                            onClick={() => { setPopoverOpenId(null); handleDelete(cls.id); }}
+                            className="flex-1 flex items-center justify-center gap-1 py-2 text-[11px] text-red-500 hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 size={11} /> Delete
+                          </button>
                         </div>
                       </div>
                     );

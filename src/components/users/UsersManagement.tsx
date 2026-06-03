@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import React from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { ScrollableTabBar } from "@/components/layout/ScrollableTabBar";
+import { InstitutionTabBar } from "@/components/layout/InstitutionTabBar";
 import { createClient } from "@/utils/supabase/client";
 import { Plus, Search, ChevronLeft, ChevronRight, X, Pencil, Upload, LayoutGrid, Table2, Info, User } from "lucide-react";
 import { AddPersonModal } from "@/components/users/AddPersonModal";
@@ -27,6 +27,7 @@ export type UsersManagementPerson = {
   student_year?: number | null;
   departments: { name: string; funding_type?: string | null } | null;
   institutions: { name: string } | null;
+  roll_no?: string;
 };
 
 const PAGE_SIZE = 10;
@@ -82,21 +83,53 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
   };
 
   useEffect(() => {
-    fetchPeople();
+    Promise.resolve().then(() => {
+      fetchPeople();
+    });
+
     const supabase = createClient();
-    supabase.from("institutions").select("id, name").order("name").then(({ data }) => {
-      if (data && data.length > 0) {
-        setTenants(data);
-        setSelectedTenantId((prev) => prev || data[0].id);
-      }
-    });
-    supabase.from("departments").select("id, name, institution_id, funding_type, color").order("name").then(({ data }) => {
-      if (data) setDepartments(data);
-    });
-  }, []);
+    supabase
+      .from("institutions")
+      .select("id, name")
+      .order("name")
+      .then((res) => {
+        if (res?.data && res.data.length > 0) {
+          Promise.resolve().then(() => {
+            setTenants(res.data);
+            setSelectedTenantId((prev) => prev || res.data[0].id);
+          });
+        }
+      });
+
+    supabase
+      .from("departments")
+      .select("id, name, institution_id, funding_type, color")
+      .order("name")
+      .then((res) => {
+        if (res?.data) {
+          Promise.resolve().then(() => {
+            setDepartments(res.data);
+          });
+        }
+      });
+
+    const table = role === "STAFF" ? "staff" : "students";
+    const channel = supabase
+      .channel(`realtime-${table}`)
+      .on("postgres_changes", { event: "*", schema: "public", table }, () => {
+        fetchPeople();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [role]);
 
   useEffect(() => {
-    setPage(1);
+    Promise.resolve().then(() => {
+      setPage(1);
+    });
   }, [search, filterDeptId, selectedTenantId, filterProgram, filterYearNum, role, staffLayoutMode]);
 
   const filteredDepts = useMemo(
@@ -106,20 +139,24 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
 
   useEffect(() => {
     if (filterDeptId && !filteredDepts.some((d) => d.id === filterDeptId)) {
-      setFilterDeptId("");
-      setFilterProgram("");
-      setFilterYearNum(null);
-      setSegmentActiveKey(null);
+      Promise.resolve().then(() => {
+        setFilterDeptId("");
+        setFilterProgram("");
+        setFilterYearNum(null);
+        setSegmentActiveKey(null);
+      });
     }
   }, [filteredDepts, filterDeptId]);
 
   /** Cohort filters are per institution — reset when switching college tab */
   useEffect(() => {
     if (!selectedTenantId) return;
-    setFilterDeptId("");
-    setFilterProgram("");
-    setFilterYearNum(null);
-    setSegmentActiveKey(null);
+    Promise.resolve().then(() => {
+      setFilterDeptId("");
+      setFilterProgram("");
+      setFilterYearNum(null);
+      setSegmentActiveKey(null);
+    });
   }, [selectedTenantId]);
 
   const studentsInTenantCount = useMemo(() => {
@@ -138,8 +175,82 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
     setSegmentActiveKey(null);
   };
 
+  const peopleWithRollNos = useMemo(() => {
+    if (role !== "STUDENT") return people;
+    
+    const maxIndices = new Map<string, number>();
+    for (const p of people) {
+      if (p.roll_no) {
+        const cohortKey = `${p.institution_id}:${p.department_id}:${p.student_program}:${p.student_year}`;
+        const match = p.roll_no.match(/-(\d+)$/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          maxIndices.set(cohortKey, Math.max(maxIndices.get(cohortKey) || 0, num));
+        }
+      }
+    }
+
+    return people.map(p => {
+      if (p.roll_no) return p;
+
+      const cohortKey = `${p.institution_id}:${p.department_id}:${p.student_program}:${p.student_year}`;
+      const currentCount = (maxIndices.get(cohortKey) || 0) + 1;
+      maxIndices.set(cohortKey, currentCount);
+
+      const program = p.student_program || "XX";
+      const fundingRaw = p.departments?.funding_type;
+      const funding = fundingRaw === "AIDED" ? "A" : fundingRaw === "SF" ? "SF" : "XX";
+      
+      const deptName = p.departments?.name || "";
+      let deptPrefix = "XX";
+      if (deptName) {
+        const words = deptName.split(/[\s-]+/);
+        if (words.length > 1) {
+          deptPrefix = words.map(w => w[0].toUpperCase()).join("");
+        } else {
+          deptPrefix = deptName.substring(0, 2).toUpperCase();
+        }
+      }
+      
+      const idxStr = String(currentCount).padStart(3, "0");
+      const roll_no = `${program}-${funding}-${deptPrefix}-${idxStr}`;
+
+      return { ...p, roll_no };
+    });
+  }, [people, role]);
+
+  useEffect(() => {
+    if (role !== "STUDENT" || people.length === 0) return;
+    
+    const missing = people.filter(p => !p.roll_no);
+    if (missing.length === 0) return;
+
+    const updates = missing.map(m => {
+      const computed = peopleWithRollNos.find(c => c.id === m.id);
+      return { 
+        id: m.id, 
+        roll_no: computed?.roll_no,
+        institution_id: m.institution_id,
+        full_name: m.full_name,
+        department_id: m.department_id
+      };
+    }).filter(u => u.roll_no);
+
+    if (updates.length > 0) {
+      const supabase = createClient();
+      supabase
+        .from('students')
+        .upsert(updates)
+        .then((res) => {
+          if (res?.error) {
+            console.error("Lazy backfill error - Message:", res.error.message, "Details:", res.error.details, "Code:", res.error.code, "Hint:", res.error.hint);
+          }
+        });
+    }
+  }, [people, peopleWithRollNos, role]);
+
   const filtered = useMemo(() => {
-    return people.filter((p) => {
+    return peopleWithRollNos.filter((p) => {
       if (p.institution_id !== selectedTenantId) return false;
       if (filterDeptId && p.department_id !== filterDeptId) return false;
       if (role === "STUDENT") {
@@ -180,49 +291,37 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
   return (
     <DashboardLayout>
       <div className="px-6 pt-2 pb-4 w-full relative flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
-        <div className="mb-3 shrink-0 border-b border-slate-200">
-          <ScrollableTabBar innerClassName="items-stretch gap-0">
-            {tenants.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setSelectedTenantId(t.id)}
-                className={`shrink-0 whitespace-nowrap px-5 py-2.5 text-xs font-semibold transition-colors border-b-2 ${
-                  selectedTenantId === t.id
-                    ? "border-violet-600 bg-violet-50/50 text-violet-700"
-                    : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800"
-                }`}
-              >
-                {t.name}
-              </button>
-            ))}
-          </ScrollableTabBar>
-        </div>
+        <InstitutionTabBar
+          institutions={tenants}
+          selectedId={selectedTenantId}
+          onSelect={setSelectedTenantId}
+          loading={tenants.length === 0}
+        />
 
         {role === "STUDENT" && selectedTenantId && studentsLayoutMode === "grid" ? (
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3 shrink-0">
             <div className="min-w-0">
-              <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-tight">Students</h1>
+              <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight">Students</h1>
             </div>
             <div className="flex flex-wrap items-center gap-2 justify-end">
-              <div className="relative group shrink-0 z-[100]">
+              <div className="relative group shrink-0 z-40">
                 <button
                   type="button"
-                  className="rounded-md p-1.5 text-slate-400 outline-none hover:text-violet-600 hover:bg-violet-50 transition-colors border border-transparent hover:border-violet-100 focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1"
+                  className="rounded-md p-1.5 text-slate-400 outline-none hover:text-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950/30 dark:hover:text-violet-400 transition-colors border border-transparent hover:border-violet-100 dark:hover:border-violet-900/45 focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1"
                   aria-label="About the student grid"
                 >
                   <Info size={16} strokeWidth={2} aria-hidden />
                 </button>
                 <div
                   role="tooltip"
-                  className="pointer-events-none absolute right-0 top-full z-[100] mt-2 w-72 max-w-[min(18rem,calc(100vw-3rem))] rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left text-[11px] leading-snug text-slate-600 shadow-xl opacity-0 transition-opacity duration-150 invisible group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+                  className="pointer-events-none absolute right-0 top-full z-50 mt-2 w-72 max-w-[min(18rem,calc(100vw-3rem))] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-left text-[11px] leading-snug text-slate-600 dark:text-slate-300 shadow-xl opacity-0 transition-opacity duration-150 invisible group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
                 >
-                  <p className="font-semibold text-slate-800 mb-1.5">Department grid</p>
+                  <p className="font-semibold text-slate-800 dark:text-slate-200 mb-1.5">Department grid</p>
                   <p className="mb-2">
                     Headcount by program and year. Tap a number to filter; tap again to clear.
                   </p>
-                  <p className="text-slate-500">
-                    Switch to <span className="font-medium text-slate-700">Table</span> for search, roster edits, and bulk CSV.
+                  <p className="text-slate-500 dark:text-slate-450">
+                    Switch to <span className="font-medium text-slate-700 dark:text-slate-300">Table</span> for search, roster edits, and bulk CSV.
                   </p>
                 </div>
               </div>
@@ -230,19 +329,19 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                 type="button"
                 onClick={() => setBulkOpen(true)}
                 disabled={!selectedTenantId}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 text-xs font-semibold rounded-md hover:bg-slate-50 transition-colors border border-slate-200 disabled:opacity-50 shrink-0"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 disabled:opacity-50 shrink-0"
               >
                 <Upload size={14} strokeWidth={2.5} /> Bulk CSV
               </button>
               <div
-                className="flex rounded-lg border border-slate-200 bg-slate-100/90 p-0.5 shrink-0"
+                className="flex rounded-lg border border-slate-200 dark:border-slate-750 bg-slate-100/90 dark:bg-slate-800/90 p-0.5 shrink-0"
                 role="group"
                 aria-label="Layout"
               >
                 <button
                   type="button"
                   onClick={() => setStudentsLayoutMode("grid")}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors bg-white text-violet-700 shadow-sm border border-slate-200/80"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-450 shadow-sm border border-slate-200/80 dark:border-slate-650"
                 >
                   <LayoutGrid size={14} strokeWidth={2.25} />
                   Grid
@@ -250,7 +349,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                 <button
                   type="button"
                   onClick={() => setStudentsLayoutMode("table")}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors text-slate-500 hover:text-slate-800"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                 >
                   <Table2 size={14} strokeWidth={2.25} />
                   Table
@@ -268,8 +367,8 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
         ) : (
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2 shrink-0">
             <div className="min-w-0">
-              <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-tight">{role === "STAFF" ? "Staff" : "Students"}</h1>
-              <p className="text-slate-500 mt-0.5 text-[11px] leading-snug">
+              <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight">{role === "STAFF" ? "Staff" : "Students"}</h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-0.5 text-[11px] leading-snug">
                 {role === "STAFF"
                   ? "Faculty and staff for the selected institution."
                   : "Filters below apply to the table and match grid selections when you use the cohort breakdown."}
@@ -280,13 +379,13 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                 type="button"
                 onClick={() => setBulkOpen(true)}
                 disabled={!selectedTenantId}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 text-xs font-semibold rounded-md hover:bg-slate-50 transition-colors border border-slate-200 disabled:opacity-50 shrink-0"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700 disabled:opacity-50 shrink-0"
               >
                 <Upload size={14} strokeWidth={2.5} /> Bulk CSV
               </button>
               {role === "STUDENT" && (
                 <div
-                  className="flex rounded-lg border border-slate-200 bg-slate-100/90 p-0.5 shrink-0"
+                  className="flex rounded-lg border border-slate-200 dark:border-slate-750 bg-slate-100/90 dark:bg-slate-800/90 p-0.5 shrink-0"
                   role="group"
                   aria-label="Layout"
                 >
@@ -295,8 +394,8 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                     onClick={() => setStudentsLayoutMode("grid")}
                     className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                       studentsLayoutMode === "grid"
-                        ? "bg-white text-violet-700 shadow-sm border border-slate-200/80"
-                        : "text-slate-500 hover:text-slate-800"
+                        ? "bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-450 shadow-sm border border-slate-200/80 dark:border-slate-650"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                     }`}
                   >
                     <LayoutGrid size={14} strokeWidth={2.25} />
@@ -307,8 +406,8 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                     onClick={() => setStudentsLayoutMode("table")}
                     className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                       studentsLayoutMode === "table"
-                        ? "bg-white text-violet-700 shadow-sm border border-slate-200/80"
-                        : "text-slate-500 hover:text-slate-800"
+                        ? "bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-450 shadow-sm border border-slate-200/80 dark:border-slate-650"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                     }`}
                   >
                     <Table2 size={14} strokeWidth={2.25} />
@@ -318,7 +417,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
               )}
               {role === "STAFF" && (
                 <div
-                  className="flex rounded-lg border border-slate-200 bg-slate-100/90 p-0.5 shrink-0"
+                  className="flex rounded-lg border border-slate-200 dark:border-slate-750 bg-slate-100/90 dark:bg-slate-800/90 p-0.5 shrink-0"
                   role="group"
                   aria-label="Layout"
                 >
@@ -327,8 +426,8 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                     onClick={() => setStaffLayoutMode("grid")}
                     className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                       staffLayoutMode === "grid"
-                        ? "bg-white text-violet-700 shadow-sm border border-slate-200/80"
-                        : "text-slate-500 hover:text-slate-800"
+                        ? "bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-455 shadow-sm border border-slate-200/80 dark:border-slate-650"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                     }`}
                   >
                     <LayoutGrid size={14} strokeWidth={2.25} />
@@ -339,8 +438,8 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                     onClick={() => setStaffLayoutMode("table")}
                     className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                       staffLayoutMode === "table"
-                        ? "bg-white text-violet-700 shadow-sm border border-slate-200/80"
-                        : "text-slate-500 hover:text-slate-800"
+                        ? "bg-white dark:bg-slate-700 text-violet-700 dark:text-violet-455 shadow-sm border border-slate-200/80 dark:border-slate-650"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                     }`}
                   >
                     <Table2 size={14} strokeWidth={2.25} />
@@ -368,20 +467,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
               activeKey={segmentActiveKey}
               onSelectSegment={onBreakdownSelect}
             />
-            {segmentActiveKey ? (
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-violet-100 bg-violet-50/60 px-3 py-2 text-[11px] text-violet-900">
-                <span>
-                  Cohort filter active — open <strong>Table</strong> to see those students.
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setStudentsLayoutMode("table")}
-                  className="shrink-0 rounded-md bg-violet-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-violet-700"
-                >
-                  Show table
-                </button>
-              </div>
-            ) : null}
+            {/* Cohort slide-out drawer has replaced the bottom bar */}
           </div>
         )}
 
@@ -398,7 +484,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                   setFilterProgram(v);
                   setFilterYearNum(null);
                 }}
-                className="h-8 px-2 text-xs border border-slate-200 rounded-md bg-white text-slate-700 shrink-0"
+                className="h-8 px-2 text-xs border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-200 shrink-0"
               >
                 <option value="">All programs</option>
                 <option value="UG">{studentProgramLabel("UG")}</option>
@@ -411,7 +497,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                   const v = e.target.value;
                   setFilterYearNum(v === "" ? null : Number(v));
                 }}
-                className="h-8 px-2 text-xs border border-slate-200 rounded-md bg-white text-slate-700 shrink-0"
+                className="h-8 px-2 text-xs border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-200 shrink-0"
               >
                 <option value="">All years</option>
                 {yearOptions.map((y) => (
@@ -429,7 +515,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={role === "STAFF" ? "Search by name or department…" : "Search name, dept, UG/PG…"}
-              className="h-8 w-full pl-8 pr-7 bg-white border border-slate-200 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-colors placeholder:text-slate-400"
+              className="h-8 w-full pl-8 pr-7 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-colors placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-slate-100"
             />
             {search && (
               <button type="button" onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -443,7 +529,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
               type="button"
               onClick={() => setFilterDeptOpen((v) => !v)}
               className={`h-8 flex items-center gap-1.5 px-3 border text-xs font-medium rounded-md transition-colors ${
-                filterDeptId ? "border-purple-400 bg-purple-50 text-purple-700" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                filterDeptId ? "border-purple-400 bg-purple-50 dark:bg-purple-950/20 text-purple-700 dark:text-purple-300" : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
               }`}
             >
               {activeDept ? `${activeDept.name} (${fundingTypeShortLabel(activeDept.funding_type)})` : "Department"}
@@ -464,8 +550,8 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
             </button>
 
             {filterDeptOpen && (
-              <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-slate-200 rounded-md shadow-xl z-30 py-1 max-h-60 overflow-y-auto">
-                <p className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Filter by Department</p>
+              <div className="absolute right-0 top-full mt-1 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-xl z-30 py-1 max-h-60 overflow-y-auto">
+                <p className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Filter by Department</p>
                 {filteredDepts.map((d) => (
                   <button
                     key={d.id}
@@ -476,11 +562,11 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                       setFilterDeptOpen(false);
                     }}
                     className={`w-full text-left px-3 py-1.5 text-xs transition-colors ${
-                      filterDeptId === d.id ? "bg-purple-50 text-purple-700 font-medium" : "text-slate-700 hover:bg-slate-50"
+                      filterDeptId === d.id ? "bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-medium" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
                     }`}
                   >
                     {d.name}{" "}
-                    <span className="text-slate-400 font-normal">({fundingTypeShortLabel(d.funding_type)})</span>
+                    <span className="text-slate-400 dark:text-slate-500 font-normal">({fundingTypeShortLabel(d.funding_type)})</span>
                   </button>
                 ))}
                 {filterDeptId && (
@@ -491,7 +577,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                       setSegmentActiveKey(null);
                       setFilterDeptOpen(false);
                     }}
-                    className="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 border-t border-slate-100 mt-1"
+                    className="w-full text-left px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 border-t border-slate-100 dark:border-slate-700 mt-1"
                   >
                     Clear filter
                   </button>
@@ -553,25 +639,25 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                   {filtered.map((person) => (
                     <article
                       key={person.id}
-                      className="rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50/90 to-white p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] flex flex-col gap-3 hover:border-violet-200/80 hover:shadow-md transition-all"
+                      className="rounded-xl border border-slate-200 dark:border-slate-750 bg-gradient-to-b from-slate-50/90 to-white dark:from-slate-800/90 dark:to-slate-900 p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] flex flex-col gap-3 hover:border-violet-200/80 dark:hover:border-violet-800/80 hover:shadow-md transition-all"
                     >
                       <div className="flex items-start gap-3 min-w-0">
-                        <span className="w-10 h-10 rounded-lg bg-violet-50 border border-violet-100 shrink-0 flex items-center justify-center">
-                          <User size={18} className="text-violet-600" aria-hidden />
+                        <span className="w-10 h-10 rounded-lg bg-violet-50 dark:bg-violet-950/40 border border-violet-100 dark:border-violet-900/60 shrink-0 flex items-center justify-center">
+                          <User size={18} className="text-violet-600 dark:text-violet-400" aria-hidden />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-slate-900 leading-tight truncate">{person.full_name}</p>
-                          <div className="text-[11px] text-slate-600 mt-1 line-clamp-2">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight truncate">{person.full_name}</p>
+                          <div className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">
                             {person.departments?.name ? (
                               <span className="inline-flex items-center gap-1.5 flex-wrap">
                                 <span>{person.departments.name}</span>
                                 <DepartmentFundingBadge fundingType={person.departments.funding_type} />
                               </span>
                             ) : (
-                              <span className="text-slate-400">No department</span>
+                              <span className="text-slate-400 dark:text-slate-500">No department</span>
                             )}
                           </div>
-                          <p className="text-[10px] text-slate-400 mt-1 truncate">{person.institutions?.name ?? "—"}</p>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-550 mt-1 truncate">{person.institutions?.name ?? "—"}</p>
                         </div>
                       </div>
                       <button
@@ -592,7 +678,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                             student_year: person.student_year ?? null,
                           });
                         }}
-                        className="mt-auto inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-slate-200 text-[11px] font-semibold text-slate-600 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        className="mt-auto inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-600 dark:text-slate-300 hover:border-violet-300 dark:hover:border-violet-850 hover:text-violet-700 dark:hover:text-violet-400 hover:bg-violet-50/50 dark:hover:bg-violet-950/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                       >
                         <Pencil size={12} />
                         Edit
@@ -605,23 +691,23 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
           ) : (
             <>
               <div className="flex-1 overflow-y-auto custom-scrollbar">
-                <table className="w-full text-left text-sm relative border border-slate-200 rounded-lg overflow-hidden bg-white">
-              <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                <table className="w-full text-left text-sm relative border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden bg-white dark:bg-slate-900">
+              <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10 shadow-sm">
                 <tr>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-900">#</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-900">Name</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-900">Department</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-900 dark:text-slate-100">{role === "STUDENT" ? "Roll No." : "#"}</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-900 dark:text-slate-100">Name</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-900 dark:text-slate-100">Department</th>
                   {role === "STUDENT" && (
                     <>
-                      <th className="px-4 py-3 text-xs font-semibold text-slate-900">Program</th>
-                      <th className="px-4 py-3 text-xs font-semibold text-slate-900">Year</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-slate-900 dark:text-slate-100">Program</th>
+                      <th className="px-4 py-3 text-xs font-semibold text-slate-900 dark:text-slate-100">Year</th>
                     </>
                   )}
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-900">Institution</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-900 w-[100px] text-right">Actions</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-900 dark:text-slate-100">Institution</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-900 dark:text-slate-100 w-[100px] text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {loading ? (
                   <tr>
                     <td colSpan={colSpan} className="px-4 py-8 text-center">
@@ -630,10 +716,12 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                   </tr>
                 ) : paginated.length > 0 ? (
                   paginated.map((person, i) => (
-                    <tr key={person.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-3 text-xs text-slate-400">{(page - 1) * PAGE_SIZE + i + 1}</td>
-                      <td className="px-4 py-3 font-medium text-slate-900 text-xs">{person.full_name}</td>
-                      <td className="px-4 py-3 text-slate-600 text-xs">
+                    <tr key={person.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                      <td className="px-4 py-3 text-xs text-slate-400 dark:text-slate-500 font-mono">
+                        {role === "STUDENT" ? person.roll_no : (page - 1) * PAGE_SIZE + i + 1}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100 text-xs">{person.full_name}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300 text-xs">
                         {person.departments?.name ? (
                           <span className="inline-flex items-center gap-1.5 flex-wrap">
                             <span>{person.departments.name}</span>
@@ -654,10 +742,10 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                               "—"
                             )}
                           </td>
-                          <td className="px-4 py-3 text-slate-600 text-xs">{person.student_year ?? "—"}</td>
+                          <td className="px-4 py-3 text-slate-600 dark:text-slate-300 text-xs">{person.student_year ?? "—"}</td>
                         </>
                       )}
-                      <td className="px-4 py-3 text-slate-600 text-xs">{person.institutions?.name || "N/A"}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300 text-xs">{person.institutions?.name || "N/A"}</td>
                       <td className="px-4 py-3 text-right">
                         <button
                           type="button"
@@ -668,7 +756,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                             setPersonToEdit({
                               id: person.id,
                               full_name: person.full_name,
-                              role: person.role,
+                              role: role,
                               institution_id: person.institution_id,
                               department_id: person.department_id,
                               email: person.email,
@@ -677,7 +765,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                               student_year: person.student_year ?? null,
                             });
                           }}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 text-[11px] font-medium text-slate-600 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-slate-600 dark:text-slate-300 hover:border-violet-300 dark:hover:border-violet-800 hover:text-violet-700 dark:hover:text-violet-400 hover:bg-violet-50/50 dark:hover:bg-violet-950/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                         >
                           <Pencil size={12} />
                           Edit
@@ -687,7 +775,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={colSpan} className="px-4 py-10 text-center text-xs text-slate-400">
+                    <td colSpan={colSpan} className="px-4 py-10 text-center text-xs text-slate-400 dark:text-slate-550">
                       No {role === "STAFF" ? "staff" : "students"} found{search ? ` matching "${search}"` : ""}.
                     </td>
                   </tr>
@@ -698,14 +786,14 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
 
           {!loading && totalPages > 1 && !(role === "STAFF" && staffLayoutMode === "grid") && (
             <div className="flex items-center justify-between mt-4 shrink-0">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 dark:text-slate-500">
                 Page {page} of {totalPages}
               </p>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeft size={14} />
                 </button>
@@ -719,7 +807,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                   }, [])
                   .map((n, i) =>
                     n === "..." ? (
-                      <span key={`ellipsis-${i}`} className="w-7 h-7 flex items-center justify-center text-xs text-slate-400">
+                      <span key={`ellipsis-${i}`} className="w-7 h-7 flex items-center justify-center text-xs text-slate-400 dark:text-slate-500">
                         …
                       </span>
                     ) : (
@@ -727,7 +815,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                         key={n}
                         onClick={() => setPage(n as number)}
                         className={`w-7 h-7 flex items-center justify-center rounded-md text-xs font-medium transition-colors ${
-                          page === n ? "bg-purple-600 text-white" : "border border-slate-200 text-slate-600 hover:bg-slate-50"
+                          page === n ? "bg-purple-600 text-white" : "border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800"
                         }`}
                       >
                         {n}
@@ -750,6 +838,145 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
         </div>
           </>
         )}
+      </div>
+
+      {/* Cohort Slide-out Drawer */}
+      <div
+        className={`fixed inset-0 z-[60] flex justify-end transition-opacity duration-200 ${segmentActiveKey ? "pointer-events-auto" : "pointer-events-none"}`}
+      >
+        <div
+          className={`fixed inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity duration-200 ${segmentActiveKey ? "opacity-100" : "opacity-0"}`}
+          onClick={() => {
+            setSegmentActiveKey(null);
+            setFilterDeptId("");
+            setFilterProgram("");
+            setFilterYearNum(null);
+          }}
+        />
+        <div
+          className={`relative w-full max-w-4xl h-full bg-white flex flex-col transform transition-transform duration-300 ease-out border-l border-slate-200 ${segmentActiveKey ? "translate-x-0" : "translate-x-full"}`}
+        >
+          <div className="flex items-center justify-between p-4 border-b border-slate-100 shrink-0">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900 tracking-tight">
+                {activeDept?.name || "All Departments"}
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {filterProgram ? `${filterProgram} ` : ""}
+                {filterYearNum ? `Year ${filterYearNum}` : "All Years"}
+                {` • ${filtered.length} students`}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSegmentActiveKey(null);
+                setFilterDeptId("");
+                setFilterProgram("");
+                setFilterYearNum(null);
+              }}
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
+            <div className="relative flex-1 max-w-md">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name…"
+                className="h-8 w-full pl-8 pr-7 bg-white border border-slate-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-colors placeholder:text-slate-400 shadow-sm"
+              />
+              {search && (
+                <button type="button" onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 flex flex-col min-h-0 bg-slate-50 p-4">
+            <div className="flex-1 overflow-y-auto custom-scrollbar border border-slate-200 rounded-lg bg-white shadow-sm">
+              <table className="w-full text-left text-sm relative">
+                <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                  <tr>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-900">Roll No.</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-900">Name</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-900">Department</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-900">Program</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-900">Year</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-900 w-[100px] text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filtered.length > 0 ? (
+                    filtered.map((person, i) => (
+                      <tr key={person.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 text-xs text-slate-400 font-mono">{person.roll_no}</td>
+                        <td className="px-4 py-3 font-medium text-slate-900 text-xs">{person.full_name}</td>
+                        <td className="px-4 py-3 text-slate-600 text-xs">
+                          {person.departments?.name ? (
+                            <span className="inline-flex items-center gap-1.5 flex-wrap">
+                              <span>{person.departments.name}</span>
+                              <DepartmentFundingBadge fundingType={person.departments.funding_type} />
+                            </span>
+                          ) : (
+                            "N/A"
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs">
+                          {person.student_program ? (
+                            <Badge variant={person.student_program === "UG" ? "active" : "default"}>
+                              {person.student_program}
+                            </Badge>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600 text-xs">{person.student_year ?? "—"}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            disabled={!person.department_id}
+                            title={!person.department_id ? "Assign a department before editing" : undefined}
+                            onClick={() => {
+                              if (!person.department_id) return;
+                              setPersonToEdit({
+                                id: person.id,
+                                full_name: person.full_name,
+                                role: role,
+                                institution_id: person.institution_id,
+                                department_id: person.department_id,
+                                email: person.email,
+                                phone: person.phone,
+                                student_program: person.student_program ? (person.student_program as StudentProgram) : null,
+                                student_year: person.student_year ?? null,
+                              });
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 text-[11px] font-medium text-slate-600 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                          >
+                            <Pencil size={12} />
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-10 text-center text-xs text-slate-400">
+                        No students found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
       <AddPersonModal

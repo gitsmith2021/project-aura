@@ -5,6 +5,7 @@ import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundi
 import { getDeptColor } from "@/lib/deptColors";
 import { getDeptIcon } from "@/lib/deptIcons";
 import type { StudentProgram } from "@/lib/studentProgram";
+import { useTheme } from "@/context/ThemeContext";
 
 type DeptTone = ReturnType<typeof getDeptColor>;
 
@@ -45,18 +46,21 @@ function YearPill({
   const active = activeKey === k;
   const quiet = count === 0;
 
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const inactiveStyle: CSSProperties | undefined = active
     ? undefined
     : quiet
       ? {
           borderColor: tone.border,
-          backgroundColor: tone.bg2,
+          backgroundColor: isDark ? "rgba(0,0,0,0.15)" : tone.bg2,
           color: tone.text,
           opacity: 0.42,
         }
       : {
           borderColor: tone.border,
-          backgroundColor: "rgba(255,255,255,0.82)",
+          backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.82)",
           color: tone.text,
         };
 
@@ -86,6 +90,8 @@ function YearPill({
 }
 
 export function StudentDeptBreakdown({ tenantId, students, departments, activeKey, onSelectSegment }: Props) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const depts = useMemo(() => departments.filter((d) => d.institution_id === tenantId), [departments, tenantId]);
 
   const counts = useMemo(() => {
@@ -110,7 +116,7 @@ export function StudentDeptBreakdown({ tenantId, students, departments, activeKe
           <button
             type="button"
             onClick={() => onSelectSegment(null, null, null, null)}
-            className="text-[11px] font-medium text-violet-600 hover:text-violet-800 px-2 py-1 rounded-md hover:bg-violet-50"
+            className="text-[11px] font-medium text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 px-2 py-1 rounded-md hover:bg-violet-50 dark:hover:bg-violet-950/30"
           >
             Clear selection
           </button>
@@ -119,7 +125,7 @@ export function StudentDeptBreakdown({ tenantId, students, departments, activeKe
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {depts.map((d) => {
-          const c = getDeptColor(d.color);
+          const c = getDeptColor(d.color, isDark);
           return (
             <article
               key={d.id}
@@ -137,7 +143,7 @@ export function StudentDeptBreakdown({ tenantId, students, departments, activeKe
                   const Icon = getDeptIcon(d.name);
                   return (
                     <span
-                      className="w-8 h-8 rounded-lg border shrink-0 flex items-center justify-center bg-white/80"
+                      className="w-8 h-8 rounded-lg border shrink-0 flex items-center justify-center bg-white/80 dark:bg-slate-800/80"
                       style={{ borderColor: c.border }}
                     >
                       <Icon className="w-4 h-4" style={{ color: c.hex }} />
@@ -154,7 +160,7 @@ export function StudentDeptBreakdown({ tenantId, students, departments, activeKe
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="w-7 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-sky-700/90">UG</span>
+                  <span className="w-7 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-sky-700/90 dark:text-sky-400">UG</span>
                   <div className="flex flex-wrap gap-1">
                     {[1, 2, 3].map((year) => (
                       <YearPill
@@ -171,7 +177,7 @@ export function StudentDeptBreakdown({ tenantId, students, departments, activeKe
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-7 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-amber-800/85">PG</span>
+                  <span className="w-7 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-amber-800/85 dark:text-amber-400">PG</span>
                   <div className="flex flex-wrap gap-1">
                     {[1, 2].map((year) => (
                       <YearPill

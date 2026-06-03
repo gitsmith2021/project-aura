@@ -9,6 +9,7 @@ In this new terminal, you need to step into the Python folder and wake up your i
 Bash
 
 cd aura-scheduler-engine
+
 .\venv\Scripts\activate
 
 

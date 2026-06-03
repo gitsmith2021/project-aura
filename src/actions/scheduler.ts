@@ -28,6 +28,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { SHIFT_PERIOD_TIMES } from "@/lib/scheduleConstants";
 
 const SCHEDULER_URL = process.env.SCHEDULER_API_URL ?? "http://127.0.0.1:8000";
 
@@ -72,6 +73,216 @@ export type SchedulerResult =
   | { success: true; draftId: string; solverStatus: string; solveTime: number }
   | { success: false; error: string };
 
+export type DraftTimetableEntry = {
+  staff_id: string;
+  staff_name: string;
+  cohort_id: string;
+  cohort_name: string;
+  day: number;
+  day_name: string;
+  period: number;
+};
+
+export type DraftStaffWorkload = {
+  staff_id: string;
+  staff_name: string;
+  total_hours_week: number;
+};
+
+export type DraftScheduleData = {
+  id: string;
+  institution_id: string;
+  department_id: string;
+  academic_year: string;
+  status: string;
+  timetable: DraftTimetableEntry[];
+  staff_workload: DraftStaffWorkload[];
+};
+
+export type PublishResult =
+  | { success: true; count: number }
+  | { success: false; error: string };
+
+
+
+export type DraftSummary = {
+  id: string;
+  academic_year: string;
+  status: string;
+  generated_at: string;
+  slot_count: number;
+};
+
+export async function listDraftSchedules(
+  institutionId: string,
+  departmentId: string,
+): Promise<{ data: DraftSummary[]; error: string | null }> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { data, error } = await supabase
+    .from("draft_schedules")
+    .select("id, academic_year, status, generated_at, schedule_data")
+    .eq("institution_id", institutionId)
+    .eq("department_id", departmentId)
+    .order("generated_at", { ascending: false })
+    .limit(10);
+
+  if (error) return { data: [], error: error.message };
+
+  const summaries: DraftSummary[] = (data ?? []).map((row) => {
+    const sd = row.schedule_data as Record<string, unknown>;
+    const timetable = (sd?.timetable as unknown[]) ?? [];
+    return {
+      id: row.id as string,
+      academic_year: row.academic_year as string,
+      status: row.status as string,
+      generated_at: row.generated_at as string,
+      slot_count: timetable.length,
+    };
+  });
+
+  return { data: summaries, error: null };
+}
+
+export async function getDraftSchedule(
+  draftId: string,
+): Promise<{ data: DraftScheduleData | null; error: string | null }> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { data, error } = await supabase
+    .from("draft_schedules")
+    .select("id, institution_id, department_id, academic_year, schedule_data, status")
+    .eq("id", draftId)
+    .single();
+
+  if (error || !data) return { data: null, error: error?.message ?? "Draft not found" };
+
+  const sd = data.schedule_data as Record<string, unknown>;
+  return {
+    data: {
+      id: data.id as string,
+      institution_id: data.institution_id as string,
+      department_id: data.department_id as string,
+      academic_year: data.academic_year as string,
+      status: data.status as string,
+      timetable: (sd.timetable as DraftTimetableEntry[]) ?? [],
+      staff_workload: (sd.staff_workload as DraftStaffWorkload[]) ?? [],
+    },
+    error: null,
+  };
+}
+
+export async function deleteDraftSchedule(draftId: string): Promise<{ success: boolean; error?: string }> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+  const { error } = await supabase.from("draft_schedules").delete().eq("id", draftId);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function clearDepartmentSchedules(
+  institutionId: string,
+  departmentId: string,
+): Promise<{ success: boolean; count: number; error?: string }> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  // Count before deleting so we can report how many were removed
+  const { count } = await supabase
+    .from("schedules")
+    .select("*", { count: "exact", head: true })
+    .eq("tenant_id", institutionId)
+    .eq("department_id", departmentId);
+
+  const { error } = await supabase
+    .from("schedules")
+    .delete()
+    .eq("tenant_id", institutionId)
+    .eq("department_id", departmentId);
+
+  if (error) return { success: false, count: 0, error: error.message };
+
+  // Reset all published drafts for this dept back to DRAFT
+  await supabase
+    .from("draft_schedules")
+    .update({ status: "DRAFT" })
+    .eq("institution_id", institutionId)
+    .eq("department_id", departmentId)
+    .eq("status", "PUBLISHED");
+
+  revalidatePath("/schedules");
+  return { success: true, count: count ?? 0 };
+}
+
+export async function publishDraftSchedule(draftId: string): Promise<PublishResult> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { data: draft, error: fetchError } = await supabase
+    .from("draft_schedules")
+    .select("institution_id, department_id, schedule_data, status")
+    .eq("id", draftId)
+    .single();
+
+  if (fetchError || !draft) return { success: false, error: fetchError?.message ?? "Draft not found" };
+
+  const { data: dept } = await supabase
+    .from("departments")
+    .select("session_type")
+    .eq("id", draft.department_id as string)
+    .maybeSingle();
+  const periodTimes = SHIFT_PERIOD_TIMES[(dept?.session_type as string) ?? "NORMAL"] ?? SHIFT_PERIOD_TIMES.NORMAL;
+  if ((draft.status as string) === "PUBLISHED") return { success: false, error: "This schedule is already published." };
+
+  // ── Unpublish any existing published schedule for this department ─────
+  const { data: prevPublished } = await supabase
+    .from("draft_schedules")
+    .select("id")
+    .eq("institution_id", draft.institution_id as string)
+    .eq("department_id", draft.department_id as string)
+    .eq("status", "PUBLISHED")
+    .maybeSingle();
+
+  if (prevPublished) {
+    // Remove schedule rows that came from the previous published draft
+    await supabase
+      .from("schedules")
+      .delete()
+      .eq("draft_schedule_id", prevPublished.id);
+
+    // Revert its status back to DRAFT
+    await supabase
+      .from("draft_schedules")
+      .update({ status: "DRAFT" })
+      .eq("id", prevPublished.id);
+  }
+
+  // ── Insert new schedule rows ──────────────────────────────────────────
+  const sd = draft.schedule_data as Record<string, unknown>;
+  const timetable = (sd.timetable as DraftTimetableEntry[]) ?? [];
+
+  const rows = timetable.map((e) => ({
+    day_of_week:       e.day_name,
+    start_time:        periodTimes[e.period]?.start ?? "09:00:00",
+    end_time:          periodTimes[e.period]?.end   ?? "10:00:00",
+    department_id:     draft.department_id as string,
+    subject_name:      e.cohort_name,
+    staff_id:          e.staff_id,
+    tenant_id:         draft.institution_id as string,
+    draft_schedule_id: draftId,
+  }));
+
+  const { error: insertError } = await supabase.from("schedules").insert(rows);
+  if (insertError) return { success: false, error: insertError.message };
+
+  await supabase.from("draft_schedules").update({ status: "PUBLISHED" }).eq("id", draftId);
+  revalidatePath("/schedules");
+
+  return { success: true, count: rows.length };
+}
+
 export async function generateDepartmentSchedule(
   institutionId: string,
   departmentId: string,
@@ -81,7 +292,24 @@ export async function generateDepartmentSchedule(
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
-    // ── Step A: Fetch active staff for this department ───────────────────
+    // ── Step A: Reject if a draft already exists for this dept + year ───
+    const { data: existing } = await supabase
+      .from("draft_schedules")
+      .select("id")
+      .eq("institution_id", institutionId)
+      .eq("department_id", departmentId)
+      .eq("academic_year", academicYear)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      return {
+        success: false,
+        error: `A schedule for "${academicYear}" already exists for this department. Delete the existing one from Past Schedules first, or choose a different year name.`,
+      };
+    }
+
+    // ── Step B: Fetch active staff for this department ───────────────────
     const { data: staffRows, error: staffError } = await supabase
       .from("staff")
       .select("id, full_name, max_hours_per_week")
@@ -100,7 +328,7 @@ export async function generateDepartmentSchedule(
       };
     }
 
-    // ── Step B: Map Supabase rows → Python API payload ───────────────────
+    // ── Step C: Map Supabase rows → Python API payload ───────────────────
     const payload: SolverPayload = {
       staff: (staffRows as StaffRow[]).map((s) => ({
         id: s.id,
@@ -111,7 +339,7 @@ export async function generateDepartmentSchedule(
       settings: INSTITUTION_SETTINGS,
     };
 
-    // ── Step C: Call the Python scheduling engine ────────────────────────
+    // ── Step D: Call the Python scheduling engine ────────────────────────
     let solverResponse: SolverResponse;
 
     try {
@@ -143,7 +371,7 @@ export async function generateDepartmentSchedule(
       return { success: false, error: message };
     }
 
-    // ── Step D: Persist as a draft schedule in Supabase ─────────────────
+    // ── Step E: Persist as a draft schedule in Supabase ─────────────────
     const { data: draft, error: insertError } = await supabase
       .from("draft_schedules")
       .insert({

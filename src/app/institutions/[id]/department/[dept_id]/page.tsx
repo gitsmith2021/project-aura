@@ -59,12 +59,12 @@ function WaitingForPulse({ nextClass, now, formatTimeFn }: {
 
   if (!nextClass) {
     return (
-      <div className="aura-fade-in relative overflow-hidden rounded-2xl border border-violet-100/60 bg-[radial-gradient(ellipse_at_top_left,_rgba(139,92,246,0.06)_0%,_rgba(255,255,255,0.8)_70%)] backdrop-blur-sm p-8 shadow-[0_1px_24px_rgba(109,40,217,0.06)] flex flex-col items-center justify-center text-center gap-3">
+      <div className="aura-fade-in relative overflow-hidden rounded-2xl border border-violet-100/60 dark:border-violet-800/30 bg-[radial-gradient(ellipse_at_top_left,_rgba(139,92,246,0.06)_0%,_rgba(255,255,255,0.8)_70%)] dark:bg-slate-800 backdrop-blur-sm p-8 shadow-[0_1px_24px_rgba(109,40,217,0.06)] flex flex-col items-center justify-center text-center gap-3">
         <div className="relative flex items-center justify-center w-16 h-16 mb-2">
           <span className="pulse-ring-1 absolute inset-0 rounded-full bg-violet-300/20" />
           <span className="pulse-ring-2 absolute inset-0 rounded-full bg-violet-300/20" />
           <span className="pulse-ring-3 absolute inset-0 rounded-full bg-violet-300/20" />
-          <span className="relative w-8 h-8 rounded-full bg-violet-100 border border-violet-200/60 flex items-center justify-center">
+          <span className="relative w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900/40 border border-violet-200/60 flex items-center justify-center">
             <span className="w-2.5 h-2.5 rounded-full bg-violet-300" />
           </span>
         </div>
@@ -76,7 +76,7 @@ function WaitingForPulse({ nextClass, now, formatTimeFn }: {
   }
 
   return (
-    <div className="aura-fade-in relative overflow-hidden rounded-2xl border border-violet-200/50 bg-[radial-gradient(ellipse_at_top_left,_rgba(139,92,246,0.08)_0%,_rgba(255,255,255,0.82)_65%)] backdrop-blur-sm shadow-[0_2px_32px_rgba(109,40,217,0.07)]">
+    <div className="aura-fade-in relative overflow-hidden rounded-2xl border border-violet-200/50 dark:border-violet-800/30 bg-[radial-gradient(ellipse_at_top_left,_rgba(139,92,246,0.08)_0%,_rgba(255,255,255,0.82)_65%)] dark:bg-slate-800 backdrop-blur-sm shadow-[0_2px_32px_rgba(109,40,217,0.07)]">
       {/* subtle corner glow */}
       <div className="pointer-events-none absolute -top-10 -left-10 w-48 h-48 rounded-full bg-violet-300/10 blur-3xl" />
 
@@ -87,7 +87,7 @@ function WaitingForPulse({ nextClass, now, formatTimeFn }: {
           <span className="pulse-ring-1 absolute inset-0 rounded-full bg-violet-400/15" />
           <span className="pulse-ring-2 absolute inset-0 rounded-full bg-violet-400/15" />
           <span className="pulse-ring-3 absolute inset-0 rounded-full bg-violet-400/15" />
-          <span className="relative w-11 h-11 rounded-full bg-violet-100/80 border border-violet-300/50 flex items-center justify-center shadow-inner">
+          <span className="relative w-11 h-11 rounded-full bg-violet-100/80 dark:bg-violet-900/40 border border-violet-300/50 flex items-center justify-center shadow-inner">
             <Clock className="w-5 h-5 text-violet-500" strokeWidth={1.8} />
           </span>
         </div>

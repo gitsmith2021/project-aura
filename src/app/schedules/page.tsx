@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ScrollableTabBar } from "@/components/layout/ScrollableTabBar";
+import { InstitutionTabBar } from "@/components/layout/InstitutionTabBar";
 import { createClient } from "@/utils/supabase/client";
 import {
   Plus, BookOpen,
@@ -120,7 +121,7 @@ export default function SchedulesPage() {
     const seen = new Map<string, string>();
     institutionClasses.forEach(c => {
       if (c.staff_id && !seen.has(c.staff_id))
-        seen.set(c.staff_id, (c.profiles as any)?.full_name ?? "Unknown");
+        seen.set(c.staff_id, (c.staff as any)?.full_name ?? "Unknown");
     });
     return Array.from(seen, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
   }, [institutionClasses]);
@@ -160,7 +161,7 @@ export default function SchedulesPage() {
       for (let i = 0; i < entries.length - 1; i++) {
         if (entries[i].end_time > entries[i + 1].start_time) {
           const id = entries[i].staff_id;
-          const name = (entries[i].profiles as any)?.full_name ?? "Unknown";
+          const name = (entries[i].staff as any)?.full_name ?? "Unknown";
           affectedStaff.set(id, name);
         }
       }
@@ -191,24 +192,13 @@ export default function SchedulesPage() {
     <DashboardLayout>
       <div className="relative flex h-[calc(100vh-56px)] min-h-0 min-w-0 max-w-full flex-col overflow-hidden px-6 pt-2 pb-2">
 
-        <div className="mb-3 min-w-0 shrink-0 border-b border-slate-200">
-          <ScrollableTabBar innerClassName="items-stretch gap-0">
-            {tenants.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setSelectedTenantId(t.id)}
-                className={`shrink-0 whitespace-nowrap px-5 py-2.5 text-xs font-semibold transition-colors border-b-2 ${
-                  selectedTenantId === t.id
-                    ? "border-violet-600 bg-violet-50/50 text-violet-700"
-                    : "border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800"
-                }`}
-              >
-                {t.name}
-              </button>
-            ))}
-          </ScrollableTabBar>
-        </div>
+        <InstitutionTabBar
+          institutions={tenants}
+          selectedId={selectedTenantId}
+          onSelect={setSelectedTenantId}
+          loading={tenants.length === 0}
+          className="-mx-6 px-6 bg-white dark:bg-slate-900"
+        />
 
         {/* ── Page Header ── */}
         <div className="mb-2 flex min-w-0 shrink-0 flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
@@ -461,7 +451,7 @@ export default function SchedulesPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-              <AutoSchedulerButton tenantId={selectedTenantId} />
+              <AutoSchedulerButton tenantId={selectedTenantId} onPublished={fetchClasses} />
             </div>
           </div>
         </div>

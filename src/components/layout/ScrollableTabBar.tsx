@@ -81,9 +81,9 @@ export function ScrollableTabBar({
         aria-label="Scroll tabs left"
         disabled={!canLeft}
         onClick={() => scrollByDir(-1)}
-        className="flex shrink-0 items-center justify-center border-r border-slate-100 bg-slate-50/95 px-1 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-35"
+        className="flex shrink-0 items-center justify-center border-r border-slate-100 dark:border-slate-700 bg-slate-50/95 dark:bg-slate-900/95 px-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-35"
       >
-        <ChevronLeft size={14} className="text-slate-600" />
+        <ChevronLeft size={14} className="text-slate-600 dark:text-slate-400" />
       </button>
 
       <div
@@ -101,12 +101,12 @@ export function ScrollableTabBar({
         aria-label="Scroll tabs right"
         disabled={!canRight}
         onClick={() => scrollByDir(1)}
-        className="flex shrink-0 items-center justify-center border-l border-slate-100 bg-slate-50/95 px-1 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-35"
+        className="flex shrink-0 items-center justify-center border-l border-slate-100 dark:border-slate-700 bg-slate-50/95 dark:bg-slate-900/95 px-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-35"
       >
-        <ChevronRight size={14} className="text-slate-600" />
+        <ChevronRight size={14} className="text-slate-600 dark:text-slate-400" />
       </button>
 
-      {trailing ? <div className="flex shrink-0 items-stretch border-l border-slate-200 bg-white">{trailing}</div> : null}
+      {trailing ? <div className="flex shrink-0 items-stretch border-l border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">{trailing}</div> : null}
     </div>
   );
 }

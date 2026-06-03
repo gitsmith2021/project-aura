@@ -11,8 +11,8 @@ export function DepartmentFundingBadge({ fundingType, variant = "light", classNa
   const label = fundingTypeShortLabel(fundingType);
   const isSf = fundingType === "SELF_FINANCING";
   const light = isSf
-    ? "bg-amber-50 text-amber-800 border-amber-200"
-    : "bg-sky-50 text-sky-800 border-sky-200";
+    ? "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/35"
+    : "bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/35";
   const dark = isSf
     ? "bg-amber-500/15 text-amber-300 border-amber-500/35"
     : "bg-sky-500/15 text-sky-300 border-sky-500/35";

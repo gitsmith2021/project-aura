@@ -46,14 +46,21 @@ const SHIFT_OPTIONS: ShiftOption[] = [
   },
 ];
 
-export function ShiftGateway() {
+export function ShiftGateway({ allowedShifts }: { allowedShifts?: string[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const visibleOptions = allowedShifts && allowedShifts.length > 0
+    ? SHIFT_OPTIONS.filter((o) => allowedShifts.includes(o.key))
+    : SHIFT_OPTIONS;
+
+  // Single-shift institution — no switcher needed
+  if (visibleOptions.length <= 1) return null;
+
   const currentShift = (searchParams?.get("shift") as ShiftKey) || "NORMAL";
-  const activeIndex = SHIFT_OPTIONS.findIndex((o) => o.key === currentShift);
-  const activeOption = SHIFT_OPTIONS[activeIndex >= 0 ? activeIndex : 0];
+  const activeIndex = visibleOptions.findIndex((o) => o.key === currentShift);
+  const activeOption = visibleOptions[activeIndex >= 0 ? activeIndex : 0];
 
   // Refs for measuring pill positions
   const containerRef = useRef<HTMLDivElement>(null);
@@ -112,8 +119,8 @@ export function ShiftGateway() {
           }}
         />
 
-        {SHIFT_OPTIONS.map((opt, i) => {
-          const isActive = opt.key === (activeIndex >= 0 ? SHIFT_OPTIONS[activeIndex].key : "NORMAL");
+        {visibleOptions.map((opt, i) => {
+          const isActive = opt.key === (activeIndex >= 0 ? visibleOptions[activeIndex].key : "NORMAL");
           return (
             <button
               key={opt.key}

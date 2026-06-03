@@ -29,6 +29,7 @@ type College = {
   name: string;
   college_type: string | null;
   subdomain?: string | null;
+  session_types?: string[] | null;
 };
 
 type StaffMember = {
@@ -187,12 +188,14 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
             </button>
           </div>
 
-          {/* Shift Gateway — Segmented Control */}
-          <div className="shrink-0 mb-4">
-            <Suspense fallback={<div className="h-9 w-80 bg-slate-100 rounded-xl animate-pulse" />}>
-              <ShiftGateway />
-            </Suspense>
-          </div>
+          {/* Shift Gateway — only visible when institution supports multiple shifts */}
+          {(college?.session_types?.length ?? 0) > 1 && (
+            <div className="shrink-0 mb-4">
+              <Suspense fallback={<div className="h-9 w-80 bg-slate-100 rounded-xl animate-pulse" />}>
+                <ShiftGateway allowedShifts={college?.session_types ?? undefined} />
+              </Suspense>
+            </div>
+          )}
 
           <div className="custom-scrollbar flex-1 min-h-0 overflow-y-auto pb-4 pr-1.5">
             {loading ? (
@@ -299,6 +302,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
         tenantId={collegeId}
         onSuccess={fetchData}
         departmentToEdit={departmentToEdit}
+        allowedSessionTypes={college?.session_types ?? undefined}
       />
 
       <EditInstitutionModal
@@ -312,6 +316,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
                 name: college.name,
                 college_type: college.college_type,
                 subdomain: college.subdomain ?? null,
+                session_types: college.session_types ?? null,
               } satisfies InstitutionEditPayload)
             : null
         }

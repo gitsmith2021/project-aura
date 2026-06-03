@@ -22,6 +22,14 @@ type Props = {
   onSuccess: () => void;
   /** When set, updates this department instead of creating a new one */
   departmentToEdit?: DepartmentEditPayload | null;
+  /** Session types the institution supports. If only one, locks the field. */
+  allowedSessionTypes?: string[];
+};
+
+const SESSION_LABELS: Record<string, string> = {
+  NORMAL: "General Shift (9 AM – 4 PM)",
+  DAY:    "Day Shift 1 (8:15 AM – 1:15 PM)",
+  EVENING:"Evening Shift 2 (1:30 PM – 6:30 PM)",
 };
 
 export function AddDepartmentModal({
@@ -30,7 +38,9 @@ export function AddDepartmentModal({
   tenantId,
   onSuccess,
   departmentToEdit = null,
+  allowedSessionTypes,
 }: Props) {
+  const singleShift = allowedSessionTypes?.length === 1 ? allowedSessionTypes[0] : null;
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState('');
   const [sessionType, setSessionType] = useState<'NORMAL' | 'DAY' | 'EVENING'>('NORMAL');
@@ -49,13 +59,14 @@ export function AddDepartmentModal({
         setName(departmentToEdit.name);
         const st = departmentToEdit.session_type;
         setSessionType(
-          st === "DAY" || st === "EVENING" ? st : "NORMAL"
+          singleShift as 'NORMAL' | 'DAY' | 'EVENING'
+          ?? (st === "DAY" || st === "EVENING" ? st : "NORMAL")
         );
         setFundingType(normalizeFundingType(departmentToEdit.funding_type));
         setColor(departmentToEdit.color || randomDeptColorKey());
       } else {
         setName("");
-        setSessionType("NORMAL");
+        setSessionType((singleShift as 'NORMAL' | 'DAY' | 'EVENING') ?? "NORMAL");
         setFundingType("AIDED");
         setColor(randomDeptColorKey());
       }
@@ -81,13 +92,13 @@ export function AddDepartmentModal({
             .from("departments")
             .update({ name, session_type: sessionType, funding_type: fundingType, color })
             .eq("id", departmentToEdit.id)
-            .eq("tenant_id", tenantId)
+            .eq("institution_id", tenantId)
         ).error
       : (
           await supabase.from("departments").insert([
             {
               name,
-              tenant_id: tenantId,
+              institution_id: tenantId,
               color,
               session_type: sessionType,
               funding_type: fundingType,
@@ -192,16 +203,22 @@ export function AddDepartmentModal({
               <label htmlFor="dept_session_type" className="block text-xs font-medium text-slate-700">
                 College Session Type
               </label>
-              <select
-                id="dept_session_type"
-                value={sessionType}
-                onChange={e => setSessionType(e.target.value as 'NORMAL' | 'DAY' | 'EVENING')}
-                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs"
-              >
-                <option value="NORMAL">General Shift</option>
-                <option value="DAY">Day Shift 1</option>
-                <option value="EVENING">Evening Shift 2</option>
-              </select>
+              {singleShift ? (
+                <div className="w-full px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-md text-xs text-slate-500 cursor-not-allowed">
+                  {SESSION_LABELS[singleShift] ?? singleShift}
+                </div>
+              ) : (
+                <select
+                  id="dept_session_type"
+                  value={sessionType}
+                  onChange={e => setSessionType(e.target.value as 'NORMAL' | 'DAY' | 'EVENING')}
+                  className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs"
+                >
+                  {(allowedSessionTypes ?? ["NORMAL", "DAY", "EVENING"]).map(key => (
+                    <option key={key} value={key}>{SESSION_LABELS[key] ?? key}</option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div className="space-y-1">

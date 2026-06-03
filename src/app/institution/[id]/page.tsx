@@ -21,11 +21,12 @@ export default async function InstitutionDashboardPage({ params, searchParams }:
   // Fetch the actual institution name
   const { data: tenant } = await supabase
     .from('institutions')
-    .select('name')
+    .select('name, session_types')
     .eq('id', institutionId)
     .single();
 
   const institutionName = tenant?.name || 'Bishop Heber College';
+  const isMultiShift = ((tenant?.session_types as string[] | null) ?? []).length > 1;
 
   // Read shift search parameter. Default to 'DAY' if undefined or empty.
   const shiftParam = resolvedSearchParams?.shift;
@@ -45,10 +46,12 @@ export default async function InstitutionDashboardPage({ params, searchParams }:
             </p>
           </div>
           
-          {/* Shift Toggle Component placed right below the title */}
-          <div className="flex items-center">
-            <ShiftSelector />
-          </div>
+          {/* Shift Toggle — only for multi-shift institutions */}
+          {isMultiShift && (
+            <div className="flex items-center">
+              <ShiftSelector />
+            </div>
+          )}
         </div>
       </header>
 

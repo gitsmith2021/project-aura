@@ -12,7 +12,7 @@ type Props = {
   role: "STAFF" | "STUDENT";
   tenantId: string;
   tenantName: string;
-  departments: { id: string; name: string; institution_id: string }[];
+  departments: { id: string; name: string; institution_id: string; funding_type?: string | null }[];
 };
 
 function parseCsvLine(line: string): string[] {
@@ -103,8 +103,25 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
     let start = 0;
     if (rowLooksLikeHeader(rows[0])) start = 1;
 
+    const supabase = createClient();
     const lines: string[] = [];
     const payloads: Record<string, unknown>[] = [];
+    
+    const cohortCounts = new Map<string, number>();
+    if (role === "STUDENT") {
+      const { data: existing } = await supabase
+        .from('students')
+        .select('department_id, student_program, student_year')
+        .eq('institution_id', tenantId);
+        
+      if (existing) {
+        for (const s of existing) {
+          if (!s.department_id || !s.student_program || s.student_year == null) continue;
+          const k = `${s.department_id}:${s.student_program}:${s.student_year}`;
+          cohortCounts.set(k, (cohortCounts.get(k) || 0) + 1);
+        }
+      }
+    }
 
     for (let i = start; i < rows.length; i++) {
       const cells = rows[i];
@@ -159,6 +176,28 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
         lines.push(`Row ${rowNum}: year ${year} invalid for ${program} — skipped`);
         continue;
       }
+      
+      const cohortKey = `${deptId}:${program}:${year}`;
+      const currentCount = (cohortCounts.get(cohortKey) || 0) + 1;
+      cohortCounts.set(cohortKey, currentCount);
+
+      const dept = departments.find(d => d.id === deptId);
+      const fundingRaw = dept?.funding_type;
+      const funding = fundingRaw === "AIDED" ? "A" : fundingRaw === "SF" ? "SF" : "XX";
+      
+      const deptName = dept?.name || "";
+      let deptPrefix = "XX";
+      if (deptName) {
+        const words = deptName.split(/[\s-]+/);
+        if (words.length > 1) {
+          deptPrefix = words.map(w => w[0].toUpperCase()).join("");
+        } else {
+          deptPrefix = deptName.substring(0, 2).toUpperCase();
+        }
+      }
+      
+      const idxStr = String(currentCount).padStart(3, "0");
+      const roll_no = `${program}-${funding}-${deptPrefix}-${idxStr}`;
 
       payloads.push({
         full_name,
@@ -168,6 +207,7 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
         department_id: deptId,
         student_program: program,
         student_year: year,
+        roll_no,
       });
     }
 
@@ -180,7 +220,6 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
     setBusy(true);
     setLog([`Importing ${payloads.length} ${role === "STAFF" ? "staff" : "students"}…`, ...lines]);
 
-    const supabase = createClient();
     const chunk = 40;
     let inserted = 0;
     for (let i = 0; i < payloads.length; i += chunk) {
