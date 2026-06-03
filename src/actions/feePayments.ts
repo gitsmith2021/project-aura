@@ -124,6 +124,7 @@ export async function recordManualPayment(
                           : null,
       notes:            payload.notes?.trim() || null,
       institution_id:   payload.institution_id,
+      recorded_by:      user.id,
     });
 
     let { data, error } = await supabase
@@ -192,14 +193,15 @@ export async function createRazorpayOrder(payload: {
     const { data: paymentRow, error: dbErr } = await supabase
       .from("fee_payments")
       .insert({
-        institution_id:   payload.institutionId,
-        student_id:       payload.studentId,
-        fee_structure_id: payload.feeStructureId,
-        amount_paid:      payload.amount,
-        payment_mode:     "razorpay" as PaymentMode,
-        payment_status:   "pending",
+        institution_id:    payload.institutionId,
+        student_id:        payload.studentId,
+        fee_structure_id:  payload.feeStructureId,
+        amount_paid:       payload.amount,
+        payment_mode:      "razorpay" as PaymentMode,
+        payment_status:    "pending",
         razorpay_order_id: order.id,
-        receipt_number:   generateReceiptNumber(),
+        receipt_number:    generateReceiptNumber(),
+        recorded_by:       user.id,
       })
       .select("id")
       .single();
