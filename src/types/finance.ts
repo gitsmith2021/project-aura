@@ -168,3 +168,63 @@ export type ExpenseSummary = {
   byDepartment: { department_name: string; total: number }[];
   topVendors: { vendor_name: string; total: number; count: number }[];
 };
+
+// ── Reports ───────────────────────────────────────────────────────────────────
+
+export type MonthlyPLData = {
+  month:     string;   // "Jan", "Feb" etc.
+  month_num: number;   // 1-12
+  income:    number;
+  expenses:  number;
+  salary:    number;
+  net:       number;
+};
+
+export type StudentFeeReportRow = {
+  student_id:        string;
+  full_name:         string;
+  roll_no:           string | null;
+  student_program:   string | null;
+  student_year:      number | null;
+  department_name:   string | null;
+  total_due:         number;
+  total_paid:        number;
+  balance_due:       number;
+  last_payment_date: string | null;
+  status:            'fully_paid' | 'partially_paid' | 'unpaid';
+};
+
+export type SalaryReportRow = {
+  staff_id:            string;
+  full_name:           string;
+  title:               string | null;
+  designation:         string | null;
+  department_name:     string | null;
+  net_salary:          number;
+  disbursement_status: string | null;
+  disbursed_at:        string | null;
+  transaction_ref:     string | null;
+  payment_mode:        string | null;
+};
+
+export type BudgetReportRow = {
+  department_id:   string | null;
+  department_name: string;
+  category:        string;
+  academic_year:   string;
+  allocated:       number;
+  actual_spent:    number;
+  remaining:       number;
+  utilisation_pct: number;
+};
+
+export type FinancialSummary = {
+  totalIncome:           number;
+  totalExpenditure:      number;
+  netSurplus:            number;
+  feeCollectionRate:     number;
+  payrollPct:            number;
+  topExpenseCategories:  { category: string; amount: number }[];
+  highestIncomeMonth:    string;
+  highestExpenseMonth:   string;
+};
