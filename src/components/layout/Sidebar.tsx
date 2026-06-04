@@ -12,24 +12,37 @@ import { usePathname } from "next/navigation";
 export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const pathname = usePathname();
 
-  // ── Finance: extract institution ID from URL or localStorage ─────────────
-  const segments    = pathname.split("/");
-  const instIdx     = segments.indexOf("institutions");
-  const urlInstId   = instIdx >= 0 && segments[instIdx + 1] && pathname.includes("/finance")
-    ? segments[instIdx + 1]
-    : null;
+  // ── Finance: reactive institution ID ────────────────────────────────────
+  // Sources (in priority order):
+  //  1. Current URL  — /institutions/[id]/finance/* paths
+  //  2. Custom event — dispatched by /finance page when tab changes
+  //  3. localStorage — persisted from any prior visit
+  const [financeInstId, setFinanceInstId] = useState<string | null>(null);
 
-  const [cachedInstId, setCachedInstId] = useState<string | null>(null);
-
+  // Read URL on every navigation
   useEffect(() => {
-    if (urlInstId) {
-      localStorage.setItem("aura_finance_inst", urlInstId);
-    } else {
-      setCachedInstId(localStorage.getItem("aura_finance_inst"));
+    const segs   = pathname.split("/");
+    const idx    = segs.indexOf("institutions");
+    if (idx >= 0 && segs[idx + 1] && pathname.includes("/finance")) {
+      const id = segs[idx + 1];
+      setFinanceInstId(id);
+      localStorage.setItem("aura_finance_inst", id);
+      return;
     }
-  }, [urlInstId]);
+    // On /finance (no id in URL) fall back to localStorage
+    const stored = localStorage.getItem("aura_finance_inst");
+    if (stored) setFinanceInstId(stored);
+  }, [pathname]);
 
-  const financeInstId = urlInstId ?? cachedInstId;
+  // Listen for the event dispatched by the Finance page when user switches tabs
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      if (id) setFinanceInstId(id);
+    };
+    window.addEventListener("aura:finance:inst", handler);
+    return () => window.removeEventListener("aura:finance:inst", handler);
+  }, []);
 
   // ── Finance open/close state ──────────────────────────────────────────────
   const isFinanceActive = pathname === "/finance" || pathname.includes("/finance");

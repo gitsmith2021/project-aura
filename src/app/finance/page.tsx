@@ -171,6 +171,15 @@ export default function FinancePage() {
       });
   }, []);
 
+  // ── Sync selected institution to sidebar via localStorage + custom event ─
+  useEffect(() => {
+    if (!selectedTenantId) return;
+    localStorage.setItem("aura_finance_inst", selectedTenantId);
+    window.dispatchEvent(
+      new CustomEvent("aura:finance:inst", { detail: selectedTenantId })
+    );
+  }, [selectedTenantId]);
+
   // ── Fetch finance data whenever institution or refreshKey changes ─
   const fetchData = useCallback(async (tenantId: string) => {
     if (!tenantId) return;
