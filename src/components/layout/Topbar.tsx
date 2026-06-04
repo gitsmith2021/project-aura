@@ -28,6 +28,8 @@ export function Topbar({
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
+    // Clear the role cookie so middleware re-evaluates on next login
+    document.cookie = "aura-role=; path=/; max-age=0";
     window.location.href = "/login";
   };
 

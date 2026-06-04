@@ -5,8 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Calendar, ClipboardCheck, CalendarOff,
-  Wallet, Building2, Menu, X,
+  Wallet, Building2, Menu, X, LogOut,
 } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
 
 type Props = {
   staffName:    string;
@@ -30,6 +31,13 @@ function initials(name: string) {
 export function StaffSidebar({ staffName, staffTitle, designation, institution }: Props) {
   const pathname  = usePathname();
   const [open, setOpen] = useState(false);
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    document.cookie = "aura-role=; path=/; max-age=0";
+    window.location.href = "/login";
+  }
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -87,8 +95,15 @@ export function StaffSidebar({ staffName, staffTitle, designation, institution }
       </nav>
 
       {/* Footer */}
-      <div className="px-5 py-3 border-t border-white/20">
+      <div className="px-4 py-3 border-t border-white/20 space-y-2">
         <p className="text-[10px] text-slate-400 dark:text-slate-500">Aura 1.0 · Staff Portal</p>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="flex items-center gap-2 w-full px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 dark:text-slate-400 hover:bg-rose-50/80 dark:hover:bg-rose-900/20 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+        >
+          <LogOut size={13} /> Sign Out
+        </button>
       </div>
     </div>
   );
