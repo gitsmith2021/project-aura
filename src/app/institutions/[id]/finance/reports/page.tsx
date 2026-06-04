@@ -1,13 +1,12 @@
-import { cookies }   from "next/headers";
-import { redirect }  from "next/navigation";
-import Link          from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { cookies }  from "next/headers";
+import { redirect } from "next/navigation";
+import Link         from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { FinanceNav }      from "@/components/finance/FinanceNav";
 import { ReportsClient }   from "@/components/finance/ReportsClient";
+import { FinanceTabBar }   from "@/components/finance/FinanceTabBar";
 import { getMonthlyPLReport, getFinancialSummaryReport } from "@/actions/reports";
 import { createClient } from "@/utils/supabase/server";
-import type { FinancialSummary, MonthlyPLData } from "@/types/finance";
+import type { FinancialSummary } from "@/types/finance";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -39,12 +38,13 @@ export default async function ReportsPage({ params }: PageProps) {
   const currentMonth = now.toISOString().slice(0, 7);
   const currentAY    = currentAcademicYear();
 
-  const [{ data: institution }, { data: departments }] = await Promise.all([
-    supabase.from("institutions").select("name").eq("id", id).single(),
+  const [{ data: institutions }, { data: departments }] = await Promise.all([
+    supabase.from("institutions").select("id, name").order("name"),
     supabase.from("departments").select("id, name").eq("institution_id", id).order("name"),
   ]);
 
-  // Pre-fetch Tab 1 (P&L) data server-side
+  const institution = (institutions ?? []).find(i => i.id === id);
+
   const [plResult, sumResult] = await Promise.all([
     getMonthlyPLReport(id, currentYear),
     getFinancialSummaryReport(id, { from: `${currentYear}-01-01`, to: `${currentYear}-12-31` }),
@@ -64,19 +64,7 @@ export default async function ReportsPage({ params }: PageProps) {
     <DashboardLayout breadcrumb={breadcrumb}>
       <div className="flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
 
-        <div className="shrink-0 px-6 pt-3 pb-0 flex flex-col gap-2">
-          <Link
-            href="/finance"
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 uppercase tracking-wider transition-colors w-fit"
-          >
-            <ArrowLeft size={12} /> Back to Finance
-          </Link>
-        </div>
-
-        {/* Finance sub-nav */}
-        <div className="shrink-0 px-6 pt-2">
-          <FinanceNav />
-        </div>
+        <FinanceTabBar institutions={institutions ?? []} currentId={id} />
 
         <div className="flex-1 min-h-0 overflow-hidden">
           <ReportsClient

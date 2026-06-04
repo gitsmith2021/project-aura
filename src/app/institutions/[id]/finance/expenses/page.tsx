@@ -1,9 +1,9 @@
-import { cookies }   from "next/headers";
-import { redirect }  from "next/navigation";
-import Link          from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { cookies }  from "next/headers";
+import { redirect } from "next/navigation";
+import Link         from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ExpensesClient }  from "@/components/finance/ExpensesClient";
+import { FinanceTabBar }   from "@/components/finance/FinanceTabBar";
 import {
   getExpenses, getExpenseSummary, getBudgets, getBudgetVsActuals, currentAY,
 } from "@/actions/expenses";
@@ -31,13 +31,14 @@ export default async function ExpensesPage({ params }: PageProps) {
   const currentMonth = now.toISOString().slice(0, 7);
   const ay           = currentAY();
 
-  // Fetch institution + departments in parallel (raw Supabase, no auth overhead)
-  const [{ data: institution }, { data: departments }] = await Promise.all([
-    supabase.from("institutions").select("name").eq("id", id).single(),
+  const [{ data: institutions }, { data: departments }] = await Promise.all([
+    supabase.from("institutions").select("id, name").order("name"),
     supabase.from("departments").select("id, name").eq("institution_id", id).order("name"),
   ]);
 
-  // Fetch all initial data via server actions
+  // Derive institution name from the all-institutions list
+  const institution = (institutions ?? []).find(i => i.id === id);
+
   const [expResult, sumResult, budResult, bvaResult] = await Promise.all([
     getExpenses(id, { page: 1, pageSize: 10, month: currentMonth }),
     getExpenseSummary(id, currentMonth),
@@ -59,19 +60,13 @@ export default async function ExpensesPage({ params }: PageProps) {
     <DashboardLayout breadcrumb={breadcrumb}>
       <div className="flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
 
-        <div className="shrink-0 px-6 pt-3 pb-1 flex flex-col gap-2">
-          <Link
-            href="/finance"
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-violet-600 dark:hover:text-violet-400 uppercase tracking-wider transition-colors w-fit"
-          >
-            <ArrowLeft size={12} /> Back to Finance
-          </Link>
-          {!expResult.success && (
-            <p className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-lg px-3 py-2">
-              Failed to load expenses: {expResult.error}
-            </p>
-          )}
-        </div>
+        <FinanceTabBar institutions={institutions ?? []} currentId={id} />
+
+        {!expResult.success && (
+          <p className="shrink-0 mx-6 mt-2 text-xs text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-lg px-3 py-2">
+            Failed to load expenses: {expResult.error}
+          </p>
+        )}
 
         <div className="flex-1 min-h-0 overflow-hidden">
           <ExpensesClient
