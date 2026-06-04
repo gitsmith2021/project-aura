@@ -7,7 +7,17 @@
       "Bash(Out-Null)",
       "Bash(New-Item -ItemType Directory -Force -Path \"D:\\\\Aura-Project\\\\project-aura\\\\src\\\\components\\\\schedules\")",
       "PowerShell(New-Item -ItemType Directory -Force -Path \"D:\\\\Aura-Project\\\\project-aura\\\\src\\\\actions\")",
-      "PowerShell(New-Item -ItemType Directory -Force -Path \"D:\\\\Aura-Project\\\\project-aura\\\\src\\\\components\\\\schedules\")"
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"D:\\\\Aura-Project\\\\project-aura\\\\src\\\\components\\\\schedules\")",
+      "Bash(git -C \"d:/Aura-Project/project-aura\" show 9a6a5be --format=\"%B\" --stat)",
+      "Bash(git -C \"d:/Aura-Project/project-aura\" status)",
+      "Bash(git -C \"d:/Aura-Project/project-aura\" log --oneline -5)",
+      "Bash(git -C \"d:/Aura-Project/project-aura\" diff --stat HEAD)",
+      "Bash(git -C \"d:/Aura-Project/project-aura\" status --short)",
+      "Bash(git -C \"d:/Aura-Project/project-aura\" push origin main)",
+      "Bash(mkdir -p \"d:/Aura-Project/project-aura/src/app/institutions/[id]/finance/fees\" 2>&1; echo \"done\")"
+    ],
+    "additionalDirectories": [
+      "d:\\Aura-Project\\project-aura\\src\\app\\institutions\\[id]\\finance"
     ]
   }
 }

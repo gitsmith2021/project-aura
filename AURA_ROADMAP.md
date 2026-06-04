@@ -70,16 +70,18 @@ Branch:       main
 **Route:** `/staff-portal` (auth-gated, role=STAFF only)
 
 #### What to build:
-- [ ] `src/app/staff-portal/layout.tsx` — Portal layout with staff-specific nav
-- [ ] `src/app/staff-portal/page.tsx` — Staff dashboard home
-- [ ] `src/app/staff-portal/schedule/page.tsx` — Personal timetable view
-- [ ] `src/app/staff-portal/attendance/page.tsx` — View attendance records they've marked
-- [ ] `src/app/staff-portal/leave/page.tsx` — Apply for leave, view leave history
-- [ ] `src/app/staff-portal/salary/page.tsx` — View salary structure + payslips per month
-- [ ] `src/components/staff-portal/StaffScheduleView.tsx` — Personal weekly timetable
-- [ ] `src/components/staff-portal/LeaveApplicationForm.tsx` — Apply for leave drawer
-- [ ] `src/components/staff-portal/PayslipCard.tsx` — Monthly payslip with breakdown
-- [ ] `src/actions/staffPortal.ts` — Server actions for all staff portal data
+- [x] `src/app/staff-portal/layout.tsx` — Portal layout with staff-specific nav
+- [x] `src/app/staff-portal/page.tsx` — Staff dashboard home
+- [x] `src/app/staff-portal/schedule/page.tsx` — Personal timetable view
+- [x] `src/app/staff-portal/attendance/page.tsx` — View attendance records they've marked
+- [x] `src/app/staff-portal/leave/page.tsx` — Apply for leave, view leave history
+- [x] `src/app/staff-portal/salary/page.tsx` — View salary structure + payslips per month
+- [x] `src/components/staff-portal/StaffSidebar.tsx` — Staff portal sidebar (mobile-responsive)
+- [x] `src/components/staff-portal/LeaveApplicationDrawer.tsx` — Apply for leave drawer
+- [x] `src/components/staff-portal/PayslipCard.tsx` — Monthly payslip with breakdown + print
+- [x] `src/actions/staffPortal.ts` — Server actions for all staff portal data
+- [x] `src/app/institutions/[id]/leave/page.tsx` — Admin view to approve/reject leave requests
+- [x] `supabase/migrations/20260604000001_create_leave_requests.sql` — Leave requests table
 
 #### Key features:
 - Show only data belonging to the logged-in staff member

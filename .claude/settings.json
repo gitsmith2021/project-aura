@@ -3,7 +3,18 @@
     "allow": [
       "Bash(git push *)",
       "Bash(git commit *)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(mkdir -p \"d:/Aura-Project/project-aura/src/app/institutions/[id]/finance/fees/payments\" 2>&1; echo \"done\")",
+      "Bash(mkdir -p \"d:/Aura-Project/project-aura/src/app/institutions/[id]/finance/salary\" 2>&1; echo done)",
+      "Bash(mkdir -p \"d:/Aura-Project/project-aura/src/app/institutions/[id]/finance/expenses\" 2>&1; echo done)",
+      "Bash(mkdir -p \"d:/Aura-Project/project-aura/src/app/institutions/[id]/finance/reports\" 2>&1; echo done)",
+      "Bash(git -C \"d:/Aura-Project/project-aura\" log --oneline -3)",
+      "Bash(mkdir -p \"d:/Aura-Project/project-aura/src/app/institutions/[id]/leave\" 2>&1; echo done)"
+    ],
+    "additionalDirectories": [
+      "d:\\Aura-Project\\project-aura\\src\\app\\institutions\\[id]\\finance\\fees",
+      "d:\\Aura-Project\\project-aura\\src\\app\\institutions\\[id]\\finance",
+      "d:\\Aura-Project\\project-aura\\src\\app\\institutions\\[id]"
     ]
   }
 }
