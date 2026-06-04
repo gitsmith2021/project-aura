@@ -500,41 +500,48 @@ export function ReportsClient({
             </div>
           )}
 
+          {/* This wrapper fills remaining height so the cards are viewport-constrained */}
+          <div className="flex-1 min-h-0 overflow-hidden">
           {fetchingSal ? (
             <div className="flex items-center justify-center h-32"><span className="w-6 h-6 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin" /></div>
           ) : !salFetched ? (
             <div className="flex items-center justify-center h-32 text-xs text-slate-400">Loading…</div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="h-full grid grid-cols-1 lg:grid-cols-3 gap-4">
               {/* Donut chart */}
               {salPieData.length > 0 && (
-                <div className="rounded-xl bg-white/70 dark:bg-slate-800/60 border border-white/40 dark:border-slate-700/50 backdrop-blur-sm shadow-sm p-4 flex flex-col items-center">
-                  <h3 className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">Disbursement Status</h3>
-                  <ResponsiveContainer width="100%" height={180}>
-                    <PieChart>
-                      <Pie data={salPieData} innerRadius={50} outerRadius={72} paddingAngle={3} dataKey="value">
-                        {salPieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{ fontSize: 11, borderRadius: 8, background: "#0f172a", border: "1px solid #334155", color: "#f1f5f9" }}
-                        formatter={(v, n) => [Number(v ?? 0), String(n)]}
-                      />
-                      <Legend wrapperStyle={{ fontSize: 11 }} />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="rounded-xl bg-white/70 dark:bg-slate-800/60 border border-white/40 dark:border-slate-700/50 backdrop-blur-sm shadow-sm p-4 flex flex-col items-center min-h-0 overflow-y-auto custom-scrollbar">
+                  <h3 className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2 shrink-0">Disbursement Status</h3>
+                  <div className="shrink-0 w-full">
+                    <ResponsiveContainer width="100%" height={180}>
+                      <PieChart>
+                        <Pie data={salPieData} innerRadius={50} outerRadius={72} paddingAngle={3} dataKey="value">
+                          {salPieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{ fontSize: 11, borderRadius: 8, background: "#0f172a", border: "1px solid #334155", color: "#f1f5f9" }}
+                          formatter={(v, n) => [Number(v ?? 0), String(n)]}
+                        />
+                        <Legend wrapperStyle={{ fontSize: 11 }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               )}
 
-              {/* Staff table */}
-              <div className={`${salPieData.length > 0 ? "lg:col-span-2" : "lg:col-span-3"} rounded-xl bg-white/70 dark:bg-slate-800/60 border border-white/40 dark:border-slate-700/50 backdrop-blur-sm shadow-sm overflow-auto`}>
-                <table className="w-full text-left min-w-[600px]">
-                  <thead>
+              {/* Staff table — flex column with sticky header + scrollable body */}
+              <div className={`${salPieData.length > 0 ? "lg:col-span-2" : "lg:col-span-3"} rounded-xl bg-white/70 dark:bg-slate-800/60 border border-white/40 dark:border-slate-700/50 backdrop-blur-sm shadow-sm flex flex-col min-h-0 overflow-hidden`}>
+                <table className="w-full text-left min-w-[600px] shrink-0">
+                  <thead className="bg-white/90 dark:bg-slate-800/90">
                     <tr className="border-b border-slate-100/80 dark:border-slate-700/60">
                       {["Staff","Designation","Dept","Net Salary","Status","Disbursed At","Tx Ref"].map(h => (
                         <th key={h} className="px-3 py-2.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
+                </table>
+                <div className="overflow-y-auto custom-scrollbar flex-1 min-h-0">
+                <table className="w-full text-left min-w-[600px]">
                   <tbody className="divide-y divide-slate-100/60 dark:divide-slate-700/40">
                     {salRows.map(r => (
                       <tr key={r.staff_id} className="hover:bg-violet-50/40 dark:hover:bg-violet-900/10 transition-colors">
@@ -562,9 +569,11 @@ export function ReportsClient({
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           )}
+          </div>
         </>
       )}
 
