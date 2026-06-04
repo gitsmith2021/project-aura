@@ -374,7 +374,7 @@ export default function FinancePage() {
             </div>
 
             {/* ── Secondary row ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 shrink-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
 
               {/* Salary */}
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
@@ -415,26 +415,6 @@ export default function FinancePage() {
                 </div>
               </div>
 
-              {/* Quick nav */}
-              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
-                <p className="text-xs font-semibold text-slate-700 mb-3">Quick Navigate</p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {[
-                    { label: "Fee Structures", href: `/institutions/${selectedTenantId}/finance/fees` },
-                    { label: "All Payments",   href: `/institutions/${selectedTenantId}/finance/fees/payments` },
-                    { label: "Salaries",       href: `/institutions/${selectedTenantId}/finance/salary` },
-                    { label: "Reports",        href: `/institutions/${selectedTenantId}/finance/reports` },
-                  ].map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="px-2.5 py-1.5 rounded-md bg-slate-50 hover:bg-violet-50 hover:text-violet-700 text-slate-600 text-[11px] font-medium transition-colors border border-transparent hover:border-violet-100"
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* ── Recent transactions ── */}
