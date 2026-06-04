@@ -78,7 +78,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
       .from(table)
       .select("*, departments(name, funding_type), institutions(name)")
       .order("full_name", { ascending: true });
-    if (!error && data) setPeople(data as UsersManagementPerson[]);
+    if (!error && data) setPeople(data.map(p => ({ ...p, role })) as UsersManagementPerson[]);
     setLoading(false);
   };
 
