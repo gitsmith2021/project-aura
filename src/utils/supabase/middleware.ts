@@ -28,7 +28,10 @@ export async function updateSession(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   const isLoginPage   = pathname === "/login";
-  const isStaffPortal = pathname.startsWith("/staff-portal");
+  // /staff-portal/view/* is the admin's read-only window into a staff member's portal.
+  // Admins are allowed there; only /staff-portal (no /view) is staff-only.
+  const isAdminViewStaff = pathname.startsWith("/staff-portal/view");
+  const isStaffPortal    = pathname.startsWith("/staff-portal") && !isAdminViewStaff;
 
   // ── Unauthenticated ───────────────────────────────────────────────────────
   if (!user) {
@@ -77,8 +80,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Admins cannot enter /staff-portal
-  if (role === "admin" && isStaffPortal) {
+  // Admins cannot enter the staff self-service area, but CAN use /staff-portal/view/*
+  if (role === "admin" && isStaffPortal && !isAdminViewStaff) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
