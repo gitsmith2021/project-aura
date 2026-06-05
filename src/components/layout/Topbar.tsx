@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Menu, Bell, ChevronDown, User, Settings, LogOut, Sun, Moon } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -15,15 +16,31 @@ export function Topbar({
   breadcrumb?: React.ReactNode;
 }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [email, setEmail] = useState("");
+  const [email,        setEmail]       = useState("");
+  const [displayName,  setDisplayName] = useState("");
   const { theme, toggle } = useTheme();
+  const pathname    = usePathname();
+  const isStaff     = pathname.startsWith("/staff-portal");
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user?.email) setEmail(user.email);
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user?.email) return;
+      setEmail(user.email);
+
+      if (isStaff) {
+        // For staff portal: look up the staff member's full name
+        const { data } = await supabase
+          .from("staff")
+          .select("full_name, title")
+          .eq("email", user.email)
+          .maybeSingle();
+        if (data?.full_name) {
+          setDisplayName(data.title ? `${data.title} ${data.full_name}` : data.full_name);
+        }
+      }
     });
-  }, []);
+  }, [isStaff]);
 
   const handleLogout = async () => {
     const supabase = createClient();
@@ -80,10 +97,12 @@ export function Topbar({
               {email ? email.charAt(0) : "S"}
             </div>
             <div className="flex flex-col text-left">
-              <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-none truncate max-w-[100px]">
-                {email ? email.split("@")[0] : "Super Admin"}
+              <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-none truncate max-w-[120px]">
+                {displayName || (email ? email.split("@")[0] : "User")}
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Admin</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                {isStaff ? "Staff" : "Admin"}
+              </span>
             </div>
             <ChevronDown size={14} className="text-slate-400 ml-1 group-hover:text-slate-600 dark:group-hover:text-slate-300" />
           </div>
