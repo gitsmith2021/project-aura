@@ -25,7 +25,8 @@ END $$;
 
 ALTER TABLE public.draft_schedules ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Tenant members can manage their own draft schedules" ON public.draft_schedules;
+DROP POLICY IF EXISTS "Tenant members can manage their own draft schedules"      ON public.draft_schedules;
+DROP POLICY IF EXISTS "Institution members can manage their own draft schedules" ON public.draft_schedules;
 
 CREATE POLICY "Institution members can manage their own draft schedules"
   ON public.draft_schedules FOR ALL
