@@ -4,12 +4,10 @@ import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Users, Settings, Building2, Calendar, GraduationCap,
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
-  ClipboardCheck, CalendarOff, MonitorSmartphone,
+  ClipboardCheck, CalendarOff,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createClient } from "@/utils/supabase/client";
-
 // ── Admin nav (Settings rendered separately, always last) ─────────────────────
 
 const ADMIN_MAIN = [
@@ -38,10 +36,6 @@ const STAFF_NAV = [
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
   { key: "salary",     href: "/staff-portal/salary",     label: "Salary",      Icon: Wallet },
 ] as const;
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type StaffRow = { id: string; full_name: string; title: string | null; departments: { name: string } | null };
 
 // ── NavItem ───────────────────────────────────────────────────────────────────
 
@@ -132,9 +126,8 @@ function Accordion({
 export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const pathname = usePathname();
 
-  // Staff portal = the staff self-service area. Admin's /view/* is NOT staff nav.
-  const isStaffPortal    = pathname.startsWith("/staff-portal") && !pathname.startsWith("/staff-portal/view");
-  const isAdminViewStaff = pathname.startsWith("/staff-portal/view");
+  // Staff portal = the staff self-service area (/staff-portal/view/* is admin territory).
+  const isStaffPortal = pathname.startsWith("/staff-portal") && !pathname.startsWith("/staff-portal/view");
 
   // ── Finance accordion ─────────────────────────────────────────────────────
   const isFinanceActive = pathname === "/finance" || pathname.includes("/finance");
@@ -175,28 +168,6 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     if (key === "reports")  return pathname.includes("/finance/reports");
     return false;
   };
-
-  // ── Staff Portal accordion (admin) ────────────────────────────────────────
-  const isStaffPortalSectionActive = isAdminViewStaff || pathname.startsWith("/staff-portal/view");
-  const [staffPortalOpen, setStaffPortalOpen] = useState(isStaffPortalSectionActive);
-  const [staffList,       setStaffList]       = useState<StaffRow[]>([]);
-  const [staffLoaded,     setStaffLoaded]     = useState(false);
-
-  useEffect(() => {
-    if (isStaffPortalSectionActive) setStaffPortalOpen(true);
-  }, [isStaffPortalSectionActive]);
-
-  // Lazy-load staff list when accordion first opens
-  useEffect(() => {
-    if (!staffPortalOpen || staffLoaded) return;
-    setStaffLoaded(true);
-    createClient()
-      .from("staff")
-      .select("id, full_name, title, departments(name)")
-      .eq("is_active", true)
-      .order("full_name")
-      .then(({ data }) => { if (data) setStaffList(data as unknown as StaffRow[]); });
-  }, [staffPortalOpen, staffLoaded]);
 
   // ── Active detection helpers ──────────────────────────────────────────────
   const adminNavActive = (key: string, href: string, exact?: boolean) => {
@@ -295,50 +266,6 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
                   </Link>
                 );
               })}
-            </Accordion>
-
-            {/* Staff Portal accordion — admin view of any staff member */}
-            <Accordion
-              icon={<MonitorSmartphone size={18} />}
-              label="Staff Portal"
-              isActive={isStaffPortalSectionActive}
-              isOpen={staffPortalOpen}
-              onToggle={() => setStaffPortalOpen(o => !o)}
-              isCollapsed={isCollapsed}
-            >
-              {/* Staff list — no search (use topbar search to find staff) */}
-              {staffList.slice(0, 8).map(s => {
-                const isViewing = pathname.startsWith(`/staff-portal/view/${s.id}`);
-                return (
-                  <Link
-                    key={s.id}
-                    href={`/staff-portal/view/${s.id}`}
-                    className={`flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors ${
-                      isViewing
-                        ? "bg-purple-100/80 text-purple-700 dark:bg-purple-600/15 dark:text-purple-400"
-                        : "text-slate-500 hover:bg-slate-200/80 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                    }`}
-                  >
-                    <div className="w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 flex items-center justify-center text-[9px] font-bold shrink-0 border border-violet-200/60 dark:border-violet-700/40">
-                      {s.full_name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-medium truncate leading-tight">
-                        {s.title ? `${s.title} ` : ""}{s.full_name}
-                      </p>
-                      {s.departments?.name && (
-                        <p className="text-[9px] text-slate-400 dark:text-slate-500 truncate">{s.departments.name}</p>
-                      )}
-                    </div>
-                  </Link>
-                );
-              })}
-
-              {staffList.length > 8 && (
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 px-2 py-1">
-                  +{staffList.length - 8} more — use search bar above
-                </p>
-              )}
             </Accordion>
 
             {/* Settings — always last */}
