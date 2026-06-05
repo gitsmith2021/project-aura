@@ -18,6 +18,16 @@ CREATE TABLE IF NOT EXISTS fee_structures (
   created_at        TIMESTAMPTZ   NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
+-- Ensure columns exist on pre-existing tables (idempotent for preview/branch DBs)
+ALTER TABLE fee_structures ADD COLUMN IF NOT EXISTS tenant_id      UUID        REFERENCES public.tenants(id)     ON DELETE CASCADE;
+ALTER TABLE fee_structures ADD COLUMN IF NOT EXISTS department_id  UUID        REFERENCES public.departments(id) ON DELETE SET NULL;
+ALTER TABLE fee_structures ADD COLUMN IF NOT EXISTS name           TEXT;
+ALTER TABLE fee_structures ADD COLUMN IF NOT EXISTS fee_type       TEXT;
+ALTER TABLE fee_structures ADD COLUMN IF NOT EXISTS amount         NUMERIC(10,2);
+ALTER TABLE fee_structures ADD COLUMN IF NOT EXISTS academic_year  TEXT;
+ALTER TABLE fee_structures ADD COLUMN IF NOT EXISTS is_active      BOOLEAN     NOT NULL DEFAULT TRUE;
+ALTER TABLE fee_structures ADD COLUMN IF NOT EXISTS created_at     TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE fee_structures ADD COLUMN IF NOT EXISTS updated_at     TIMESTAMPTZ NOT NULL DEFAULT now();
 CREATE INDEX IF NOT EXISTS idx_fee_structures_tenant ON fee_structures(tenant_id);
 
 -- ─────────────────────────────────────────────────────────────
@@ -41,6 +51,21 @@ CREATE TABLE IF NOT EXISTS fee_payments (
   created_at            TIMESTAMPTZ   NOT NULL DEFAULT now(),
   updated_at            TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS tenant_id          UUID        REFERENCES public.tenants(id)     ON DELETE CASCADE;
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS student_id         UUID        REFERENCES public.profiles(id)    ON DELETE CASCADE;
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS fee_structure_id   UUID        REFERENCES fee_structures(id)     ON DELETE SET NULL;
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS amount_paid        NUMERIC(10,2);
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS payment_mode       TEXT;
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS payment_status     TEXT        NOT NULL DEFAULT 'pending';
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS razorpay_order_id  TEXT;
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS razorpay_payment_id TEXT;
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS razorpay_signature TEXT;
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS receipt_number     TEXT;
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS paid_at            TIMESTAMPTZ;
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS recorded_by        UUID        REFERENCES auth.users(id)         ON DELETE SET NULL;
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS notes              TEXT;
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS created_at         TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE fee_payments ADD COLUMN IF NOT EXISTS updated_at         TIMESTAMPTZ NOT NULL DEFAULT now();
 CREATE INDEX IF NOT EXISTS idx_fee_payments_tenant  ON fee_payments(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_fee_payments_student ON fee_payments(student_id);
 CREATE INDEX IF NOT EXISTS idx_fee_payments_status  ON fee_payments(payment_status);
@@ -72,6 +97,22 @@ CREATE TABLE IF NOT EXISTS salary_structures (
   created_at        TIMESTAMPTZ   NOT NULL DEFAULT now(),
   updated_at        TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS tenant_id         UUID        REFERENCES public.tenants(id)  ON DELETE CASCADE;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS staff_id          UUID        REFERENCES public.profiles(id) ON DELETE CASCADE;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS basic_salary      NUMERIC(10,2) NOT NULL DEFAULT 0;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS hra               NUMERIC(10,2) NOT NULL DEFAULT 0;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS ta                NUMERIC(10,2) NOT NULL DEFAULT 0;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS da                NUMERIC(10,2) NOT NULL DEFAULT 0;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS other_allowances  NUMERIC(10,2) NOT NULL DEFAULT 0;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS pf_deduction      NUMERIC(10,2) NOT NULL DEFAULT 0;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS esi_deduction     NUMERIC(10,2) NOT NULL DEFAULT 0;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS tds_deduction     NUMERIC(10,2) NOT NULL DEFAULT 0;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS other_deductions  NUMERIC(10,2) NOT NULL DEFAULT 0;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS effective_from    DATE;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS effective_to      DATE;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS is_active         BOOLEAN     NOT NULL DEFAULT TRUE;
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS created_at        TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE salary_structures ADD COLUMN IF NOT EXISTS updated_at        TIMESTAMPTZ NOT NULL DEFAULT now();
 CREATE INDEX IF NOT EXISTS idx_salary_structures_tenant ON salary_structures(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_salary_structures_staff  ON salary_structures(staff_id);
 
@@ -95,6 +136,19 @@ CREATE TABLE IF NOT EXISTS salary_disbursements (
   updated_at            TIMESTAMPTZ   NOT NULL DEFAULT now(),
   UNIQUE(tenant_id, staff_id, month)
 );
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS tenant_id            UUID        REFERENCES public.tenants(id)     ON DELETE CASCADE;
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS staff_id             UUID        REFERENCES public.profiles(id)    ON DELETE CASCADE;
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS salary_structure_id  UUID        REFERENCES salary_structures(id)  ON DELETE SET NULL;
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS month                TEXT;
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS amount_disbursed     NUMERIC(10,2);
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS payment_mode         TEXT;
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS status               TEXT        NOT NULL DEFAULT 'pending';
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS disbursed_at         TIMESTAMPTZ;
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS transaction_ref      TEXT;
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS remarks              TEXT;
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS processed_by         UUID        REFERENCES auth.users(id)         ON DELETE SET NULL;
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS created_at           TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE salary_disbursements ADD COLUMN IF NOT EXISTS updated_at           TIMESTAMPTZ NOT NULL DEFAULT now();
 CREATE INDEX IF NOT EXISTS idx_salary_disbursements_tenant ON salary_disbursements(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_salary_disbursements_month  ON salary_disbursements(month);
 CREATE INDEX IF NOT EXISTS idx_salary_disbursements_status ON salary_disbursements(status);
@@ -118,6 +172,19 @@ CREATE TABLE IF NOT EXISTS expenses (
   created_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS tenant_id     UUID        REFERENCES public.tenants(id)     ON DELETE CASCADE;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS department_id UUID        REFERENCES public.departments(id) ON DELETE SET NULL;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS category      TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS description   TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS amount        NUMERIC(10,2);
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS payment_mode  TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS vendor_name   TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS receipt_url   TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS expense_date  DATE;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS recorded_by   UUID        REFERENCES auth.users(id)         ON DELETE SET NULL;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS notes         TEXT;
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS created_at    TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE expenses ADD COLUMN IF NOT EXISTS updated_at    TIMESTAMPTZ NOT NULL DEFAULT now();
 CREATE INDEX IF NOT EXISTS idx_expenses_tenant     ON expenses(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_department ON expenses(department_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_date       ON expenses(expense_date);
@@ -137,6 +204,13 @@ CREATE TABLE IF NOT EXISTS budgets (
   updated_at        TIMESTAMPTZ   NOT NULL DEFAULT now(),
   UNIQUE(tenant_id, department_id, category, academic_year)
 );
+ALTER TABLE budgets ADD COLUMN IF NOT EXISTS tenant_id        UUID        REFERENCES public.tenants(id)     ON DELETE CASCADE;
+ALTER TABLE budgets ADD COLUMN IF NOT EXISTS department_id    UUID        REFERENCES public.departments(id) ON DELETE CASCADE;
+ALTER TABLE budgets ADD COLUMN IF NOT EXISTS category         TEXT;
+ALTER TABLE budgets ADD COLUMN IF NOT EXISTS academic_year    TEXT;
+ALTER TABLE budgets ADD COLUMN IF NOT EXISTS allocated_amount NUMERIC(10,2);
+ALTER TABLE budgets ADD COLUMN IF NOT EXISTS created_at       TIMESTAMPTZ NOT NULL DEFAULT now();
+ALTER TABLE budgets ADD COLUMN IF NOT EXISTS updated_at       TIMESTAMPTZ NOT NULL DEFAULT now();
 
 -- ─────────────────────────────────────────────────────────────
 -- 7. REPORTING VIEWS
