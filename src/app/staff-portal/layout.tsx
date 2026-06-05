@@ -9,20 +9,22 @@ export default async function StaffPortalLayout({ children }: { children: React.
   const cookieStore = await cookies();
   const supabase    = createClient(cookieStore);
 
-  // Auth + staff-role guard (middleware also enforces this, but belt-and-suspenders)
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: staff } = await supabase
-    .from("staff")
-    .select("id")
-    .eq("email", user.email)
-    .eq("is_active", true)
-    .maybeSingle();
+  // Admins accessing /staff-portal/view/* skip the staff guard.
+  // The middleware already ensures admins cannot reach /staff-portal (base).
+  const role = cookieStore.get("aura-role")?.value;
+  if (role !== "admin") {
+    const { data: staff } = await supabase
+      .from("staff")
+      .select("id")
+      .eq("email", user.email)
+      .eq("is_active", true)
+      .maybeSingle();
 
-  if (!staff) redirect("/institutions");
+    if (!staff) redirect("/institutions");
+  }
 
-  // DashboardLayout provides the identical sidebar + topbar + dark-mode UI as the admin panel.
-  // The Sidebar detects /staff-portal routes and swaps to the staff nav automatically.
   return <DashboardLayout>{children}</DashboardLayout>;
 }

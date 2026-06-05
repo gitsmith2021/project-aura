@@ -5,6 +5,7 @@ import { Menu, Bell, ChevronDown, User, Settings, LogOut, Sun, Moon } from "luci
 import { usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useTheme } from "@/context/ThemeContext";
+import { StaffSearchBar } from "@/components/staff-portal/StaffSearchBar";
 
 export function Topbar({
   isSidebarCollapsed,
@@ -19,8 +20,9 @@ export function Topbar({
   const [email,        setEmail]       = useState("");
   const [displayName,  setDisplayName] = useState("");
   const { theme, toggle } = useTheme();
-  const pathname    = usePathname();
-  const isStaff     = pathname.startsWith("/staff-portal");
+  const pathname         = usePathname();
+  const isStaff          = pathname.startsWith("/staff-portal") && !pathname.startsWith("/staff-portal/view");
+  const isAdminViewStaff = pathname.startsWith("/staff-portal/view");
 
   useEffect(() => {
     const supabase = createClient();
@@ -59,17 +61,22 @@ export function Topbar({
         >
           <Menu size={18} />
         </button>
-        <div className="flex min-w-0 items-center overflow-x-hidden text-xs">
-          <span className="shrink-0 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer transition-colors">
-            AURA
-          </span>
-          <span className="mx-2 shrink-0 text-slate-300 dark:text-slate-600">/</span>
-          {breadcrumb ? (
-            <span className="flex min-w-0 flex-1 items-center overflow-hidden">{breadcrumb}</span>
-          ) : (
-            <span className="truncate text-slate-900 dark:text-slate-100">Command Center</span>
-          )}
-        </div>
+        {isAdminViewStaff ? (
+          /* Staff search bar replaces breadcrumb when admin is viewing a staff portal */
+          <StaffSearchBar />
+        ) : (
+          <div className="flex min-w-0 items-center overflow-x-hidden text-xs">
+            <span className="shrink-0 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer transition-colors">
+              AURA
+            </span>
+            <span className="mx-2 shrink-0 text-slate-300 dark:text-slate-600">/</span>
+            {breadcrumb ? (
+              <span className="flex min-w-0 flex-1 items-center overflow-hidden">{breadcrumb}</span>
+            ) : (
+              <span className="truncate text-slate-900 dark:text-slate-100">Command Center</span>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex shrink-0 items-center gap-2">

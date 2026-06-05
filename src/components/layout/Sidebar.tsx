@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Users, Settings, Building2, Calendar, GraduationCap,
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
-  ClipboardCheck, CalendarOff, MonitorSmartphone, Search,
+  ClipboardCheck, CalendarOff, MonitorSmartphone,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -180,9 +180,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const isStaffPortalSectionActive = isAdminViewStaff || pathname.startsWith("/staff-portal/view");
   const [staffPortalOpen, setStaffPortalOpen] = useState(isStaffPortalSectionActive);
   const [staffList,       setStaffList]       = useState<StaffRow[]>([]);
-  const [staffSearch,     setStaffSearch]     = useState("");
   const [staffLoaded,     setStaffLoaded]     = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isStaffPortalSectionActive) setStaffPortalOpen(true);
@@ -199,13 +197,6 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
       .order("full_name")
       .then(({ data }) => { if (data) setStaffList(data as unknown as StaffRow[]); });
   }, [staffPortalOpen, staffLoaded]);
-
-  const filteredStaff = staffSearch.trim()
-    ? staffList.filter(s =>
-        s.full_name.toLowerCase().includes(staffSearch.toLowerCase()) ||
-        (s.departments?.name ?? "").toLowerCase().includes(staffSearch.toLowerCase())
-      ).slice(0, 8)
-    : staffList.slice(0, 6);
 
   // ── Active detection helpers ──────────────────────────────────────────────
   const adminNavActive = (key: string, href: string, exact?: boolean) => {
@@ -315,57 +306,38 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
               onToggle={() => setStaffPortalOpen(o => !o)}
               isCollapsed={isCollapsed}
             >
-              {/* Search input */}
-              <div className="relative mb-1">
-                <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                <input
-                  ref={searchRef}
-                  type="text"
-                  value={staffSearch}
-                  onChange={e => setStaffSearch(e.target.value)}
-                  placeholder="Search staff…"
-                  className="w-full pl-7 pr-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-[11px] text-slate-700 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-violet-400 transition-colors"
-                />
-              </div>
+              {/* Staff list — no search (use topbar search to find staff) */}
+              {staffList.slice(0, 8).map(s => {
+                const isViewing = pathname.startsWith(`/staff-portal/view/${s.id}`);
+                return (
+                  <Link
+                    key={s.id}
+                    href={`/staff-portal/view/${s.id}`}
+                    className={`flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors ${
+                      isViewing
+                        ? "bg-purple-100/80 text-purple-700 dark:bg-purple-600/15 dark:text-purple-400"
+                        : "text-slate-500 hover:bg-slate-200/80 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    }`}
+                  >
+                    <div className="w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 flex items-center justify-center text-[9px] font-bold shrink-0 border border-violet-200/60 dark:border-violet-700/40">
+                      {s.full_name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium truncate leading-tight">
+                        {s.title ? `${s.title} ` : ""}{s.full_name}
+                      </p>
+                      {s.departments?.name && (
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 truncate">{s.departments.name}</p>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
 
-              {/* Staff results */}
-              {filteredStaff.length === 0 && staffSearch.trim() ? (
-                <p className="text-[10px] text-slate-400 px-1 py-1">No staff found.</p>
-              ) : (
-                filteredStaff.map(s => {
-                  const isViewing = pathname.startsWith(`/staff-portal/view/${s.id}`);
-                  return (
-                    <Link
-                      key={s.id}
-                      href={`/staff-portal/view/${s.id}`}
-                      className={`flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors ${
-                        isViewing
-                          ? "bg-purple-100/80 text-purple-700 dark:bg-purple-600/15 dark:text-purple-400"
-                          : "text-slate-500 hover:bg-slate-200/80 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                      }`}
-                    >
-                      <div className="w-5 h-5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 flex items-center justify-center text-[9px] font-bold shrink-0 border border-violet-200/60 dark:border-violet-700/40">
-                        {s.full_name.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-medium truncate leading-tight">
-                          {s.title ? `${s.title} ` : ""}{s.full_name}
-                        </p>
-                        {s.departments?.name && (
-                          <p className="text-[9px] text-slate-400 dark:text-slate-500 truncate">{s.departments.name}</p>
-                        )}
-                      </div>
-                    </Link>
-                  );
-                })
-              )}
-
-              {/* View all link */}
-              {!staffSearch.trim() && staffList.length > 6 && (
-                <Link href="/staff-portal/view"
-                  className="text-[10px] text-violet-600 dark:text-violet-400 hover:underline px-2 py-1 block">
-                  View all {staffList.length} staff →
-                </Link>
+              {staffList.length > 8 && (
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 px-2 py-1">
+                  +{staffList.length - 8} more — use search bar above
+                </p>
               )}
             </Accordion>
 
