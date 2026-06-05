@@ -19,7 +19,7 @@ export default async function SalaryPage() {
   const deductions = current ? current.pf_deduction + current.esi_deduction + current.tds_deduction + current.other_deductions : 0;
 
   return (
-    <div className="px-6 pt-6 pb-8 max-w-4xl mx-auto space-y-5">
+    <div className="px-6 pt-4 pb-6 space-y-5">
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Salary & Payslips</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">

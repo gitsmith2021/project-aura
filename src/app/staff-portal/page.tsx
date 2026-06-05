@@ -45,7 +45,7 @@ export default async function StaffDashboard() {
     "bg-amber-100/80 text-amber-700 border-amber-200/60 dark:bg-amber-900/25 dark:text-amber-300 dark:border-amber-800/40";
 
   return (
-    <div className="px-6 pt-6 pb-8 max-w-5xl mx-auto space-y-6">
+    <div className="px-6 pt-4 pb-6 space-y-6">
 
       {/* Greeting */}
       <div>

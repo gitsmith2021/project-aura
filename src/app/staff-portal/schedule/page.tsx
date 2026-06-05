@@ -35,7 +35,7 @@ export default async function SchedulePage() {
   const uniqueSubjects = new Set(slots.map(s => s.subject_name)).size;
 
   return (
-    <div className="px-4 md:px-6 pt-6 pb-8 max-w-6xl mx-auto space-y-5">
+    <div className="px-6 pt-4 pb-6 space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">My Weekly Schedule</h1>
