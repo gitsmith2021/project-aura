@@ -21,17 +21,17 @@ async function getSupabase() {
   return createClient(cookieStore);
 }
 
-function revalidateExpenses(institutionId: string) {
+async function revalidateExpenses(institutionId: string) {
   revalidatePath(`/institutions/${institutionId}/finance/expenses`);
   revalidatePath("/finance");
 }
 
-function ayToRange(ay: string): { start: string; end: string } {
+async function ayToRange(ay: string): Promise<{ start: string; end: string }> {
   const startYear = parseInt(ay.split("-")[0], 10);
   return { start: `${startYear}-04-01`, end: `${startYear + 1}-03-31` };
 }
 
-function currentAY(): string {
+async function currentAY(): Promise<string> {
   const now = new Date();
   const y   = now.getFullYear();
   const m   = now.getMonth() + 1;
@@ -151,7 +151,7 @@ export async function createExpense(
 
     if (error) return { success: false, error: error.message };
 
-    revalidateExpenses(payload.institution_id);
+    await revalidateExpenses(payload.institution_id);
     return { success: true, data: data as unknown as Expense };
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
@@ -190,7 +190,7 @@ export async function updateExpense(
 
     if (error) return { success: false, error: error.message };
 
-    revalidateExpenses(institutionId);
+    await revalidateExpenses(institutionId);
     return { success: true, data: data as unknown as Expense };
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
@@ -231,7 +231,7 @@ export async function deleteExpense(
     const { error } = await supabase.from("expenses").delete().eq("id", id);
     if (error) return { success: false, error: error.message };
 
-    revalidateExpenses(institutionId);
+    await revalidateExpenses(institutionId);
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
@@ -369,7 +369,7 @@ export async function upsertBudget(payload: {
 
     if (error) return { success: false, error: error.message };
 
-    revalidateExpenses(payload.institution_id);
+    await revalidateExpenses(payload.institution_id);
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
@@ -389,7 +389,7 @@ export async function getBudgetVsActuals(
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) return { success: false, error: "Unauthorized." };
 
-    const { start, end } = ayToRange(academicYear);
+    const { start, end } = await ayToRange(academicYear);
 
     const [budgetsRes, expensesRes] = await Promise.all([
       supabase.from("budgets")
@@ -433,5 +433,4 @@ export async function getBudgetVsActuals(
   }
 }
 
-// Export helper for components
-export { currentAY, ALL_CATEGORIES };
+export { currentAY };

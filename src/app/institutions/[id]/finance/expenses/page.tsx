@@ -29,7 +29,7 @@ export default async function ExpensesPage({ params }: PageProps) {
 
   const now          = new Date();
   const currentMonth = now.toISOString().slice(0, 7);
-  const ay           = currentAY();
+  const ay           = await currentAY();
 
   const [{ data: institutions }, { data: departments }] = await Promise.all([
     supabase.from("institutions").select("id, name").order("name"),
