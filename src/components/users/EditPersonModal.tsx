@@ -159,17 +159,15 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
               />
             </div>
 
-            {email && (
-              <div className="space-y-1">
-                <label className="block text-xs font-medium text-slate-700">
-                  Email
-                  <span className="ml-1 text-slate-400 font-normal">(login credential — read only)</span>
-                </label>
-                <div className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-500 font-mono truncate">
-                  {email}
-                </div>
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-slate-700">
+                Email
+                <span className="ml-1 text-slate-400 font-normal">(login credential — read only)</span>
+              </label>
+              <div className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-550 font-mono truncate dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400">
+                {email || "—"}
               </div>
-            )}
+            </div>
 
             <div className="space-y-1">
               <label className="block text-xs font-medium text-slate-700">Phone</label>

@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import React from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { createClient } from "@/utils/supabase/client";
-import { Plus, Search, ChevronLeft, ChevronRight, X, Pencil, Upload, LayoutGrid, Table2, Info, User, LogIn, KeyRound, Loader2 } from "lucide-react";
+import { Plus, Search, ChevronLeft, ChevronRight, X, Pencil, Upload, LayoutGrid, Table2, Info, User, LogIn, KeyRound, Loader2, Mail, Phone } from "lucide-react";
 import { AddPersonModal } from "@/components/users/AddPersonModal";
 import { EditPersonModal, type PersonEditPayload } from "@/components/users/EditPersonModal";
 import { Badge } from "@/components/ui/Badge";
@@ -717,6 +717,22 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                               )}
                             </div>
                             <p className="text-[10px] text-slate-400 dark:text-slate-550 mt-1 truncate">{person.institutions?.name ?? "—"}</p>
+                            {(person.email || person.phone) && (
+                              <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-2 pt-2 border-t border-slate-100/60 dark:border-slate-800/80 shrink-0 space-y-0.5 font-normal">
+                                {person.email && (
+                                  <div className="flex items-center gap-1 min-w-0">
+                                    <Mail size={10} className="text-slate-400 dark:text-slate-550 shrink-0" />
+                                    <span className="truncate text-slate-600 dark:text-slate-350">{person.email}</span>
+                                  </div>
+                                )}
+                                {person.phone && (
+                                  <div className="flex items-center gap-1 min-w-0">
+                                    <Phone size={10} className="text-slate-400 dark:text-slate-550 shrink-0" />
+                                    <span className="text-slate-600 dark:text-slate-350">{person.phone}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -874,7 +890,15 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                       <td className="px-4 py-3 text-xs text-slate-400 dark:text-slate-500 font-mono">
                         {role === "STUDENT" ? person.roll_no : (page - 1) * PAGE_SIZE + i + 1}
                       </td>
-                      <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100 text-xs">{person.full_name}</td>
+                      <td className="px-4 py-3 text-xs">
+                        <div className="font-semibold text-slate-900 dark:text-slate-100">{person.full_name}</div>
+                        {(person.email || person.phone) && (
+                          <div className="text-[10px] text-slate-400 dark:text-slate-500 font-normal mt-0.5 space-y-0.5 max-w-[200px]">
+                            {person.email && <div className="truncate" title={person.email}>{person.email}</div>}
+                            {person.phone && <div>{person.phone}</div>}
+                          </div>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-300 text-xs">
                         {person.departments?.name ? (
                           <span className="inline-flex items-center gap-1.5 flex-wrap">
@@ -1157,7 +1181,15 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                     filtered.map((person, i) => (
                       <tr key={person.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-3 text-xs text-slate-400 font-mono">{person.roll_no}</td>
-                        <td className="px-4 py-3 font-medium text-slate-900 text-xs">{person.full_name}</td>
+                        <td className="px-4 py-3 text-xs">
+                          <div className="font-semibold text-slate-900">{person.full_name}</div>
+                          {(person.email || person.phone) && (
+                            <div className="text-[10px] text-slate-400 font-normal mt-0.5 space-y-0.5 max-w-[200px]">
+                              {person.email && <div className="truncate" title={person.email}>{person.email}</div>}
+                              {person.phone && <div>{person.phone}</div>}
+                            </div>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-slate-600 text-xs">
                           {person.departments?.name ? (
                             <span className="inline-flex items-center gap-1.5 flex-wrap">
