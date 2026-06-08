@@ -884,12 +884,161 @@ CREATE TABLE hostel_announcements (
 - Cafeteria: weekly menu board editable by admin
 - Hostel fees auto-appear in student fee ledger
 
+---
+
+### Step 7D — Laboratory Management
+
+**Route:** `/institutions/[id]/laboratories`
+
+> Manage scientific laboratories (Physics, Chemistry, Botany, Zoology, Bio-tech, Computer Science, etc.), lab student batches, experiment syllabus, sessions, and grading.
+
+#### Database:
+```sql
+CREATE TABLE laboratories (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  department_id   UUID REFERENCES departments(id),
+  name            TEXT NOT NULL,
+  lab_type        TEXT NOT NULL CHECK (lab_type IN ('physics','chemistry','botany','zoology','biotech','computer_science','other')),
+  capacity        INTEGER,
+  lab_assistant_id UUID REFERENCES staff(id),
+  description     TEXT,
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE laboratory_batches (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  laboratory_id   UUID NOT NULL REFERENCES laboratories(id) ON DELETE CASCADE,
+  name            TEXT NOT NULL,
+  year_semester   TEXT NOT NULL,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE laboratory_experiments (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  laboratory_id   UUID NOT NULL REFERENCES laboratories(id) ON DELETE CASCADE,
+  title           TEXT NOT NULL,
+  description     TEXT,
+  requirements    JSONB -- Chemicals, apparatuses, or instruments needed
+);
+
+CREATE TABLE laboratory_sessions (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  laboratory_batch_id UUID NOT NULL REFERENCES laboratory_batches(id) ON DELETE CASCADE,
+  experiment_id   UUID NOT NULL REFERENCES laboratory_experiments(id) ON DELETE CASCADE,
+  session_date    DATE NOT NULL DEFAULT CURRENT_DATE,
+  remarks         TEXT
+);
+
+CREATE TABLE laboratory_attendance (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id      UUID NOT NULL REFERENCES laboratory_sessions(id) ON DELETE CASCADE,
+  student_id      UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  is_present      BOOLEAN NOT NULL DEFAULT TRUE,
+  marks_secured   NUMERIC(4,2), -- Lab assessment grades
+  remarks         TEXT,
+  UNIQUE(session_id, student_id)
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._laboratories.sql`
+- [ ] `src/app/institutions/[id]/laboratories/page.tsx` — Labs landing page: list of labs, department filters, and active batches
+- [ ] `src/app/institutions/[id]/laboratories/[labId]/page.tsx` — Lab detail: experiment syllabus, schedule, and assistant details
+- [ ] `src/app/institutions/[id]/laboratories/[labId]/sessions/page.tsx` — Log a new session, record student attendance, and assign lab session marks
+- [ ] `src/actions/laboratories.ts` — getLaboratories, getLabExperiments, logLabSession, submitLabAttendance
+- [ ] `src/components/laboratories/ExperimentCard.tsx` — Card showing experiment steps and inventory/chemical requirements
+- [ ] Student portal: `src/app/student-portal/laboratories/page.tsx` — View assigned lab batches, experiment logs, attendance, and internal session grades
+- [ ] Staff portal: `src/app/staff-portal/laboratories/page.tsx` — Log lab sessions, mark attendance, and record grades
+
+#### Key features:
+- Lab assistant assignment and custom lab batch roster scheduling
+- Log session-wise experiment completion
+- Record attendance and session grades, linking to internal academic profiles
+- Quick-reference checklists for required glassware/chemicals per experiment
+
+---
+
+### Step 7E — Asset & Inventory Management
+
+**Route:** `/institutions/[id]/assets`
+
+> Track physical assets, machinery, laboratory equipment, chemicals, glassware, and computer peripherals. Supports consumable stock replenishment, reorder warnings, and asset allocations to labs and departments.
+
+#### Database:
+```sql
+CREATE TABLE asset_categories (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name            TEXT NOT NULL,
+  is_consumable   BOOLEAN NOT NULL DEFAULT FALSE -- Consumables like chemicals/glassware vs fixed assets
+);
+
+CREATE TABLE assets (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  category_id     UUID NOT NULL REFERENCES asset_categories(id) ON DELETE CASCADE,
+  name            TEXT NOT NULL,
+  brand_model     TEXT,
+  serial_number   TEXT,
+  purchase_date   DATE,
+  purchase_cost   NUMERIC(10,2),
+  status          TEXT NOT NULL DEFAULT 'active'
+                  CHECK (status IN ('active','maintenance','disposed','low_stock')),
+  location_details TEXT,
+  current_stock   INTEGER NOT NULL DEFAULT 1, -- For stock count
+  unit            TEXT NOT NULL DEFAULT 'pcs', -- pcs, ml, grams, boxes etc.
+  reorder_level   INTEGER,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE asset_allocations (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  asset_id        UUID NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+  allocated_to_type TEXT NOT NULL CHECK (allocated_to_type IN ('department','laboratory','staff')),
+  department_id   UUID REFERENCES departments(id),
+  laboratory_id   UUID REFERENCES laboratories(id),
+  staff_id        UUID REFERENCES staff(id),
+  allocated_qty   INTEGER NOT NULL DEFAULT 1,
+  allocated_date  DATE NOT NULL DEFAULT CURRENT_DATE,
+  returned_qty    INTEGER DEFAULT 0,
+  returned_date   DATE,
+  status          TEXT NOT NULL DEFAULT 'allocated' CHECK (status IN ('allocated','returned','consumed'))
+);
+
+CREATE TABLE asset_maintenance_logs (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  asset_id        UUID NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
+  log_date        DATE NOT NULL DEFAULT CURRENT_DATE,
+  description     TEXT NOT NULL,
+  cost            NUMERIC(8,2) DEFAULT 0,
+  logged_by       UUID REFERENCES staff(id)
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._assets.sql`
+- [ ] `src/app/institutions/[id]/assets/page.tsx` — Assets Inventory Dashboard: categorized asset list, stock levels, and replenishment status
+- [ ] `src/app/institutions/[id]/assets/allocations/page.tsx` — Track allocations (e.g. allocating microscopes/chemicals to the Physics/Chemistry Lab)
+- [ ] `src/app/institutions/[id]/assets/maintenance/page.tsx` — Manage equipment maintenance schedules and track repair costs
+- [ ] `src/actions/assets.ts` — getAssets, addAsset, allocateAsset, recordMaintenance, getLowStockItems
+- [ ] `src/components/assets/AssetStockAlert.tsx` — Alert banner highlighting assets below reorder levels
+- [ ] `src/components/assets/AllocationModal.tsx` — Form allocating asset quantities to a department, lab, or staff member
+
+#### Key features:
+- Consumable inventory tracking (e.g., tracking chemical quantities in ml/grams)
+- Stock alerts: auto-flag items falling below configured reorder levels
+- Allocations mapping: easily see which department, room, or lab possesses specific assets
+- Maintenance tracker: logs servicing schedules and keeps running cost calculations for equipment
+
 ### Phase 7 Completion Checklist
 - [ ] Library: book catalog, lending, overdue fine calculation all working
 - [ ] Auditorium: venue booking with conflict detection and approval flow
 - [ ] Hostel: room allocation, occupancy grid, student portal hostel view
-- [ ] All three modules visible in student portal sidebar
-- [ ] `git commit -m "feat: Phase 7 — Campus Infrastructure complete"`
+- [ ] Laboratories: labs registry, student batches, experiment sessions, and portal views
+- [ ] Assets: stock registry, low stock alerts, allocations to labs, and maintenance logs
+- [ ] All campus infrastructure modules integrated with student and staff portals
+- [ ] `git commit -m "feat: Phase 7 — Campus Infrastructure & Laboratories complete"`
 - [ ] `git push origin main`
 
 ---
@@ -1055,6 +1204,8 @@ CREATE TABLE hostel_announcements (
 | 🔲 Phase 7A | Library Management System | Pending |
 | 🔲 Phase 7B | Auditorium & Space Booking | Pending |
 | 🔲 Phase 7C | Hostel Management | Pending |
+| 🔲 Phase 7D | Laboratory Management | Pending |
+| 🔲 Phase 7E | Asset Management | Pending |
 | 🔲 Phase 8A | Transport Management | Pending |
 | 🔲 Phase 8B | Certificate & Document Generator | Pending |
 | 🔲 Phase 8C | Parent Portal | Pending |
