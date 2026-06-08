@@ -18,6 +18,7 @@ export type InstitutionEditPayload = {
   college_type: string | null;
   subdomain: string | null;
   session_types: string[] | null;
+  email_domain: string | null;
 };
 
 type Props = {
@@ -31,6 +32,7 @@ export function EditInstitutionModal({ isOpen, onClose, onSuccess, tenant }: Pro
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
   const [type, setType] = useState("");
+  const [emailDomain, setEmailDomain] = useState("");
   const [sessionTypes, setSessionTypes] = useState<SessionTypeKey[]>(["NORMAL"]);
   const [loading, setLoading] = useState(false);
 
@@ -43,6 +45,7 @@ export function EditInstitutionModal({ isOpen, onClose, onSuccess, tenant }: Pro
       document.body.style.overflow = "hidden";
       setName(tenant.name);
       setType(tenant.college_type || "");
+      setEmailDomain(tenant.email_domain || "");
       const st = (tenant.session_types ?? ["NORMAL"]).filter(
         (k): k is SessionTypeKey => ["NORMAL", "DAY", "EVENING"].includes(k)
       );
@@ -71,7 +74,7 @@ export function EditInstitutionModal({ isOpen, onClose, onSuccess, tenant }: Pro
     const supabase = createClient();
     const { error } = await supabase
       .from("institutions")
-      .update({ name, college_type: type, session_types: sessionTypes })
+      .update({ name, college_type: type, session_types: sessionTypes, email_domain: emailDomain.trim() || null })
       .eq("id", tenant.id);
 
     setLoading(false);
@@ -166,6 +169,29 @@ export function EditInstitutionModal({ isOpen, onClose, onSuccess, tenant }: Pro
                 </span>
               </div>
               <p className="text-[10px] text-slate-400">Subdomain is fixed after creation.</p>
+            </div>
+
+            <div className="space-y-1">
+              <label htmlFor="edit_email_domain" className="block text-xs font-medium text-slate-700">
+                Email Domain
+                <span className="ml-1 text-slate-400 font-normal">(for auto-generated staff/student emails)</span>
+              </label>
+              <div className="flex items-stretch rounded-md">
+                <span className="px-3 py-1.5 bg-slate-100 border border-r-0 border-slate-200 rounded-l-md text-slate-500 text-xs flex items-center shrink-0">
+                  @
+                </span>
+                <input
+                  type="text"
+                  id="edit_email_domain"
+                  value={emailDomain}
+                  onChange={(e) => setEmailDomain(e.target.value.toLowerCase().replace(/\s/g, "").replace(/^@/, ""))}
+                  placeholder="heber.ac.in"
+                  className="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-r-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs font-mono"
+                />
+              </div>
+              <p className="text-[10px] text-slate-400">
+                Staff emails: <span className="font-mono">firstname.lastname@{emailDomain || "domain.ac.in"}</span> · Students: <span className="font-mono">rollno@{emailDomain || "domain.ac.in"}</span>
+              </p>
             </div>
 
             <div className="space-y-2">

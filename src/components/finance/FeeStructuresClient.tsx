@@ -82,7 +82,7 @@ export function FeeStructuresClient({ institutionId, feeStructures }: Props) {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-5 px-6 pt-3 pb-6 h-full overflow-y-auto">
+    <div className="flex flex-col gap-5 px-6 pt-6 pb-6 h-full overflow-y-auto">
 
       {/* ── Page header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">

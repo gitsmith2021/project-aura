@@ -30,6 +30,7 @@ type College = {
   college_type: string | null;
   subdomain?: string | null;
   session_types?: string[] | null;
+  email_domain?: string | null;
 };
 
 type StaffMember = {
@@ -148,7 +149,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
 
   return (
     <DashboardLayout breadcrumb={breadcrumb}>
-      <div className="px-5 pt-2 pb-2 w-full h-[calc(100vh-56px)] min-h-0 flex flex-col overflow-hidden">
+      <div className="px-6 pt-6 pb-6 w-full h-[calc(100vh-56px)] min-h-0 flex flex-col overflow-hidden">
         <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2 shrink-0">
@@ -317,6 +318,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
                 college_type: college.college_type,
                 subdomain: college.subdomain ?? null,
                 session_types: college.session_types ?? null,
+                email_domain: college.email_domain ?? null,
               } satisfies InstitutionEditPayload)
             : null
         }

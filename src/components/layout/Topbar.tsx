@@ -1,90 +1,109 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, Bell, ChevronDown, User, Settings, LogOut, Sun, Moon } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useTheme } from "@/context/ThemeContext";
-import { StaffSearchBar } from "@/components/staff-portal/StaffSearchBar";
+import { ScrollableTabBar } from "./ScrollableTabBar";
+import { useInstitution } from "@/context/InstitutionContext";
+
+
 
 export function Topbar({
   isSidebarCollapsed,
   toggleSidebar,
-  breadcrumb,
 }: {
   isSidebarCollapsed: boolean;
   toggleSidebar: () => void;
-  breadcrumb?: React.ReactNode;
 }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [email,        setEmail]       = useState("");
-  const [displayName,  setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
   const { theme, toggle } = useTheme();
-  const pathname         = usePathname();
-  const isStaff          = pathname.startsWith("/staff-portal") && !pathname.startsWith("/staff-portal/view");
-  const isAdminViewStaff = pathname.startsWith("/staff-portal/view");
+  const { institutions, selectedId, setSelectedId, loading } = useInstitution();
+  const pathname = usePathname();
+  const router   = useRouter();
+
+  // Detect URL-based institution routes: /institutions/[id]/...
+  const urlInstMatch = pathname.match(/^\/institutions\/([^/]+)(\/.*)?$/);
+  const urlInstId    = urlInstMatch?.[1];
+  // Finance sub-page suffix (e.g. /finance/fees/payments)
+  const urlInstSuffix = urlInstMatch?.[2] ?? "";
+
+  // Active tab: URL-based routes use the URL's institution ID; others use context
+  const activeInstId = urlInstId ?? selectedId;
+
+
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user?.email) return;
-      setEmail(user.email);
-
-      if (isStaff) {
-        // For staff portal: look up the staff member's full name
-        const { data } = await supabase
-          .from("staff")
-          .select("full_name, title")
-          .eq("email", user.email)
-          .maybeSingle();
-        if (data?.full_name) {
-          setDisplayName(data.title ? `${data.title} ${data.full_name}` : data.full_name);
-        }
-      }
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.email) setEmail(user.email);
     });
-  }, [isStaff]);
+  }, []);
+
+  const handleTabClick = (instId: string) => {
+    setSelectedId(instId);
+    // On URL-based institution routes, navigate to the equivalent page for the new institution
+    if (urlInstId) {
+      router.push(`/institutions/${instId}${urlInstSuffix}`);
+    }
+  };
 
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    // Clear the role cookie so middleware re-evaluates on next login
     document.cookie = "aura-role=; path=/; max-age=0";
     window.location.href = "/login";
   };
 
   return (
-    <header className="h-14 min-w-0 max-w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 px-4 sticky top-0 z-10">
-      <div className="flex min-w-0 flex-1 items-center gap-3 text-sm font-medium text-slate-500 dark:text-slate-400">
-        <button
-          onClick={toggleSidebar}
-          className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md text-slate-600 dark:text-slate-400 transition-colors"
-        >
-          <Menu size={18} />
-        </button>
-        {isAdminViewStaff ? (
-          /* Staff search bar replaces breadcrumb when admin is viewing a staff portal */
-          <StaffSearchBar />
-        ) : (
-          <div className="flex min-w-0 items-center overflow-x-hidden text-xs">
-            <span className="shrink-0 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer transition-colors">
-              AURA
-            </span>
-            <span className="mx-2 shrink-0 text-slate-300 dark:text-slate-600">/</span>
-            {breadcrumb ? (
-              <span className="flex min-w-0 flex-1 items-center overflow-hidden">{breadcrumb}</span>
-            ) : (
-              <span className="truncate text-slate-900 dark:text-slate-100">Command Center</span>
-            )}
+    <header className="h-14 min-w-0 max-w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-stretch sticky top-0 z-10">
+
+      {/* ── Hamburger ── */}
+      <button
+        onClick={toggleSidebar}
+        className="flex shrink-0 items-center justify-center px-4 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200 transition-colors border-r border-slate-200 dark:border-slate-800"
+      >
+        <Menu size={18} />
+      </button>
+
+      {/* ── Institution tabs — fill available space ── */}
+      <div className="flex-1 overflow-hidden flex items-stretch">
+        {loading ? (
+          <div className="flex items-center gap-3 px-5">
+            <div className="h-3.5 w-28 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />
+            <div className="h-3.5 w-20 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />
           </div>
+        ) : institutions.length === 0 ? (
+          <div className="flex items-center px-5 text-xs text-slate-400">No institutions</div>
+        ) : (
+          <ScrollableTabBar innerClassName="items-center gap-0">
+            {institutions.map((inst) => (
+              <button
+                key={inst.id}
+                type="button"
+                onClick={() => handleTabClick(inst.id)}
+                className={`relative flex h-14 shrink-0 items-center whitespace-nowrap px-5 text-xs font-semibold transition-colors
+                  after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 ${
+                  activeInstId === inst.id
+                    ? "text-violet-700 dark:text-violet-400 bg-violet-50/40 dark:bg-violet-950/15 after:bg-violet-600 dark:after:bg-violet-500"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/60 after:bg-transparent"
+                }`}
+              >
+                {inst.name}
+              </button>
+            ))}
+          </ScrollableTabBar>
         )}
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
-        {/* Theme toggle */}
+      {/* ── Right actions ── */}
+      <div className="flex shrink-0 items-center gap-1 px-3 border-l border-slate-200 dark:border-slate-800">
         <button
           onClick={toggle}
           title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          className="p-1.5 rounded-md text-slate-400 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
           {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
         </button>
@@ -93,25 +112,23 @@ export function Topbar({
           <Bell size={16} />
         </button>
 
-        <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
+        <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
 
         <div className="relative">
           <div
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="flex items-center gap-2 cursor-pointer group px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
           >
-            <div className="w-7 h-7 rounded-md bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-xs font-semibold text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700 uppercase">
+            <div className="w-7 h-7 rounded-md bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-xs font-semibold text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700 uppercase shrink-0">
               {email ? email.charAt(0) : "S"}
             </div>
             <div className="flex flex-col text-left">
-              <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-none truncate max-w-[120px]">
-                {displayName || (email ? email.split("@")[0] : "User")}
+              <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-none truncate max-w-[100px]">
+                {email ? email.split("@")[0] : "User"}
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                {isStaff ? "Staff" : "Admin"}
-              </span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Admin</span>
             </div>
-            <ChevronDown size={14} className="text-slate-400 ml-1 group-hover:text-slate-600 dark:group-hover:text-slate-300" />
+            <ChevronDown size={14} className="text-slate-400 ml-1 group-hover:text-slate-600 dark:group-hover:text-slate-300 shrink-0" />
           </div>
 
           {isDropdownOpen && (

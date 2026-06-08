@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { updatePersonProfile } from "@/actions/user";
 import { fundingTypeShortLabel } from "@/lib/deptFunding";
 import { studentProgramLabel, yearOptionsForProgram, type StudentProgram } from "@/lib/studentProgram";
 
@@ -84,30 +85,22 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
     if (!person || !fullName.trim() || !departmentId) return;
     setLoading(true);
 
-    const supabase = createClient();
-    const base = {
+    const result = await updatePersonProfile({
+      id: person.id,
+      role: person.role,
+      institution_id: person.institution_id,
       full_name: fullName.trim(),
-      email: email.trim() || null,
       phone: phone.trim() || null,
       department_id: departmentId,
-    };
-    const studentPatch =
-      person.role === "STUDENT"
-        ? { student_program: studentProgram, student_year: studentYear }
-        : { student_program: null, student_year: null };
-
-    const targetTable = person.role === "STAFF" ? "staff" : "students";
-    const { error } = await supabase
-      .from(targetTable)
-      .update({ ...base, ...studentPatch })
-      .eq("id", person.id)
-      .eq("institution_id", person.institution_id);
+      student_program: person.role === "STUDENT" ? studentProgram : null,
+      student_year: person.role === "STUDENT" ? studentYear : null,
+    });
 
     setLoading(false);
 
-    if (error) {
-      console.error("Error updating profile:", error.message ?? error);
-      alert("Failed to update person: " + error.message);
+    if (!result.success) {
+      console.error("Error updating profile:", result.error);
+      alert("Failed to update person: " + result.error);
     } else {
       onSuccess();
       onClose();
@@ -118,7 +111,7 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-200 ${isOpen ? "pointer-events-auto" : "pointer-events-none"}`}
+      className={`fixed inset-0 z-[70] flex justify-end transition-opacity duration-200 ${isOpen ? "pointer-events-auto" : "pointer-events-none"}`}
     >
       <div
         className={`fixed inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity duration-200 ${isOpen ? "opacity-100" : "opacity-0"}`}
@@ -166,16 +159,17 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="block text-xs font-medium text-slate-700">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="optional"
-                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs"
-              />
-            </div>
+            {email && (
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-slate-700">
+                  Email
+                  <span className="ml-1 text-slate-400 font-normal">(login credential — read only)</span>
+                </label>
+                <div className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-500 font-mono truncate">
+                  {email}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-1">
               <label className="block text-xs font-medium text-slate-700">Phone</label>

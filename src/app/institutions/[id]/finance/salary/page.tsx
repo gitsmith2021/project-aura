@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import Link         from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { SalaryClient }    from "@/components/finance/SalaryClient";
-import { FinanceTabBar }   from "@/components/finance/FinanceTabBar";
 import {
   getSalaryStructures, getStaffWithoutSalaryStructure,
   getDisbursements, getSalarySummary,
@@ -30,10 +29,8 @@ export default async function SalaryPage({ params }: PageProps) {
 
   const currentMonth = new Date().toISOString().slice(0, 7);
 
-  const [{ data: institutions }, { data: institution }] = await Promise.all([
-    supabase.from("institutions").select("id, name").order("name"),
-    supabase.from("institutions").select("name").eq("id", id).single(),
-  ]);
+  const { data: institution } = await supabase
+    .from("institutions").select("name").eq("id", id).single();
 
   const [structuresResult, staffWithoutResult, disbResult, summaryResult] = await Promise.all([
     getSalaryStructures(id),
@@ -55,8 +52,6 @@ export default async function SalaryPage({ params }: PageProps) {
   return (
     <DashboardLayout breadcrumb={breadcrumb}>
       <div className="flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
-
-        <FinanceTabBar institutions={institutions ?? []} currentId={id} />
 
         {(!structuresResult.success || !disbResult.success) && (
           <p className="shrink-0 mx-6 mt-2 text-xs text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-lg px-3 py-2">

@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ScrollableTabBar } from "@/components/layout/ScrollableTabBar";
-import { InstitutionTabBar } from "@/components/layout/InstitutionTabBar";
+import { useInstitution } from "@/context/InstitutionContext";
 import { createClient } from "@/utils/supabase/client";
 import {
   Plus, BookOpen,
@@ -15,7 +15,6 @@ import { CurrentClassWidget } from "@/components/dashboard/CurrentClassWidget";
 import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundingBadge";
 import { AutoSchedulerButton } from "@/components/schedules/AutoSchedulerButton";
 
-type Tenant = { id: string; name: string };
 type Department = { id: string; name: string; institution_id: string; funding_type?: string | null };
 
 const TAB_ACTIVE = [
@@ -46,8 +45,7 @@ function KpiCard({ icon, label, value, sub, warn }: {
 }
 
 export default function SchedulesPage() {
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [selectedTenantId, setSelectedTenantId] = useState("");
+  const { institutions: tenants, selectedId: selectedTenantId } = useInstitution();
   const [allDepts, setAllDepts] = useState<Department[]>([]);
   const [classes, setClasses] = useState<ClassEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,14 +61,12 @@ export default function SchedulesPage() {
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchAll = useCallback(async () => {
     const supabase = createClient();
-    const [{ data: tData }, { data: dData }, { data: sData }] = await Promise.all([
-      supabase.from("institutions").select("id, name").order("name"),
+    const [{ data: dData }, { data: sData }] = await Promise.all([
       supabase.from("departments").select("id, name, institution_id, funding_type").order("name"),
       supabase.from("schedules")
         .select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, tenant_id, staff(full_name)")
         .order("start_time"),
     ]);
-    if (tData?.length) { setTenants(tData); setSelectedTenantId(p => p || tData[0].id); }
     if (dData) setAllDepts(dData as Department[]);
     if (sData) setClasses(sData as unknown as ClassEntry[]);
     setLoading(false);
@@ -190,15 +186,7 @@ export default function SchedulesPage() {
 
   return (
     <DashboardLayout>
-      <div className="relative flex h-[calc(100vh-56px)] min-h-0 min-w-0 max-w-full flex-col overflow-hidden px-6 pt-2 pb-2">
-
-        <InstitutionTabBar
-          institutions={tenants}
-          selectedId={selectedTenantId}
-          onSelect={setSelectedTenantId}
-          loading={tenants.length === 0}
-          className="-mx-6 px-6 bg-white dark:bg-slate-900"
-        />
+      <div className="relative flex h-[calc(100vh-56px)] min-h-0 min-w-0 max-w-full flex-col overflow-hidden px-6 pt-6 pb-6">
 
         {/* ── Page Header ── */}
         <div className="mb-2 flex min-w-0 shrink-0 flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">

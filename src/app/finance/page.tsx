@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { InstitutionTabBar } from "@/components/layout/InstitutionTabBar";
+import { useInstitution } from "@/context/InstitutionContext";
 import { createClient } from "@/utils/supabase/client";
 import {
   TrendingUp,
@@ -147,8 +147,7 @@ const EMPTY_SUMMARY: FinanceSummary = {
 // ── Page ──────────────────────────────────────────────────────
 
 export default function FinancePage() {
-  const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
-  const [selectedTenantId, setSelectedTenantId] = useState("");
+  const { selectedId: selectedTenantId } = useInstitution();
 
   const [summary, setSummary] = useState<FinanceSummary>(EMPTY_SUMMARY);
   const [recentTxns, setRecentTxns] = useState<RecentTransaction[]>([]);
@@ -156,29 +155,6 @@ export default function FinancePage() {
   const [isExpensePanelOpen, setIsExpensePanelOpen] = useState(false);
   const [isPaymentPanelOpen, setIsPaymentPanelOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  // ── Fetch institutions once ───────────────────────────────
-  useEffect(() => {
-    createClient()
-      .from("institutions")
-      .select("id, name")
-      .order("name")
-      .then(({ data }) => {
-        if (data?.length) {
-          setTenants(data);
-          setSelectedTenantId((prev) => prev || data[0].id);
-        }
-      });
-  }, []);
-
-  // ── Sync selected institution to sidebar via localStorage + custom event ─
-  useEffect(() => {
-    if (!selectedTenantId) return;
-    localStorage.setItem("aura_finance_inst", selectedTenantId);
-    window.dispatchEvent(
-      new CustomEvent("aura:finance:inst", { detail: selectedTenantId })
-    );
-  }, [selectedTenantId]);
 
   // ── Fetch finance data whenever institution or refreshKey changes ─
   const fetchData = useCallback(async (tenantId: string) => {
@@ -298,16 +274,7 @@ export default function FinancePage() {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-4 px-6 pt-2 pb-4 h-[calc(100vh-56px)] overflow-y-auto">
-
-        {/* ── Institution tab switcher ── */}
-        <InstitutionTabBar
-          institutions={tenants}
-          selectedId={selectedTenantId}
-          onSelect={setSelectedTenantId}
-          loading={tenants.length === 0}
-          className="-mx-6 px-6 bg-white dark:bg-slate-900"
-        />
+      <div className="flex flex-col gap-4 px-6 pt-6 pb-6 h-[calc(100vh-56px)] overflow-y-auto">
 
         {/* ── Page header ── */}
         <div className="flex items-center justify-between flex-wrap gap-3 shrink-0">

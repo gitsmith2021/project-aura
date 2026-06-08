@@ -25,7 +25,6 @@ export function DashboardLayout({
         <Topbar
           isSidebarCollapsed={isSidebarCollapsed}
           toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          breadcrumb={breadcrumb}
         />
         {children}
       </main>

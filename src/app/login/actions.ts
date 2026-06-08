@@ -15,7 +15,7 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) redirect("/login?error=Invalid login credentials");
 
-  // ── Determine role: staff (in staff table) or admin ──────────────────────
+  // ── Determine role: staff → student → admin ──────────────────────────────
   const { data: staffRow } = await supabase
     .from("staff")
     .select("id")
@@ -23,7 +23,16 @@ export async function login(formData: FormData) {
     .eq("is_active", true)
     .maybeSingle();
 
-  const role: "staff" | "admin" = staffRow ? "staff" : "admin";
+  let role: "staff" | "admin" | "student" = staffRow ? "staff" : "admin";
+
+  if (role === "admin") {
+    const { data: studentRow } = await supabase
+      .from("students")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+    if (studentRow) role = "student";
+  }
 
   // Cache the role in a cookie so middleware doesn't need a DB call per request
   cookieStore.set("aura-role", role, {
@@ -35,7 +44,7 @@ export async function login(formData: FormData) {
   });
 
   revalidatePath("/", "layout");
-  redirect(role === "staff" ? "/staff-portal" : "/");
+  redirect(role === "staff" ? "/staff-portal" : role === "student" ? "/student-portal" : "/");
 }
 
 export async function logout() {

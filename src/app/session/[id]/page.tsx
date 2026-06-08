@@ -184,7 +184,7 @@ export default function SessionPage() {
   const attendancePercentage = totalCount === 0 ? 0 : Math.round((presentCount / totalCount) * 100);
   return (
     <DashboardLayout>
-      <div className="px-6 pt-4 pb-4 w-full h-[calc(100vh-56px)] min-h-0 flex flex-col overflow-hidden">
+      <div className="px-6 pt-6 pb-6 w-full h-[calc(100vh-56px)] min-h-0 flex flex-col overflow-hidden">
         {/* Header */}
         <button
           type="button"

@@ -20,6 +20,7 @@ body {
 :root {
   /* Page background */
   --color-page-bg:      #f8fafc;   /* slate-50  */
+  --color-page-bg-gradient-end: #f1f5f9;   /* slate-100 */
   /* Card / panel surface */
   --color-surface:      #ffffff;
   --color-surface-2:    #f8fafc;   /* slate-50  */
@@ -41,7 +42,8 @@ body {
 }
 
 .dark {
-  --color-page-bg:      #0f172a;   /* slate-900 */
+  --color-page-bg:      #0a0f1d;   /* slate-955-ish */
+  --color-page-bg-gradient-end: #1e293b;   /* slate-800 */
   --color-surface:      #1e293b;   /* slate-800 */
   --color-surface-2:    #0f172a;   /* slate-900 */
   --color-surface-3:    #334155;   /* slate-700 */
@@ -83,6 +85,8 @@ html {
 /* Main scrollable content area background */
 main, [data-page-shell] {
   background-color: var(--color-page-bg);
+  background-image: linear-gradient(135deg, var(--color-page-bg), var(--color-page-bg-gradient-end));
+  background-attachment: fixed;
 }
 
 /* Cards & panels: override bg-white → var(--color-surface) */

@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { FeeStructuresClient } from "@/components/finance/FeeStructuresClient";
-import { FinanceTabBar } from "@/components/finance/FinanceTabBar";
 import { getFeeStructures } from "@/actions/feeStructures";
 import { createClient } from "@/utils/supabase/server";
 
@@ -18,8 +17,7 @@ export default async function FeeStructuresPage({ params }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: institutions }, { data: institution }, result] = await Promise.all([
-    supabase.from("institutions").select("id, name").order("name"),
+  const [{ data: institution }, result] = await Promise.all([
     supabase.from("institutions").select("name").eq("id", id).single(),
     getFeeStructures(id),
   ]);
@@ -39,8 +37,6 @@ export default async function FeeStructuresPage({ params }: PageProps) {
   return (
     <DashboardLayout breadcrumb={breadcrumb}>
       <div className="flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
-
-        <FinanceTabBar institutions={institutions ?? []} currentId={id} />
 
         {!result.success && (
           <p className="shrink-0 mx-6 mt-2 text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-lg px-3 py-2">

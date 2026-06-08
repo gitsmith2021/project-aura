@@ -4,7 +4,10 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  let supabaseResponse = NextResponse.next({ request: { headers: request.headers } });
+  // Forward pathname so server layouts can read it via headers()
+  const forwardedHeaders = new Headers(request.headers);
+  forwardedHeaders.set("x-pathname", pathname);
+  let supabaseResponse = NextResponse.next({ request: { headers: forwardedHeaders } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || "https://nsaheksysxinemtjcako.supabase.co",
@@ -27,11 +30,13 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const isLoginPage   = pathname === "/login";
+  const isLoginPage      = pathname === "/login";
   // /staff-portal/view/* is the admin's read-only window into a staff member's portal.
   // Admins are allowed there; only /staff-portal (no /view) is staff-only.
-  const isAdminViewStaff = pathname.startsWith("/staff-portal/view");
-  const isStaffPortal    = pathname.startsWith("/staff-portal") && !isAdminViewStaff;
+  const isAdminViewStaff    = pathname.startsWith("/staff-portal/view");
+  const isStaffPortal       = pathname.startsWith("/staff-portal") && !isAdminViewStaff;
+  const isAdminViewStudent  = pathname.startsWith("/student-portal/view");
+  const isStudentPortal     = pathname.startsWith("/student-portal") && !isAdminViewStudent;
 
   // ── Unauthenticated ───────────────────────────────────────────────────────
   if (!user) {
@@ -45,7 +50,7 @@ export async function updateSession(request: NextRequest) {
 
   // ── Authenticated: determine role ─────────────────────────────────────────
   // Read the cached cookie set at login (avoids a DB query on every request)
-  let role = request.cookies.get("aura-role")?.value as "staff" | "admin" | undefined;
+  let role = request.cookies.get("aura-role")?.value as "staff" | "admin" | "student" | undefined;
 
   if (!role) {
     // Cookie missing — query once and cache it
@@ -56,7 +61,17 @@ export async function updateSession(request: NextRequest) {
       .eq("is_active", true)
       .maybeSingle();
 
-    role = staffRow ? "staff" : "admin";
+    if (staffRow) {
+      role = "staff";
+    } else {
+      const { data: studentRow } = await supabase
+        .from("students")
+        .select("id")
+        .eq("email", user.email ?? "")
+        .maybeSingle();
+      role = studentRow ? "student" : "admin";
+    }
+
     supabaseResponse.cookies.set("aura-role", role, {
       path:     "/",
       httpOnly: true,
@@ -69,7 +84,7 @@ export async function updateSession(request: NextRequest) {
   // Logged-in user lands on /login → send to their home
   if (isLoginPage) {
     const url = request.nextUrl.clone();
-    url.pathname = role === "staff" ? "/staff-portal" : "/";
+    url.pathname = role === "staff" ? "/staff-portal" : role === "student" ? "/student-portal" : "/";
     return NextResponse.redirect(url);
   }
 
@@ -80,10 +95,31 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Students must stay inside /student-portal (they cannot use admin view routes)
+  if (role === "student" && (!isStudentPortal || isAdminViewStudent)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/student-portal";
+    return NextResponse.redirect(url);
+  }
+
   // Admins cannot enter the staff self-service area, but CAN use /staff-portal/view/*
   if (role === "admin" && isStaffPortal && !isAdminViewStaff) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
+    return NextResponse.redirect(url);
+  }
+
+  // Non-students cannot access the student self-service area, but CAN use /student-portal/view/*
+  if (role !== "student" && isStudentPortal) {
+    const url = request.nextUrl.clone();
+    url.pathname = role === "staff" ? "/staff-portal" : "/";
+    return NextResponse.redirect(url);
+  }
+
+  // Staff cannot access admin student-view routes
+  if (role === "staff" && isAdminViewStudent) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/staff-portal";
     return NextResponse.redirect(url);
   }
 

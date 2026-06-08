@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import Link         from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ReportsClient }   from "@/components/finance/ReportsClient";
-import { FinanceTabBar }   from "@/components/finance/FinanceTabBar";
 import { getMonthlyPLReport, getFinancialSummaryReport } from "@/actions/reports";
 import { createClient } from "@/utils/supabase/server";
 import type { FinancialSummary } from "@/types/finance";
@@ -38,12 +37,10 @@ export default async function ReportsPage({ params }: PageProps) {
   const currentMonth = now.toISOString().slice(0, 7);
   const currentAY    = currentAcademicYear();
 
-  const [{ data: institutions }, { data: departments }] = await Promise.all([
-    supabase.from("institutions").select("id, name").order("name"),
+  const [{ data: institution }, { data: departments }] = await Promise.all([
+    supabase.from("institutions").select("name").eq("id", id).single(),
     supabase.from("departments").select("id, name").eq("institution_id", id).order("name"),
   ]);
-
-  const institution = (institutions ?? []).find(i => i.id === id);
 
   const [plResult, sumResult] = await Promise.all([
     getMonthlyPLReport(id, currentYear),
@@ -63,8 +60,6 @@ export default async function ReportsPage({ params }: PageProps) {
   return (
     <DashboardLayout breadcrumb={breadcrumb}>
       <div className="flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
-
-        <FinanceTabBar institutions={institutions ?? []} currentId={id} />
 
         <div className="flex-1 min-h-0 overflow-hidden">
           <ReportsClient

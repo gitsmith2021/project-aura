@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { InstitutionTabBar } from "@/components/layout/InstitutionTabBar";
+import { useInstitution } from "@/context/InstitutionContext";
 import { createClient } from "@/utils/supabase/client";
 import { AddDepartmentModal, type DepartmentEditPayload } from "@/components/dashboard/AddDepartmentModal";
 import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundingBadge";
@@ -34,8 +34,7 @@ function formatSessionType(sessionType: string | null) {
 }
 
 export default function DepartmentsPage() {
-  const [tenants, setTenants] = useState<{ id: string; name: string; session_types?: string[] | null }[]>([]);
-  const [selectedTenantId, setSelectedTenantId] = useState("");
+  const { institutions: tenants, selectedId: selectedTenantId } = useInstitution();
   const [departments, setDepartments] = useState<DeptRow[]>([]);
   const [studentCountByDept, setStudentCountByDept] = useState<CountMap>(new Map());
   const [staffCountByDept, setStaffCountByDept] = useState<CountMap>(new Map());
@@ -83,20 +82,6 @@ export default function DepartmentsPage() {
   }, [selectedTenantId]);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from("institutions")
-      .select("id, name, session_types")
-      .order("name")
-      .then(({ data }) => {
-        if (data?.length) {
-          setTenants(data);
-          setSelectedTenantId((prev) => prev || data[0].id);
-        }
-      });
-  }, []);
-
-  useEffect(() => {
     fetchDepartments();
   }, [fetchDepartments]);
 
@@ -123,21 +108,13 @@ export default function DepartmentsPage() {
 
   return (
     <DashboardLayout>
-      <div className="px-6 pt-2 pb-4 w-full flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
-        <InstitutionTabBar
-          institutions={tenants}
-          selectedId={selectedTenantId}
-          onSelect={setSelectedTenantId}
-          loading={tenants.length === 0}
-          className="-mx-6 px-6 bg-white dark:bg-slate-900"
-        />
-
+      <div className="px-6 pt-6 pb-6 w-full flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3 shrink-0">
           <div className="min-w-0">
             <h1 className="text-lg font-bold text-slate-900 tracking-tight leading-tight">Departments</h1>
             <p className="text-slate-500 mt-0.5 text-[11px] leading-snug">
               <span className="font-medium text-slate-700">{activeTenantName || "…"}</span>
-              {" · "}Use tabs above to switch institutions.
+              {" · "}Use the topbar tabs to switch institutions.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 justify-end shrink-0">

@@ -434,7 +434,7 @@ export function CollegeDashboard({
   ];
 
   return (
-    <div className="h-full min-h-0 overflow-y-auto custom-scrollbar px-5 pt-5 pb-6 flex flex-col">
+    <div className="h-full min-h-0 overflow-y-auto custom-scrollbar px-6 pt-6 pb-6 flex flex-col">
       <div className="max-w-7xl mx-auto w-full flex flex-col gap-5 flex-1 min-h-full">
 
         {/* ── College title + link ── */}

@@ -38,10 +38,9 @@ export function AddPersonModal({
   const [tenantId, setTenantId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
 
-  const [tenants, setTenants] = useState<{id: string, name: string}[]>([]);
+  const [tenants, setTenants] = useState<{id: string, name: string, email_domain?: string | null}[]>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string; funding_type?: string | null }[]>([]);
 
-  const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [studentProgram, setStudentProgram] = useState<StudentProgram>("UG");
   const [studentYear, setStudentYear] = useState(1);
@@ -57,9 +56,27 @@ export function AddPersonModal({
 
   const fetchTenants = async () => {
     const supabase = createClient();
-    const { data } = await supabase.from('institutions').select('id, name').order('name');
+    const { data } = await supabase.from('institutions').select('id, name, email_domain').order('name');
     if (data) setTenants(data);
   };
+
+  function buildEmailLocal(name: string): string {
+    const words = name.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const first = words[0] ?? "";
+    const last = words.length > 1 ? words[words.length - 1] : "";
+    return last ? `${first}.${last}` : first;
+  }
+
+  const emailDomain = tenants.find(t => t.id === tenantId)?.email_domain ?? null;
+
+  function emailPreview(): string {
+    if (!emailDomain) return "";
+    if (role === "STAFF") {
+      const local = buildEmailLocal(fullName);
+      return local ? `${local}@${emailDomain}` : "";
+    }
+    return `[roll-no]@${emailDomain}`;
+  }
 
   useEffect(() => {
     if (tenantId) {
@@ -92,7 +109,6 @@ export function AddPersonModal({
     if (isOpen) {
       document.body.style.overflow = "hidden";
       setFullName('');
-      setEmail('');
       setPhone('');
       setRole(defaultRole);
 
@@ -116,16 +132,20 @@ export function AddPersonModal({
     setLoading(true);
 
     const supabase = createClient();
+    const domain = tenants.find(t => t.id === tenantId)?.email_domain ?? null;
     const targetTable = role === "STAFF" ? "staff" : "students";
     const row: Record<string, unknown> = {
       full_name: fullName,
-      email: email.trim() || null,
       phone: phone.trim() || null,
       institution_id: tenantId,
       department_id: departmentId,
       student_program: role === "STUDENT" ? studentProgram : null,
       student_year: role === "STUDENT" ? studentYear : null,
     };
+
+    if (role === "STAFF") {
+      row.email = domain ? `${buildEmailLocal(fullName)}@${domain}` : null;
+    }
 
     if (role === "STUDENT") {
       const { count } = await supabase
@@ -135,14 +155,14 @@ export function AddPersonModal({
         .eq('department_id', departmentId)
         .eq('student_program', studentProgram)
         .eq('student_year', studentYear);
-      
+
       const currentCount = (count || 0) + 1;
-      
+
       const dept = departments.find(d => d.id === departmentId);
       const program = studentProgram || "XX";
       const fundingRaw = dept?.funding_type;
       const funding = fundingRaw === "AIDED" ? "A" : fundingRaw === "SF" ? "SF" : "XX";
-      
+
       const deptName = dept?.name || "";
       let deptPrefix = "XX";
       if (deptName) {
@@ -153,9 +173,11 @@ export function AddPersonModal({
           deptPrefix = deptName.substring(0, 2).toUpperCase();
         }
       }
-      
+
       const idxStr = String(currentCount).padStart(3, "0");
-      row.roll_no = `${program}-${funding}-${deptPrefix}-${idxStr}`;
+      const rollNo = `${program}-${funding}-${deptPrefix}-${idxStr}`;
+      row.roll_no = rollNo;
+      row.email = domain ? `${rollNo.toLowerCase().replace(/-/g, "")}@${domain}` : null;
     }
 
     const { error } = await supabase.from(targetTable).insert([row]);
@@ -206,16 +228,23 @@ export function AddPersonModal({
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="block text-xs font-medium text-slate-700">Email <span className="text-slate-400 font-normal">(optional)</span></label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="john@example.com"
-                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs"
-              />
-            </div>
+            {tenantId && (
+              <div className="space-y-1">
+                <label className="block text-xs font-medium text-slate-700">
+                  Email
+                  <span className="ml-1 text-slate-400 font-normal">(auto-generated)</span>
+                </label>
+                {emailDomain ? (
+                  <div className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs text-slate-500 font-mono truncate">
+                    {emailPreview() || <span className="text-slate-300 italic">type a name above…</span>}
+                  </div>
+                ) : (
+                  <div className="px-3 py-2 rounded-md bg-amber-50 border border-amber-200 text-[10px] text-amber-700 leading-snug">
+                    No email domain set for this institution. Open Institution Settings → Edit to add one (e.g. <span className="font-mono">heber.ac.in</span>).
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="space-y-1">
               <label className="block text-xs font-medium text-slate-700">Phone <span className="text-slate-400 font-normal">(optional)</span></label>

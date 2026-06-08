@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { InstitutionTabBar } from "@/components/layout/InstitutionTabBar";
+import { useInstitution } from "@/context/InstitutionContext";
 import { createClient } from "@/utils/supabase/client";
 import {
   Building2,
@@ -31,10 +31,10 @@ type Institution = {
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general");
   const [isSaving, setIsSaving] = useState(false);
+  const { selectedId: selectedInstId } = useInstitution();
 
-  // Campuses state
+  // Campuses state — full institution details for the settings form
   const [institutions, setInstitutions] = useState<Institution[]>([]);
-  const [selectedInstId, setSelectedInstId] = useState("");
   const [calendarMode, setCalendarMode] = useState("Semester");
   const [nfcEnabled, setNfcEnabled] = useState(true);
   const [autoPublish, setAutoPublish] = useState(true);
@@ -46,12 +46,7 @@ export default function SettingsPage() {
       .select("id, name, college_type, subdomain, session_types")
       .order("name")
       .then(({ data }) => {
-        if (data) {
-          setInstitutions(data);
-          if (data.length > 0) {
-            setSelectedInstId(data[0].id);
-          }
-        }
+        if (data) setInstitutions(data);
       });
   }, []);
 
@@ -91,7 +86,7 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-      <div className="px-6 pt-2 pb-4 w-full flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden bg-slate-50/50 dark:bg-slate-950/20">
+      <div className="px-6 pt-6 pb-6 w-full flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden bg-slate-50/50 dark:bg-slate-950/20">
         <div className="mb-3 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="min-w-0">
             <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight">
@@ -219,19 +214,6 @@ export default function SettingsPage() {
 
               {activeTab === "campuses" && (
                 <div className="space-y-5 animate-in fade-in duration-300">
-                  <div>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2 mb-2">
-                      Campus Selector
-                    </h2>
-                    <InstitutionTabBar
-                      institutions={institutions}
-                      selectedId={selectedInstId}
-                      onSelect={setSelectedInstId}
-                      loading={institutions.length === 0}
-                      className="mb-1"
-                    />
-                  </div>
-
                   {activeInst && (
                     <div className="space-y-5">
                       <div>

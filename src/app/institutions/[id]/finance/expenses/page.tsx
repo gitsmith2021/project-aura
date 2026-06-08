@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import Link         from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ExpensesClient }  from "@/components/finance/ExpensesClient";
-import { FinanceTabBar }   from "@/components/finance/FinanceTabBar";
 import {
   getExpenses, getExpenseSummary, getBudgets, getBudgetVsActuals, currentAY,
 } from "@/actions/expenses";
@@ -31,13 +30,10 @@ export default async function ExpensesPage({ params }: PageProps) {
   const currentMonth = now.toISOString().slice(0, 7);
   const ay           = await currentAY();
 
-  const [{ data: institutions }, { data: departments }] = await Promise.all([
-    supabase.from("institutions").select("id, name").order("name"),
+  const [{ data: institution }, { data: departments }] = await Promise.all([
+    supabase.from("institutions").select("name").eq("id", id).single(),
     supabase.from("departments").select("id, name").eq("institution_id", id).order("name"),
   ]);
-
-  // Derive institution name from the all-institutions list
-  const institution = (institutions ?? []).find(i => i.id === id);
 
   const [expResult, sumResult, budResult, bvaResult] = await Promise.all([
     getExpenses(id, { page: 1, pageSize: 10, month: currentMonth }),
@@ -59,8 +55,6 @@ export default async function ExpensesPage({ params }: PageProps) {
   return (
     <DashboardLayout breadcrumb={breadcrumb}>
       <div className="flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
-
-        <FinanceTabBar institutions={institutions ?? []} currentId={id} />
 
         {!expResult.success && (
           <p className="shrink-0 mx-6 mt-2 text-xs text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-lg px-3 py-2">

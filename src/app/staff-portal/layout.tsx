@@ -1,4 +1,5 @@
 import { cookies }  from "next/headers";
+import { headers }  from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient }    from "@/utils/supabase/server";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
@@ -12,8 +13,6 @@ export default async function StaffPortalLayout({ children }: { children: React.
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Admins accessing /staff-portal/view/* skip the staff guard.
-  // The middleware already ensures admins cannot reach /staff-portal (base).
   const role = cookieStore.get("aura-role")?.value;
   if (role !== "admin") {
     const { data: staff } = await supabase
@@ -24,6 +23,14 @@ export default async function StaffPortalLayout({ children }: { children: React.
       .maybeSingle();
 
     if (!staff) redirect("/institutions");
+  }
+
+  // View routes (/staff-portal/view/*) have their own StaffViewShell layout.
+  // Skip DashboardLayout here to avoid a double topbar/sidebar.
+  const headerList  = await headers();
+  const pathname    = headerList.get("x-pathname") ?? "";
+  if (pathname.startsWith("/staff-portal/view/")) {
+    return <>{children}</>;
   }
 
   return <DashboardLayout>{children}</DashboardLayout>;

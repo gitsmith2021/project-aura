@@ -177,7 +177,7 @@ export function PaymentsClient({
   ];
 
   return (
-    <div className="flex flex-col gap-4 px-6 pt-3 pb-6 h-full overflow-y-auto">
+    <div className="flex flex-col gap-4 px-6 pt-6 pb-6 h-full overflow-y-auto">
 
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">

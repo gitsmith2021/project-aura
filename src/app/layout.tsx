@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { InstitutionProvider } from "@/context/InstitutionContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,7 +30,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
     >
       <body suppressHydrationWarning className="font-sans min-h-screen flex flex-col">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <InstitutionProvider>{children}</InstitutionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

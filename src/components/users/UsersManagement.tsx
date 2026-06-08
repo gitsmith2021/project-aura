@@ -3,9 +3,8 @@
 import { useEffect, useState, useMemo } from "react";
 import React from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { InstitutionTabBar } from "@/components/layout/InstitutionTabBar";
 import { createClient } from "@/utils/supabase/client";
-import { Plus, Search, ChevronLeft, ChevronRight, X, Pencil, Upload, LayoutGrid, Table2, Info, User } from "lucide-react";
+import { Plus, Search, ChevronLeft, ChevronRight, X, Pencil, Upload, LayoutGrid, Table2, Info, User, LogIn, KeyRound, Loader2 } from "lucide-react";
 import { AddPersonModal } from "@/components/users/AddPersonModal";
 import { EditPersonModal, type PersonEditPayload } from "@/components/users/EditPersonModal";
 import { Badge } from "@/components/ui/Badge";
@@ -14,6 +13,42 @@ import { fundingTypeShortLabel } from "@/lib/deptFunding";
 import { formatStudentTrack, studentProgramLabel, type StudentProgram } from "@/lib/studentProgram";
 import { BulkUploadModal } from "@/components/users/BulkUploadModal";
 import { StudentDeptBreakdown } from "@/components/users/StudentDeptBreakdown";
+import { StaffCredentialsModal } from "@/components/users/StaffCredentialsModal";
+import { batchGetStaffAuthStatuses, toggleStaffPortalAccess, type StaffAuthStatus } from "@/actions/staffCredentials";
+import { useInstitution } from "@/context/InstitutionContext";
+
+const CARD_PALETTES = [
+  {
+    card: "from-violet-50/80 to-white dark:from-violet-950/30 dark:to-slate-900 border-violet-100/80 dark:border-violet-900/40 hover:border-violet-300/80 dark:hover:border-violet-700/60",
+    iconBg: "bg-violet-50 dark:bg-violet-950/50 border-violet-100 dark:border-violet-900/60",
+    iconText: "text-violet-600 dark:text-violet-400",
+  },
+  {
+    card: "from-blue-50/80 to-white dark:from-blue-950/30 dark:to-slate-900 border-blue-100/80 dark:border-blue-900/40 hover:border-blue-300/80 dark:hover:border-blue-700/60",
+    iconBg: "bg-blue-50 dark:bg-blue-950/50 border-blue-100 dark:border-blue-900/60",
+    iconText: "text-blue-600 dark:text-blue-400",
+  },
+  {
+    card: "from-teal-50/80 to-white dark:from-teal-950/30 dark:to-slate-900 border-teal-100/80 dark:border-teal-900/40 hover:border-teal-300/80 dark:hover:border-teal-700/60",
+    iconBg: "bg-teal-50 dark:bg-teal-950/50 border-teal-100 dark:border-teal-900/60",
+    iconText: "text-teal-600 dark:text-teal-400",
+  },
+  {
+    card: "from-rose-50/80 to-white dark:from-rose-950/30 dark:to-slate-900 border-rose-100/80 dark:border-rose-900/40 hover:border-rose-300/80 dark:hover:border-rose-700/60",
+    iconBg: "bg-rose-50 dark:bg-rose-950/50 border-rose-100 dark:border-rose-900/60",
+    iconText: "text-rose-600 dark:text-rose-400",
+  },
+  {
+    card: "from-amber-50/80 to-white dark:from-amber-950/30 dark:to-slate-900 border-amber-100/80 dark:border-amber-900/40 hover:border-amber-300/80 dark:hover:border-amber-700/60",
+    iconBg: "bg-amber-50 dark:bg-amber-950/50 border-amber-100 dark:border-amber-900/60",
+    iconText: "text-amber-600 dark:text-amber-400",
+  },
+  {
+    card: "from-emerald-50/80 to-white dark:from-emerald-950/30 dark:to-slate-900 border-emerald-100/80 dark:border-emerald-900/40 hover:border-emerald-300/80 dark:hover:border-emerald-700/60",
+    iconBg: "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-100 dark:border-emerald-900/60",
+    iconText: "text-emerald-600 dark:text-emerald-400",
+  },
+] as const;
 
 export type UsersManagementPerson = {
   id: string;
@@ -62,13 +97,22 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
     funding_type?: string | null;
     color?: string | null;
   }[]>([]);
-  const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
-  const [selectedTenantId, setSelectedTenantId] = useState("");
+  const { institutions: tenants, selectedId: selectedTenantId } = useInstitution();
   const [page, setPage] = useState(1);
   /** Students page only: department grid vs roster table */
   const [studentsLayoutMode, setStudentsLayoutMode] = useState<"grid" | "table">("grid");
   /** Staff page only: card grid vs roster table */
   const [staffLayoutMode, setStaffLayoutMode] = useState<"grid" | "table">("grid");
+  /** Staff portal credentials */
+  const [authStatuses, setAuthStatuses] = useState<Record<string, StaffAuthStatus>>({});
+  const [authLoading, setAuthLoading] = useState(false);
+  const [credModalPerson, setCredModalPerson] = useState<{ id: string; full_name: string; email: string } | null>(null);
+  const [blockingEmail, setBlockingEmail] = useState<string | null>(null);
+  /** Student portal credentials */
+  const [studentAuthStatuses, setStudentAuthStatuses] = useState<Record<string, StaffAuthStatus>>({});
+  const [studentAuthLoading, setStudentAuthLoading] = useState(false);
+  const [studentCredModalPerson, setStudentCredModalPerson] = useState<{ id: string; full_name: string; email: string } | null>(null);
+  const [studentBlockingEmail, setStudentBlockingEmail] = useState<string | null>(null);
 
   const fetchPeople = async () => {
     setLoading(true);
@@ -88,19 +132,6 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
     });
 
     const supabase = createClient();
-    supabase
-      .from("institutions")
-      .select("id, name")
-      .order("name")
-      .then((res) => {
-        if (res?.data && res.data.length > 0) {
-          Promise.resolve().then(() => {
-            setTenants(res.data);
-            setSelectedTenantId((prev) => prev || res.data[0].id);
-          });
-        }
-      });
-
     supabase
       .from("departments")
       .select("id, name, institution_id, funding_type, color")
@@ -131,6 +162,30 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
       setPage(1);
     });
   }, [search, filterDeptId, selectedTenantId, filterProgram, filterYearNum, role, staffLayoutMode]);
+
+  // Load Supabase auth status for all staff members
+  useEffect(() => {
+    if (role !== "STAFF" || people.length === 0) return;
+    const emails = people.map((p) => p.email).filter(Boolean) as string[];
+    if (emails.length === 0) return;
+    setAuthLoading(true);
+    batchGetStaffAuthStatuses(emails).then((statuses) => {
+      setAuthStatuses(statuses);
+      setAuthLoading(false);
+    });
+  }, [people, role]);
+
+  // Load Supabase auth status for all students
+  useEffect(() => {
+    if (role !== "STUDENT" || people.length === 0) return;
+    const emails = people.map((p) => p.email).filter(Boolean) as string[];
+    if (emails.length === 0) return;
+    setStudentAuthLoading(true);
+    batchGetStaffAuthStatuses(emails).then((statuses) => {
+      setStudentAuthStatuses(statuses);
+      setStudentAuthLoading(false);
+    });
+  }, [people, role]);
 
   const filteredDepts = useMemo(
     () => departments.filter((d) => d.institution_id === selectedTenantId),
@@ -271,6 +326,13 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
   const activeDept = departments.find((d) => d.id === filterDeptId);
   const activeTenantName = tenants.find((t) => t.id === selectedTenantId)?.name ?? "";
 
+  function currentAcademicYear(): string {
+    const now = new Date();
+    const y = now.getFullYear();
+    const startYear = now.getMonth() + 1 >= 7 ? y : y - 1;
+    return `${startYear}-${String(startYear + 1).slice(2)}`;
+  }
+
   const yearOptions =
     filterProgram === "PG" ? [1, 2] : filterProgram === "UG" ? [1, 2, 3] : [1, 2, 3];
 
@@ -291,13 +353,6 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
   return (
     <DashboardLayout>
       <div className="px-6 pt-2 pb-4 w-full relative flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
-        <InstitutionTabBar
-          institutions={tenants}
-          selectedId={selectedTenantId}
-          onSelect={setSelectedTenantId}
-          loading={tenants.length === 0}
-        />
-
         {role === "STUDENT" && selectedTenantId && studentsLayoutMode === "grid" ? (
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3 shrink-0">
             <div className="min-w-0">
@@ -636,29 +691,127 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
             ) : (
               <div className="flex-1 overflow-y-auto custom-scrollbar">
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pb-2">
-                  {filtered.map((person) => (
+                  {filtered.map((person, idx) => {
+                    const palette = CARD_PALETTES[idx % CARD_PALETTES.length];
+                    return (
                     <article
                       key={person.id}
-                      className="rounded-xl border border-slate-200 dark:border-slate-750 bg-gradient-to-b from-slate-50/90 to-white dark:from-slate-800/90 dark:to-slate-900 p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] flex flex-col gap-3 hover:border-violet-200/80 dark:hover:border-violet-800/80 hover:shadow-md transition-all"
+                      className={`rounded-xl border bg-gradient-to-br ${palette.card} p-4 shadow-[0_1px_8px_rgba(0,0,0,0.04)] flex flex-col gap-3 hover:shadow-md transition-all`}
                     >
-                      <div className="flex items-start gap-3 min-w-0">
-                        <span className="w-10 h-10 rounded-lg bg-violet-50 dark:bg-violet-950/40 border border-violet-100 dark:border-violet-900/60 shrink-0 flex items-center justify-center">
-                          <User size={18} className="text-violet-600 dark:text-violet-400" aria-hidden />
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight truncate">{person.full_name}</p>
-                          <div className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">
-                            {person.departments?.name ? (
-                              <span className="inline-flex items-center gap-1.5 flex-wrap">
-                                <span>{person.departments.name}</span>
-                                <DepartmentFundingBadge fundingType={person.departments.funding_type} />
-                              </span>
-                            ) : (
-                              <span className="text-slate-400 dark:text-slate-500">No department</span>
-                            )}
+                      {/* Card header: avatar + info + portal action icons */}
+                      <div className="flex items-start gap-2">
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                          <span className={`w-10 h-10 rounded-lg ${palette.iconBg} border shrink-0 flex items-center justify-center`}>
+                            <User size={18} className={palette.iconText} aria-hidden />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 leading-tight truncate">{person.full_name}</p>
+                            <div className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 line-clamp-2">
+                              {person.departments?.name ? (
+                                <span className="inline-flex items-center gap-1.5 flex-wrap">
+                                  <span>{person.departments.name}</span>
+                                  <DepartmentFundingBadge fundingType={person.departments.funding_type} />
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 dark:text-slate-500">No department</span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-550 mt-1 truncate">{person.institutions?.name ?? "—"}</p>
                           </div>
-                          <p className="text-[10px] text-slate-400 dark:text-slate-550 mt-1 truncate">{person.institutions?.name ?? "—"}</p>
                         </div>
+
+                        {/* Portal action icons (staff only) */}
+                        {role === "STAFF" && (() => {
+                          const email = person.email ?? "";
+                          const status = authStatuses[email];
+                          const isBlocked = status?.blocked ?? false;
+                          const hasAccount = status?.exists ?? false;
+                          const isBlockingThis = blockingEmail === email;
+
+                          return (
+                            <div className="flex flex-col items-end gap-1 shrink-0">
+                              {authLoading && !status ? (
+                                <Loader2 size={13} className="text-slate-300 dark:text-slate-600 animate-spin" />
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  {/* View portal button */}
+                                  <a
+                                    href={`/staff-portal/view/${person.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title={isBlocked ? "Access blocked" : !hasAccount ? "No portal account — set credentials first" : `View ${person.full_name}'s portal`}
+                                    className={`p-1 rounded-md transition-colors ${
+                                      !email || (!hasAccount && !authLoading)
+                                        ? "text-slate-300 dark:text-slate-600 cursor-not-allowed pointer-events-none"
+                                        : isBlocked
+                                        ? "text-rose-400 dark:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                                        : "text-slate-400 dark:text-slate-500 hover:text-violet-600 dark:hover:text-violet-400 hover:bg-violet-50/60 dark:hover:bg-violet-950/30"
+                                    }`}
+                                    onClick={(e) => { if (!hasAccount || isBlocked) e.preventDefault(); }}
+                                  >
+                                    <LogIn size={13} />
+                                  </a>
+
+                                  {/* Set credentials button */}
+                                  <button
+                                    type="button"
+                                    title={hasAccount ? `Update password for ${person.full_name}` : `Create portal account for ${person.full_name}`}
+                                    disabled={!email}
+                                    onClick={() => email && setCredModalPerson({ id: person.id, full_name: person.full_name, email })}
+                                    className="p-1 rounded-md cursor-pointer text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50/60 dark:hover:bg-amber-950/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                  >
+                                    <KeyRound size={13} />
+                                  </button>
+
+                                  {/* Block / Unblock toggle switch */}
+                                  <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={!isBlocked}
+                                    title={
+                                      !hasAccount ? "No portal account — set credentials first" :
+                                      isBlockingThis ? "Updating…" :
+                                      isBlocked ? `Unblock ${person.full_name}'s portal access` :
+                                      `Block ${person.full_name}'s portal access`
+                                    }
+                                    disabled={!hasAccount || isBlockingThis}
+                                    onClick={async () => {
+                                      if (!email || !hasAccount) return;
+                                      setBlockingEmail(email);
+                                      const res = await toggleStaffPortalAccess(email, !isBlocked);
+                                      if (res.success) {
+                                        setAuthStatuses((prev) => ({
+                                          ...prev,
+                                          [email]: { exists: true, blocked: !isBlocked },
+                                        }));
+                                      } else {
+                                        alert(res.error ?? "Failed to update access.");
+                                      }
+                                      setBlockingEmail(null);
+                                    }}
+                                    className="disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                  >
+                                    {isBlockingThis ? (
+                                      <Loader2 size={13} className="text-slate-400 animate-spin" />
+                                    ) : (
+                                      <span className={`relative inline-flex h-3.5 w-6 shrink-0 items-center rounded-full border transition-colors duration-200 ${
+                                        !hasAccount
+                                          ? "bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600"
+                                          : isBlocked
+                                          ? "bg-rose-200 dark:bg-rose-900/60 border-rose-300 dark:border-rose-700"
+                                          : "bg-emerald-400 dark:bg-emerald-500 border-emerald-500 dark:border-emerald-400"
+                                      }`}>
+                                        <span className={`inline-block h-2.5 w-2.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                                          (!hasAccount || isBlocked) ? "translate-x-0.5" : "translate-x-3"
+                                        }`} />
+                                      </span>
+                                    )}
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                       <button
                         type="button"
@@ -684,7 +837,8 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                         Edit
                       </button>
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )
@@ -704,7 +858,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                     </>
                   )}
                   <th className="px-4 py-3 text-xs font-semibold text-slate-900 dark:text-slate-100">Institution</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-slate-900 dark:text-slate-100 w-[100px] text-right">Actions</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-slate-900 dark:text-slate-100 w-[160px] text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -747,29 +901,112 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                       )}
                       <td className="px-4 py-3 text-slate-600 dark:text-slate-300 text-xs">{person.institutions?.name || "N/A"}</td>
                       <td className="px-4 py-3 text-right">
-                        <button
-                          type="button"
-                          disabled={!person.department_id}
-                          title={!person.department_id ? "Assign a department before editing" : undefined}
-                          onClick={() => {
-                            if (!person.department_id) return;
-                            setPersonToEdit({
-                              id: person.id,
-                              full_name: person.full_name,
-                              role: role,
-                              institution_id: person.institution_id,
-                              department_id: person.department_id,
-                              email: person.email,
-                              phone: person.phone,
-                              student_program: person.student_program ? (person.student_program as StudentProgram) : null,
-                              student_year: person.student_year ?? null,
-                            });
-                          }}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-slate-600 dark:text-slate-300 hover:border-violet-300 dark:hover:border-violet-800 hover:text-violet-700 dark:hover:text-violet-400 hover:bg-violet-50/50 dark:hover:bg-violet-950/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                        >
-                          <Pencil size={12} />
-                          Edit
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          {role === "STUDENT" && (() => {
+                            const email = person.email ?? "";
+                            const status = studentAuthStatuses[email];
+                            const isBlocked  = status?.blocked ?? false;
+                            const hasAccount = status?.exists  ?? false;
+                            const isBlockingThis = studentBlockingEmail === email;
+                            return (
+                              <>
+                                {/* View student portal */}
+                                <a
+                                  href={`/student-portal/view/${person.id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title={!email ? "No email — cannot view portal" : `View ${person.full_name}'s portal`}
+                                  className={`p-1 rounded-md transition-colors ${
+                                    !email
+                                      ? "text-slate-300 dark:text-slate-600 cursor-not-allowed pointer-events-none"
+                                      : "text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30"
+                                  }`}
+                                >
+                                  <LogIn size={13} />
+                                </a>
+
+                                {/* Set credentials */}
+                                <button
+                                  type="button"
+                                  title={hasAccount ? `Update password for ${person.full_name}` : `Create portal account for ${person.full_name}`}
+                                  disabled={!email}
+                                  onClick={() => email && setStudentCredModalPerson({ id: person.id, full_name: person.full_name, email })}
+                                  className="p-1 rounded-md cursor-pointer text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50/60 dark:hover:bg-amber-950/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                  <KeyRound size={13} />
+                                </button>
+
+                                {/* Block / Unblock toggle */}
+                                <button
+                                  type="button"
+                                  role="switch"
+                                  aria-checked={!isBlocked}
+                                  title={
+                                    !hasAccount ? "No portal account — set credentials first" :
+                                    isBlockingThis ? "Updating…" :
+                                    isBlocked ? `Unblock ${person.full_name}'s portal access` :
+                                    `Block ${person.full_name}'s portal access`
+                                  }
+                                  disabled={!hasAccount || isBlockingThis}
+                                  onClick={async () => {
+                                    if (!email || !hasAccount) return;
+                                    setStudentBlockingEmail(email);
+                                    const res = await toggleStaffPortalAccess(email, !isBlocked);
+                                    if (res.success) {
+                                      setStudentAuthStatuses((prev) => ({
+                                        ...prev,
+                                        [email]: { exists: true, blocked: !isBlocked },
+                                      }));
+                                    } else {
+                                      alert(res.error ?? "Failed to update access.");
+                                    }
+                                    setStudentBlockingEmail(null);
+                                  }}
+                                  className="disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                >
+                                  {isBlockingThis ? (
+                                    <Loader2 size={13} className="text-slate-400 animate-spin" />
+                                  ) : (
+                                    <span className={`relative inline-flex h-3.5 w-6 shrink-0 items-center rounded-full border transition-colors duration-200 ${
+                                      !hasAccount
+                                        ? "bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600"
+                                        : isBlocked
+                                        ? "bg-rose-200 dark:bg-rose-900/60 border-rose-300 dark:border-rose-700"
+                                        : "bg-emerald-400 dark:bg-emerald-500 border-emerald-500 dark:border-emerald-400"
+                                    }`}>
+                                      <span className={`inline-block h-2.5 w-2.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                                        (!hasAccount || isBlocked) ? "translate-x-0.5" : "translate-x-3"
+                                      }`} />
+                                    </span>
+                                  )}
+                                </button>
+                              </>
+                            );
+                          })()}
+                          <button
+                            type="button"
+                            disabled={!person.department_id}
+                            title={!person.department_id ? "Assign a department before editing" : undefined}
+                            onClick={() => {
+                              if (!person.department_id) return;
+                              setPersonToEdit({
+                                id: person.id,
+                                full_name: person.full_name,
+                                role: role,
+                                institution_id: person.institution_id,
+                                department_id: person.department_id,
+                                email: person.email,
+                                phone: person.phone,
+                                student_program: person.student_program ? (person.student_program as StudentProgram) : null,
+                                student_year: person.student_year ?? null,
+                              });
+                            }}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-slate-600 dark:text-slate-300 hover:border-violet-300 dark:hover:border-violet-800 hover:text-violet-700 dark:hover:text-violet-400 hover:bg-violet-50/50 dark:hover:bg-violet-950/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                          >
+                            <Pencil size={12} />
+                            Edit
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -861,6 +1098,9 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
               <h2 className="text-base font-semibold text-slate-900 tracking-tight">
                 {activeDept?.name || "All Departments"}
               </h2>
+              <p className="text-[11px] text-slate-400 mt-0.5 leading-tight">
+                {activeTenantName} · {currentAcademicYear()}
+              </p>
               <p className="text-xs text-slate-500 mt-0.5">
                 {filterProgram ? `${filterProgram} ` : ""}
                 {filterYearNum ? `Year ${filterYearNum}` : "All Years"}
@@ -909,7 +1149,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                     <th className="px-4 py-3 text-xs font-semibold text-slate-900">Department</th>
                     <th className="px-4 py-3 text-xs font-semibold text-slate-900">Program</th>
                     <th className="px-4 py-3 text-xs font-semibold text-slate-900">Year</th>
-                    <th className="px-4 py-3 text-xs font-semibold text-slate-900 w-[100px] text-right">Actions</th>
+                    <th className="px-4 py-3 text-xs font-semibold text-slate-900 w-[160px] text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -939,29 +1179,93 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                         </td>
                         <td className="px-4 py-3 text-slate-600 text-xs">{person.student_year ?? "—"}</td>
                         <td className="px-4 py-3 text-right">
-                          <button
-                            type="button"
-                            disabled={!person.department_id}
-                            title={!person.department_id ? "Assign a department before editing" : undefined}
-                            onClick={() => {
-                              if (!person.department_id) return;
-                              setPersonToEdit({
-                                id: person.id,
-                                full_name: person.full_name,
-                                role: role,
-                                institution_id: person.institution_id,
-                                department_id: person.department_id,
-                                email: person.email,
-                                phone: person.phone,
-                                student_program: person.student_program ? (person.student_program as StudentProgram) : null,
-                                student_year: person.student_year ?? null,
-                              });
-                            }}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 text-[11px] font-medium text-slate-600 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                          >
-                            <Pencil size={12} />
-                            Edit
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            {(() => {
+                              const email = person.email ?? "";
+                              const status = studentAuthStatuses[email];
+                              const isBlocked  = status?.blocked ?? false;
+                              const hasAccount = status?.exists  ?? false;
+                              const isBlockingThis = studentBlockingEmail === email;
+                              return (
+                                <>
+                                  <a
+                                    href={`/student-portal/view/${person.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title={!email ? "No email" : `View ${person.full_name}'s portal`}
+                                    className={`p-1 rounded-md transition-colors ${
+                                      !email
+                                        ? "text-slate-300 cursor-not-allowed pointer-events-none"
+                                        : "text-slate-400 hover:text-indigo-600 hover:bg-indigo-50/60"
+                                    }`}
+                                  >
+                                    <LogIn size={13} />
+                                  </a>
+                                  <button
+                                    type="button"
+                                    title={hasAccount ? `Update password for ${person.full_name}` : `Create portal account for ${person.full_name}`}
+                                    disabled={!email}
+                                    onClick={() => email && setStudentCredModalPerson({ id: person.id, full_name: person.full_name, email })}
+                                    className="p-1 rounded-md cursor-pointer text-slate-400 hover:text-amber-600 hover:bg-amber-50/60 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                  >
+                                    <KeyRound size={13} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={!isBlocked}
+                                    title={!hasAccount ? "Set credentials first" : isBlocked ? `Unblock ${person.full_name}` : `Block ${person.full_name}`}
+                                    disabled={!hasAccount || isBlockingThis}
+                                    onClick={async () => {
+                                      if (!email || !hasAccount) return;
+                                      setStudentBlockingEmail(email);
+                                      const res = await toggleStaffPortalAccess(email, !isBlocked);
+                                      if (res.success) {
+                                        setStudentAuthStatuses((prev) => ({ ...prev, [email]: { exists: true, blocked: !isBlocked } }));
+                                      } else {
+                                        alert(res.error ?? "Failed.");
+                                      }
+                                      setStudentBlockingEmail(null);
+                                    }}
+                                    className="disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                  >
+                                    {isBlockingThis ? (
+                                      <Loader2 size={13} className="text-slate-400 animate-spin" />
+                                    ) : (
+                                      <span className={`relative inline-flex h-3.5 w-6 shrink-0 items-center rounded-full border transition-colors duration-200 ${
+                                        !hasAccount ? "bg-slate-200 border-slate-300" : isBlocked ? "bg-rose-200 border-rose-300" : "bg-emerald-400 border-emerald-500"
+                                      }`}>
+                                        <span className={`inline-block h-2.5 w-2.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${(!hasAccount || isBlocked) ? "translate-x-0.5" : "translate-x-3"}`} />
+                                      </span>
+                                    )}
+                                  </button>
+                                </>
+                              );
+                            })()}
+                            <button
+                              type="button"
+                              disabled={!person.department_id}
+                              title={!person.department_id ? "Assign a department before editing" : undefined}
+                              onClick={() => {
+                                if (!person.department_id) return;
+                                setPersonToEdit({
+                                  id: person.id,
+                                  full_name: person.full_name,
+                                  role: role,
+                                  institution_id: person.institution_id,
+                                  department_id: person.department_id,
+                                  email: person.email,
+                                  phone: person.phone,
+                                  student_program: person.student_program ? (person.student_program as StudentProgram) : null,
+                                  student_year: person.student_year ?? null,
+                                });
+                              }}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-200 text-[11px] font-medium text-slate-600 hover:border-violet-300 hover:text-violet-700 hover:bg-violet-50/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                            >
+                              <Pencil size={12} />
+                              Edit
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -1001,6 +1305,34 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
       />
 
       <EditPersonModal isOpen={personToEdit !== null} onClose={() => setPersonToEdit(null)} onSuccess={fetchPeople} person={personToEdit} />
+
+      <StaffCredentialsModal
+        isOpen={credModalPerson !== null}
+        onClose={() => setCredModalPerson(null)}
+        person={credModalPerson}
+        hasAccount={credModalPerson ? (authStatuses[credModalPerson.email]?.exists ?? false) : false}
+        isBlocked={credModalPerson ? (authStatuses[credModalPerson.email]?.blocked ?? false) : false}
+        onSuccess={(email) => {
+          setAuthStatuses((prev) => ({
+            ...prev,
+            [email]: { exists: true, blocked: prev[email]?.blocked ?? false },
+          }));
+        }}
+      />
+
+      <StaffCredentialsModal
+        isOpen={studentCredModalPerson !== null}
+        onClose={() => setStudentCredModalPerson(null)}
+        person={studentCredModalPerson}
+        hasAccount={studentCredModalPerson ? (studentAuthStatuses[studentCredModalPerson.email]?.exists ?? false) : false}
+        isBlocked={studentCredModalPerson ? (studentAuthStatuses[studentCredModalPerson.email]?.blocked ?? false) : false}
+        onSuccess={(email) => {
+          setStudentAuthStatuses((prev) => ({
+            ...prev,
+            [email]: { exists: true, blocked: prev[email]?.blocked ?? false },
+          }));
+        }}
+      />
     </DashboardLayout>
   );
 }

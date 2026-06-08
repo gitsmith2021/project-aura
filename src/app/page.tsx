@@ -1,13 +1,11 @@
 "use client";
 
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { InstitutionTabBar } from "@/components/layout/InstitutionTabBar";
-import { AddInstitutionModal } from "@/components/dashboard/AddInstitutionModal";
 import { CollegeDashboard } from "@/components/dashboard/CollegeDashboard";
 import { SessionSummaryModal } from "@/components/analytics/SessionSummaryModal";
-import { Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { useInstitution } from "@/context/InstitutionContext";
 
 type College = {
   id: string;
@@ -18,11 +16,10 @@ type College = {
 };
 
 export default function Dashboard() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [colleges, setColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<string | null>(null);
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
+  const { selectedId: activeTab } = useInstitution();
 
   const fetchColleges = async () => {
     setLoading(true);
@@ -43,9 +40,6 @@ export default function Dashboard() {
     }));
 
     setColleges(enriched);
-    if (enriched.length > 0 && !activeTab) {
-      setActiveTab(enriched[0].id);
-    }
     setLoading(false);
   };
 
@@ -68,22 +62,6 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="w-full h-[calc(100vh-56px)] min-h-0 flex flex-col overflow-hidden">
 
-        <InstitutionTabBar
-          institutions={colleges}
-          selectedId={activeTab}
-          onSelect={setActiveTab}
-          loading={loading}
-          className="bg-white dark:bg-slate-900 px-5"
-          trailing={
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex shrink-0 items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-violet-700"
-            >
-              <Plus size={13} strokeWidth={2.5} /> Register Institution
-            </button>
-          }
-        />
-
         {/* ── Per-college dashboard ── */}
         <div className="flex-1 min-h-0 overflow-hidden">
           {loading ? (
@@ -102,12 +80,6 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-
-      <AddInstitutionModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={fetchColleges}
-      />
 
       {selectedScheduleId && (
         <SessionSummaryModal

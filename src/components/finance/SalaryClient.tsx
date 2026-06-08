@@ -174,7 +174,7 @@ export function SalaryClient({
   const cardCls = "px-4 py-3 rounded-xl bg-white/70 dark:bg-slate-800/60 border backdrop-blur-sm shadow-sm";
 
   return (
-    <div className="flex flex-col gap-4 px-6 pt-3 pb-6 h-full overflow-y-auto">
+    <div className="flex flex-col gap-4 px-6 pt-6 pb-6 h-full overflow-y-auto">
 
       {/* ── Page header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">

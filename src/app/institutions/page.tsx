@@ -14,6 +14,7 @@ type InstitutionRow = {
   college_type: string | null;
   subdomain: string | null;
   session_types: string[] | null;
+  email_domain?: string | null;
   studentsCount: number;
   staffCount: number;
   departmentsCount: number;
@@ -127,13 +128,14 @@ export default function InstitutionsPage() {
       college_type: r.college_type,
       subdomain: r.subdomain,
       session_types: r.session_types,
+      email_domain: r.email_domain ?? null,
     });
     setEditOpen(true);
   };
 
   return (
     <DashboardLayout>
-      <div className="px-6 pt-2 pb-4 w-full flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
+      <div className="px-6 pt-6 pb-6 w-full flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-3 shrink-0">
           <div className="min-w-0">
             <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-tight">Institutions</h1>

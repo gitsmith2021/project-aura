@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { PaymentsClient }  from "@/components/finance/PaymentsClient";
-import { FinanceTabBar }   from "@/components/finance/FinanceTabBar";
 import { getFeePayments, getPaymentSummary } from "@/actions/feePayments";
 import { createClient } from "@/utils/supabase/server";
 import type { PaymentSummary } from "@/types/finance";
@@ -27,8 +26,7 @@ export default async function FeePaymentsPage({ params }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: institutions }, { data: institution }, { data: feeStructures }] = await Promise.all([
-    supabase.from("institutions").select("id, name").order("name"),
+  const [{ data: institution }, { data: feeStructures }] = await Promise.all([
     supabase.from("institutions").select("name").eq("id", id).single(),
     supabase.from("fee_structures").select("id, name, amount").eq("institution_id", id).eq("is_active", true).order("name"),
   ]);
@@ -58,8 +56,6 @@ export default async function FeePaymentsPage({ params }: PageProps) {
   return (
     <DashboardLayout breadcrumb={breadcrumb}>
       <div className="flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
-
-        <FinanceTabBar institutions={institutions ?? []} currentId={id} />
 
         {!paymentsResult.success && (
           <p className="shrink-0 mx-6 mt-2 text-xs text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40 rounded-lg px-3 py-2">

@@ -3,6 +3,53 @@
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import type { StudentProgram } from "@/lib/studentProgram";
+
+export async function updatePersonProfile(payload: {
+  id: string;
+  role: "STAFF" | "STUDENT";
+  institution_id: string;
+  full_name: string;
+  phone: string | null;
+  department_id: string;
+  student_program?: StudentProgram | null;
+  student_year?: number | null;
+}): Promise<{ success: true } | { success: false; error: string }> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Unauthorized" };
+
+  // Email is the login credential — never update it through this action.
+  const base = {
+    full_name: payload.full_name,
+    phone: payload.phone,
+    department_id: payload.department_id,
+  };
+
+  if (payload.role === "STAFF") {
+    const { error } = await supabase
+      .from("staff")
+      .update(base)
+      .eq("id", payload.id)
+      .eq("institution_id", payload.institution_id);
+    if (error) return { success: false, error: error.message };
+    revalidatePath("/users/staff");
+    revalidatePath("/users/students");
+    return { success: true };
+  }
+
+  const { error } = await supabase
+    .from("students")
+    .update({ ...base, student_program: payload.student_program ?? null, student_year: payload.student_year ?? null })
+    .eq("id", payload.id)
+    .eq("institution_id", payload.institution_id);
+  if (error) return { success: false, error: error.message };
+  revalidatePath("/users/staff");
+  revalidatePath("/users/students");
+  return { success: true };
+}
 
 export async function registerUser(prevState: any, formData: FormData) {
   const fullName = formData.get("fullName") as string;

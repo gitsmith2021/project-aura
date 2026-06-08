@@ -305,7 +305,7 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
 
   return (
     <DashboardLayout breadcrumb={breadcrumb}>
-      <div className="px-5 pt-4 pb-2 w-full h-[calc(100vh-56px)] min-h-0 flex flex-col overflow-hidden">
+      <div className="px-6 pt-6 pb-6 w-full h-[calc(100vh-56px)] min-h-0 flex flex-col overflow-hidden">
         <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
 
           <div className="flex items-center justify-between mb-4 shrink-0 gap-3">

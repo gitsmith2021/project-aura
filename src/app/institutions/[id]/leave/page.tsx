@@ -51,7 +51,7 @@ export default function AdminLeavePage({ params }: { params: Promise<{ id: strin
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-y-auto px-6 pt-4 pb-6 space-y-4">
+      <div className="flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-y-auto px-6 pt-6 pb-6 space-y-4">
 
         {/* Header */}
         <div className="flex items-center justify-between shrink-0">
