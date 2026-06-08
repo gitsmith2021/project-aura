@@ -457,13 +457,101 @@ CREATE TABLE syllabus_completion (
 
 ---
 
+### Step 2G — Teacher Lesson Plan / Daily Diary
+
+**Route:** `/institutions/[id]/lesson-plans`
+
+> Day-wise lesson plans by teachers aligned to curriculum units (Step 2F). Mandatory during NAAC site visits — auditors ask for any teacher's lesson diary on the spot.
+
+#### Database:
+```sql
+CREATE TABLE lesson_plans (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id     UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  staff_id           UUID NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+  subject_id         UUID REFERENCES subjects(id),
+  curriculum_unit_id UUID REFERENCES curriculum_units(id),
+  plan_date          DATE NOT NULL,
+  period_number      INTEGER,
+  topic_covered      TEXT NOT NULL,
+  teaching_method    TEXT CHECK (teaching_method IN ('lecture','demonstration','discussion','lab','seminar','other')),
+  objectives         TEXT,
+  materials_used     TEXT,
+  homework_given     TEXT,
+  remarks            TEXT,
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(staff_id, plan_date, period_number)
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._lesson_plans.sql`
+- [ ] `src/app/institutions/[id]/lesson-plans/page.tsx` — Admin view: all teachers' lesson plans with date/dept filter
+- [ ] `src/actions/lessonPlans.ts` — getMyPlans, submitPlan, getStaffPlans, getCompletionReport
+- [ ] `src/components/lesson-plans/LessonPlanForm.tsx` — Daily plan entry: curriculum unit selector, teaching method, objectives
+- [ ] Staff portal: `src/app/staff-portal/lesson-plan/page.tsx` — Staff logs today's lesson plan (pre-filled from timetable)
+
+#### Key features:
+- Links to curriculum units (Step 2F) — marks which syllabus unit was covered today
+- Admin can view any teacher's diary for NAAC site visits
+- Weekly/monthly lesson diary PDF export (NAAC documentation)
+- Auto-pre-fills subject and period from timetable schedule
+
+---
+
+### Step 2H — Guest Lecture & Expert Talk Management
+
+**Route:** `/institutions/[id]/guest-lectures`
+
+> NAAC Criterion 1.3 (Curriculum Enrichment). Every guest lecture must be documented with speaker details, attendance, and curriculum alignment. Auditors specifically ask for this during NAAC visits.
+
+#### Database:
+```sql
+CREATE TABLE guest_lectures (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id     UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  department_id      UUID REFERENCES departments(id),
+  subject_id         UUID REFERENCES subjects(id),
+  curriculum_unit_id UUID REFERENCES curriculum_units(id),
+  speaker_name       TEXT NOT NULL,
+  speaker_org        TEXT,
+  speaker_designation TEXT,
+  topic              TEXT NOT NULL,
+  lecture_date       DATE NOT NULL,
+  venue              TEXT,
+  duration_hours     NUMERIC(4,2),
+  attendees_count    INTEGER,
+  feedback_summary   TEXT,
+  photo_urls         JSONB,
+  organized_by       UUID REFERENCES staff(id),
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._guest_lectures.sql`
+- [ ] `src/app/institutions/[id]/guest-lectures/page.tsx` — Guest lecture log with dept/date filter + NAAC export
+- [ ] `src/actions/guestLectures.ts` — getGuestLectures, addGuestLecture, exportForNAAC
+- [ ] `src/components/guest-lectures/GuestLectureCard.tsx` — Card: speaker, topic, date, attendance, curriculum unit tag
+- [ ] Student portal: `src/app/student-portal/guest-lectures/page.tsx` — Upcoming and past guest lectures in their dept
+
+#### Key features:
+- Links to curriculum units — NAAC evidence of curriculum enrichment activities
+- Attendance count tracking
+- NAAC Criterion 1.3 export: guest lectures count per academic year
+- Photo uploads for event documentation (Supabase Storage)
+
+---
+
 ### Phase 2 Completion Checklist
 - [ ] Academic years table live; at least one year marked `is_current = true`
-- [ ] All six sub-steps (2A–2F) built and tested
+- [ ] All eight sub-steps (2A–2H) built and tested
 - [ ] Academic calendar visible in all three portals (admin, staff, student)
 - [ ] Marks entry → arrear detection → year promotion pipeline working end-to-end
 - [ ] CIA marks integrate into marksheet totals correctly
 - [ ] Syllabus completion tracking working for at least one department
+- [ ] Lesson plan diary accessible to admin (NAAC site visit ready)
+- [ ] Guest lectures logged and linked to curriculum units
 - [ ] Marksheet printable as PDF
 - [ ] `git commit -m "feat: Phase 2 — Academic Operations complete"`
 - [ ] `git push origin main`
@@ -557,11 +645,60 @@ Wire notifications into existing modules:
 
 ---
 
+### Step 3D — Digital Notice Board & Announcements
+
+**Route:** `/institutions/[id]/notices`
+
+> Centralized announcement system replacing physical notice boards. Visible across all portals with audience targeting. Day-to-day campus communication backbone.
+
+#### Database:
+```sql
+CREATE TABLE notices (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  title            TEXT NOT NULL,
+  body             TEXT NOT NULL,
+  notice_type      TEXT NOT NULL CHECK (notice_type IN (
+                     'academic','exam','holiday','event','emergency',
+                     'placement','hostel','transport','general')),
+  target_audience  TEXT NOT NULL CHECK (target_audience IN (
+                     'all','students','staff','parents','hostel')),
+  department_id    UUID REFERENCES departments(id),   -- NULL = institution-wide
+  attachment_url   TEXT,           -- PDF circular via Supabase Storage
+  is_pinned        BOOLEAN NOT NULL DEFAULT FALSE,
+  expires_at       DATE,
+  posted_by        UUID REFERENCES auth.users(id),
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._notices.sql`
+- [ ] `src/app/institutions/[id]/notices/page.tsx` — Admin: create notices, pin/unpin, manage target audience
+- [ ] `src/actions/notices.ts` — createNotice, updateNotice, deleteNotice, getActiveNotices
+- [ ] `src/components/notices/NoticeBoard.tsx` — Notice board widget embeddable in any portal dashboard
+- [ ] `src/components/notices/NoticeBadge.tsx` — Type badge (Emergency — red, Academic — violet, Event — amber)
+- [ ] Student portal: `src/app/student-portal/notices/page.tsx` — Active notices filtered for students
+- [ ] Staff portal: `src/app/staff-portal/notices/page.tsx` — Active notices filtered for staff
+- [ ] Integration: creating an Emergency or Exam notice optionally triggers a push notification (Phase 3B)
+
+#### Key features:
+- Audience targeting: all / students only / staff only / specific dept / hostel residents
+- Pinned notices always appear at top of board
+- Auto-expire: notices disappear after `expires_at` date
+- PDF attachment support for official circulars
+- Optional push notification + WhatsApp trigger for urgent/emergency notices
+
+---
+
 ### Phase 3 Completion Checklist
 - [ ] Notifications table created and RLS locked down
 - [ ] Bell icon shows live unread count in all nav bars
 - [ ] All 7 trigger events fire correctly
 - [ ] Email sending works for at least fee and payment events
+- [ ] SMS sending works for at least attendance alert
+- [ ] WhatsApp template sending works for fee receipt
+- [ ] Digital Notice Board live on all portals with audience targeting and auto-expiry
 - [ ] `npx tsc --noEmit` passes
 - [ ] `git commit -m "feat: Phase 3 — Notifications System complete"`
 - [ ] `git push origin main`
@@ -972,6 +1109,246 @@ CREATE INDEX idx_smart_cards_staff ON smart_cards(staff_id);
 
 ---
 
+### Step 4G — Gate Pass & Visitor Management
+
+**Route:** `/institutions/[id]/gate`
+
+> Campus security and student movement tracking. Essential for residential colleges. Students leaving campus need warden/HOD approval. All external visitors must be logged.
+
+#### Database:
+```sql
+CREATE TABLE visitor_log (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  visitor_name     TEXT NOT NULL,
+  visitor_phone    TEXT,
+  id_proof_type    TEXT,           -- Aadhaar, PAN, Driving License
+  id_proof_number  TEXT,
+  purpose          TEXT NOT NULL,
+  meeting_with     UUID REFERENCES auth.users(id),
+  vehicle_number   TEXT,
+  check_in_time    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  check_out_time   TIMESTAMPTZ,
+  status           TEXT NOT NULL DEFAULT 'checked_in'
+                   CHECK (status IN ('checked_in','checked_out'))
+);
+
+CREATE TABLE student_outpasses (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  student_id       UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  hostel_id        UUID REFERENCES hostels(id),
+  reason           TEXT NOT NULL,
+  destination      TEXT NOT NULL,
+  out_time         TIMESTAMPTZ NOT NULL,
+  expected_return  TIMESTAMPTZ NOT NULL,
+  actual_return    TIMESTAMPTZ,
+  approved_by      UUID REFERENCES staff(id),
+  status           TEXT NOT NULL DEFAULT 'pending'
+                   CHECK (status IN ('pending','approved','rejected','returned','overdue'))
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._gate_management.sql`
+- [ ] `src/app/institutions/[id]/gate/page.tsx` — Security dashboard: active visitors, pending outpasses, real-time log
+- [ ] `src/app/institutions/[id]/gate/visitors/page.tsx` — Log new visitor + check-out
+- [ ] `src/app/institutions/[id]/gate/outpasses/page.tsx` — Approve/reject student outpass requests
+- [ ] `src/actions/gateManagement.ts` — logVisitor, checkOutVisitor, requestOutpass, approveOutpass
+- [ ] Student portal: `src/app/student-portal/outpass/page.tsx` — Apply for outpass, track approval status
+- [ ] Staff portal: `src/app/staff-portal/outpass/page.tsx` — Wardens approve pending outpasses for their hostel
+
+#### Key features:
+- Visitor log with ID proof type, vehicle entry, and check-in/out timestamps
+- Student outpass: apply → warden/HOD approval → security check-out → check-in on return
+- Overdue alerts: student not returned by expected time → notification to warden
+- Daily/weekly visitor and outpass report
+
+---
+
+### Step 4H — Student Clubs & Organizations (NSS / NCC / Cultural)
+
+**Route:** `/institutions/[id]/clubs`
+
+> Every Indian college has NSS, NCC, cultural committees, sports associations. Tracking these is required for NAAC Criterion 5.3 (Student Participation).
+
+#### Database:
+```sql
+CREATE TABLE clubs (
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id       UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name                 TEXT NOT NULL,
+  club_type            TEXT NOT NULL CHECK (club_type IN (
+                         'nss','ncc','cultural','sports','literary',
+                         'technical','environmental','other')),
+  faculty_coordinator  UUID REFERENCES staff(id),
+  student_secretary_id UUID REFERENCES students(id),
+  description          TEXT,
+  is_active            BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE club_members (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  club_id    UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  role       TEXT NOT NULL DEFAULT 'member'
+             CHECK (role IN ('member','secretary','joint_secretary','treasurer','president')),
+  joined_at  DATE NOT NULL DEFAULT CURRENT_DATE,
+  UNIQUE(club_id, student_id)
+);
+
+CREATE TABLE club_activities (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  club_id            UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+  title              TEXT NOT NULL,
+  activity_type      TEXT NOT NULL CHECK (activity_type IN (
+                       'event','camp','competition','workshop',
+                       'community_service','seminar','other')),
+  activity_date      DATE NOT NULL,
+  venue              TEXT,
+  participants_count INTEGER,
+  description        TEXT,
+  photo_urls         JSONB,
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._clubs.sql`
+- [ ] `src/app/institutions/[id]/clubs/page.tsx` — Clubs directory: list, manage, view activity stats
+- [ ] `src/app/institutions/[id]/clubs/[clubId]/page.tsx` — Club detail: members roster, activities log
+- [ ] `src/actions/clubs.ts` — getClubs, addClub, addMember, logActivity, getNAACReport
+- [ ] `src/components/clubs/ClubCard.tsx` — Card: club type badge, coordinator, member count, recent activity
+- [ ] Student portal: `src/app/student-portal/clubs/page.tsx` — My clubs, upcoming activities, membership badge
+- [ ] NAAC export: student participation in extracurricular activities (Criterion 5.3)
+
+#### Key features:
+- NSS and NCC flagged separately for government reporting
+- Activity log: community service hours, competition results
+- NAAC Criterion 5.3 report: number of students in clubs, activities count
+- Student portal shows membership certificates per club
+
+---
+
+### Step 4I — Health & Medical Records (Infirmary)
+
+**Route:** `/institutions/[id]/infirmary`
+
+> College infirmary/sick bay management. Patient visit logs, medicines dispensed, referrals. Essential for residential colleges. Students with chronic conditions need pre-registered medical profiles.
+
+#### Database:
+```sql
+CREATE TABLE medical_records (
+  id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id          UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  student_id              UUID REFERENCES students(id) ON DELETE CASCADE,
+  blood_group             TEXT,
+  known_allergies         TEXT,
+  chronic_conditions      TEXT,
+  emergency_contact_name  TEXT,
+  emergency_contact_phone TEXT,
+  insurance_policy        TEXT
+);
+
+CREATE TABLE medical_visits (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id      UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  patient_id          UUID NOT NULL REFERENCES auth.users(id),
+  patient_type        TEXT NOT NULL CHECK (patient_type IN ('student','staff')),
+  visit_date          TIMESTAMPTZ NOT NULL DEFAULT now(),
+  symptoms            TEXT NOT NULL,
+  diagnosis           TEXT,
+  treatment_given     TEXT,
+  medicines_dispensed JSONB,     -- Array of { name, dosage, quantity }
+  referred_to         TEXT,      -- External hospital/doctor if referred
+  follow_up_date      DATE,
+  attended_by         TEXT       -- Doctor/nurse name
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._infirmary.sql`
+- [ ] `src/app/institutions/[id]/infirmary/page.tsx` — Infirmary dashboard: today's visits, medicine log
+- [ ] `src/app/institutions/[id]/infirmary/visit/page.tsx` — Log new patient visit with diagnosis and medicines
+- [ ] `src/app/institutions/[id]/infirmary/records/page.tsx` — Search student medical profiles
+- [ ] `src/actions/infirmary.ts` — logVisit, getMedicalRecord, getVisitHistory, updateMedicalProfile
+- [ ] Student portal: `src/app/student-portal/health/page.tsx` — Personal medical record, visit history, upcoming follow-ups
+- [ ] Admin: pre-populate medical record from admissions module (blood group, allergies)
+
+#### Key features:
+- Student medical profile pre-populated at admission (blood group, allergies, emergency contact)
+- Visit log with medicines dispensed per visit
+- Referral tracking: student referred to external hospital with reason
+- Follow-up date reminder via notification system (Phase 3)
+
+---
+
+### Step 4J — Sports & Physical Education
+
+**Route:** `/institutions/[id]/sports`
+
+> Sports teams, facilities, tournaments, and achievements. NAAC Criterion 4.4 (Maintenance of Infrastructure) and Criterion 5.3 (Student Support). Essential for NIRF rankings.
+
+#### Database:
+```sql
+CREATE TABLE sports_facilities (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name           TEXT NOT NULL,
+  sport_type     TEXT NOT NULL,
+  capacity       INTEGER,
+  is_active      BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE sports_teams (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  sport_name       TEXT NOT NULL,
+  team_category    TEXT NOT NULL CHECK (team_category IN ('men','women','mixed')),
+  coach_id         UUID REFERENCES staff(id),
+  academic_year_id UUID REFERENCES academic_years(id)
+);
+
+CREATE TABLE sports_team_members (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  team_id    UUID NOT NULL REFERENCES sports_teams(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES students(id),
+  position   TEXT,
+  UNIQUE(team_id, student_id)
+);
+
+CREATE TABLE sports_achievements (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  team_id        UUID REFERENCES sports_teams(id),
+  student_id     UUID REFERENCES students(id),
+  event_name     TEXT NOT NULL,
+  level          TEXT NOT NULL CHECK (level IN (
+                   'inter_class','inter_college','district',
+                   'state','national','international')),
+  position       TEXT NOT NULL,   -- Gold, Silver, Bronze, Participant
+  event_date     DATE NOT NULL,
+  certificate_url TEXT
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._sports.sql`
+- [ ] `src/app/institutions/[id]/sports/page.tsx` — Sports overview: teams, achievements trophy wall, facilities
+- [ ] `src/app/institutions/[id]/sports/achievements/page.tsx` — Log achievements: student, level, position, event
+- [ ] `src/actions/sports.ts` — getTeams, addTeam, logAchievement, getSportsReport
+- [ ] `src/components/sports/AchievementCard.tsx` — Card: sport, level badge, position medal icon
+- [ ] Student portal: `src/app/student-portal/sports/page.tsx` — My sports teams, personal achievements
+- [ ] NAAC/NIRF export: sports achievements per academic year, level-wise breakdown
+
+#### Key features:
+- Achievement levels colour-coded: International (gold) → State (silver) → District (bronze)
+- Sports scholarship eligibility auto-link (Step 5G)
+- NIRF Criterion: sports achievements and facilities count
+- Student portal shows achievements as profile badges
+
+---
+
 ### Phase 4 Completion Checklist
 - [ ] Library: book catalog, lending, overdue fine calculation all working
 - [ ] Auditorium: venue booking with conflict detection and approval flow
@@ -979,6 +1356,10 @@ CREATE INDEX idx_smart_cards_staff ON smart_cards(staff_id);
 - [ ] Laboratories: labs registry, student batches, experiment sessions, and portal views
 - [ ] Assets: stock registry, low stock alerts, allocations to labs, and maintenance logs
 - [ ] Smart cards: NFC card registry with issuance and deactivation working
+- [ ] Gate pass: visitor log and student outpass working with warden approval
+- [ ] Clubs: NSS/NCC and all clubs registered with activity logs and NAAC export
+- [ ] Infirmary: visit log and student medical profiles working
+- [ ] Sports: teams, facilities, and achievements logged with NIRF export
 - [ ] All campus infrastructure modules integrated with student and staff portals
 - [ ] `git commit -m "feat: Phase 4 — Campus Infrastructure & Laboratories complete"`
 - [ ] `git push origin main`
@@ -1193,6 +1574,244 @@ CREATE TABLE staff_appraisal_activities (
 
 ---
 
+### Step 5F — Placement Cell & Career Services
+
+**Route:** `/institutions/[id]/placements`
+
+> Single most important module for college reputation and NIRF rankings. Tracks every placement drive from company onboarding to offer letters. Feeds NIRF Criterion 5.2 (Student Progression).
+
+#### Database:
+```sql
+CREATE TABLE companies (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name             TEXT NOT NULL,
+  industry         TEXT,
+  website          TEXT,
+  hr_contact_name  TEXT,
+  hr_contact_email TEXT,
+  hr_contact_phone TEXT
+);
+
+CREATE TABLE placement_drives (
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id       UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  company_id           UUID NOT NULL REFERENCES companies(id),
+  academic_year_id     UUID REFERENCES academic_years(id),
+  drive_date           DATE NOT NULL,
+  job_role             TEXT NOT NULL,
+  ctc_offered          NUMERIC(10,2),   -- in LPA
+  eligibility_criteria JSONB,           -- { min_cgpa: 7.0, no_backlogs: true, departments: [] }
+  process_stages       JSONB,           -- ["Resume Screening", "Aptitude", "Technical", "HR"]
+  status               TEXT NOT NULL DEFAULT 'scheduled'
+                       CHECK (status IN ('scheduled','ongoing','completed','cancelled'))
+);
+
+CREATE TABLE placement_registrations (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  drive_id     UUID NOT NULL REFERENCES placement_drives(id) ON DELETE CASCADE,
+  student_id   UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  stage_status TEXT NOT NULL DEFAULT 'registered'
+               CHECK (stage_status IN ('registered','shortlisted','interviewed','offered','rejected','placed')),
+  offer_ctc    NUMERIC(10,2),
+  placed_at    TIMESTAMPTZ,
+  UNIQUE(drive_id, student_id)
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._placements.sql`
+- [ ] `src/app/institutions/[id]/placements/page.tsx` — Placement cell dashboard: drives, stats, company list
+- [ ] `src/app/institutions/[id]/placements/drives/[driveId]/page.tsx` — Drive management: registrations, pipeline stages, results
+- [ ] `src/app/institutions/[id]/placements/companies/page.tsx` — Company registry with HR contacts
+- [ ] `src/app/institutions/[id]/placements/statistics/page.tsx` — Placement stats: % placed, avg CTC, highest package, dept-wise breakdown
+- [ ] `src/actions/placements.ts` — getDrives, registerStudent, updateStageStatus, getPlacementStats, exportNIRF
+- [ ] `src/components/placements/PlacementStatsCard.tsx` — KPI cards: total placed, avg package, highest package
+- [ ] Student portal: `src/app/student-portal/placements/page.tsx` — Upcoming drives, one-click register, track application status
+
+#### Key features:
+- Full pipeline: company → drive → registration → stage tracking → placed
+- Eligibility auto-check against student CGPA, backlogs, department, year
+- "Already placed" flag: blocks re-registration on exclusive drives
+- Placement statistics NIRF-ready export (Criterion 5.2)
+- Student portal: real-time stage update notifications
+
+---
+
+### Step 5G — Scholarship Management
+
+**Route:** `/institutions/[id]/scholarships`
+
+> Most Indian colleges manage multiple government schemes — SC/ST, OBC, merit, minority, sports quota scholarships. Manual tracking is error-prone. Auto-eligibility checks and fee integration save hours of admin work.
+
+#### Database:
+```sql
+CREATE TABLE scholarship_schemes (
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id       UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name                 TEXT NOT NULL,
+  scheme_type          TEXT NOT NULL CHECK (scheme_type IN (
+                         'government_central','government_state','institutional',
+                         'private','sports','merit','minority','sc_st_obc')),
+  eligibility_criteria JSONB,    -- { min_marks: 60, categories: ["SC","ST"], income_limit: 250000 }
+  amount_per_student   NUMERIC(10,2),
+  renewable            BOOLEAN NOT NULL DEFAULT TRUE,
+  application_deadline DATE
+);
+
+CREATE TABLE scholarship_applications (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  scheme_id        UUID NOT NULL REFERENCES scholarship_schemes(id),
+  student_id       UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  academic_year_id UUID REFERENCES academic_years(id),
+  application_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  documents_url    JSONB,
+  status           TEXT NOT NULL DEFAULT 'applied'
+                   CHECK (status IN ('applied','verified','approved','rejected','disbursed')),
+  disbursed_amount NUMERIC(10,2),
+  disbursed_at     TIMESTAMPTZ,
+  admin_notes      TEXT,
+  UNIQUE(scheme_id, student_id, academic_year_id)
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._scholarships.sql`
+- [ ] `src/app/institutions/[id]/scholarships/page.tsx` — Scholarship schemes registry + applications dashboard
+- [ ] `src/app/institutions/[id]/scholarships/[schemeId]/page.tsx` — Applications per scheme: verify, approve, disburse
+- [ ] `src/actions/scholarships.ts` — getSchemes, applyForScholarship, approveScholarship, disburseScholarship
+- [ ] `src/components/scholarships/EligibilityChecker.tsx` — Auto-check student profile against scheme criteria
+- [ ] Student portal: `src/app/student-portal/scholarships/page.tsx` — Available schemes, apply, track disbursement status
+- [ ] Fee integration: approved scholarship amount auto-deducted from student fee dues (finance module)
+
+#### Key features:
+- Auto-eligibility check against student profile (category, marks, income limit)
+- Scholarship amount auto-adjusts fee dues in finance module
+- Document upload for proof (via Supabase Storage)
+- Disbursement tracking and reporting
+- WhatsApp notification on approval and disbursement (Phase 3C)
+
+---
+
+### Step 5H — Disciplinary Records & Anti-Ragging
+
+**Route:** `/institutions/[id]/disciplinary`
+
+> UGC mandates an anti-ragging committee and formal disciplinary mechanism. NAAC Criterion 6.2 requires documented evidence of grievance/disciplinary actions taken.
+
+#### Database:
+```sql
+CREATE TABLE disciplinary_incidents (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  reported_by      UUID REFERENCES auth.users(id),
+  student_id       UUID REFERENCES students(id),
+  incident_type    TEXT NOT NULL CHECK (incident_type IN (
+                     'misconduct','ragging','attendance_violation',
+                     'exam_malpractice','property_damage','other')),
+  incident_date    DATE NOT NULL,
+  description      TEXT NOT NULL,
+  is_anonymous     BOOLEAN NOT NULL DEFAULT FALSE,
+  status           TEXT NOT NULL DEFAULT 'reported'
+                   CHECK (status IN ('reported','under_review','resolved','escalated')),
+  committee_remarks TEXT,
+  action_taken     TEXT,
+  resolved_at      TIMESTAMPTZ
+);
+
+CREATE TABLE disciplinary_actions (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  incident_id  UUID NOT NULL REFERENCES disciplinary_incidents(id) ON DELETE CASCADE,
+  action_type  TEXT NOT NULL CHECK (action_type IN (
+                 'verbal_warning','written_warning','suspension',
+                 'fine','expulsion','counseling','other')),
+  effective_date DATE NOT NULL,
+  duration_days  INTEGER,
+  fine_amount    NUMERIC(8,2),
+  issued_by      UUID REFERENCES staff(id),
+  document_url   TEXT   -- Warning letter PDF
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._disciplinary.sql`
+- [ ] `src/app/institutions/[id]/disciplinary/page.tsx` — Incident register: filter by type, status, student
+- [ ] `src/app/institutions/[id]/disciplinary/[incidentId]/page.tsx` — Incident detail + committee action recording
+- [ ] `src/app/institutions/[id]/disciplinary/anti-ragging/page.tsx` — UGC anti-ragging committee incident register
+- [ ] `src/actions/disciplinary.ts` — reportIncident, updateStatus, recordAction, generateWarningLetter
+- [ ] Student portal: anonymous ragging reporting form
+- [ ] Warning letter auto-generation: PDF via certificate module (Step 6C)
+- [ ] NAAC Criterion 6.2: evidence export of disciplinary mechanism
+
+#### Key features:
+- Anonymous reporting protects complainant identity (no student_id stored for anonymous reports)
+- Warning/suspension letters auto-generated and linked to certificate system
+- UGC anti-ragging register format
+- NAAC evidence: number of cases, resolution rate, action types
+
+---
+
+### Step 5I — Research & Publications Management
+
+**Route:** `/institutions/[id]/research`
+
+> NAAC Criterion 3 is entirely about Research & Innovation. Tracks staff research projects, publications, funding grants, and patents. Links to Staff Appraisal (Step 5E) for NAAC API data.
+
+#### Database:
+```sql
+CREATE TABLE research_projects (
+  id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id          UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  title                   TEXT NOT NULL,
+  principal_investigator  UUID REFERENCES staff(id),
+  co_investigators        JSONB,      -- Array of staff_ids
+  funding_agency          TEXT,
+  funding_amount          NUMERIC(12,2),
+  start_date              DATE,
+  end_date                DATE,
+  status                  TEXT NOT NULL DEFAULT 'ongoing'
+                          CHECK (status IN ('proposed','ongoing','completed','published')),
+  department_id           UUID REFERENCES departments(id)
+);
+
+CREATE TABLE publications (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  staff_id       UUID NOT NULL REFERENCES staff(id),
+  title          TEXT NOT NULL,
+  pub_type       TEXT NOT NULL CHECK (pub_type IN (
+                   'journal','conference','book','book_chapter','patent','other')),
+  journal_name   TEXT,
+  publisher      TEXT,
+  pub_year       INTEGER NOT NULL,
+  doi            TEXT,
+  scopus_indexed BOOLEAN DEFAULT FALSE,
+  ugc_listed     BOOLEAN DEFAULT FALSE,
+  impact_factor  NUMERIC(6,3),
+  authors        JSONB,     -- Array of author names
+  document_url   TEXT
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._research.sql`
+- [ ] `src/app/institutions/[id]/research/page.tsx` — Research dashboard: active projects, publications count, funding total
+- [ ] `src/app/institutions/[id]/research/projects/page.tsx` — Research projects registry
+- [ ] `src/app/institutions/[id]/research/publications/page.tsx` — Publications directory with Scopus/UGC/impact factor filters
+- [ ] `src/actions/research.ts` — getProjects, addProject, addPublication, getNIRFResearchData
+- [ ] Staff portal: `src/app/staff-portal/research/page.tsx` — Staff logs own publications (auto-links to Appraisal 5E)
+- [ ] NIRF Research & Innovation export (Criterion 3 format)
+
+#### Key features:
+- Scopus/UGC-listed flag for publications (critical for NAAC scoring)
+- Research funding tracking: grants received vs spent
+- Publications auto-link to Staff Appraisal (Step 5E) to avoid duplicate entry
+- NIRF Criterion 3 data export
+- Impact factor and h-index tracking per faculty
+
+---
+
 ### Phase 5 Completion Checklist
 - [ ] Admissions public form live and accepting applications
 - [ ] Enroll actions correctly create student and staff profiles
@@ -1200,6 +1819,10 @@ CREATE TABLE staff_appraisal_activities (
 - [ ] Alumni auto-populated from year promotion workflow
 - [ ] Alumni portal accessible with `aura-role=alumni` cookie
 - [ ] Appraisal cycles created and workload report generating from live schedule data
+- [ ] Placement cell: drives, registrations, and NIRF statistics export working
+- [ ] Scholarships: auto-eligibility check and fee-integration working
+- [ ] Disciplinary: incident register and anti-ragging committee register working
+- [ ] Research: publications with Scopus/UGC flags and NIRF export working
 - [ ] `git commit -m "feat: Phase 5 — Admissions, Recruitment & Alumni complete"`
 - [ ] `git push origin main`
 
@@ -1353,12 +1976,163 @@ CREATE TABLE transport_allocations (
 - [ ] Student portal: `src/app/student-portal/feedback/page.tsx` — Active feedback forms to fill
 - [ ] Staff portal: `src/app/staff-portal/feedback/page.tsx` — View own anonymised ratings + feedback comments
 
+### Step 6F — Grievance Redressal System
+
+**Routes:** `/institutions/[id]/grievances` (admin) · `/student-portal/grievance` (student) · `/staff-portal/grievance` (staff)
+
+> NAAC Criterion 6.2 mandates a formal, documented grievance mechanism. Without this, NAAC auditors will flag it as a critical gap. Includes anonymous submission option for harassment/ragging cases.
+
+#### Database:
+```sql
+CREATE TABLE grievances (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  submitted_by     UUID REFERENCES auth.users(id),  -- NULL if anonymous
+  complainant_type TEXT NOT NULL CHECK (complainant_type IN ('student','staff','anonymous')),
+  category         TEXT NOT NULL CHECK (category IN (
+                     'academic','financial','infrastructure','staff_conduct',
+                     'harassment','ragging','other')),
+  subject          TEXT NOT NULL,
+  description      TEXT NOT NULL,
+  evidence_url     JSONB,
+  status           TEXT NOT NULL DEFAULT 'submitted'
+                   CHECK (status IN ('submitted','acknowledged','under_review','resolved','escalated','closed')),
+  assigned_to      UUID REFERENCES staff(id),
+  resolution_notes TEXT,
+  resolved_at      TIMESTAMPTZ,
+  deadline         DATE,    -- Resolution deadline set by admin
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._grievances.sql`
+- [ ] `src/app/institutions/[id]/grievances/page.tsx` — Admin dashboard: open cases, SLA tracking, overdue alerts
+- [ ] `src/app/institutions/[id]/grievances/[grievanceId]/page.tsx` — Case detail + resolution workflow
+- [ ] `src/actions/grievances.ts` — submitGrievance, updateStatus, assignGrievance, resolveGrievance
+- [ ] `src/components/grievances/GrievancePipeline.tsx` — Kanban: Submitted → Acknowledged → Under Review → Resolved
+- [ ] Student portal: `src/app/student-portal/grievance/page.tsx` — Submit grievance, anonymous option, track status
+- [ ] Staff portal: `src/app/staff-portal/grievance/page.tsx` — Submit grievance, track status
+- [ ] Auto-notify complainant on every status change (Phase 3B trigger)
+- [ ] NAAC Criterion 6.2 report: cases filed, resolution rate, avg days to resolve
+
+#### Key features:
+- Anonymous submission: no complainant identity stored
+- SLA tracking: resolution deadline with overdue alerts to admin
+- Auto-notification on every status change
+- NAAC compliance report: % resolved within 30 days (Criterion 6.2)
+- Escalation workflow: unresolved cases auto-escalated after deadline
+
+---
+
+### Step 6G — E-Learning & Study Materials (LMS)
+
+**Route:** `/institutions/[id]/lms`
+
+> Post-COVID necessity. Every college needs teachers to upload notes, slides, and lecture recordings. Students access materials any time. Linked to syllabus units (Step 2F) for organized delivery.
+
+#### Database:
+```sql
+CREATE TABLE study_materials (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id     UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  subject_id         UUID NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  curriculum_unit_id UUID REFERENCES curriculum_units(id),
+  title              TEXT NOT NULL,
+  material_type      TEXT NOT NULL CHECK (material_type IN (
+                       'notes','slides','video_link','assignment',
+                       'question_paper','reference')),
+  file_url           TEXT,         -- Supabase Storage path
+  external_url       TEXT,         -- YouTube, Google Drive link
+  uploaded_by        UUID REFERENCES staff(id),
+  is_published       BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._study_materials.sql`
+- [ ] Supabase Storage bucket: `study-materials` (authenticated read for enrolled students, staff write)
+- [ ] `src/app/institutions/[id]/lms/page.tsx` — LMS overview: subjects with material count, recent uploads
+- [ ] `src/app/institutions/[id]/lms/[subjectId]/page.tsx` — Subject materials management by unit
+- [ ] `src/actions/studyMaterials.ts` — uploadMaterial, getMaterials, deleteMaterial, publishMaterial
+- [ ] `src/components/lms/MaterialCard.tsx` — Card: type icon (PDF/video/slides), unit tag, download/view link
+- [ ] Student portal: `src/app/student-portal/lms/page.tsx` — My subjects → materials organized per syllabus unit
+- [ ] Staff portal: `src/app/staff-portal/lms/page.tsx` — Upload and manage own subject materials
+
+#### Key features:
+- Materials organized by curriculum units (Step 2F) — students know which unit each material covers
+- Supports PDF upload, PPT, video links (YouTube embed), external URLs
+- Supabase Storage RLS: only students of the relevant department can access materials
+- Staff draft/publish control per material
+- Student portal: type-filtered tabs (notes, videos, question papers)
+
+---
+
+### Step 6H — Industry Connect & MOU Management
+
+**Route:** `/institutions/[id]/industry-connect`
+
+> Track Memoranda of Understanding with industry and academic partners. NAAC Criterion 7.1 (Institutional Values). MOU expiry alerts prevent lapsed partnerships from hurting NAAC scores.
+
+#### Database:
+```sql
+CREATE TABLE mou_partners (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  partner_name     TEXT NOT NULL,
+  partner_type     TEXT NOT NULL CHECK (partner_type IN (
+                     'industry','university','government','ngo','research_institute')),
+  mou_date         DATE NOT NULL,
+  validity_years   INTEGER NOT NULL DEFAULT 3,
+  expiry_date      DATE NOT NULL,
+  purpose          TEXT NOT NULL,
+  activities       JSONB,        -- Planned activities under the MOU
+  contact_person   TEXT,
+  mou_document_url TEXT,
+  is_active        BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE industry_interactions (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id     UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  mou_partner_id     UUID REFERENCES mou_partners(id),
+  interaction_type   TEXT NOT NULL CHECK (interaction_type IN (
+                       'internship','guest_lecture','workshop','project',
+                       'training','placement_drive','other')),
+  title              TEXT NOT NULL,
+  date               DATE NOT NULL,
+  students_benefited INTEGER,
+  description        TEXT
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._industry_connect.sql`
+- [ ] `src/app/institutions/[id]/industry-connect/page.tsx` — MOU registry with expiry status badges + upcoming expiry alerts
+- [ ] `src/app/institutions/[id]/industry-connect/interactions/page.tsx` — Log activities under each MOU
+- [ ] `src/actions/industryConnect.ts` — getMOUs, addMOU, logInteraction, getExpiryAlerts, getNAACReport
+- [ ] `src/components/industry-connect/MOUCard.tsx` — Card: partner name, type, expiry date badge, activities count
+- [ ] NAAC Criterion 7.1 export: list of MOUs with activity log and students benefited
+
+#### Key features:
+- MOU expiry alerts: 30 and 60 days before expiry (notification + dashboard badge)
+- Activity log per MOU (internships, workshops, guest lectures, placement drives)
+- Links to Guest Lecture module (2H) and Placement module (5F) to avoid duplicate entry
+- NAAC Criterion 7.1 export
+
+---
+
 ### Phase 6 Completion Checklist
 - [ ] Parent portal logins working (new `aura-role=parent` cookie)
-- [ ] Transport routes configured and mapped to fee ledger
-- [ ] Certificate generation engine produces printable PDFs with student parameters
-- [ ] Online MCQ exam sessions complete and auto-publish grades to results ledger
+- [ ] Transport routes configured, vehicle registry complete, fee ledger linked
+- [ ] Certificate generation engine produces printable PDFs (student + staff types)
+- [ ] Online MCQ exam sessions complete with anti-cheating and auto-grade to results
 - [ ] Student feedback forms protect anonymity and compile analytics correctly
+- [ ] Grievance redressal: anonymous submission, SLA tracking, NAAC report working
+- [ ] LMS: study materials uploaded, Supabase Storage RLS working, student access confirmed
+- [ ] Industry connect: MOU registry with expiry alerts and NAAC export working
 - [ ] `git commit -m "feat: Phase 6 — Extended Portal Features complete"`
 - [ ] `git push origin main`
 
@@ -1493,6 +2267,43 @@ CREATE TABLE subscription_invoices (
 
 ---
 
+### Step 7F — IQAC & Government Compliance Reports (NAAC / NIRF / AISHE)
+
+**Routes:** `/institutions/[id]/iqac` (institution admin) · `/admin/iqac` (super admin overview)
+
+> The crown jewel of AURA for Indian colleges. Aggregates data from ALL modules into NAAC, NIRF, AISHE, and UGC report formats. A real-time data completeness meter tells admin which criterion needs more data before the NAAC visit.
+
+#### NAAC Criterion → Module Mapping:
+| NAAC Criterion | Primary Data Source |
+|---|---|
+| 1. Curricular Aspects | Curriculum (2F), Guest Lectures (2H), CIA (2E) |
+| 2. Teaching-Learning | Attendance, Timetable, Lesson Plans (2G), Feedback (6E) |
+| 3. Research & Innovation | Publications (5I), Research Projects (5I) |
+| 4. Infrastructure | Library (4A), Labs (4D), Sports (4J), Assets (4E) |
+| 5. Student Support | Scholarships (5G), Placements (5F), Clubs (4H), Alumni (5D) |
+| 6. Governance | Grievances (6F), Disciplinary (5H), Appraisals (5E) |
+| 7. Institutional Values | MOUs (6H), Sports (4J), Guest Lectures (2H) |
+
+#### What to build:
+- [ ] `src/app/institutions/[id]/iqac/page.tsx` — IQAC dashboard: criterion-wise data completeness meter (0–100%)
+- [ ] `src/app/institutions/[id]/iqac/aqar/page.tsx` — AQAR data compilation view per academic year
+- [ ] `src/app/institutions/[id]/iqac/naac/page.tsx` — NAAC criterion-wise data view with evidence count per criterion
+- [ ] `src/app/institutions/[id]/iqac/nirf/page.tsx` — NIRF data export (Teaching, Research, Graduation, Outreach, Perception)
+- [ ] `src/app/institutions/[id]/iqac/aishe/page.tsx` — AISHE annual report auto-population from student/staff counts
+- [ ] `src/actions/iqac.ts` — aggregateNAACData, generateAQAR, exportNIRFData, exportAISHEData, getCriterionCompleteness
+- [ ] `src/components/iqac/CriterionDataCard.tsx` — Per-criterion completeness card with progress ring and data count
+- [ ] `src/components/iqac/NIRFExportButton.tsx` — One-click NIRF-formatted CSV/Excel export
+
+#### Key features:
+- Real-time NAAC data completeness: "Criterion 3: Research — 70% data filled" with drill-down to missing data
+- AQAR PDF auto-generation (pre-fills from all modules)
+- NIRF data export: auto-populates all 5 NIRF parameters from live database
+- AISHE annual report: student headcount, staff count, program-wise enrollment
+- Best practices documentation editor (NAAC Criterion 7 evidence)
+- Super admin can see NAAC readiness score across all institutions
+
+---
+
 ### Phase 7 Completion Checklist
 - [ ] Super admin route fully protected
 - [ ] No cross-institution data leaks to regular admins
@@ -1500,6 +2311,8 @@ CREATE TABLE subscription_invoices (
 - [ ] Audit log capturing key actions
 - [ ] Subscription plans and billing working end-to-end
 - [ ] Feature gating blocks out-of-plan module access
+- [ ] IQAC dashboard showing live criterion completeness from all modules
+- [ ] NIRF and AISHE exports generating correctly
 - [ ] `npx tsc --noEmit` passes
 - [ ] `git commit -m "feat: Phase 7 — Super Admin Panel complete"`
 - [ ] `git push origin main`
@@ -1645,30 +2458,45 @@ CREATE TABLE subscription_invoices (
 | 🔲 Phase 2D | Year Promotion & Graduation Workflow | Pending |
 | 🔲 Phase 2E | CIA / Internal Assessment Ledger (NAAC) | Pending |
 | 🔲 Phase 2F | Syllabus & Curriculum Management | Pending |
+| 🔲 Phase 2G | Teacher Lesson Plan / Daily Diary | Pending |
+| 🔲 Phase 2H | Guest Lecture & Expert Talk Management | Pending |
 | 🔲 Phase 3A | Notification Infrastructure | Pending |
 | 🔲 Phase 3B | Notification Triggers | Pending |
 | 🔲 Phase 3C | Email + SMS + WhatsApp Notifications | Pending |
+| 🔲 Phase 3D | Digital Notice Board & Announcements | Pending |
 | 🔲 Phase 4A | Library Management System | Pending |
 | 🔲 Phase 4B | Auditorium & Space Booking | Pending |
 | 🔲 Phase 4C | Hostel Management + Mess Billing | Pending |
 | 🔲 Phase 4D | Laboratory Management | Pending |
 | 🔲 Phase 4E | Asset & Inventory Management | Pending |
 | 🔲 Phase 4F | Smart ID Card & NFC Card Registry | Pending |
+| 🔲 Phase 4G | Gate Pass & Visitor Management | Pending |
+| 🔲 Phase 4H | Student Clubs & Organizations (NSS/NCC/Cultural) | Pending |
+| 🔲 Phase 4I | Health & Medical Records (Infirmary) | Pending |
+| 🔲 Phase 4J | Sports & Physical Education | Pending |
 | 🔲 Phase 5A | Student Admissions System (public-facing) | Pending |
 | 🔲 Phase 5B | Staff Recruitment Module | Pending |
 | 🔲 Phase 5C | Non-Teaching Staff & Payroll | Pending |
 | 🔲 Phase 5D | Alumni System & Panel | Pending |
 | 🔲 Phase 5E | Staff Appraisal & NAAC Workload Reports | Pending |
+| 🔲 Phase 5F | Placement Cell & Career Services | Pending |
+| 🔲 Phase 5G | Scholarship Management | Pending |
+| 🔲 Phase 5H | Disciplinary Records & Anti-Ragging (UGC) | Pending |
+| 🔲 Phase 5I | Research & Publications Management (NAAC Criterion 3) | Pending |
 | 🔲 Phase 6A | Parent Portal | Pending |
 | 🔲 Phase 6B | Transport Management + Vehicle Registry | Pending |
 | 🔲 Phase 6C | Certificate & Document Generator (Student + Staff) | Pending |
 | 🔲 Phase 6D | Online Examination System + Anti-Cheating | Pending |
 | 🔲 Phase 6E | Student Feedback & Faculty Ratings | Pending |
+| 🔲 Phase 6F | Grievance Redressal System (NAAC Criterion 6.2) | Pending |
+| 🔲 Phase 6G | E-Learning & Study Materials LMS | Pending |
+| 🔲 Phase 6H | Industry Connect & MOU Management (NAAC Criterion 7.1) | Pending |
 | 🔲 Phase 7A | Super Admin Auth & Layout | Pending |
 | 🔲 Phase 7B | Platform Overview Dashboard | Pending |
 | 🔲 Phase 7C | Per-Institution Drill Down | Pending |
 | 🔲 Phase 7D | Platform Health & Audit | Pending |
 | 🔲 Phase 7E | SaaS Subscription & Billing Management | Pending |
+| 🔲 Phase 7F | IQAC & Govt Compliance Reports (NAAC/NIRF/AISHE) | Pending |
 | 🔲 Phase 8A | React Native Setup | Pending |
 | 🔲 Phase 8B | Staff Mobile App + NFC | Pending |
 | 🔲 Phase 8C | Student Mobile App | Pending |
@@ -1747,4 +2575,4 @@ npx expo start
 
 ---
 
-*Last updated: 2026-06-08 — Phase 1 complete. Roadmap comprehensively expanded with 8 new modules: `academic_years` master table, CIA internal assessment (2E), syllabus & curriculum management (2F), mess billing (4C), NFC smart card registry (4F), staff appraisal & NAAC workload reports (5E), SaaS subscription & billing management (7E), and parent mobile app (8F). SMS/WhatsApp notifications added to Phase 3. Vehicle/driver registry added to Phase 6B. Staff certificates added to Phase 6C. Anti-cheating added to Phase 6D. All critical schema bugs (notifications FK, library FK) fixed. Next: Phase 2A.*
+*Last updated: 2026-06-08 — Phase 1 complete. Roadmap is now **comprehensive and NAAC/NIRF ready** with 53 tracked modules across 8 phases. This session added 15 new modules: Teacher Lesson Plans (2G), Guest Lectures (2H), Digital Notice Board (3D), Gate Pass/Visitor Mgmt (4G), Student Clubs NSS/NCC (4H), Infirmary (4I), Sports (4J), Placement Cell (5F), Scholarships (5G), Disciplinary/Anti-Ragging (5H), Research & Publications (5I), Grievance Redressal (6F), E-Learning LMS (6G), Industry Connect/MOU (6H), IQAC & Govt Reports/NAAC/NIRF/AISHE (7F). Every NAAC criterion is now mapped to a data-source module. Next: Phase 2A.*
