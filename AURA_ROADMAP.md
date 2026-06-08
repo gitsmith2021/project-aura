@@ -165,6 +165,218 @@ Branch:       main
 
 ---
 
+## 🧱 Foundation Migrations (Prerequisites for Phase 2+)
+
+> **Critical — build these before starting Step 2A.**
+> These four steps resolve structural gaps — missing master tables, un-migrated FK columns,
+> and the absent HOD role — that every Phase 2+ module depends on.
+> Skipping them will create unresolvable FK inconsistencies across Academic, CIA,
+> Curriculum, Appraisal, and Finance modules.
+
+### Step 2-Pre-A — Subjects Master Table & Teaching Assignments
+
+> Every Phase 2+ module references `subjects(id)` as a FK — CIA marks, curriculum units,
+> lesson plans, guest lectures, study materials — yet no such table exists. The timetable
+> currently stores subject names as free text. This step formalises subjects as a first-class
+> entity and establishes which staff member teaches which subject each semester.
+
+#### Database:
+```sql
+CREATE TABLE subjects (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  department_id   UUID NOT NULL REFERENCES departments(id) ON DELETE CASCADE,
+  name            TEXT NOT NULL,
+  code            TEXT,                    -- e.g. "CS301", "PH201"
+  subject_type    TEXT NOT NULL DEFAULT 'theory'
+                  CHECK (subject_type IN ('theory','lab','elective','project')),
+  semester        INTEGER NOT NULL,
+  credits         INTEGER NOT NULL DEFAULT 3,
+  hours_per_week  INTEGER NOT NULL DEFAULT 5,
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(institution_id, department_id, code, semester)
+);
+ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "subjects: institution members can manage"
+  ON public.subjects
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+  ));
+
+-- Who teaches which subject this academic year
+CREATE TABLE teaching_assignments (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  staff_id         UUID NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+  subject_id       UUID NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  academic_year_id UUID REFERENCES academic_years(id),
+  semester         INTEGER NOT NULL,
+  is_primary       BOOLEAN NOT NULL DEFAULT TRUE,   -- primary vs co-teacher
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(staff_id, subject_id, academic_year_id)
+);
+ALTER TABLE teaching_assignments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "teaching_assignments: institution members can manage"
+  ON public.teaching_assignments
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+  ));
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._subjects.sql` — subjects + teaching_assignments + RLS policies
+- [ ] `src/app/institutions/[id]/subjects/page.tsx` — Subject registry per department and semester (add/edit/deactivate)
+- [ ] `src/actions/subjects.ts` — getSubjects, addSubject, updateSubject, assignTeacher, getTeachingAssignments, getMySubjects (for staff portal)
+- [ ] `src/components/subjects/SubjectForm.tsx` — Add/edit form: name, code, type, credits, hours/week, semester
+- [ ] `src/components/subjects/TeachingAssignmentDrawer.tsx` — Assign staff to subject for a given semester
+- [ ] Backfill migration: parse existing subject name text from `class_schedules` (timetable) and seed the subjects table
+- [ ] Update `class_schedules`: add `subject_id UUID REFERENCES subjects(id)` column; populate via backfill; keep `subject_name TEXT` temporarily for fallback display until all rows are migrated
+
+#### Why this unblocks:
+- CIA marks entry (2E): `subject_id` authorises the correct staff to enter marks — without it, any staff can enter marks for any subject
+- Lesson plan diary (2G): auto-pre-fills subject from the teacher's active assignment
+- Appraisal workload report (5E): counts hours taught per subject per staff member
+- Study materials (6G): Supabase Storage RLS gates files to students enrolled in the relevant department
+
+---
+
+### Step 2-Pre-B — `academic_years` FK Migration for Existing Tables
+
+> Step 2A creates the `academic_years` master table. Once it exists and at least one year is
+> seeded, run this migration to convert all existing `academic_year TEXT` columns platform-wide
+> to typed FK references. Without this, Phase 2 modules will have two incompatible ways to
+> reference the same academic year, breaking join queries and reports.
+
+#### Tables to audit for `academic_year TEXT` columns before running:
+- `fee_payments`
+- `salary_disbursements`
+- `fee_structures`
+- `class_schedules`
+- `attendance_sessions`
+
+#### Migration pattern (repeat for each affected table):
+```sql
+-- Step 1: Add FK column alongside the old text column
+ALTER TABLE fee_payments
+  ADD COLUMN academic_year_id UUID REFERENCES academic_years(id);
+
+-- Step 2: Backfill FK from matching label in academic_years
+UPDATE fee_payments fp
+  SET academic_year_id = ay.id
+  FROM academic_years ay
+  WHERE ay.label = fp.academic_year
+    AND ay.institution_id = fp.institution_id;
+
+-- Step 3: Drop old text column only after verifying all rows have been backfilled
+ALTER TABLE fee_payments DROP COLUMN academic_year;
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._academic_year_fk_migration.sql` — For every affected table: add `academic_year_id` FK, backfill from text label, drop old `academic_year TEXT` column
+- [ ] Update all Server Actions that accept `academic_year: string` to query by `academic_year_id` (UUID) instead
+- [ ] Update all UI selectors that show a free-text year input to a dropdown bound to the `academic_years` table
+
+---
+
+### Step 2-Pre-C — HOD Role & Department Head Designation
+
+> Multiple workflows name the HOD explicitly — leave approvals, appraisals, disciplinary
+> actions, year promotion sign-off — but the auth system only has `ADMIN`, `STAFF`, `STUDENT`.
+> This step adds HOD as a first-class role so those workflows can be properly gated.
+
+#### Database:
+```sql
+-- Designate a staff member as HOD per department
+ALTER TABLE public.departments
+  ADD COLUMN IF NOT EXISTS hod_id UUID REFERENCES staff(id);
+
+-- Extend role enum to include HOD
+ALTER TABLE public.institution_members
+  DROP CONSTRAINT IF EXISTS institution_members_role_check;
+ALTER TABLE public.institution_members
+  ADD CONSTRAINT institution_members_role_check
+  CHECK (role IN ('ADMIN', 'HOD', 'STAFF', 'STUDENT'));
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._hod_role.sql` — Add `hod_id` to departments; extend `institution_members.role` CHECK to include `'HOD'`
+- [ ] `src/app/institutions/[id]/departments/page.tsx` — "Set as HOD" action on staff list per department; updates both `departments.hod_id` and `institution_members.role`
+- [ ] `src/actions/departments.ts` — `setHOD(departmentId, staffId)`, `removeHOD(departmentId)`
+- [ ] Middleware: HOD role routes to the admin panel (`/`) with department-scoped data, NOT to `/staff-portal` — update route guards
+- [ ] Sidebar: HOD sees a limited admin panel — only their department's staff, students, attendance, and results
+- [ ] Leave approval (staffPortal.ts): forward unapproved leave requests to the HOD of the requesting staff member's department
+- [ ] Appraisal review (Step 5E): HOD reviews and scores appraisals for their department's staff
+- [ ] Disciplinary actions (Step 5H): HOD sign-off required before incident status is `resolved`
+- [ ] Year promotion (Step 2D): HOD confirms department eligibility list before admin commits the promotion run
+
+---
+
+### Step 2-Pre-D — Fee Concession & Waiver Management
+
+**Route:** `/institutions/[id]/finance/concessions`
+
+> Separate from formal scholarship schemes (Step 5G). This covers admin-discretion waivers —
+> staff ward discounts, management quota reductions, hardship waivers. Without this, finance
+> reports are inaccurate: gross fees vs net receivables will not reconcile.
+
+#### Database:
+```sql
+CREATE TABLE fee_concessions (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  student_id       UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  academic_year_id UUID REFERENCES academic_years(id),
+  concession_type  TEXT NOT NULL CHECK (concession_type IN (
+                     'staff_ward','management_quota','merit',
+                     'hardship','sports_quota','other')),
+  amount           NUMERIC(10,2),          -- Fixed INR amount discount
+  percentage       NUMERIC(5,2),           -- OR percentage discount (use one, not both)
+  applicable_to    TEXT,                   -- NULL = all fees; or specific fee_structure type
+  reason           TEXT NOT NULL,
+  approved_by      UUID REFERENCES auth.users(id),
+  status           TEXT NOT NULL DEFAULT 'pending'
+                   CHECK (status IN ('pending','approved','rejected')),
+  approved_at      TIMESTAMPTZ,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE fee_concessions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "fee_concessions: institution members can manage"
+  ON public.fee_concessions
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+  ));
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._fee_concessions.sql`
+- [ ] `src/app/institutions/[id]/finance/concessions/page.tsx` — Grant and manage concessions per student; filter by type and status
+- [ ] `src/actions/concessions.ts` — grantConcession, approveConcession, rejectConcession, getConcessionsByStudent
+- [ ] `src/components/finance/ConcessionDrawer.tsx` — Apply concession: student search, type, fixed amount or %, reason
+- [ ] Fee ledger integration: approved concession auto-reduces student's outstanding balance (shows as "Concession Applied" credit line in fee history)
+- [ ] Student portal: concession appears as a credit entry in fee payment history
+- [ ] Finance reports: add "Total Concessions Granted" column so gross vs net receivable reconciles correctly
+
+#### Key features:
+- Amount-based or percentage-based concession (mutually exclusive — validate at form level)
+- Scoped to all fees or a specific fee structure type
+- Approval workflow: admin submits → HOD or senior admin approves
+- Revenue reconciliation: concessions appear as a deduction line in the Finance Reports page
+
+### Foundation Migrations Checklist
+- [ ] `subjects` table live with at least one subject per active department
+- [ ] `teaching_assignments` table live; at least one staff assigned per subject
+- [ ] `academic_years` table live with at least one year marked `is_current = true`
+- [ ] `academic_years` FK migration complete for all affected tables (fee_payments, salary_disbursements, fee_structures, class_schedules, attendance_sessions)
+- [ ] HOD role added to `institution_members` CHECK constraint
+- [ ] At least one HOD designated per department
+- [ ] `fee_concessions` table live with RLS enabled
+- [ ] `npm run build` passes with zero TypeScript errors
+- [ ] `git commit -m "feat: Foundation Migrations — subjects, academic_years FK, HOD role, fee concessions"`
+- [ ] `git push origin main`
+
+---
+
 ## 🎓 Phase 2 — Academic Operations
 
 > **Goal:** Complete the formal academic lifecycle — calendar, exams, results, arrears,
@@ -543,9 +755,74 @@ CREATE TABLE guest_lectures (
 
 ---
 
+### Step 2I — Internship & Industrial Training
+
+**Route:** `/institutions/[id]/internships`
+
+> Most Indian UG programs (engineering, BCA, BSc) mandate industrial training of 4–8 weeks.
+> NAAC Criterion 1.2 (Academic Flexibility) and NIRF Criterion 5.2 (Student Progression) both
+> require internship statistics. This module also gates year promotion (Step 2D) — students
+> with `is_mandatory=true` internships that are not yet `status=verified` cannot be promoted.
+
+#### Database:
+```sql
+CREATE TABLE internships (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  student_id       UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  academic_year_id UUID REFERENCES academic_years(id),
+  company_name     TEXT NOT NULL,
+  company_address  TEXT,
+  mentor_name      TEXT,
+  mentor_phone     TEXT,
+  role_title       TEXT NOT NULL,
+  start_date       DATE NOT NULL,
+  end_date         DATE NOT NULL,
+  stipend_amount   NUMERIC(8,2) NOT NULL DEFAULT 0,
+  internship_type  TEXT NOT NULL DEFAULT 'industrial_training'
+                   CHECK (internship_type IN (
+                     'industrial_training','internship',
+                     'project_internship','research_internship')),
+  report_url       TEXT,           -- Supabase Storage: internship report PDF
+  certificate_url  TEXT,           -- Company-issued internship certificate
+  is_mandatory     BOOLEAN NOT NULL DEFAULT TRUE,
+  status           TEXT NOT NULL DEFAULT 'registered'
+                   CHECK (status IN (
+                     'registered','ongoing','completed','verified','rejected')),
+  admin_notes      TEXT,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE internships ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "internships: institution members can manage"
+  ON public.internships
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+  ));
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._internships.sql`
+- [ ] Supabase Storage bucket: `internship-documents` (student write, admin read, RLS by institution)
+- [ ] `src/app/institutions/[id]/internships/page.tsx` — Admin: all internships filtered by year/dept/status, verify or reject submissions, NAAC export
+- [ ] `src/app/institutions/[id]/internships/verify/page.tsx` — Admin reviews uploaded report and company certificate before approving
+- [ ] `src/actions/internships.ts` — registerInternship, submitReport, verifyInternship, rejectInternship, getInternshipStats
+- [ ] `src/components/internships/InternshipCard.tsx` — Card: student name, company, role, date range, status badge, report/certificate links
+- [ ] Student portal: `src/app/student-portal/internship/page.tsx` — Register internship details, upload report and company certificate, track verification status
+- [ ] Year promotion integration (Step 2D): `previewPromotion` must check `is_mandatory=true` internships are `status=verified` before marking a student eligible for promotion
+- [ ] NAAC Criterion 1.2 export: students who completed industrial training per academic year, company-wise listing
+
+#### Key features:
+- Students self-register company details, then upload report and certificate on completion
+- Admin verifies submission (confirms certificate is genuine) before promotion eligibility is granted
+- Mandatory vs optional flag: mandatory internship blocks year promotion if not verified
+- NAAC/NIRF export: total internship completions, unique companies, average duration per academic year
+
+---
+
 ### Phase 2 Completion Checklist
+- [ ] All pre-requisite Foundation Migrations (2-Pre-A through 2-Pre-D) committed before starting this phase
 - [ ] Academic years table live; at least one year marked `is_current = true`
-- [ ] All eight sub-steps (2A–2H) built and tested
+- [ ] All nine sub-steps (2A–2I) built and tested
 - [ ] Academic calendar visible in all three portals (admin, staff, student)
 - [ ] Marks entry → arrear detection → year promotion pipeline working end-to-end
 - [ ] CIA marks integrate into marksheet totals correctly
@@ -893,6 +1170,26 @@ CREATE TABLE mess_billing (
   paid_at         TIMESTAMPTZ,
   UNIQUE(student_id, month)
 );
+
+CREATE TABLE hostel_maintenance_requests (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  hostel_id        UUID NOT NULL REFERENCES hostels(id) ON DELETE CASCADE,
+  room_id          UUID REFERENCES hostel_rooms(id),
+  raised_by        UUID NOT NULL REFERENCES auth.users(id),
+  category         TEXT NOT NULL CHECK (category IN (
+                     'electrical','plumbing','furniture','cleaning',
+                     'ac_fan','pest_control','other')),
+  description      TEXT NOT NULL,
+  photo_url        TEXT,
+  priority         TEXT NOT NULL DEFAULT 'normal'
+                   CHECK (priority IN ('urgent','normal','low')),
+  status           TEXT NOT NULL DEFAULT 'open'
+                   CHECK (status IN ('open','in_progress','resolved','closed')),
+  assigned_to      TEXT,           -- Maintenance staff name
+  resolution_notes TEXT,
+  resolved_at      TIMESTAMPTZ,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 ```
 
 #### What to build:
@@ -905,9 +1202,11 @@ CREATE TABLE mess_billing (
 - [ ] `src/app/institutions/[id]/hostels/cafeteria/billing/page.tsx` — Monthly mess billing: generate bills per student, mark paid
 - [ ] `src/actions/mess.ts` — getMessMenu, updateMessMenu, generateMessBills, markMessPaid
 - [ ] `src/actions/hostels.ts` — getHostels, getRooms, allocateStudent, vacateStudent, getOccupancyStats
+- [ ] `src/actions/hostelMaintenance.ts` — raiseMaintenanceRequest, updateRequestStatus, getOpenRequests, resolveRequest
 - [ ] `src/components/hostels/RoomGrid.tsx` — Visual floor-wise room grid with colour: empty/partial/full
 - [ ] `src/components/hostels/AllocationDrawer.tsx` — Search student → assign to room
-- [ ] Student portal: `src/app/student-portal/hostel/page.tsx` — Room number, hostel name, roommates, announcements, weekly cafeteria menu, mess bill status
+- [ ] `src/app/institutions/[id]/hostels/[hostelId]/maintenance/page.tsx` — Warden dashboard: open requests by priority, assign maintenance staff, mark resolved with notes
+- [ ] Student portal: `src/app/student-portal/hostel/page.tsx` — Room number, hostel name, roommates, announcements, cafeteria menu, mess bill status, raise maintenance request
 - [ ] Hostel fee auto-linked to existing `fee_structures` (hostel fee type already exists)
 
 #### Key features:
@@ -916,6 +1215,7 @@ CREATE TABLE mess_billing (
 - Warden can post announcements visible in student portal
 - Cafeteria: weekly menu board editable by admin
 - Hostel fees auto-appear in student fee ledger
+- Maintenance requests: student raises → warden assigns → resolved with notes; urgent priority highlighted in warden dashboard
 
 ---
 
@@ -1349,10 +1649,75 @@ CREATE TABLE sports_achievements (
 
 ---
 
+### Step 4K — Annual Day & Large Campus Event Management
+
+**Route:** `/institutions/[id]/events`
+
+> The academic calendar (Step 2A) records events as date entries. This module manages the
+> operational side of large institutional events — Annual Day, Sports Day, Cultural Fests,
+> Convocation — with committee assignment, participant rosters, budget tracking, and photo
+> documentation. Separate from Clubs (4H), which are year-round recurring organisations.
+
+#### Database:
+```sql
+CREATE TABLE campus_events (
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id       UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  academic_year_id     UUID REFERENCES academic_years(id),
+  title                TEXT NOT NULL,
+  event_type           TEXT NOT NULL CHECK (event_type IN (
+                         'annual_day','sports_day','cultural_fest','tech_fest',
+                         'convocation','orientation','open_day','seminar_day','other')),
+  event_date           DATE NOT NULL,
+  venue                TEXT,
+  organizing_committee JSONB,    -- Array of { staff_id, role }
+  budget_allocated     NUMERIC(10,2),
+  actual_spend         NUMERIC(10,2) NOT NULL DEFAULT 0,
+  attendees_count      INTEGER,
+  photo_urls           JSONB,
+  description          TEXT,
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE campus_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "campus_events: institution members can manage"
+  ON public.campus_events
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+  ));
+
+CREATE TABLE event_participants (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id     UUID NOT NULL REFERENCES campus_events(id) ON DELETE CASCADE,
+  student_id   UUID REFERENCES students(id) ON DELETE CASCADE,
+  role         TEXT NOT NULL DEFAULT 'participant'
+               CHECK (role IN ('participant','organizer','performer','volunteer')),
+  UNIQUE(event_id, student_id)
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._campus_events.sql`
+- [ ] `src/app/institutions/[id]/events/page.tsx` — Event registry: upcoming and past events, budget vs spend overview
+- [ ] `src/app/institutions/[id]/events/[eventId]/page.tsx` — Event detail: committee roster, participant list, budget line items, photo gallery
+- [ ] `src/actions/campusEvents.ts` — createEvent, addParticipant, bulkAddParticipants, updateBudget, uploadEventPhotos
+- [ ] `src/components/events/EventCard.tsx` — Card: event type badge, date, venue, participant count, budget status (over/under)
+- [ ] Student portal: `src/app/student-portal/events/page.tsx` — Upcoming events in their institution, registered events, volunteer sign-up
+- [ ] Academic calendar integration: creating a campus event auto-adds it to the academic calendar (Step 2A) as an `annual_day` / `sports_day` etc. event entry
+- [ ] NAAC Criterion 5.3 export: number of institutional events per year, student participation counts
+
+#### Key features:
+- Committee assignment: designate organizing staff and their roles (Coordinator, Stage Manager, MC, etc.)
+- Budget tracker: allocated vs actual spend with line-item breakdown
+- Participant roster: students register or volunteer; admin can bulk-import via CSV
+- Photo gallery per event for NAAC/NIRF evidence documentation
+- Auto-synced to academic calendar on creation (no duplicate entry)
+
+---
+
 ### Phase 4 Completion Checklist
 - [ ] Library: book catalog, lending, overdue fine calculation all working
 - [ ] Auditorium: venue booking with conflict detection and approval flow
-- [ ] Hostel: room allocation, occupancy grid, mess billing, student portal hostel view
+- [ ] Hostel: room allocation, occupancy grid, mess billing, maintenance requests, student portal hostel view
 - [ ] Laboratories: labs registry, student batches, experiment sessions, and portal views
 - [ ] Assets: stock registry, low stock alerts, allocations to labs, and maintenance logs
 - [ ] Smart cards: NFC card registry with issuance and deactivation working
@@ -1360,6 +1725,7 @@ CREATE TABLE sports_achievements (
 - [ ] Clubs: NSS/NCC and all clubs registered with activity logs and NAAC export
 - [ ] Infirmary: visit log and student medical profiles working
 - [ ] Sports: teams, facilities, and achievements logged with NIRF export
+- [ ] Campus Events: event registry with committee assignment, participant rosters, and budget tracking
 - [ ] All campus infrastructure modules integrated with student and staff portals
 - [ ] `git commit -m "feat: Phase 4 — Campus Infrastructure & Laboratories complete"`
 - [ ] `git push origin main`
@@ -1812,6 +2178,117 @@ CREATE TABLE publications (
 
 ---
 
+### Step 5J — Staff Daily Attendance & LOP Tracking
+
+**Route:** `/institutions/[id]/staff-attendance`
+
+> The existing attendance system tracks student attendance per class session. This separate
+> module tracks whether each staff member is present on campus each working day. Required for
+> payroll accuracy (absent days without approved leave are deducted as LOP), leave balance
+> validation, and NAAC Criterion 2.4 (Teacher Quality evidence).
+
+#### Database:
+```sql
+CREATE TABLE staff_attendance (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  staff_id       UUID NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+  date           DATE NOT NULL,
+  check_in_time  TIME,
+  check_out_time TIME,
+  status         TEXT NOT NULL DEFAULT 'present'
+                 CHECK (status IN (
+                   'present','absent','half_day','late',
+                   'on_duty','on_leave','holiday')),
+  late_reason    TEXT,
+  remarks        TEXT,
+  logged_by      UUID REFERENCES auth.users(id),   -- manual override by admin/HOD
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(staff_id, date)
+);
+ALTER TABLE staff_attendance ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "staff_attendance: institution members can manage"
+  ON public.staff_attendance
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+  ));
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._staff_attendance.sql`
+- [ ] `src/app/institutions/[id]/staff-attendance/page.tsx` — Daily register: all staff with today's status, one-click bulk mark present, admin marks exceptions (absent/late/half-day)
+- [ ] `src/app/institutions/[id]/staff-attendance/reports/page.tsx` — Monthly report per staff: present days, absent days, LOP days, late count, leave days
+- [ ] `src/actions/staffAttendance.ts` — markStaffAttendance, bulkMarkPresent, getMonthlyReport, getLOPSummary
+- [ ] `src/components/staff-attendance/DailyRegister.tsx` — Tabular register: staff name, department, status toggle (P / A / L / HD / OD)
+- [ ] Staff portal: `src/app/staff-portal/attendance/page.tsx` — Personal monthly attendance view: days present, absences, late count, leave days
+- [ ] Payroll integration: monthly attendance summary feeds into `salary_disbursements` — absent days without approved leave deducted as LOP (Loss of Pay) from gross salary
+- [ ] Leave cross-reference: when a leave request is approved (Step 1A), auto-mark those dates as `status='on_leave'` in staff_attendance
+
+#### Key features:
+- Daily register with one-click bulk-mark all present; admin marks exceptions only
+- LOP auto-calculation: absent days with no approved leave → deducted during payroll run
+- Late arrival tracking with reason field
+- Monthly report: present %, late count, LOP days, leave days per staff
+- NAAC Criterion 2.4: average teacher attendance % as an institution-wide metric
+
+---
+
+### Step 5K — Staff Career Lifecycle Management
+
+**Route:** `/institutions/[id]/staff/career`
+
+> Staff join, get promoted, receive increments, transfer departments, and eventually resign or
+> retire. Without a lifecycle log there is no seniority data for salary increments, no paper
+> trail for promotions, and no formal offboarding to trigger the Relieving Letter in the
+> Certificate module (Step 6C). This module provides the complete audit trail.
+
+#### Database:
+```sql
+CREATE TABLE staff_career_events (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  staff_id         UUID NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+  event_type       TEXT NOT NULL CHECK (event_type IN (
+                     'joining','confirmation','promotion','increment',
+                     'transfer','resignation','retirement','termination','other')),
+  effective_date   DATE NOT NULL,
+  previous_value   TEXT,    -- e.g. old designation, old salary, old department
+  new_value        TEXT,    -- e.g. new designation, revised salary, new department
+  order_number     TEXT,    -- Official order/letter reference number
+  document_url     TEXT,    -- Scanned order PDF via Supabase Storage
+  remarks          TEXT,
+  recorded_by      UUID REFERENCES auth.users(id),
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE staff_career_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "staff_career_events: institution members can manage"
+  ON public.staff_career_events
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+  ));
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._staff_career_events.sql`
+- [ ] `src/app/institutions/[id]/staff/career/page.tsx` — Career events log: filter by event_type, department, date range
+- [ ] `src/app/institutions/[id]/staff/career/[staffId]/page.tsx` — Individual staff career timeline: chronological events from joining to present
+- [ ] `src/actions/staffCareer.ts` — recordCareerEvent, getCareerTimeline, processResignation, processRetirement, getServiceYears
+- [ ] `src/components/staff/CareerTimeline.tsx` — Vertical timeline: event type badge, old→new value, effective date, document link
+- [ ] Increment workflow: recording an `increment` event auto-updates `staff.salary` to the new value — no separate manual edit needed
+- [ ] Resignation / Retirement workflow: sets `staff.is_active = false`, auto-creates a Relieving Letter request in the Certificate module (Step 6C)
+- [ ] Staff portal: `src/app/staff-portal/career/page.tsx` — Staff views their own career history (joining date, confirmations, promotions) — read-only
+- [ ] Appraisal integration (Step 5E): HOD can trigger an increment or promotion career event directly from a completed appraisal review
+- [ ] Seniority calculation: derive years of service from the `joining` event for salary increment eligibility
+
+#### Key features:
+- Full audit trail: every career change recorded with effective date, before/after values, and document reference number
+- Increment auto-updates salary record in the staff profile — single source of truth
+- Resignation triggers staff deactivation + automatic Relieving Letter certificate request
+- Staff can view their own career history in the staff portal (read-only)
+- NAAC Criterion 2.4: faculty stability and promotion data for accreditation evidence
+
+---
+
 ### Phase 5 Completion Checklist
 - [ ] Admissions public form live and accepting applications
 - [ ] Enroll actions correctly create student and staff profiles
@@ -1823,6 +2300,8 @@ CREATE TABLE publications (
 - [ ] Scholarships: auto-eligibility check and fee-integration working
 - [ ] Disciplinary: incident register and anti-ragging committee register working
 - [ ] Research: publications with Scopus/UGC flags and NIRF export working
+- [ ] Staff daily attendance register live; LOP auto-calculation integrated with payroll run
+- [ ] Staff career lifecycle: joining events seeded for all existing staff; increment and resignation workflows working end-to-end
 - [ ] `git commit -m "feat: Phase 5 — Admissions, Recruitment & Alumni complete"`
 - [ ] `git push origin main`
 
@@ -1836,31 +2315,45 @@ CREATE TABLE publications (
 
 **Route:** `/parent-portal`
 
-> Read-only view of a child's academic activity. Parents can also pay fees. Linked to existing student records by parent email.
+> Read-only view of a child's academic activity. Parents can also pay fees. One parent account
+> can be linked to multiple children (e.g. siblings in the same institution) via a junction table.
 
 #### Database:
 ```sql
+-- Parent account — one parent, potentially many linked children
 CREATE TABLE parents (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
   name            TEXT NOT NULL,
-  email           TEXT NOT NULL,
+  email           TEXT NOT NULL UNIQUE,
   phone           TEXT,
-  student_id      UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  user_id         UUID REFERENCES auth.users(id),   -- Supabase auth account
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE parents ENABLE ROW LEVEL SECURITY;
+
+-- Junction table: one parent ↔ many students (siblings supported)
+CREATE TABLE parent_student_links (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  parent_id    UUID NOT NULL REFERENCES parents(id) ON DELETE CASCADE,
+  student_id   UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  relationship TEXT NOT NULL DEFAULT 'parent'
+               CHECK (relationship IN ('father','mother','guardian','other')),
+  is_primary   BOOLEAN NOT NULL DEFAULT FALSE,  -- primary contact for this student
+  UNIQUE(parent_id, student_id)
 );
 ```
 
 #### What to build:
 - [ ] `supabase/migrations/..._parents.sql`
-- [ ] `src/app/parent-portal/layout.tsx` — Parent portal shell (amber/orange theme)
-- [ ] `src/app/parent-portal/page.tsx` — Dashboard: child's attendance %, upcoming exams, fees due
-- [ ] `src/app/parent-portal/attendance/page.tsx` — Child's subject-wise attendance
-- [ ] `src/app/parent-portal/results/page.tsx` — Child's marks and arrear status (Step 2C)
-- [ ] `src/app/parent-portal/fees/page.tsx` — Fees ledger + Razorpay payment on behalf
-- [ ] `src/actions/parentPortal.ts` — getLinkedStudent, getChildAttendance, getChildResults, getChildFees
+- [ ] `src/app/parent-portal/layout.tsx` — Parent portal shell (amber/orange theme) with child-switcher in topbar (dropdown listing all linked children by name; persists selected child in session)
+- [ ] `src/app/parent-portal/page.tsx` — Dashboard: selected child's attendance %, upcoming exams, fees due; if multiple children are linked, show a child-selector card grid on first visit
+- [ ] `src/app/parent-portal/attendance/page.tsx` — Selected child's subject-wise attendance
+- [ ] `src/app/parent-portal/results/page.tsx` — Selected child's marks and arrear status (Step 2C)
+- [ ] `src/app/parent-portal/fees/page.tsx` — Selected child's fees ledger + Razorpay payment on behalf
+- [ ] `src/actions/parentPortal.ts` — getLinkedStudents (returns all children via parent_student_links), getChildAttendance, getChildResults, getChildFees
 - [ ] Login flow: detect parent role (check `parents` table) → redirect to `/parent-portal`
-- [ ] Admin: `src/app/institutions/[id]/parents/page.tsx` — Link parent accounts to students
+- [ ] Admin: `src/app/institutions/[id]/parents/page.tsx` — Link parent accounts to students via `parent_student_links`; one parent can be linked to multiple students
 
 ---
 
@@ -2126,6 +2619,7 @@ CREATE TABLE industry_interactions (
 
 ### Phase 6 Completion Checklist
 - [ ] Parent portal logins working (new `aura-role=parent` cookie)
+- [ ] Parent portal: multiple children per parent supported via `parent_student_links` junction table; child-switcher UI working
 - [ ] Transport routes configured, vehicle registry complete, fee ledger linked
 - [ ] Certificate generation engine produces printable PDFs (student + staff types)
 - [ ] Online MCQ exam sessions complete with anti-cheating and auto-grade to results
@@ -2452,6 +2946,10 @@ CREATE TABLE subscription_invoices (
 | ✅ Phase 1B | Student Admin Preview (`/student-portal/view/[studentId]`) | Complete |
 | ✅ Phase 1B | Student Portal Credentials (login/password/block per row) | Complete |
 | ✅ Phase 1B | Student Portal — Razorpay Pay Page | Complete |
+| 🔲 2-Pre-A | Subjects Master Table + Teaching Assignments | Pending |
+| 🔲 2-Pre-B | `academic_years` FK Migration for Existing Tables | Pending |
+| 🔲 2-Pre-C | HOD Role + Department Head Designation | Pending |
+| 🔲 2-Pre-D | Fee Concession & Waiver Management | Pending |
 | 🔲 Phase 2A | Academic Year Calendar + `academic_years` Master Table | Pending |
 | 🔲 Phase 2B | Semester Exam Planner + Hall Tickets | Pending |
 | 🔲 Phase 2C | Marks & Arrears Management | Pending |
@@ -2460,6 +2958,7 @@ CREATE TABLE subscription_invoices (
 | 🔲 Phase 2F | Syllabus & Curriculum Management | Pending |
 | 🔲 Phase 2G | Teacher Lesson Plan / Daily Diary | Pending |
 | 🔲 Phase 2H | Guest Lecture & Expert Talk Management | Pending |
+| 🔲 Phase 2I | Internship & Industrial Training (NAAC 1.2 / NIRF 5.2) | Pending |
 | 🔲 Phase 3A | Notification Infrastructure | Pending |
 | 🔲 Phase 3B | Notification Triggers | Pending |
 | 🔲 Phase 3C | Email + SMS + WhatsApp Notifications | Pending |
@@ -2474,6 +2973,7 @@ CREATE TABLE subscription_invoices (
 | 🔲 Phase 4H | Student Clubs & Organizations (NSS/NCC/Cultural) | Pending |
 | 🔲 Phase 4I | Health & Medical Records (Infirmary) | Pending |
 | 🔲 Phase 4J | Sports & Physical Education | Pending |
+| 🔲 Phase 4K | Annual Day & Large Campus Event Management | Pending |
 | 🔲 Phase 5A | Student Admissions System (public-facing) | Pending |
 | 🔲 Phase 5B | Staff Recruitment Module | Pending |
 | 🔲 Phase 5C | Non-Teaching Staff & Payroll | Pending |
@@ -2483,7 +2983,9 @@ CREATE TABLE subscription_invoices (
 | 🔲 Phase 5G | Scholarship Management | Pending |
 | 🔲 Phase 5H | Disciplinary Records & Anti-Ragging (UGC) | Pending |
 | 🔲 Phase 5I | Research & Publications Management (NAAC Criterion 3) | Pending |
-| 🔲 Phase 6A | Parent Portal | Pending |
+| 🔲 Phase 5J | Staff Daily Attendance + LOP-Payroll Integration | Pending |
+| 🔲 Phase 5K | Staff Career Lifecycle (Increments, Transfers, Resignation) | Pending |
+| 🔲 Phase 6A | Parent Portal (multi-child via junction table) | Pending |
 | 🔲 Phase 6B | Transport Management + Vehicle Registry | Pending |
 | 🔲 Phase 6C | Certificate & Document Generator (Student + Staff) | Pending |
 | 🔲 Phase 6D | Online Examination System + Anti-Cheating | Pending |
@@ -2575,4 +3077,4 @@ npx expo start
 
 ---
 
-*Last updated: 2026-06-08 — Phase 1 complete. Roadmap is now **comprehensive and NAAC/NIRF ready** with 53 tracked modules across 8 phases. This session added 15 new modules: Teacher Lesson Plans (2G), Guest Lectures (2H), Digital Notice Board (3D), Gate Pass/Visitor Mgmt (4G), Student Clubs NSS/NCC (4H), Infirmary (4I), Sports (4J), Placement Cell (5F), Scholarships (5G), Disciplinary/Anti-Ragging (5H), Research & Publications (5I), Grievance Redressal (6F), E-Learning LMS (6G), Industry Connect/MOU (6H), IQAC & Govt Reports/NAAC/NIRF/AISHE (7F). Every NAAC criterion is now mapped to a data-source module. Next: Phase 2A.*
+*Last updated: 2026-06-08 — Roadmap hardened with 11 structural gap fixes. Added: Foundation Migrations pre-phase (subjects master table + teaching assignments, academic_years FK migration plan, HOD role & department designation, fee concession management); Step 2I Internship & Industrial Training; hostel maintenance requests sub-module in 4C; Step 4K Annual Day & Campus Event Management; Step 5J Staff Daily Attendance with LOP-payroll integration; Step 5K Staff Career Lifecycle (increments, transfers, resignation offboarding); Phase 6A parent schema fixed from one-to-one to multi-child junction table. Total: **67 tracked modules** across Foundation Migrations + 8 phases. Every NAAC criterion mapped. Next: Foundation Migrations → Phase 2A.*
