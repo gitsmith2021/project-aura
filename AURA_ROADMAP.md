@@ -177,30 +177,57 @@ Branch:       main
 
 > The master calendar for an institution. Every other module (exams, leave, events)
 > references this. Build it first.
+>
+> **⚠️ Build `academic_years` first** — all Phase 2+ tables reference it as a FK. Replace raw `academic_year TEXT` fields with `REFERENCES academic_years(id)` everywhere.
 
 #### Database:
+
+**1. Academic Years — master table (build this first):**
 ```sql
-CREATE TABLE academic_events (
+CREATE TABLE academic_years (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
-  title           TEXT NOT NULL,
-  event_type      TEXT NOT NULL CHECK (event_type IN (
-                    'semester_start','semester_end','exam_window','holiday',
-                    'annual_day','sports_day','expo','cultural','other')),
+  label           TEXT NOT NULL,       -- e.g. "2025-2026"
   start_date      DATE NOT NULL,
   end_date        DATE NOT NULL,
-  description     TEXT,
-  is_public       BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+  is_current      BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(institution_id, label)
+);
+ALTER TABLE academic_years ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "academic_years: institution members can manage"
+  ON public.academic_years
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+  ));
+```
+
+**2. Academic Events (references academic_years):**
+```sql
+CREATE TABLE academic_events (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  academic_year_id UUID REFERENCES academic_years(id) ON DELETE SET NULL,
+  title            TEXT NOT NULL,
+  event_type       TEXT NOT NULL CHECK (event_type IN (
+                     'semester_start','semester_end','exam_window','holiday',
+                     'annual_day','sports_day','expo','cultural','other')),
+  start_date       DATE NOT NULL,
+  end_date         DATE NOT NULL,
+  description      TEXT,
+  is_public        BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ```
 
 #### What to build:
+- [ ] `supabase/migrations/..._academic_years.sql` — Academic years master table + RLS
 - [ ] `supabase/migrations/..._academic_events.sql`
-- [ ] `src/app/institutions/[id]/calendar/page.tsx` — Admin calendar manager (monthly/yearly view, add/edit events)
-- [ ] `src/actions/academicCalendar.ts` — getCalendarEvents, createEvent, updateEvent, deleteEvent
-- [ ] `src/components/calendar/AcademicCalendar.tsx` — Recharts-based monthly calendar grid with event badges
-- [ ] `src/components/calendar/EventDrawer.tsx` — Add/edit event slide-out panel
+- [ ] `src/app/institutions/[id]/calendar/page.tsx` — Admin calendar manager (monthly/yearly view + list view toggle, add/edit events)
+- [ ] `src/app/institutions/[id]/calendar/years/page.tsx` — Manage academic years: create year, set current active year
+- [ ] `src/actions/academicCalendar.ts` — getCalendarEvents, createEvent, updateEvent, deleteEvent, getAcademicYears, setCurrentYear
+- [ ] `src/components/calendar/AcademicCalendar.tsx` — Monthly calendar grid with event badges (toggle: grid / list view)
+- [ ] `src/components/calendar/EventDrawer.tsx` — Add/edit event slide-out panel with academic year selector
 - [ ] Student portal: `src/app/student-portal/calendar/page.tsx` — Read-only calendar view
 - [ ] Staff portal: `src/app/staff-portal/calendar/page.tsx` — Read-only calendar view
 
@@ -218,6 +245,8 @@ CREATE TABLE academic_events (
 
 > Exam scheduling builds on the academic calendar. An exam is a special schedule
 > slot with a hall, duration, and seating assignment.
+> 
+> *Note on Optimization:* Integrate with the **Python Scheduler Engine** (FastAPI + OR-Tools) to calculate optimized hall allocation, invigilator schedules, and conflict-free student seating plans.
 
 #### Database:
 ```sql
@@ -326,10 +355,115 @@ CREATE TABLE exam_results (
 - One-click run with confirmation modal
 - Email notification to students (hooks into Phase 3 notifications)
 
+### Step 2E — CIA / Internal Assessment Ledger
+
+**Route:** `/institutions/[id]/cia`
+
+> Indian colleges conduct Continuous Internal Assessment (CIA) — unit tests, assignments, lab records, seminars — separately from semester exams. CIA marks feed into final grade calculations and are **mandatory for NAAC compliance**. Build after Step 2C so results can reference both.
+
+#### Database:
+```sql
+CREATE TABLE cia_components (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  department_id    UUID REFERENCES departments(id),
+  name             TEXT NOT NULL,  -- e.g. "Unit Test 1", "Assignment 2"
+  component_type   TEXT NOT NULL CHECK (component_type IN (
+                     'unit_test','assignment','lab_record','seminar',
+                     'attendance_marks','viva','other')),
+  max_marks        NUMERIC(5,2) NOT NULL DEFAULT 25,
+  academic_year_id UUID REFERENCES academic_years(id),
+  semester         INTEGER NOT NULL
+);
+
+CREATE TABLE cia_marks (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id    UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  student_id        UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  cia_component_id  UUID NOT NULL REFERENCES cia_components(id) ON DELETE CASCADE,
+  subject_id        UUID REFERENCES subjects(id),
+  marks_scored      NUMERIC(5,2) NOT NULL,
+  entered_by        UUID REFERENCES auth.users(id),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(student_id, cia_component_id, subject_id)
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._cia.sql`
+- [ ] `src/app/institutions/[id]/cia/page.tsx` — CIA component manager: define test/assignment components per dept & semester
+- [ ] `src/app/institutions/[id]/cia/[componentId]/marks/page.tsx` — Bulk marks entry per component, per subject
+- [ ] `src/actions/cia.ts` — getCIAComponents, bulkEnterCIAMarks, getCIAReport, calculateCIATotal
+- [ ] `src/components/cia/CIAMarksGrid.tsx` — Spreadsheet-style marks entry grid per subject
+- [ ] `src/components/cia/CIAReportCard.tsx` — Per-student CIA summary per semester
+- [ ] Student portal: `src/app/student-portal/cia/page.tsx` — Personal CIA marks breakdown per component
+- [ ] Results integration: CIA total auto-included in marksheet grand total (Step 2C)
+
+#### Key features:
+- Configurable CIA components per department and semester
+- Spreadsheet-style bulk marks entry (mirrors Step 2C BulkMarksEntry)
+- CIA marks auto-contribute to final marksheet total
+- NAAC-compliant: full internal assessment documentation trail
+
+---
+
+### Step 2F — Syllabus & Curriculum Management
+
+**Route:** `/institutions/[id]/curriculum`
+
+> Maintain official syllabus per subject — units, topics, reference books. Track syllabus completion per staff. Required for NAAC accreditation, teaching quality reports, and academic transparency.
+
+#### Database:
+```sql
+CREATE TABLE curriculum_units (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  subject_id      UUID NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  unit_number     INTEGER NOT NULL,
+  title           TEXT NOT NULL,
+  description     TEXT,
+  topics          JSONB,            -- Array of topic strings
+  reference_books JSONB,            -- Array of { title, author, isbn }
+  hours_allocated INTEGER NOT NULL DEFAULT 5,
+  UNIQUE(subject_id, unit_number)
+);
+
+CREATE TABLE syllabus_completion (
+  id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  curriculum_unit_id UUID NOT NULL REFERENCES curriculum_units(id) ON DELETE CASCADE,
+  staff_id           UUID NOT NULL REFERENCES staff(id),
+  academic_year_id   UUID REFERENCES academic_years(id),
+  completed_at       DATE,
+  completion_notes   TEXT,
+  is_completed       BOOLEAN NOT NULL DEFAULT FALSE,
+  UNIQUE(curriculum_unit_id, staff_id, academic_year_id)
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._curriculum.sql`
+- [ ] `src/app/institutions/[id]/curriculum/page.tsx` — Curriculum overview: subjects list + completion stats per dept
+- [ ] `src/app/institutions/[id]/curriculum/[subjectId]/page.tsx` — Unit-wise syllabus editor (topics, reference books, hours)
+- [ ] `src/actions/curriculum.ts` — getCurriculum, addUnit, updateUnit, markUnitComplete, getSyllabusCompletion
+- [ ] `src/components/curriculum/SyllabusCard.tsx` — Unit card with expandable topic list + completion toggle
+- [ ] `src/components/curriculum/CompletionProgressBar.tsx` — % syllabus covered per subject per staff
+- [ ] Staff portal: `src/app/staff-portal/curriculum/page.tsx` — Staff marks their own units complete as teaching progresses
+- [ ] Student portal: `src/app/student-portal/curriculum/page.tsx` — View syllabus and teacher-reported progress per subject
+
+#### Key features:
+- Unit-by-unit syllabus definition (topics, reference books, hours allocated)
+- Teacher logs completion per unit → auto-calculates % completion
+- NAAC audit export: subject-wise completion report
+- Students can see what has been taught and what is pending
+
+---
+
 ### Phase 2 Completion Checklist
-- [ ] All four sub-steps built and tested
+- [ ] Academic years table live; at least one year marked `is_current = true`
+- [ ] All six sub-steps (2A–2F) built and tested
 - [ ] Academic calendar visible in all three portals (admin, staff, student)
 - [ ] Marks entry → arrear detection → year promotion pipeline working end-to-end
+- [ ] CIA marks integrate into marksheet totals correctly
+- [ ] Syllabus completion tracking working for at least one department
 - [ ] Marksheet printable as PDF
 - [ ] `git commit -m "feat: Phase 2 — Academic Operations complete"`
 - [ ] `git push origin main`
@@ -349,7 +483,7 @@ CREATE TABLE exam_results (
 CREATE TABLE public.notifications (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   institution_id  UUID NOT NULL REFERENCES public.institutions(id) ON DELETE CASCADE,
-  recipient_id    UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  recipient_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,  -- ✅ Fixed: was profiles(id) which is legacy
   type            TEXT NOT NULL,
   title           TEXT NOT NULL,
   body            TEXT NOT NULL,
@@ -389,15 +523,37 @@ Wire notifications into existing modules:
 
 ---
 
-### Step 3C — Email Notifications (Resend Integration)
+### Step 3C — Email, SMS & WhatsApp Notifications
 
+#### Email — Resend Integration
 - [ ] Integrate Resend (resend.com) for transactional emails
 - [ ] Email template: Fee Due Reminder
 - [ ] Email template: Payment Receipt
 - [ ] Email template: Leave Approved/Rejected
 - [ ] Email template: Salary Slip
+- [ ] Email template: Exam Schedule Released
 - [ ] `src/lib/email.ts` — sendEmail() wrapper around Resend API
 - [ ] Add `RESEND_API_KEY` to .env.local
+
+#### SMS — MSG91 / Fast2SMS Integration
+> Indian institutions rely heavily on SMS for parents and non-tech-savvy staff who may not regularly check email.
+- [ ] Integrate MSG91 or Fast2SMS SMS gateway
+- [ ] SMS trigger: Fee due reminder to parent/student phone
+- [ ] SMS trigger: Exam schedule notification
+- [ ] SMS trigger: Attendance alert (< 75%)
+- [ ] SMS trigger: OTP for parent portal registration
+- [ ] `src/lib/sms.ts` — sendSMS() wrapper
+- [ ] Add `SMS_API_KEY` and `SMS_SENDER_ID` to .env.local
+
+#### WhatsApp — Meta Cloud API
+> WhatsApp Business API enables rich notifications with PDF attachments (payslips, fee receipts) — the preferred communication channel for Indian parents.
+- [ ] Integrate WhatsApp Business Cloud API (or Twilio WhatsApp sandbox for dev)
+- [ ] WhatsApp template: Fee receipt with PDF attachment
+- [ ] WhatsApp template: Salary slip with PDF attachment
+- [ ] WhatsApp template: Leave status update (approved/rejected)
+- [ ] WhatsApp template: Exam hall ticket download link
+- [ ] `src/lib/whatsapp.ts` — sendWhatsApp() wrapper
+- [ ] Add `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` to .env.local
 
 ---
 
@@ -443,7 +599,8 @@ CREATE TABLE library_lendings (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
   book_id         UUID NOT NULL REFERENCES library_books(id),
-  borrower_id     UUID NOT NULL REFERENCES profiles(id),  -- staff or student
+  borrower_id     UUID NOT NULL REFERENCES auth.users(id),  -- ✅ Fixed: handles both staff and student borrowers
+  borrower_type   TEXT NOT NULL DEFAULT 'student' CHECK (borrower_type IN ('student','staff')),
   issued_date     DATE NOT NULL DEFAULT CURRENT_DATE,
   due_date        DATE NOT NULL,
   returned_date   DATE,
@@ -529,6 +686,8 @@ CREATE TABLE venue_bookings (
 
 > Most complex module in Phase 4. Plan the DB schema carefully before building.
 > Multiple hostels, multiple floors, multiple rooms per floor.
+> 
+> *Note on Optimization:* Integrate with the **Python Engine** to automate roommate matching and stable room assignments based on student preferences and compatibility constraints.
 
 #### Database:
 ```sql
@@ -574,6 +733,29 @@ CREATE TABLE hostel_announcements (
   posted_by       UUID REFERENCES auth.users(id),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE mess_menu (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  hostel_id       UUID NOT NULL REFERENCES hostels(id) ON DELETE CASCADE,
+  day_of_week     TEXT NOT NULL CHECK (day_of_week IN ('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')),
+  meal_type       TEXT NOT NULL CHECK (meal_type IN ('breakfast','lunch','snacks','dinner')),
+  menu_items      JSONB NOT NULL,   -- Array of dish names
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(hostel_id, day_of_week, meal_type)
+);
+
+CREATE TABLE mess_billing (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  student_id      UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  hostel_id       UUID NOT NULL REFERENCES hostels(id),
+  month           TEXT NOT NULL,       -- e.g. "2025-07"
+  plan_type       TEXT NOT NULL CHECK (plan_type IN ('full','veg_only','non_veg','custom')),
+  amount          NUMERIC(8,2) NOT NULL,
+  is_paid         BOOLEAN NOT NULL DEFAULT FALSE,
+  paid_at         TIMESTAMPTZ,
+  UNIQUE(student_id, month)
+);
 ```
 
 #### What to build:
@@ -582,11 +764,13 @@ CREATE TABLE hostel_announcements (
 - [ ] `src/app/institutions/[id]/hostels/[hostelId]/page.tsx` — Floor plan view, room occupancy grid
 - [ ] `src/app/institutions/[id]/hostels/[hostelId]/allocations/page.tsx` — Allocate/transfer/vacate students
 - [ ] `src/app/institutions/[id]/hostels/[hostelId]/announcements/page.tsx` — Hostel-specific announcements
-- [ ] `src/app/institutions/[id]/hostels/cafeteria/page.tsx` — Cafeteria meal plan management + menu board
+- [ ] `src/app/institutions/[id]/hostels/cafeteria/page.tsx` — Cafeteria weekly menu board editor (day × meal grid)
+- [ ] `src/app/institutions/[id]/hostels/cafeteria/billing/page.tsx` — Monthly mess billing: generate bills per student, mark paid
+- [ ] `src/actions/mess.ts` — getMessMenu, updateMessMenu, generateMessBills, markMessPaid
 - [ ] `src/actions/hostels.ts` — getHostels, getRooms, allocateStudent, vacateStudent, getOccupancyStats
 - [ ] `src/components/hostels/RoomGrid.tsx` — Visual floor-wise room grid with colour: empty/partial/full
 - [ ] `src/components/hostels/AllocationDrawer.tsx` — Search student → assign to room
-- [ ] Student portal: `src/app/student-portal/hostel/page.tsx` — Room number, hostel name, roommates, announcements, cafeteria menu
+- [ ] Student portal: `src/app/student-portal/hostel/page.tsx` — Room number, hostel name, roommates, announcements, weekly cafeteria menu, mess bill status
 - [ ] Hostel fee auto-linked to existing `fee_structures` (hostel fee type already exists)
 
 #### Key features:
@@ -743,12 +927,58 @@ CREATE TABLE asset_maintenance_logs (
 - Allocations mapping: easily see which department, room, or lab possesses specific assets
 - Maintenance tracker: logs servicing schedules and keeps running cost calculations for equipment
 
+### Step 4F — Smart ID Card & NFC Card Registry
+
+**Route:** `/institutions/[id]/id-cards`
+
+> NFC-based attendance (already built) requires every student and staff member to have an assigned NFC card. This module manages card issuance, linking, replacement, and deactivation. Deactivated/lost cards are rejected at the attendance webhook.
+
+#### Database:
+```sql
+CREATE TABLE smart_cards (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  card_uid        TEXT NOT NULL UNIQUE,   -- NFC chip UID (hex string)
+  holder_type     TEXT NOT NULL CHECK (holder_type IN ('student','staff')),
+  student_id      UUID REFERENCES students(id) ON DELETE SET NULL,
+  staff_id        UUID REFERENCES staff(id) ON DELETE SET NULL,
+  issued_date     DATE NOT NULL DEFAULT CURRENT_DATE,
+  status          TEXT NOT NULL DEFAULT 'active'
+                  CHECK (status IN ('active','lost','deactivated','replaced')),
+  replaced_by     UUID REFERENCES smart_cards(id),  -- points to new card if replaced
+  notes           TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_smart_cards_uid ON smart_cards(card_uid);
+CREATE INDEX idx_smart_cards_student ON smart_cards(student_id);
+CREATE INDEX idx_smart_cards_staff ON smart_cards(staff_id);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._smart_cards.sql`
+- [ ] `src/app/institutions/[id]/id-cards/page.tsx` — Card registry: list all issued cards, filter by status / holder type
+- [ ] `src/app/institutions/[id]/id-cards/issue/page.tsx` — Issue new card: scan or enter NFC UID → link to student/staff record
+- [ ] `src/actions/smartCards.ts` — issueCard, deactivateCard, replaceCard, lookupCardHolder, reportLost
+- [ ] `src/components/id-cards/CardIssuanceDrawer.tsx` — Scan / manually enter NFC UID → assign to person
+- [ ] Update NFC attendance webhook (`/api/attendance/nfc`) to validate card status — reject deactivated/lost cards with 403
+
+#### Key features:
+- NFC UID uniqueness enforced at DB level
+- Card replacement flow: old card deactivated → new card links back via `replaced_by`
+- Deactivated/lost cards rejected at attendance webhook (security layer)
+- Lost card reporting with instant deactivation
+- Dashboard: cards issued vs active vs lost count
+
+---
+
 ### Phase 4 Completion Checklist
 - [ ] Library: book catalog, lending, overdue fine calculation all working
 - [ ] Auditorium: venue booking with conflict detection and approval flow
-- [ ] Hostel: room allocation, occupancy grid, student portal hostel view
+- [ ] Hostel: room allocation, occupancy grid, mess billing, student portal hostel view
 - [ ] Laboratories: labs registry, student batches, experiment sessions, and portal views
 - [ ] Assets: stock registry, low stock alerts, allocations to labs, and maintenance logs
+- [ ] Smart cards: NFC card registry with issuance and deactivation working
 - [ ] All campus infrastructure modules integrated with student and staff portals
 - [ ] `git commit -m "feat: Phase 4 — Campus Infrastructure & Laboratories complete"`
 - [ ] `git push origin main`
@@ -790,6 +1020,8 @@ CREATE TABLE admissions (
 
 #### What to build:
 - [ ] `supabase/migrations/..._admissions.sql`
+- [ ] Supabase Storage bucket: `admissions-documents` (policy: authenticated write, public read for issued documents)
+- [ ] `src/lib/storage.ts` — uploadDocument(), getDocumentUrl() helpers using Supabase Storage client
 - [ ] `src/app/admissions/[slug]/page.tsx` — Public application form (no auth required)
 - [ ] `src/app/admissions/[slug]/apply/page.tsx` — Multi-step application wizard (personal → academic → documents → submit)
 - [ ] `src/app/admissions/[slug]/status/page.tsx` — Applicant status check page (enter email + DOB)
@@ -904,12 +1136,70 @@ CREATE TABLE alumni (
 - Batch-targeted announcements (e.g., "2022 UG CS batch reunion")
 - Alumni directory browsable within same institution
 
+### Step 5E — Staff Appraisal & NAAC Workload Reports
+
+**Route:** `/institutions/[id]/appraisals`
+
+> Annual staff appraisal system for NAAC compliance. Records teaching performance, research output, and faculty development activities. Generates workload reports showing hours taught vs planned per staff per week.
+
+#### Database:
+```sql
+CREATE TABLE staff_appraisals (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  staff_id         UUID NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+  academic_year_id UUID REFERENCES academic_years(id),
+  appraisal_period TEXT NOT NULL,    -- e.g. "2025-2026 Annual"
+  teaching_score   NUMERIC(4,2),     -- Out of 100
+  research_score   NUMERIC(4,2),
+  admin_score      NUMERIC(4,2),
+  overall_score    NUMERIC(4,2),
+  feedback         TEXT,
+  appraised_by     UUID REFERENCES staff(id),  -- HOD or Principal
+  status           TEXT NOT NULL DEFAULT 'pending'
+                   CHECK (status IN ('pending','submitted','reviewed','completed')),
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE staff_appraisal_activities (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  appraisal_id     UUID NOT NULL REFERENCES staff_appraisals(id) ON DELETE CASCADE,
+  activity_type    TEXT NOT NULL CHECK (activity_type IN (
+                     'paper_published','conference','fdp','workshop',
+                     'award','project','patent','other')),
+  title            TEXT NOT NULL,
+  description      TEXT,
+  date_of_activity DATE,
+  document_url     TEXT   -- Proof document via Supabase Storage
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._appraisals.sql`
+- [ ] `src/app/institutions/[id]/appraisals/page.tsx` — Appraisal cycles overview: list of appraisal periods and staff completion status
+- [ ] `src/app/institutions/[id]/appraisals/[appraisalId]/page.tsx` — Individual appraisal form: review scores + activity log
+- [ ] `src/app/institutions/[id]/appraisals/workload/page.tsx` — Workload report: hours taught per staff per week (from class_schedules + attendance data)
+- [ ] `src/actions/appraisals.ts` — createAppraisalCycle, submitAppraisal, reviewAppraisal, generateWorkloadReport
+- [ ] `src/components/appraisals/AppraisalForm.tsx` — Self-assessment form: scores + activities log with document upload
+- [ ] `src/components/appraisals/WorkloadTable.tsx` — Staff-wise teaching hours vs planned hours per week
+- [ ] Staff portal: `src/app/staff-portal/appraisal/page.tsx` — Staff fills self-appraisal, uploads activity proof documents
+
+#### Key features:
+- Self-appraisal: staff log their own activities (papers, FDPs, conferences, awards)
+- HOD reviews self-appraisal and assigns final scores
+- Workload report: cross-references class_schedules with actual attendance to calculate hours taught
+- NAAC export: academic performance indicators per faculty (API format)
+- Document upload for activity proof (via Supabase Storage `appraisal-docs` bucket)
+
+---
+
 ### Phase 5 Completion Checklist
 - [ ] Admissions public form live and accepting applications
 - [ ] Enroll actions correctly create student and staff profiles
 - [ ] Non-teaching staff classified and fully supported in payroll disbursements
 - [ ] Alumni auto-populated from year promotion workflow
 - [ ] Alumni portal accessible with `aura-role=alumni` cookie
+- [ ] Appraisal cycles created and workload report generating from live schedule data
 - [ ] `git commit -m "feat: Phase 5 — Admissions, Recruitment & Alumni complete"`
 - [ ] `git push origin main`
 
@@ -955,13 +1245,56 @@ CREATE TABLE parents (
 
 **Route:** `/institutions/[id]/transport`
 
+> Manage institution transport services and vehicle allocation.
+> 
+> *Note on Optimization:* Integrate with the **Python Engine's Vehicle Routing Problem (VRP) solver** to generate turn-by-turn routes, optimize student stop pickup sequences, and reduce overall fleet fuel consumption.
+
+#### Database:
+```sql
+CREATE TABLE vehicles (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  vehicle_number  TEXT NOT NULL UNIQUE,   -- e.g. "TN12AB1234"
+  vehicle_type    TEXT NOT NULL CHECK (vehicle_type IN ('bus','van','mini_bus')),
+  capacity        INTEGER NOT NULL DEFAULT 40,
+  driver_name     TEXT NOT NULL,
+  driver_phone    TEXT NOT NULL,
+  driver_license  TEXT,
+  insurance_expiry DATE,
+  fitness_expiry  DATE,
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE bus_routes (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  vehicle_id      UUID REFERENCES vehicles(id),
+  route_name      TEXT NOT NULL,
+  stops           JSONB NOT NULL,   -- Array of { name, pickup_time, lat, lng }
+  morning_start   TIME,
+  evening_start   TIME
+);
+
+CREATE TABLE transport_allocations (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  bus_route_id     UUID NOT NULL REFERENCES bus_routes(id) ON DELETE CASCADE,
+  student_id       UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  boarding_stop    TEXT NOT NULL,
+  academic_year_id UUID REFERENCES academic_years(id),
+  UNIQUE(student_id, academic_year_id)
+);
+```
+
 #### What to build:
-- [ ] `supabase/migrations/..._transport.sql` — `bus_routes` (name, stops JSON, timing), `transport_allocations` (student → route)
-- [ ] `src/app/institutions/[id]/transport/page.tsx` — Route list with student count per route
-- [ ] `src/app/institutions/[id]/transport/[routeId]/page.tsx` — Route detail: stops, timing, allocated students
-- [ ] `src/actions/transport.ts` — getRoutes, assignStudent, getStudentRoute
-- [ ] Student portal: `src/app/student-portal/transport/page.tsx` — My bus route, stops, pickup time
+- [ ] `supabase/migrations/..._transport.sql` — vehicles, bus_routes, transport_allocations
+- [ ] `src/app/institutions/[id]/transport/vehicles/page.tsx` — Vehicle & driver registry (RC number, insurance/fitness expiry alerts)
+- [ ] `src/app/institutions/[id]/transport/page.tsx` — Route list with vehicle + student count per route
+- [ ] `src/app/institutions/[id]/transport/[routeId]/page.tsx` — Route detail: stops, timing, vehicle assigned, allocated students
+- [ ] `src/actions/transport.ts` — getVehicles, getRoutes, assignStudent, getStudentRoute, getExpiryAlerts
+- [ ] Student portal: `src/app/student-portal/transport/page.tsx` — My bus route, boarding stop, pickup time
 - [ ] Transport fee auto-linked to `fee_structures` (bus fee type)
+- [ ] Vehicle compliance alerts: flag vehicles with insurance/fitness certificates expiring within 30 days
 
 ---
 
@@ -973,7 +1306,8 @@ CREATE TABLE parents (
 
 #### What to build:
 - [ ] `supabase/migrations/..._certificate_requests.sql` — `certificate_requests` (student, type, status, issued_at)
-- [ ] Certificate types: Bonafide, Transfer Certificate, Character Certificate, NOC, Course Completion
+- [ ] **Student certificate types:** Bonafide, Transfer Certificate, Character Certificate, NOC, Course Completion
+- [ ] **Staff certificate types:** Offer Letter, Experience Certificate, Relieving Letter, Salary Certificate, Service Certificate
 - [ ] `src/app/institutions/[id]/certificates/page.tsx` — Admin: pending requests + issue action
 - [ ] `src/actions/certificates.ts` — requestCertificate, approveCertificate, generatePDF
 - [ ] `src/components/certificates/` — Printable template components per certificate type (auto-filled with student data)
@@ -993,6 +1327,12 @@ CREATE TABLE parents (
 - [ ] `src/app/institutions/[id]/online-exams/[examId]/questions/page.tsx` — Question bank editor (MCQ + short answer)
 - [ ] `src/actions/onlineExams.ts` — createExam, startSession, submitAnswers, autoGrade
 - [ ] `src/components/online-exams/ExamPlayer.tsx` — Timed exam interface (countdown, question navigation, auto-submit on timeout)
+- [ ] Anti-cheating measures:
+  * Tab-switch detection — log event and warn student; 3 violations = auto-submit with flag
+  * Full-screen enforcement — exit full-screen triggers warning modal requiring re-entry
+  * Copy-paste disabled on question text areas
+  * Unique session token per student per exam (prevents URL sharing / duplicate sessions)
+  * `exam_violations` log table: stores tab-switch events per student for admin review
 - [ ] Student portal: `src/app/student-portal/exams/online/page.tsx` — Upcoming exams, take exam, view results
 - [ ] Results auto-pushed to `exam_results` table (Step 2C integration)
 
@@ -1087,11 +1427,79 @@ CREATE TABLE parents (
 
 ---
 
+### Step 7E — SaaS Subscription & Billing Management
+
+**Route:** `/admin/billing`
+
+> Manage institution subscription plans, billing cycles, and invoice generation for the Aura SaaS business. This is the revenue backbone of the platform. Without this, Aura has no monetization layer.
+
+#### Database:
+```sql
+CREATE TABLE subscription_plans (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name            TEXT NOT NULL UNIQUE,   -- e.g. "Starter", "Pro", "Enterprise"
+  price_monthly   NUMERIC(10,2) NOT NULL,
+  price_annual    NUMERIC(10,2),
+  max_students    INTEGER,
+  max_staff       INTEGER,
+  features        JSONB NOT NULL,         -- Array of enabled feature module keys
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE institution_subscriptions (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE UNIQUE,
+  plan_id          UUID NOT NULL REFERENCES subscription_plans(id),
+  billing_cycle    TEXT NOT NULL DEFAULT 'monthly' CHECK (billing_cycle IN ('monthly','annual')),
+  started_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expires_at       TIMESTAMPTZ,
+  status           TEXT NOT NULL DEFAULT 'trial'
+                   CHECK (status IN ('active','trial','expired','cancelled')),
+  razorpay_sub_id  TEXT,   -- Razorpay subscription ID for recurring billing
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE subscription_invoices (
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id      UUID NOT NULL REFERENCES institutions(id),
+  amount              NUMERIC(10,2) NOT NULL,
+  currency            TEXT NOT NULL DEFAULT 'INR',
+  period_start        DATE NOT NULL,
+  period_end          DATE NOT NULL,
+  status              TEXT NOT NULL DEFAULT 'pending'
+                      CHECK (status IN ('pending','paid','failed','refunded')),
+  razorpay_payment_id TEXT,
+  invoice_pdf_url     TEXT,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._subscriptions.sql`
+- [ ] `src/app/admin/billing/page.tsx` — All institution subscriptions: plan, status, next billing date, MRR contribution
+- [ ] `src/app/admin/billing/plans/page.tsx` — Plan manager: create/edit subscription tiers and feature gates
+- [ ] `src/app/admin/billing/invoices/page.tsx` — Invoice history: paid, pending, failed — with PDF download
+- [ ] `src/actions/subscriptions.ts` — assignPlan, renewSubscription, cancelSubscription, generateInvoice
+- [ ] `src/components/billing/SubscriptionCard.tsx` — Institution subscription status card with trial countdown
+- [ ] Feature gating: middleware checks institution plan before accessing premium modules (e.g., Online Exams, CCTV)
+- [ ] MRR / ARR contributions fed into Phase 7B platform dashboard
+
+#### Key features:
+- Trial → Paid conversion tracking
+- MRR / ARR calculations for the platform overview dashboard (Phase 7B)
+- Automatic invoice generation on billing cycle
+- Feature gating: restrict modules by plan tier
+- Razorpay recurring subscription integration
+
+---
+
 ### Phase 7 Completion Checklist
 - [ ] Super admin route fully protected
 - [ ] No cross-institution data leaks to regular admins
 - [ ] All charts rendering with real data
 - [ ] Audit log capturing key actions
+- [ ] Subscription plans and billing working end-to-end
+- [ ] Feature gating blocks out-of-plan module access
 - [ ] `npx tsc --noEmit` passes
 - [ ] `git commit -m "feat: Phase 7 — Super Admin Panel complete"`
 - [ ] `git push origin main`
@@ -1178,12 +1586,33 @@ CREATE TABLE parents (
 
 ---
 
+### Step 8F — Parent Mobile App
+
+> Parent portal exists on web (Phase 6A). A mobile companion delivers real-time push notifications — the primary reason parents will install the app. Attendance drops, fee reminders, and exam results reach parents instantly.
+
+#### Screens to build:
+- [ ] `screens/home/ParentHomeScreen.tsx` — Dashboard: child's attendance %, upcoming exams, fees due summary
+- [ ] `screens/attendance/ChildAttendanceScreen.tsx` — Subject-wise attendance with ring charts
+- [ ] `screens/results/ChildResultsScreen.tsx` — Marks, grades, arrear status per semester
+- [ ] `screens/fees/ChildFeesScreen.tsx` — Fee ledger + Razorpay payment on behalf of child
+- [ ] `screens/notifications/ParentNotificationsScreen.tsx` — Push notification inbox
+- [ ] `screens/profile/LinkChildScreen.tsx` — Link parent account to child via roll number + OTP verification
+
+#### Parent-specific push notifications:
+- [ ] Attendance drops below 75% → instant push to linked parent
+- [ ] Fee payment due → 7-day and 1-day advance reminder push
+- [ ] Exam results published → push with grade summary
+- [ ] Leave application status updates → push to parent
+
+---
+
 ### Phase 8 Completion Checklist
 - [ ] Expo app runs on both iOS and Android
 - [ ] NFC attendance marking works end-to-end
-- [ ] Push notifications received on device
+- [ ] Push notifications received on device for staff, student, and parent apps
 - [ ] CCTV streams play correctly inside mobile dashboard (or fallback deep-links trigger)
 - [ ] Supabase auth persists across app restarts
+- [ ] Parent app correctly links to child record and shows live data
 - [ ] `git commit -m "feat: Phase 8 — Mobile Companion App & CCTV complete"`
 - [ ] `git push origin main`
 
@@ -1210,36 +1639,42 @@ CREATE TABLE parents (
 | ✅ Phase 1B | Student Admin Preview (`/student-portal/view/[studentId]`) | Complete |
 | ✅ Phase 1B | Student Portal Credentials (login/password/block per row) | Complete |
 | ✅ Phase 1B | Student Portal — Razorpay Pay Page | Complete |
-| 🔲 Phase 2A | Academic Year Calendar | Pending |
+| 🔲 Phase 2A | Academic Year Calendar + `academic_years` Master Table | Pending |
 | 🔲 Phase 2B | Semester Exam Planner + Hall Tickets | Pending |
 | 🔲 Phase 2C | Marks & Arrears Management | Pending |
 | 🔲 Phase 2D | Year Promotion & Graduation Workflow | Pending |
+| 🔲 Phase 2E | CIA / Internal Assessment Ledger (NAAC) | Pending |
+| 🔲 Phase 2F | Syllabus & Curriculum Management | Pending |
 | 🔲 Phase 3A | Notification Infrastructure | Pending |
 | 🔲 Phase 3B | Notification Triggers | Pending |
-| 🔲 Phase 3C | Email Notifications (Resend) | Pending |
+| 🔲 Phase 3C | Email + SMS + WhatsApp Notifications | Pending |
 | 🔲 Phase 4A | Library Management System | Pending |
 | 🔲 Phase 4B | Auditorium & Space Booking | Pending |
-| 🔲 Phase 4C | Hostel Management | Pending |
+| 🔲 Phase 4C | Hostel Management + Mess Billing | Pending |
 | 🔲 Phase 4D | Laboratory Management | Pending |
-| 🔲 Phase 4E | Asset Management | Pending |
+| 🔲 Phase 4E | Asset & Inventory Management | Pending |
+| 🔲 Phase 4F | Smart ID Card & NFC Card Registry | Pending |
 | 🔲 Phase 5A | Student Admissions System (public-facing) | Pending |
 | 🔲 Phase 5B | Staff Recruitment Module | Pending |
 | 🔲 Phase 5C | Non-Teaching Staff & Payroll | Pending |
 | 🔲 Phase 5D | Alumni System & Panel | Pending |
+| 🔲 Phase 5E | Staff Appraisal & NAAC Workload Reports | Pending |
 | 🔲 Phase 6A | Parent Portal | Pending |
-| 🔲 Phase 6B | Transport Management | Pending |
-| 🔲 Phase 6C | Certificate & Document Generator | Pending |
-| 🔲 Phase 6D | Online Examination System | Pending |
+| 🔲 Phase 6B | Transport Management + Vehicle Registry | Pending |
+| 🔲 Phase 6C | Certificate & Document Generator (Student + Staff) | Pending |
+| 🔲 Phase 6D | Online Examination System + Anti-Cheating | Pending |
 | 🔲 Phase 6E | Student Feedback & Faculty Ratings | Pending |
 | 🔲 Phase 7A | Super Admin Auth & Layout | Pending |
 | 🔲 Phase 7B | Platform Overview Dashboard | Pending |
 | 🔲 Phase 7C | Per-Institution Drill Down | Pending |
 | 🔲 Phase 7D | Platform Health & Audit | Pending |
+| 🔲 Phase 7E | SaaS Subscription & Billing Management | Pending |
 | 🔲 Phase 8A | React Native Setup | Pending |
 | 🔲 Phase 8B | Staff Mobile App + NFC | Pending |
 | 🔲 Phase 8C | Student Mobile App | Pending |
-| 🔲 Phase 8D | Push Notifications | Pending |
+| 🔲 Phase 8D | Push Notifications (Staff + Student + Parent) | Pending |
 | 🔲 Phase 8E | CCTV Integration | Pending |
+| 🔲 Phase 8F | Parent Mobile App | Pending |
 
 ---
 
@@ -1277,6 +1712,14 @@ SCHEDULER_API_URL=http://127.0.0.1:8000
 # Notifications
 RESEND_API_KEY=
 
+# SMS Gateway (MSG91 / Fast2SMS)
+SMS_API_KEY=
+SMS_SENDER_ID=
+
+# WhatsApp Business API (Meta Cloud)
+WHATSAPP_TOKEN=
+WHATSAPP_PHONE_NUMBER_ID=
+
 # NFC Webhook
 AURA_NFC_WEBHOOK_SECRET=
 AURA_INSTITUTION_TIMEZONE=Asia/Kolkata
@@ -1296,11 +1739,12 @@ cd aura-scheduler-engine
 source venv/bin/activate     # Mac/Linux
 uvicorn main:app --reload
 
-# Terminal 3 — Mobile App (Phase 4)
+# Terminal 3 — Mobile App (Phase 8 — directory created in Step 8A)
+# Note: Run 'npx create-expo-app aura-mobile' in Step 8A first
 cd aura-mobile
 npx expo start
 ```
 
 ---
 
-*Last updated: 2026-06-08 — Phase 1 complete (Staff & Student Portals including online payment). Next: Phase 2.*
+*Last updated: 2026-06-08 — Phase 1 complete. Roadmap comprehensively expanded with 8 new modules: `academic_years` master table, CIA internal assessment (2E), syllabus & curriculum management (2F), mess billing (4C), NFC smart card registry (4F), staff appraisal & NAAC workload reports (5E), SaaS subscription & billing management (7E), and parent mobile app (8F). SMS/WhatsApp notifications added to Phase 3. Vehicle/driver registry added to Phase 6B. Staff certificates added to Phase 6C. Anti-cheating added to Phase 6D. All critical schema bugs (notifications FK, library FK) fixed. Next: Phase 2A.*
