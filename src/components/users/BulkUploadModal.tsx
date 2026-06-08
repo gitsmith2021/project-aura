@@ -104,6 +104,12 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
     if (rowLooksLikeHeader(rows[0])) start = 1;
 
     const supabase = createClient();
+    const { data: inst } = await supabase
+      .from('institutions')
+      .select('email_domain')
+      .eq('id', tenantId)
+      .single();
+    const domain = inst?.email_domain ?? null;
     const lines: string[] = [];
     const payloads: Record<string, unknown>[] = [];
     
@@ -146,10 +152,19 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
         continue;
       }
 
+      let rowEmail = email;
+      if (!rowEmail && domain) {
+        const words = full_name.trim().toLowerCase().split(/\s+/).filter(Boolean);
+        const first = words[0] ?? "";
+        const last = words.length > 1 ? words[words.length - 1] : "";
+        const local = last ? `${first}.${last}` : first;
+        rowEmail = `${local}@${domain}`;
+      }
+
       if (role === "STAFF") {
         payloads.push({
           full_name,
-          email,
+          email: rowEmail,
           phone,
           institution_id: tenantId,
           department_id: deptId,
@@ -199,9 +214,14 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
       const idxStr = String(currentCount).padStart(3, "0");
       const roll_no = `${program}-${funding}-${deptPrefix}-${idxStr}`;
 
+      let studentEmail = email;
+      if (!studentEmail && domain) {
+        studentEmail = `${roll_no.toLowerCase().replace(/-/g, "")}@${domain}`;
+      }
+
       payloads.push({
         full_name,
-        email,
+        email: studentEmail,
         phone,
         institution_id: tenantId,
         department_id: deptId,

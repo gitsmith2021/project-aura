@@ -21,11 +21,46 @@ export async function updatePersonProfile(payload: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Unauthorized" };
 
-  // Email is the login credential — never update it through this action.
+  // Fetch the current person's email and roll number
+  const table = payload.role === "STAFF" ? "staff" : "students";
+  const { data: currentPerson } = await supabase
+    .from(table)
+    .select("email, roll_no")
+    .eq("id", payload.id)
+    .single();
+
+  let email = currentPerson?.email || null;
+
+  // If email is not set, auto-generate it based on institution domain
+  if (!email) {
+    const { data: inst } = await supabase
+      .from("institutions")
+      .select("email_domain")
+      .eq("id", payload.institution_id)
+      .single();
+    const domain = inst?.email_domain;
+
+    if (domain) {
+      if (payload.role === "STAFF") {
+        const words = payload.full_name.trim().toLowerCase().split(/\s+/).filter(Boolean);
+        const first = words[0] ?? "";
+        const last = words.length > 1 ? words[words.length - 1] : "";
+        const local = last ? `${first}.${last}` : first;
+        email = `${local}@${domain}`;
+      } else {
+        const rollNo = currentPerson?.roll_no;
+        if (rollNo) {
+          email = `${rollNo.toLowerCase().replace(/-/g, "")}@${domain}`;
+        }
+      }
+    }
+  }
+
   const base = {
     full_name: payload.full_name,
     phone: payload.phone,
     department_id: payload.department_id,
+    ...(email ? { email } : {}),
   };
 
   if (payload.role === "STAFF") {
