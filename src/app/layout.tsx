@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { InstitutionProvider } from "@/context/InstitutionContext";
+import { cookies } from "next/headers";
+import { createClient } from "@/utils/supabase/server";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,11 +21,16 @@ export const metadata: Metadata = {
   description: "High-end Multi-Tenant ERP for Colleges",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  const userId = user?.id || "";
+
   return (
     <html
       lang="en"
@@ -31,9 +38,10 @@ export default function RootLayout({
     >
       <body suppressHydrationWarning className="font-sans min-h-screen flex flex-col">
         <ThemeProvider>
-          <InstitutionProvider>{children}</InstitutionProvider>
+          <InstitutionProvider userId={userId}>{children}</InstitutionProvider>
         </ThemeProvider>
       </body>
     </html>
   );
 }
+

@@ -23,12 +23,20 @@ const InstitutionContext = createContext<InstitutionContextValue>({
   loading: true,
 });
 
-export function InstitutionProvider({ children }: { children: React.ReactNode }) {
+export function InstitutionProvider({ children, userId }: { children: React.ReactNode; userId: string }) {
   const [institutions, setInstitutions] = useState<InstitutionOption[]>([]);
   const [selectedId, setSelectedIdState] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!userId) {
+      setInstitutions([]);
+      setSelectedIdState("");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
     const supabase = createClient();
 
     const fetchInsts = () => {
@@ -67,7 +75,7 @@ export function InstitutionProvider({ children }: { children: React.ReactNode })
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [userId]);
 
   const setSelectedId = (id: string) => {
     setSelectedIdState(id);
