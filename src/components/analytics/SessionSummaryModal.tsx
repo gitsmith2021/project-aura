@@ -34,7 +34,7 @@ export function SessionSummaryModal({ scheduleId, onClose }: SessionSummaryModal
       const supabase = createClient();
       
       const { data: scheduleData, error: scheduleError } = await supabase
-        .from("schedules")
+        .from("class_schedules")
         .select("id, start_time, end_time, department_id, subject_name, staff:staff(full_name)")
         .eq("id", scheduleId)
         .single();

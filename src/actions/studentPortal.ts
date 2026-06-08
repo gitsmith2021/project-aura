@@ -155,7 +155,7 @@ export async function getStudentFeeStructures(
     const { data, error } = await supabase
       .from("fee_structures")
       .select("id, name, fee_type, amount, academic_year")
-      .eq("tenant_id", institutionId)
+      .eq("institution_id", institutionId)
       .eq("is_active", true)
       .order("academic_year", { ascending: false });
 
@@ -205,7 +205,7 @@ export async function getStudentDashboardStats(
       supabase
         .from("fee_structures")
         .select("amount")
-        .eq("tenant_id", institutionId)
+        .eq("institution_id", institutionId)
         .eq("is_active", true),
     ]);
 

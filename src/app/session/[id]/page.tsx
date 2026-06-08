@@ -41,8 +41,8 @@ export default function SessionPage() {
       
       // 1. Fetch Schedule Details
       const { data: scheduleData, error: scheduleError } = await supabase
-        .from("schedules")
-        .select("id, start_time, end_time, department_id, subject_name, staff:profiles(full_name)")
+        .from("class_schedules")
+        .select("id, start_time, end_time, department_id, subject_name, staff:staff(full_name)")
         .eq("id", scheduleId)
         .single();
         
@@ -58,10 +58,9 @@ export default function SessionPage() {
 
       // 2. Fetch Students for this Department
       const { data: studentsData, error: studentsError } = await supabase
-        .from("profiles")
+        .from("students")
         .select("id, full_name")
         .eq("department_id", scheduleData.department_id)
-        .eq("role", "STUDENT")
         .order("full_name");
         
       if (studentsError) {
@@ -133,7 +132,7 @@ export default function SessionPage() {
     
     // Update status to completed
     const { error } = await supabase
-      .from("schedules")
+      .from("class_schedules")
       .update({ status: "completed" })
       .eq("id", scheduleId);
       

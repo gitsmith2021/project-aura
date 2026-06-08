@@ -19,5 +19,9 @@
     "additionalDirectories": [
       "d:\\Aura-Project\\project-aura\\src\\app\\institutions\\[id]\\finance"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "supabase"
+  ],
+  "enableAllProjectMcpServers": true
 }

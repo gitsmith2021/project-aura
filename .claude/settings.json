@@ -11,7 +11,10 @@
       "Bash(git -C \"d:/Aura-Project/project-aura\" log --oneline -3)",
       "Bash(mkdir -p \"d:/Aura-Project/project-aura/src/app/institutions/[id]/leave\" 2>&1; echo done)",
       "Bash(git rm *)",
-      "Bash(mkdir -p \"d:/Aura-Project/project-aura/src/app/staff-portal/view/[staffId]/schedule\" \"d:/Aura-Project/project-aura/src/app/staff-portal/view/[staffId]/attendance\" \"d:/Aura-Project/project-aura/src/app/staff-portal/view/[staffId]/leave\" \"d:/Aura-Project/project-aura/src/app/staff-portal/view/[staffId]/salary\" 2>&1; echo done)"
+      "Bash(mkdir -p \"d:/Aura-Project/project-aura/src/app/staff-portal/view/[staffId]/schedule\" \"d:/Aura-Project/project-aura/src/app/staff-portal/view/[staffId]/attendance\" \"d:/Aura-Project/project-aura/src/app/staff-portal/view/[staffId]/leave\" \"d:/Aura-Project/project-aura/src/app/staff-portal/view/[staffId]/salary\" 2>&1; echo done)",
+      "Bash(git pull *)",
+      "Bash(supabase --version)",
+      "Bash(supabase projects *)"
     ],
     "additionalDirectories": [
       "d:\\Aura-Project\\project-aura\\src\\app\\institutions\\[id]\\finance\\fees",
