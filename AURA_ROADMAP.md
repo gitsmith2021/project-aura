@@ -1152,11 +1152,43 @@ CREATE TABLE asset_maintenance_logs (
 - [ ] `src/components/recruitment/ApplicationPipeline.tsx` — Kanban: Applied → Screened → Interview → Offer → Joined/Rejected
 - [ ] Hired applicant → one-click convert to Staff record (mirrors admissions enroll flow)
 
+---
+
+### Step 8G — Non-Teaching Staff & Payroll Integration
+
+**Route:** `/institutions/[id]/staff` (filtered by type)
+
+> Support non-teaching staff (office administrative workers, wardens, hostel mess workers, sweepers, security, and cleaning staff) in the staff directories, user profiles, daily shift tracking, and salary payroll system.
+
+#### Database:
+```sql
+-- Differentiate staff classifications
+ALTER TABLE public.staff 
+  ADD COLUMN IF NOT EXISTS staff_type TEXT DEFAULT 'teaching' 
+  CHECK (staff_type IN ('teaching', 'non-teaching_office', 'non-teaching_warden', 'non-teaching_mess', 'non-teaching_support'));
+
+-- Add salary computation factors for non-teaching daily/shift-wage contract staff
+ALTER TABLE public.staff 
+  ADD COLUMN IF NOT EXISTS daily_wage_rate NUMERIC(10,2) DEFAULT NULL;
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._non_teaching_staff.sql` — Schema updates for `staff_type` and daily wage tracking
+- [ ] `src/app/institutions/[id]/staff/page.tsx` — Onboarding/Edit Modals: update profile edits to select and configure `staff_type` and daily wage details
+- [ ] `src/actions/salary.ts` — Update payroll run logic to support daily-wage multiplication based on attendance counts for support staff
+- [ ] `src/components/users/BulkUploadModal.tsx` — Add `staff_type` mapping column to the CSV template for bulk onboarding of non-teaching personnel
+- [ ] Staff Portal: `/staff-portal` — Customized dashboards for non-teaching roles:
+  - Office Staff: view admin workflows and tasks
+  - Wardens: quick-link widget to hostel room occupancy grid
+  - Mess Workers: meal schedule planner
+  - Support Staff: shift history and wage reports
+
 ### Phase 8 Completion Checklist
-- [ ] All six modules built and integrated with existing staff/student portals
+- [ ] All seven modules built and integrated with existing staff/student portals
 - [ ] Transport + hostel fees auto-linked to fee ledger
 - [ ] Parent portal login working (new `aura-role=parent` cookie)
 - [ ] Online exam results feeding into marks module
+- [ ] Non-teaching staff classified and fully supported in payroll disbursements
 - [ ] `git commit -m "feat: Phase 8 — Extended Platform Features complete"`
 - [ ] `git push origin main`
 
@@ -1212,6 +1244,7 @@ CREATE TABLE asset_maintenance_logs (
 | 🔲 Phase 8D | Online Examination System | Pending |
 | 🔲 Phase 8E | Student Feedback & Faculty Ratings | Pending |
 | 🔲 Phase 8F | Staff Recruitment Module | Pending |
+| 🔲 Phase 8G | Non-Teaching Staff & Payroll | Pending |
 
 ---
 
