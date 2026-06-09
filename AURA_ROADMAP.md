@@ -2946,12 +2946,12 @@ CREATE TABLE subscription_invoices (
 | ✅ Phase 1B | Student Admin Preview (`/student-portal/view/[studentId]`) | Complete |
 | ✅ Phase 1B | Student Portal Credentials (login/password/block per row) | Complete |
 | ✅ Phase 1B | Student Portal — Razorpay Pay Page | Complete |
-| 🔲 2-Pre-A | Subjects Master Table + Teaching Assignments | Pending |
-| 🔲 2-Pre-B | `academic_years` FK Migration for Existing Tables | Pending |
-| 🔲 2-Pre-C | HOD Role + Department Head Designation | Pending |
-| 🔲 2-Pre-D | Fee Concession & Waiver Management | Pending |
-| 🔲 Phase 2A | Academic Year Calendar + `academic_years` Master Table | Pending |
-| 🔲 Phase 2B | Semester Exam Planner + Hall Tickets | Pending |
+| ✅ 2-Pre-A | Subjects Master Table + Teaching Assignments | Complete |
+| ✅ 2-Pre-B | `academic_years` FK Migration for Existing Tables | Complete |
+| ✅ 2-Pre-C | HOD Role + Department Head Designation | Complete |
+| ✅ 2-Pre-D | Fee Concession & Waiver Management | Complete |
+| ✅ Phase 2A | Academic Year Calendar + `academic_years` Master Table | Complete |
+| ✅ Phase 2B | Semester Exam Planner + Hall Tickets | Complete |
 | 🔲 Phase 2C | Marks & Arrears Management | Pending |
 | 🔲 Phase 2D | Year Promotion & Graduation Workflow | Pending |
 | 🔲 Phase 2E | CIA / Internal Assessment Ledger (NAAC) | Pending |
@@ -3077,4 +3077,4 @@ npx expo start
 
 ---
 
-*Last updated: 2026-06-08 — Roadmap hardened with 11 structural gap fixes. Added: Foundation Migrations pre-phase (subjects master table + teaching assignments, academic_years FK migration plan, HOD role & department designation, fee concession management); Step 2I Internship & Industrial Training; hostel maintenance requests sub-module in 4C; Step 4K Annual Day & Campus Event Management; Step 5J Staff Daily Attendance with LOP-payroll integration; Step 5K Staff Career Lifecycle (increments, transfers, resignation offboarding); Phase 6A parent schema fixed from one-to-one to multi-child junction table. Total: **67 tracked modules** across Foundation Migrations + 8 phases. Every NAAC criterion mapped. Next: Foundation Migrations → Phase 2A.*
+*Last updated: 2026-06-09 — Completed Foundation Migrations (2-Pre-A through 2-Pre-D), Phase 2A (Academic Calendar), and Phase 2B (Semester Exam Planner + Hall Tickets). `class_schedules.tenant_id` renamed to `institution_id`. Total: **67 tracked modules** across Foundation Migrations + 8 phases. Every NAAC criterion mapped. Next: Phase 2C — Marks & Arrears Management.*
