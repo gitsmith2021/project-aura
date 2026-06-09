@@ -15,7 +15,10 @@ export async function login(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) redirect("/login?error=Invalid login credentials");
 
-  // ── Determine role: staff → student → admin ──────────────────────────────
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login?error=Invalid login credentials");
+
+  // ── Determine role: staff → student → admin (explicit) → deny ────────────
   const { data: staffRow } = await supabase
     .from("staff")
     .select("id")
@@ -23,15 +26,31 @@ export async function login(formData: FormData) {
     .eq("is_active", true)
     .maybeSingle();
 
-  let role: "staff" | "admin" | "student" = staffRow ? "staff" : "admin";
+  let role: "staff" | "admin" | "student" | null = staffRow ? "staff" : null;
 
-  if (role === "admin") {
+  if (!role) {
     const { data: studentRow } = await supabase
       .from("students")
       .select("id")
       .eq("email", email)
       .maybeSingle();
     if (studentRow) role = "student";
+  }
+
+  if (!role) {
+    const { data: memberRow } = await supabase
+      .from("institution_members")
+      .select("role")
+      .eq("profile_id", user.id)
+      .in("role", ["SUPER_ADMIN", "INST_ADMIN", "DEPARTMENT_HEAD", "HOD"])
+      .maybeSingle();
+    if (memberRow) role = "admin";
+  }
+
+  // Deny access if no recognised role — prevents unknown users becoming admins
+  if (!role) {
+    await supabase.auth.signOut();
+    redirect("/login?error=Unauthorized access");
   }
 
   // Cache the role in a cookie so middleware doesn't need a DB call per request

@@ -201,7 +201,7 @@ ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "subjects: institution members can manage"
   ON public.subjects
   USING (institution_id IN (
-    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
   ));
 
 -- Who teaches which subject this academic year
@@ -220,7 +220,7 @@ ALTER TABLE teaching_assignments ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "teaching_assignments: institution members can manage"
   ON public.teaching_assignments
   USING (institution_id IN (
-    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
   ));
 ```
 
@@ -344,7 +344,7 @@ ALTER TABLE fee_concessions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "fee_concessions: institution members can manage"
   ON public.fee_concessions
   USING (institution_id IN (
-    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
   ));
 ```
 
@@ -410,7 +410,7 @@ ALTER TABLE academic_years ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "academic_years: institution members can manage"
   ON public.academic_years
   USING (institution_id IN (
-    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
   ));
 ```
 
@@ -796,7 +796,7 @@ ALTER TABLE internships ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "internships: institution members can manage"
   ON public.internships
   USING (institution_id IN (
-    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
   ));
 ```
 
@@ -1682,7 +1682,7 @@ ALTER TABLE campus_events ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "campus_events: institution members can manage"
   ON public.campus_events
   USING (institution_id IN (
-    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
   ));
 
 CREATE TABLE event_participants (
@@ -2210,7 +2210,7 @@ ALTER TABLE staff_attendance ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "staff_attendance: institution members can manage"
   ON public.staff_attendance
   USING (institution_id IN (
-    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
   ));
 ```
 
@@ -2264,7 +2264,7 @@ ALTER TABLE staff_career_events ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "staff_career_events: institution members can manage"
   ON public.staff_career_events
   USING (institution_id IN (
-    SELECT institution_id FROM institution_members WHERE user_id = auth.uid()
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
   ));
 ```
 
