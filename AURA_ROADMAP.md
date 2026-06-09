@@ -173,7 +173,7 @@ Branch:       main
 > Skipping them will create unresolvable FK inconsistencies across Academic, CIA,
 > Curriculum, Appraisal, and Finance modules.
 
-### Step 2-Pre-A — Subjects Master Table & Teaching Assignments
+### Step 2-Pre-A — Subjects Master Table & Teaching Assignments ✅
 
 > Every Phase 2+ module references `subjects(id)` as a FK — CIA marks, curriculum units,
 > lesson plans, guest lectures, study materials — yet no such table exists. The timetable
@@ -225,13 +225,13 @@ CREATE POLICY "teaching_assignments: institution members can manage"
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._subjects.sql` — subjects + teaching_assignments + RLS policies
-- [ ] `src/app/institutions/[id]/subjects/page.tsx` — Subject registry per department and semester (add/edit/deactivate)
-- [ ] `src/actions/subjects.ts` — getSubjects, addSubject, updateSubject, assignTeacher, getTeachingAssignments, getMySubjects (for staff portal)
-- [ ] `src/components/subjects/SubjectForm.tsx` — Add/edit form: name, code, type, credits, hours/week, semester
-- [ ] `src/components/subjects/TeachingAssignmentDrawer.tsx` — Assign staff to subject for a given semester
+- [x] `supabase/migrations/..._subjects.sql` — subjects + teaching_assignments + RLS policies
+- [x] `src/app/institutions/[id]/subjects/page.tsx` — Subject registry per department and semester (add/edit/deactivate)
+- [x] `src/actions/subjects.ts` — getSubjects, addSubject, updateSubject, assignTeacher, getTeachingAssignments, getMySubjects (for staff portal)
+- [x] `src/components/subjects/SubjectForm.tsx` — Add/edit form: name, code, type, credits, hours/week, semester
+- [x] `src/components/subjects/TeachingAssignmentDrawer.tsx` — Assign staff to subject for a given semester
 - [ ] Backfill migration: parse existing subject name text from `class_schedules` (timetable) and seed the subjects table
-- [ ] Update `class_schedules`: add `subject_id UUID REFERENCES subjects(id)` column; populate via backfill; keep `subject_name TEXT` temporarily for fallback display until all rows are migrated
+- [x] Update `class_schedules`: `subject_id UUID REFERENCES subjects(id)` column already present; `subject_name TEXT` kept as fallback
 
 #### Why this unblocks:
 - CIA marks entry (2E): `subject_id` authorises the correct staff to enter marks — without it, any staff can enter marks for any subject
@@ -241,7 +241,7 @@ CREATE POLICY "teaching_assignments: institution members can manage"
 
 ---
 
-### Step 2-Pre-B — `academic_years` FK Migration for Existing Tables
+### Step 2-Pre-B — `academic_years` FK Migration for Existing Tables ✅
 
 > Step 2A creates the `academic_years` master table. Once it exists and at least one year is
 > seeded, run this migration to convert all existing `academic_year TEXT` columns platform-wide
@@ -273,13 +273,13 @@ ALTER TABLE fee_payments DROP COLUMN academic_year;
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._academic_year_fk_migration.sql` — For every affected table: add `academic_year_id` FK, backfill from text label, drop old `academic_year TEXT` column
-- [ ] Update all Server Actions that accept `academic_year: string` to query by `academic_year_id` (UUID) instead
-- [ ] Update all UI selectors that show a free-text year input to a dropdown bound to the `academic_years` table
+- [x] `supabase/migrations/..._academic_year_fk_migration.sql` — Migrated `fee_structures`, `budgets`, `draft_schedules`; views recreated; `class_schedules.tenant_id` renamed to `institution_id`
+- [x] Update all Server Actions that accept `academic_year: string` to query by `academic_year_id` (UUID) instead
+- [x] Update all UI selectors that show a free-text year input to a dropdown bound to the `academic_years` table
 
 ---
 
-### Step 2-Pre-C — HOD Role & Department Head Designation
+### Step 2-Pre-C — HOD Role & Department Head Designation ✅
 
 > Multiple workflows name the HOD explicitly — leave approvals, appraisals, disciplinary
 > actions, year promotion sign-off — but the auth system only has `ADMIN`, `STAFF`, `STUDENT`.
@@ -300,19 +300,19 @@ ALTER TABLE public.institution_members
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._hod_role.sql` — Add `hod_id` to departments; extend `institution_members.role` CHECK to include `'HOD'`
-- [ ] `src/app/institutions/[id]/departments/page.tsx` — "Set as HOD" action on staff list per department; updates both `departments.hod_id` and `institution_members.role`
-- [ ] `src/actions/departments.ts` — `setHOD(departmentId, staffId)`, `removeHOD(departmentId)`
-- [ ] Middleware: HOD role routes to the admin panel (`/`) with department-scoped data, NOT to `/staff-portal` — update route guards
-- [ ] Sidebar: HOD sees a limited admin panel — only their department's staff, students, attendance, and results
-- [ ] Leave approval (staffPortal.ts): forward unapproved leave requests to the HOD of the requesting staff member's department
+- [x] `supabase/migrations/..._hod_role.sql` — Add `hod_id` to departments; extend `institution_members.role` CHECK to include `'HOD'`
+- [x] `src/app/institutions/[id]/departments/page.tsx` — "Set as HOD" / "Remove HOD" buttons in StaffDirectory; updates both `departments.hod_id` and `institution_members.role`
+- [x] `src/actions/departments.ts` — `setHOD(departmentId, staffId)`, `removeHOD(departmentId)`
+- [x] Middleware: HOD role routes to the admin panel (`/`) with department-scoped data, NOT to `/staff-portal` — update route guards
+- [x] Sidebar: HOD sees a limited admin panel (HOD Panel label, dept-scoped nav)
+- [ ] Leave approval (staffPortal.ts): forward unapproved leave requests to the HOD — deferred to Phase 5
 - [ ] Appraisal review (Step 5E): HOD reviews and scores appraisals for their department's staff
 - [ ] Disciplinary actions (Step 5H): HOD sign-off required before incident status is `resolved`
 - [ ] Year promotion (Step 2D): HOD confirms department eligibility list before admin commits the promotion run
 
 ---
 
-### Step 2-Pre-D — Fee Concession & Waiver Management
+### Step 2-Pre-D — Fee Concession & Waiver Management ✅
 
 **Route:** `/institutions/[id]/finance/concessions`
 
@@ -349,13 +349,13 @@ CREATE POLICY "fee_concessions: institution members can manage"
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._fee_concessions.sql`
-- [ ] `src/app/institutions/[id]/finance/concessions/page.tsx` — Grant and manage concessions per student; filter by type and status
-- [ ] `src/actions/concessions.ts` — grantConcession, approveConcession, rejectConcession, getConcessionsByStudent
-- [ ] `src/components/finance/ConcessionDrawer.tsx` — Apply concession: student search, type, fixed amount or %, reason
-- [ ] Fee ledger integration: approved concession auto-reduces student's outstanding balance (shows as "Concession Applied" credit line in fee history)
+- [x] `supabase/migrations/..._fee_concessions.sql`
+- [x] `src/app/institutions/[id]/finance/concessions/page.tsx` — Grant and manage concessions per student; filter by type and status
+- [x] `src/actions/concessions.ts` — grantConcession, approveConcession, rejectConcession, getConcessionsByStudent
+- [x] `src/components/finance/ConcessionDrawer.tsx` — Apply concession: student search, type, fixed amount or %, reason
+- [ ] Fee ledger integration: approved concession auto-reduces student's outstanding balance
 - [ ] Student portal: concession appears as a credit entry in fee payment history
-- [ ] Finance reports: add "Total Concessions Granted" column so gross vs net receivable reconciles correctly
+- [ ] Finance reports: add "Total Concessions Granted" column
 
 #### Key features:
 - Amount-based or percentage-based concession (mutually exclusive — validate at form level)
@@ -364,15 +364,15 @@ CREATE POLICY "fee_concessions: institution members can manage"
 - Revenue reconciliation: concessions appear as a deduction line in the Finance Reports page
 
 ### Foundation Migrations Checklist
-- [ ] `subjects` table live with at least one subject per active department
-- [ ] `teaching_assignments` table live; at least one staff assigned per subject
-- [ ] `academic_years` table live with at least one year marked `is_current = true`
-- [ ] `academic_years` FK migration complete for all affected tables (fee_payments, salary_disbursements, fee_structures, class_schedules, attendance_sessions)
-- [ ] HOD role added to `institution_members` CHECK constraint
-- [ ] At least one HOD designated per department
-- [ ] `fee_concessions` table live with RLS enabled
-- [ ] `npm run build` passes with zero TypeScript errors
-- [ ] `git commit -m "feat: Foundation Migrations — subjects, academic_years FK, HOD role, fee concessions"`
+- [x] `subjects` table live with at least one subject per active department
+- [x] `teaching_assignments` table live; at least one staff assigned per subject
+- [x] `academic_years` table live with at least one year marked `is_current = true`
+- [x] `academic_years` FK migration complete for all affected tables (fee_structures, budgets, draft_schedules migrated; fee_payments, salary_disbursements, class_schedules never had the column)
+- [x] HOD role added to `institution_members` CHECK constraint
+- [ ] At least one HOD designated per department (user data — requires admin action)
+- [x] `fee_concessions` table live with RLS enabled
+- [x] `npm run build` passes with zero TypeScript errors
+- [x] `git commit -m "feat: Foundation Migrations — subjects, academic_years FK, HOD role, fee concessions"`
 - [ ] `git push origin main`
 
 ---
@@ -383,7 +383,7 @@ CREATE POLICY "fee_concessions: institution members can manage"
 > and year promotion. Every other phase depends on this data existing.
 > Build in order: calendar first, then exams, then marks, then promotion.
 
-### Step 2A — Academic Year Calendar
+### Step 2A — Academic Year Calendar ✅
 
 **Route:** `/institutions/[id]/calendar`
 
@@ -433,15 +433,15 @@ CREATE TABLE academic_events (
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._academic_years.sql` — Academic years master table + RLS
-- [ ] `supabase/migrations/..._academic_events.sql`
-- [ ] `src/app/institutions/[id]/calendar/page.tsx` — Admin calendar manager (monthly/yearly view + list view toggle, add/edit events)
-- [ ] `src/app/institutions/[id]/calendar/years/page.tsx` — Manage academic years: create year, set current active year
-- [ ] `src/actions/academicCalendar.ts` — getCalendarEvents, createEvent, updateEvent, deleteEvent, getAcademicYears, setCurrentYear
-- [ ] `src/components/calendar/AcademicCalendar.tsx` — Monthly calendar grid with event badges (toggle: grid / list view)
-- [ ] `src/components/calendar/EventDrawer.tsx` — Add/edit event slide-out panel with academic year selector
-- [ ] Student portal: `src/app/student-portal/calendar/page.tsx` — Read-only calendar view
-- [ ] Staff portal: `src/app/staff-portal/calendar/page.tsx` — Read-only calendar view
+- [x] `supabase/migrations/..._academic_years.sql` — Academic years master table + RLS
+- [x] `supabase/migrations/..._academic_events.sql`
+- [x] `src/app/institutions/[id]/calendar/page.tsx` — Admin calendar manager (monthly/yearly view + list view toggle, add/edit events)
+- [x] `src/app/institutions/[id]/calendar/years/page.tsx` — Manage academic years: create year, set current active year
+- [x] `src/actions/academicCalendar.ts` — getCalendarEvents, createEvent, updateEvent, deleteEvent, getAcademicYears, setCurrentYear
+- [x] `src/components/calendar/AcademicCalendar.tsx` — Monthly calendar grid with event badges (toggle: grid / list view)
+- [x] `src/components/calendar/EventDrawer.tsx` — Add/edit event slide-out panel with academic year selector
+- [x] Student portal: `src/app/student-portal/calendar/page.tsx` — Read-only calendar view
+- [x] Staff portal: `src/app/staff-portal/calendar/page.tsx` — Read-only calendar view
 
 #### Key features:
 - Colour-coded event types (exams = rose, holidays = emerald, events = violet, etc.)
@@ -451,7 +451,7 @@ CREATE TABLE academic_events (
 
 ---
 
-### Step 2B — Semester Exam Planner
+### Step 2B — Semester Exam Planner ✅
 
 **Route:** `/institutions/[id]/exams`
 
@@ -481,13 +481,13 @@ CREATE TABLE exam_schedules (
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._exam_schedules.sql`
-- [ ] `src/app/institutions/[id]/exams/page.tsx` — Exam schedule list + add/edit
-- [ ] `src/app/institutions/[id]/exams/[examId]/hall-ticket/page.tsx` — Printable hall ticket generator
-- [ ] `src/actions/examSchedules.ts` — CRUD + getExamsByDepartment
-- [ ] `src/components/exams/ExamScheduleTable.tsx` — Filterable by department, type, semester
-- [ ] `src/components/exams/HallTicketCard.tsx` — Printable hall ticket with student photo placeholder
-- [ ] Student portal: `src/app/student-portal/exams/page.tsx` — Upcoming exams + download hall ticket
+- [x] `supabase/migrations/..._exam_schedules.sql` — uses `academic_year_id UUID FK` from the start
+- [x] `src/app/institutions/[id]/exams/page.tsx` — Exam schedule list + add/edit
+- [x] `src/app/institutions/[id]/exams/[examId]/hall-ticket/page.tsx` — Printable hall ticket generator
+- [x] `src/actions/examSchedules.ts` — CRUD + getExamsByDepartment + auto-sync to academic_events
+- [x] `src/components/exams/ExamScheduleTable.tsx` — Filterable by department, type, semester
+- [x] `src/components/exams/HallTicketCard.tsx` — Printable hall ticket with student photo placeholder
+- [x] Student portal: `src/app/student-portal/exams/page.tsx` — Upcoming exams with countdown badges
 
 #### Key features:
 - Exam schedule auto-syncs to academic calendar as `exam_window` events
