@@ -295,10 +295,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     return "";
   };
 
-  const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
-    const g = detectOpenGroup(typeof window !== "undefined" ? window.location.pathname : "");
-    return g ? new Set([g]) : new Set();
-  });
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const g = detectOpenGroup(pathname);
