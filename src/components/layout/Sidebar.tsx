@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Users, Settings, Building2, Calendar, GraduationCap,
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
-  ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent, ClipboardList, Award, BadgeCheck, Library,
+  ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent, ClipboardList, Award, BadgeCheck, Library, BookText,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -251,7 +251,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   // ── Active detection helpers ──────────────────────────────────────────────
   const adminNavActive = (key: string, href: string, exact?: boolean) => {
     if (key === "institutions")
-      return (pathname === "/institutions" || pathname.startsWith("/institutions/")) && !pathname.includes("/finance") && !pathname.includes("/calendar") && !pathname.includes("/subjects") && !pathname.includes("/exams") && !pathname.includes("/results") && !pathname.includes("/promotion");
+      return (pathname === "/institutions" || pathname.startsWith("/institutions/")) && !pathname.includes("/finance") && !pathname.includes("/calendar") && !pathname.includes("/subjects") && !pathname.includes("/exams") && !pathname.includes("/results") && !pathname.includes("/promotion") && !pathname.includes("/lesson-plans") && !pathname.includes("/curriculum") && !pathname.includes("/cia");
     if (key === "calendar")
       return pathname.includes("/calendar");
     if (key === "subjects")
@@ -262,6 +262,8 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
       return pathname.includes("/results");
     if (key === "promotion")
       return pathname.includes("/promotion");
+    if (key === "lesson-plans")
+      return pathname.includes("/lesson-plans");
     if (exact) return pathname === href;
     return pathname.startsWith(href);
   };
@@ -279,8 +281,9 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     const examsHref     = instSlug ? `/institutions/${instSlug}/exams`     : "/institutions";
     const resultsHref   = instSlug ? `/institutions/${instSlug}/results`   : "/institutions";
     const promotionHref = instSlug ? `/institutions/${instSlug}/promotion` : "/institutions";
-    const ciaHref        = instSlug ? `/institutions/${instSlug}/cia`        : "/institutions";
-    const curriculumHref = instSlug ? `/institutions/${instSlug}/curriculum` : "/institutions";
+    const ciaHref          = instSlug ? `/institutions/${instSlug}/cia`           : "/institutions";
+    const curriculumHref   = instSlug ? `/institutions/${instSlug}/curriculum`   : "/institutions";
+    const lessonPlansHref  = instSlug ? `/institutions/${instSlug}/lesson-plans` : "/institutions";
 
     if (role === "hod") {
       const deptId = userAuth?.department_id;
@@ -293,9 +296,10 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
         { key: "subjects",     href: subjectsHref,      label: "Subjects",     Icon: BookOpen },
         { key: "curriculum",   href: curriculumHref,    label: "Curriculum",   Icon: Library },
         { key: "exams",        href: examsHref,         label: "Exams",        Icon: ClipboardList },
-        { key: "cia",          href: ciaHref,           label: "CIA",          Icon: BadgePercent },
-        { key: "results",      href: resultsHref,       label: "Results",      Icon: Award },
-        { key: "calendar",     href: calendarHref,      label: "Calendar",     Icon: CalendarDays },
+        { key: "cia",           href: ciaHref,           label: "CIA",           Icon: BadgePercent },
+        { key: "lesson-plans", href: lessonPlansHref,   label: "Lesson Plans",  Icon: BookText },
+        { key: "results",      href: resultsHref,       label: "Results",       Icon: Award },
+        { key: "calendar",     href: calendarHref,      label: "Calendar",      Icon: CalendarDays },
       ];
     }
 
@@ -310,6 +314,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
       { key: "curriculum",   href: curriculumHref,    label: "Curriculum",   Icon: Library },
       { key: "exams",        href: examsHref,         label: "Exams",        Icon: ClipboardList },
       { key: "cia",          href: ciaHref,           label: "CIA",          Icon: BadgePercent },
+      { key: "lesson-plans", href: lessonPlansHref,   label: "Lesson Plans", Icon: BookText },
       { key: "results",      href: resultsHref,       label: "Results",      Icon: Award },
       { key: "promotion",    href: promotionHref,     label: "Promotion",    Icon: BadgeCheck },
       { key: "calendar",     href: calendarHref,      label: "Calendar",     Icon: CalendarDays },
