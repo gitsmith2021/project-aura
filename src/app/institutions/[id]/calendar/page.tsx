@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, use, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, Settings } from "lucide-react";
+import { CalendarDays, Settings } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { AcademicCalendar } from "@/components/calendar/AcademicCalendar";
 import { EventDrawer } from "@/components/calendar/EventDrawer";
@@ -130,12 +130,6 @@ export default function AdminCalendarPage({ params }: { params: Promise<{ id: st
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 shrink-0">
             <div>
-              <Link
-                href={`/institutions/${collegeId}`}
-                className="inline-flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-purple-600 mb-1 transition-colors uppercase tracking-wider font-semibold"
-              >
-                <ArrowLeft size={12} /> Back to College Dashboard
-              </Link>
               <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
                 <CalendarDays size={22} className="text-purple-600" />
                 Academic Calendar Manager

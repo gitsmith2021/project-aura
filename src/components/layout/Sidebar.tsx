@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Users, Settings, Building2, Calendar, GraduationCap,
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
-  ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent, ClipboardList,
+  ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent, ClipboardList, Award,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -209,13 +209,15 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   // ── Active detection helpers ──────────────────────────────────────────────
   const adminNavActive = (key: string, href: string, exact?: boolean) => {
     if (key === "institutions")
-      return (pathname === "/institutions" || pathname.startsWith("/institutions/")) && !pathname.includes("/finance") && !pathname.includes("/calendar") && !pathname.includes("/subjects") && !pathname.includes("/exams");
+      return (pathname === "/institutions" || pathname.startsWith("/institutions/")) && !pathname.includes("/finance") && !pathname.includes("/calendar") && !pathname.includes("/subjects") && !pathname.includes("/exams") && !pathname.includes("/results");
     if (key === "calendar")
       return pathname.includes("/calendar");
     if (key === "subjects")
       return pathname.includes("/subjects");
     if (key === "exams")
       return pathname.includes("/exams");
+    if (key === "results")
+      return pathname.includes("/results");
     if (exact) return pathname === href;
     return pathname.startsWith(href);
   };
@@ -232,6 +234,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
 
     const subjectsHref = instId ? `/institutions/${instId}/subjects` : "/institutions";
     const examsHref    = instId ? `/institutions/${instId}/exams`    : "/institutions";
+    const resultsHref  = instId ? `/institutions/${instId}/results`  : "/institutions";
 
     if (role === "hod") {
       const deptId = userAuth?.department_id;
@@ -243,6 +246,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
         { key: "schedules",    href: "/schedules",      label: "Timetable",    Icon: Calendar },
         { key: "subjects",     href: subjectsHref,      label: "Subjects",     Icon: BookOpen },
         { key: "exams",        href: examsHref,         label: "Exams",        Icon: ClipboardList },
+        { key: "results",      href: resultsHref,       label: "Results",      Icon: Award },
         { key: "calendar",     href: calendarHref,      label: "Calendar",     Icon: CalendarDays },
       ];
     }
@@ -256,6 +260,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
       { key: "schedules",    href: "/schedules",      label: "Timetable",    Icon: Calendar },
       { key: "subjects",     href: subjectsHref,      label: "Subjects",     Icon: BookOpen },
       { key: "exams",        href: examsHref,         label: "Exams",        Icon: ClipboardList },
+      { key: "results",      href: resultsHref,       label: "Results",      Icon: Award },
       { key: "calendar",     href: calendarHref,      label: "Calendar",     Icon: CalendarDays },
     ];
   };

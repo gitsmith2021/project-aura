@@ -496,7 +496,7 @@ CREATE TABLE exam_schedules (
 
 ---
 
-### Step 2C — Marks & Arrears Management
+### Step 2C — Marks & Arrears Management ✅
 
 **Route:** `/institutions/[id]/results`
 
@@ -524,15 +524,16 @@ CREATE TABLE exam_results (
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._exam_results.sql`
-- [ ] `src/app/institutions/[id]/results/page.tsx` — Results entry dashboard (filter by dept/semester/exam)
-- [ ] `src/app/institutions/[id]/results/[studentId]/page.tsx` — Full marksheet per student
-- [ ] `src/app/institutions/[id]/results/arrears/page.tsx` — Arrear students list + re-exam management
-- [ ] `src/actions/examResults.ts` — bulkEnterResults, getStudentMarksheet, getArrearStudents, calculateGPA
-- [ ] `src/components/results/MarksheetCard.tsx` — Printable marksheet with grades, CGPA, arrear flags
-- [ ] `src/components/results/BulkMarksEntry.tsx` — Spreadsheet-style bulk entry by subject
-- [ ] Student portal: `src/app/student-portal/results/page.tsx` — Personal marksheet + arrear subjects
-- [ ] Admin preview: `src/app/student-portal/view/[studentId]/results/page.tsx`
+- [x] `supabase/migrations/20260609000010_phase2c_exam_results.sql`
+- [x] `src/app/institutions/[id]/results/page.tsx` — Results entry dashboard (filter by dept/semester/subject)
+- [x] `src/app/institutions/[id]/results/[studentId]/page.tsx` — Full marksheet per student
+- [x] `src/app/institutions/[id]/results/arrears/page.tsx` — Arrear students list grouped by student
+- [x] `src/actions/examResults.ts` — bulkEnterResults, getStudentMarksheet, getArrearStudents
+- [x] `src/utils/grading.ts` — computeGrade, gradePoint, computeCGPA (shared by server + client)
+- [x] `src/components/results/MarksheetCard.tsx` — Printable marksheet with grades, CGPA, arrear flags
+- [x] `src/components/results/BulkMarksEntry.tsx` — Spreadsheet-style bulk entry by subject
+- [x] Student portal: `src/app/student-portal/results/page.tsx` — Personal marksheet + arrear subjects
+- [x] Admin preview: `src/app/student-portal/view/[studentId]/results/page.tsx`
 
 #### Key features:
 - Grade auto-calculation (O/A+/A/B+/B/C/F based on marks)
@@ -2952,7 +2953,7 @@ CREATE TABLE subscription_invoices (
 | ✅ 2-Pre-D | Fee Concession & Waiver Management | Complete |
 | ✅ Phase 2A | Academic Year Calendar + `academic_years` Master Table | Complete |
 | ✅ Phase 2B | Semester Exam Planner + Hall Tickets | Complete |
-| 🔲 Phase 2C | Marks & Arrears Management | Pending |
+| ✅ Phase 2C | Marks & Arrears Management | Complete |
 | 🔲 Phase 2D | Year Promotion & Graduation Workflow | Pending |
 | 🔲 Phase 2E | CIA / Internal Assessment Ledger (NAAC) | Pending |
 | 🔲 Phase 2F | Syllabus & Curriculum Management | Pending |
@@ -3077,4 +3078,4 @@ npx expo start
 
 ---
 
-*Last updated: 2026-06-09 — Completed Foundation Migrations (2-Pre-A through 2-Pre-D), Phase 2A (Academic Calendar), and Phase 2B (Semester Exam Planner + Hall Tickets). `class_schedules.tenant_id` renamed to `institution_id`. UI polish: Subjects page redesigned to AURA design system (icon header, pill badges, staff avatar rows, elevated cards); redundant "Back to Dashboard" back-links removed from Calendar, Department, and Concessions pages. Total: **67 tracked modules** across Foundation Migrations + 8 phases. Every NAAC criterion mapped. Next: Phase 2C — Marks & Arrears Management.*
+*Last updated: 2026-06-09 — Completed Foundation Migrations (2-Pre-A through 2-Pre-D), Phase 2A (Academic Calendar), Phase 2B (Semester Exam Planner + Hall Tickets), and Phase 2C (Marks & Arrears Management). Added `exam_results` table with DB-generated grade/arrear columns, bulk marks entry grid, per-student printable marksheet with CGPA, arrear dashboard, and student portal results page. Grading utilities extracted to `src/utils/grading.ts`. Results nav added to Sidebar + StudentPortalShell. UI polish: Subjects page redesigned; redundant back-links removed. Total: **67 tracked modules** across Foundation Migrations + 8 phases. Every NAAC criterion mapped. Next: Phase 2D — Year Promotion & Graduation.*

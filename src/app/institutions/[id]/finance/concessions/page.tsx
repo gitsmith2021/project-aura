@@ -3,7 +3,7 @@
 import { useEffect, useState, use, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { createClient } from "@/utils/supabase/client";
-import { Plus, ArrowLeft, Tag, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Plus, Tag, CheckCircle2, XCircle, Clock } from "lucide-react";
 import Link from "next/link";
 import { ConcessionDrawer } from "@/components/finance/ConcessionDrawer";
 import { getConcessionsByInstitution, approveConcession, rejectConcession, FeeConcession } from "@/actions/concessions";
@@ -122,12 +122,6 @@ export default function ConcessionsPage({ params }: { params: Promise<{ id: stri
           {/* Header */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 shrink-0">
             <div>
-              <Link
-                href={`/institutions/${collegeId}/finance/fees`}
-                className="inline-flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-purple-600 mb-1 transition-colors uppercase tracking-wider font-semibold"
-              >
-                <ArrowLeft size={12} /> Back to Fee Operations
-              </Link>
               <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
                 <Tag size={22} className="text-purple-600" />
                 Fee Concessions & Waivers

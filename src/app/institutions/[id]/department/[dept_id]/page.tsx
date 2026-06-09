@@ -3,7 +3,7 @@
 import { useEffect, useState, use, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { createClient } from "@/utils/supabase/client";
-import { ArrowLeft, ClipboardCheck, Clock, Video, User, PlayCircle, Pencil } from "lucide-react";
+import { ClipboardCheck, Clock, Video, User, PlayCircle, Pencil } from "lucide-react";
 import Link from "next/link";
 import { StaffDirectory } from "@/components/dashboard/StaffDirectory";
 import { AddDepartmentModal } from "@/components/dashboard/AddDepartmentModal";
@@ -311,9 +311,6 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
 
           <div className="flex items-center justify-between mb-4 shrink-0 gap-3">
             <div className="min-w-0">
-              <Link href={`/institutions/${collegeId}`} className="inline-flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-purple-600 mb-1 transition-colors uppercase tracking-wider font-semibold">
-                <ArrowLeft size={12} /> Back to {college?.name || "College"}
-              </Link>
               {loading ? (
                 <div className="h-6 bg-slate-200 rounded w-48 animate-pulse mt-1" />
               ) : (

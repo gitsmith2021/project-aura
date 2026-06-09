@@ -14,14 +14,22 @@
       "Bash(git -C \"d:/Aura-Project/project-aura\" diff --stat HEAD)",
       "Bash(git -C \"d:/Aura-Project/project-aura\" status --short)",
       "Bash(git -C \"d:/Aura-Project/project-aura\" push origin main)",
-      "Bash(mkdir -p \"d:/Aura-Project/project-aura/src/app/institutions/[id]/finance/fees\" 2>&1; echo \"done\")"
+      "Bash(mkdir -p \"d:/Aura-Project/project-aura/src/app/institutions/[id]/finance/fees\" 2>&1; echo \"done\")",
+      "Bash(python -m venv venv)",
+      "Bash(./venv/Scripts/pip install *)",
+      "Bash(py --list)",
+      "Bash(./venv/Scripts/python -c \"import fastapi, uvicorn, ortools, pydantic; print\\('All imports OK'\\)\")",
+      "Bash(npm run *)",
+      "Bash(xargs grep -l \"CREATE TABLE.*schedules\")",
+      "Skill(update-config)",
+      "Bash(gh repo *)"
     ],
     "additionalDirectories": [
       "d:\\Aura-Project\\project-aura\\src\\app\\institutions\\[id]\\finance"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "supabase"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }
