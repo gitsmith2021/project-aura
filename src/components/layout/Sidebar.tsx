@@ -154,43 +154,85 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   // ── Finance accordion ─────────────────────────────────────────────────────
   const isFinanceActive = pathname === "/finance" || pathname.includes("/finance");
   const [financeOpen, setFinanceOpen] = useState(isFinanceActive);
-  const [financeInstId, setFinanceInstId] = useState<string | null>(null);
-  const [activeInstId, setActiveInstId] = useState<string | null>(null);
+
+  // Slugs are used for link generation; middleware rewrites them → UUID before pages run.
+  // States start null on both server and client to avoid hydration mismatches.
+  // A post-mount effect then reads localStorage / the aura-inst-slug login cookie.
+  const [financeInstSlug, setFinanceInstSlug] = useState<string | null>(null);
+  const [activeInstSlug,  setActiveInstSlug]  = useState<string | null>(null);
+
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  // Post-mount only — never runs on server, so server/client HTML always matches.
+  useEffect(() => {
+    const slugFromCookie = document.cookie.split("; ")
+      .find(r => r.startsWith("aura-inst-slug="))?.split("=")[1] ?? null;
+    const storedSlug = localStorage.getItem("aura_active_inst_slug");
+    // Discard any UUID accidentally stored under the slug key by an older code path
+    const slug = (storedSlug && !UUID_RE.test(storedSlug)) ? storedSlug : slugFromCookie;
+    if (slug) setActiveInstSlug(slug);
+
+    const storedFinance = localStorage.getItem("aura_finance_inst_slug");
+    const financeSlug = (storedFinance && !UUID_RE.test(storedFinance)) ? storedFinance : null;
+    if (financeSlug) setFinanceInstSlug(financeSlug);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (isFinanceActive) setFinanceOpen(true);
   }, [isFinanceActive]);
 
+  // Extract slug from pathname — only when the segment is actually a slug (not a UUID).
+  // UUID URLs can appear transiently before the user re-logs in to get the slug cookie.
   useEffect(() => {
     const segs = pathname.split("/");
     const idx  = segs.indexOf("institutions");
-    if (idx >= 0 && segs[idx + 1] && pathname.includes("/finance")) {
-      const id = segs[idx + 1];
-      setFinanceInstId(id);
-      localStorage.setItem("aura_finance_inst", id);
-    } else {
-      const stored = localStorage.getItem("aura_finance_inst");
-      if (stored) setFinanceInstId(stored);
+    if (idx >= 0 && segs[idx + 1] && !UUID_RE.test(segs[idx + 1])) {
+      const slug = segs[idx + 1];
+      setActiveInstSlug(slug);
+      localStorage.setItem("aura_active_inst_slug", slug);
+      if (pathname.includes("/finance")) {
+        setFinanceInstSlug(slug);
+        localStorage.setItem("aura_finance_inst_slug", slug);
+      }
+    } else if (segs.indexOf("institutions") < 0) {
+      const storedSlug = localStorage.getItem("aura_active_inst_slug");
+      if (storedSlug && !UUID_RE.test(storedSlug)) setActiveInstSlug(storedSlug);
+      const storedFinanceSlug = localStorage.getItem("aura_finance_inst_slug");
+      if (storedFinanceSlug && !UUID_RE.test(storedFinanceSlug)) setFinanceInstSlug(storedFinanceSlug);
     }
   }, [pathname]);
 
+  // Admin: auto-load first institution slug on fresh sessions (no URL/localStorage)
   useEffect(() => {
-    const segs = pathname.split("/");
-    const idx  = segs.indexOf("institutions");
-    if (idx >= 0 && segs[idx + 1]) {
-      const id = segs[idx + 1];
-      setActiveInstId(id);
-      localStorage.setItem("aura_active_inst", id);
-    } else {
-      const stored = localStorage.getItem("aura_active_inst");
-      if (stored) setActiveInstId(stored);
-    }
-  }, [pathname]);
+    if (role !== "admin" || activeInstSlug) return;
+    const stored = localStorage.getItem("aura_active_inst_slug");
+    if (stored) { setActiveInstSlug(stored); return; }
+    const supabase = createClient();
+    supabase.from("institutions").select("slug").limit(1).maybeSingle().then(({ data }) => {
+      if (data?.slug) {
+        setActiveInstSlug(data.slug);
+        localStorage.setItem("aura_active_inst_slug", data.slug);
+      }
+    });
+  }, [role, activeInstSlug]);
+
+  // HOD: fetch institution slug after get_user_authorizations resolves
+  useEffect(() => {
+    if (!userAuth?.tenant_id || activeInstSlug) return;
+    const supabase = createClient();
+    supabase.from("institutions").select("slug").eq("id", userAuth.tenant_id).maybeSingle().then(({ data }) => {
+      if (data?.slug) {
+        setActiveInstSlug(data.slug);
+        localStorage.setItem("aura_active_inst_slug", data.slug);
+      }
+    });
+  }, [userAuth?.tenant_id, activeInstSlug]);
 
   useEffect(() => {
     const handler = (e: Event) => {
-      const id = (e as CustomEvent<string>).detail;
-      if (id) setFinanceInstId(id);
+      const slug = (e as CustomEvent<string>).detail;
+      if (slug) setFinanceInstSlug(slug);
     };
     window.addEventListener("aura:finance:inst", handler);
     return () => window.removeEventListener("aura:finance:inst", handler);
@@ -231,19 +273,18 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
 
   // Build items based on HOD role
   const getNavItems = () => {
-    const instId = role === "hod" ? userAuth?.tenant_id : activeInstId;
-    const calendarHref = instId ? `/institutions/${instId}/calendar` : "/institutions";
-
-    const subjectsHref   = instId ? `/institutions/${instId}/subjects`   : "/institutions";
-    const examsHref      = instId ? `/institutions/${instId}/exams`      : "/institutions";
-    const resultsHref    = instId ? `/institutions/${instId}/results`    : "/institutions";
-    const promotionHref  = instId ? `/institutions/${instId}/promotion`  : "/institutions";
+    const instSlug = activeInstSlug;
+    const calendarHref  = instSlug ? `/institutions/${instSlug}/calendar`  : "/institutions";
+    const subjectsHref  = instSlug ? `/institutions/${instSlug}/subjects`  : "/institutions";
+    const examsHref     = instSlug ? `/institutions/${instSlug}/exams`     : "/institutions";
+    const resultsHref   = instSlug ? `/institutions/${instSlug}/results`   : "/institutions";
+    const promotionHref = instSlug ? `/institutions/${instSlug}/promotion` : "/institutions";
 
     if (role === "hod") {
       const deptId = userAuth?.department_id;
       return [
         { key: "dashboard",    href: "/",               label: "Dashboard",    Icon: LayoutDashboard, exact: true },
-        ...(instId && deptId ? [{ key: "my-department", href: `/institutions/${instId}/department/${deptId}`, label: "My Department", Icon: Layers }] : []),
+        ...(instSlug && deptId ? [{ key: "my-department", href: `/institutions/${instSlug}/department/${deptId}`, label: "My Department", Icon: Layers }] : []),
         { key: "staff",        href: "/users/staff",    label: "Staff",        Icon: Users },
         { key: "students",     href: "/users/students", label: "Students",     Icon: GraduationCap },
         { key: "schedules",    href: "/schedules",      label: "Timetable",    Icon: Calendar },
@@ -342,9 +383,10 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
                 isCollapsed={isCollapsed}
               >
                 {FINANCE_SUB.map(item => {
+                  const slug = financeInstSlug ?? activeInstSlug;
                   const href = item.key === "overview"
                     ? item.href()
-                    : financeInstId ? item.href(financeInstId) : "/finance";
+                    : slug ? item.href(slug) : "/finance";
                   return (
                     <Link key={item.key} href={href}
                       className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] font-medium transition-colors ${

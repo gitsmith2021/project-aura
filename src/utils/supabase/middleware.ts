@@ -30,6 +30,29 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
+  // ── Slug → UUID rewrite for institution routes ─────────────────────────────
+  // Browser URL has the slug (e.g. /institutions/bishop-heber-college/results).
+  // Pages still receive the UUID in params.id — no page code needs to change.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const segs    = pathname.split("/");
+  const instIdx = segs.indexOf("institutions");
+  if (user && instIdx >= 0 && segs[instIdx + 1] && !UUID_RE.test(segs[instIdx + 1])) {
+    const { data: inst } = await supabase
+      .from("institutions")
+      .select("id")
+      .eq("slug", segs[instIdx + 1])
+      .maybeSingle();
+    if (inst?.id) {
+      const url = request.nextUrl.clone();
+      url.pathname = [...segs.slice(0, instIdx + 1), inst.id, ...segs.slice(instIdx + 2)].join("/");
+      const rewriteRes = NextResponse.rewrite(url, { request: { headers: forwardedHeaders } });
+      supabaseResponse.cookies.getAll().forEach(({ name, value }) =>
+        rewriteRes.cookies.set(name, value)
+      );
+      return rewriteRes;
+    }
+  }
+
   const isLoginPage      = pathname === "/login";
   // /staff-portal/view/* is the admin's read-only window into a staff member's portal.
   // Admins are allowed there; only /staff-portal (no /view) is staff-only.

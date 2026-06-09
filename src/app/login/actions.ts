@@ -21,7 +21,7 @@ export async function login(formData: FormData) {
   // ── Determine role: HOD/Admin → Staff → Student ──────────────────────────
   const { data: memberRow } = await supabase
     .from("institution_members")
-    .select("role")
+    .select("role, institution_id")
     .eq("profile_id", user.id)
     .maybeSingle();
 
@@ -73,6 +73,41 @@ export async function login(formData: FormData) {
     sameSite: "lax",
     secure:   process.env.NODE_ENV === "production",
   });
+
+  // Cache institution ID in a JS-readable cookie so the Sidebar can resolve module
+  // links (subjects, exams, results, etc.) synchronously on first render without an
+  // async Supabase fetch. Not httpOnly intentionally — it's non-sensitive navigation state.
+  if (role === "admin" || role === "hod") {
+    let instId: string | null = (memberRow as { institution_id?: string } | null)?.institution_id ?? null;
+    let instSlug: string | null = null;
+    if (!instId) {
+      // SUPER_ADMIN has no institution_id in institution_members — pick the first one
+      const { data: firstInst } = await supabase
+        .from("institutions")
+        .select("id, slug")
+        .limit(1)
+        .maybeSingle();
+      instId   = firstInst?.id   ?? null;
+      instSlug = firstInst?.slug ?? null;
+    } else {
+      const { data: instRow } = await supabase
+        .from("institutions")
+        .select("slug")
+        .eq("id", instId)
+        .maybeSingle();
+      instSlug = instRow?.slug ?? null;
+    }
+    if (instSlug) {
+      // Non-httpOnly so the Sidebar can read it from document.cookie on first render
+      cookieStore.set("aura-inst-slug", instSlug, {
+        path:     "/",
+        httpOnly: false,
+        maxAge:   60 * 60 * 24 * 7,
+        sameSite: "lax",
+        secure:   process.env.NODE_ENV === "production",
+      });
+    }
+  }
 
   revalidatePath("/", "layout");
   redirect(role === "staff" ? "/staff-portal" : role === "student" ? "/student-portal" : "/");
