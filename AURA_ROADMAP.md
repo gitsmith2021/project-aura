@@ -2952,12 +2952,12 @@ CREATE TABLE subscription_invoices (
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-09  
-> **27 of 76 modules complete — 36% of full platform built**
+> **30 of 76 modules complete — 39% of full platform built**
 
 ```
-Overall  ████████████░░░░░░░░░░░░░░░░░░░░  36%  (27/76)
+Overall  █████████████░░░░░░░░░░░░░░░░░░░  39%  (30/76)
 Phase 1  ████████████████████████████████  100% (7/7  — Staff & Student Portals)
-Phase 2  ████████████████████░░░░░░░░░░░░  63%  (6/9+4 foundations — Academic Ops: 6 done, 3 remain)
+Phase 2  █████████████████████████░░░░░░░  78%  (9/9+4 foundations — Academic Ops: all 9 done!)
 Phase 3  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/4  — Notifications)
 Phase 4  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/11 — Campus Infrastructure)
 Phase 5  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/11 — Admissions & Lifecycle)
@@ -2966,7 +2966,7 @@ Phase 7  ░░░░░░░░░░░░░░░░░░░░░░░�
 Phase 8  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/6  — Mobile Apps & CCTV)
 ```
 
-> **Next up:** Phase 2G — Teacher Lesson Plan / Daily Diary
+> **Next up:** Phase 3A — Notification Infrastructure
 
 ---
 
@@ -3005,10 +3005,10 @@ All `/institutions/[id]/...` routes display the institution **slug** in the brow
 | ✅ Phase 2D | Year Promotion & Graduation Workflow | Complete | — |
 | ✅ Phase 2E | CIA / Internal Assessment Ledger (NAAC) | Complete | `1df3ab8` |
 | ✅ Phase 2F | Syllabus & Curriculum Management | Complete | `f938ff0` |
-| 🔲 Phase 2G | Teacher Lesson Plan / Daily Diary | **Next** | — |
-| 🔲 Phase 2H | Guest Lecture & Expert Talk Management | Pending | — |
-| 🔲 Phase 2I | Internship & Industrial Training (NAAC 1.2 / NIRF 5.2) | Pending | — |
-| 🔲 Phase 3A | Notification Infrastructure | Pending | — |
+| ✅ Phase 2G | Teacher Lesson Plan / Daily Diary | Complete | `986bfd2` |
+| ✅ Phase 2H | Guest Lecture & Expert Talk Management | Complete | `76ac333` |
+| ✅ Phase 2I | Internship & Industrial Training (NAAC 1.2 / NIRF 5.2) | Complete | — |
+| 🔲 Phase 3A | Notification Infrastructure | **Next** | — |
 | 🔲 Phase 3B | Notification Triggers | Pending | — |
 | 🔲 Phase 3C | Email + SMS + WhatsApp Notifications | Pending | — |
 | 🔲 Phase 3D | Digital Notice Board & Announcements | Pending | — |
