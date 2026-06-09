@@ -69,6 +69,7 @@ export function StudentPortalShell({
   const nav = [
     { key: "dashboard",  href: "/student-portal",            label: "Dashboard",  Icon: LayoutDashboard, exact: true },
     { key: "timetable",  href: "/student-portal/timetable",  label: "Timetable",  Icon: Calendar },
+    { key: "calendar",   href: "/student-portal/calendar",   label: "Calendar",   Icon: Calendar },
     { key: "attendance", href: "/student-portal/attendance",  label: "Attendance", Icon: ClipboardCheck },
     { key: "fees",       href: "/student-portal/fees",        label: "Fees",       Icon: CreditCard },
   ];

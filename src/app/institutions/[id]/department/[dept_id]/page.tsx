@@ -20,6 +20,7 @@ type Department = {
   session_type?: string | null;
   funding_type?: string | null;
   color?: string | null;
+  hod_id?: string | null;
 };
 type StaffMember = { id: string; full_name: string; email: string | null; phone?: string | null; role: string };
 type Schedule   = { id: string; start_time: string; end_time: string; status?: string; subject: { name: string; color: string }; staff: { full_name: string } };
@@ -426,7 +427,13 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
 
                 {/* Right column: Staff Directory */}
                 <div className="lg:col-span-1 flex flex-col min-h-[320px] lg:min-h-0 lg:h-full min-w-0">
-                  <StaffDirectory staff={staff} />
+                  <StaffDirectory
+                    staff={staff}
+                    departmentId={deptId}
+                    institutionId={collegeId}
+                    hodId={department?.hod_id}
+                    onRefresh={fetchData}
+                  />
                 </div>
 
               </div>

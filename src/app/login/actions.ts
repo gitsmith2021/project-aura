@@ -18,15 +18,37 @@ export async function login(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?error=Invalid login credentials");
 
-  // ── Determine role: staff → student → admin (explicit) → deny ────────────
-  const { data: staffRow } = await supabase
-    .from("staff")
-    .select("id")
-    .eq("email", email)
-    .eq("is_active", true)
+  // ── Determine role: HOD/Admin → Staff → Student ──────────────────────────
+  const { data: memberRow } = await supabase
+    .from("institution_members")
+    .select("role")
+    .eq("profile_id", user.id)
     .maybeSingle();
 
-  let role: "staff" | "admin" | "student" | null = staffRow ? "staff" : null;
+  let role: "staff" | "admin" | "student" | "hod" | null = null;
+
+  if (memberRow) {
+    if (memberRow.role === "SUPER_ADMIN" || memberRow.role === "INST_ADMIN") {
+      role = "admin";
+    } else if (memberRow.role === "HOD" || memberRow.role === "DEPARTMENT_HEAD") {
+      role = "hod";
+    } else if (memberRow.role === "STUDENT") {
+      role = "student";
+    } else if (memberRow.role === "STAFF") {
+      role = "staff";
+    }
+  }
+
+  // Fallback checks (if member mapping is missing or needs lookup)
+  if (!role) {
+    const { data: staffRow } = await supabase
+      .from("staff")
+      .select("id")
+      .eq("email", email)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (staffRow) role = "staff";
+  }
 
   if (!role) {
     const { data: studentRow } = await supabase
@@ -35,16 +57,6 @@ export async function login(formData: FormData) {
       .eq("email", email)
       .maybeSingle();
     if (studentRow) role = "student";
-  }
-
-  if (!role) {
-    const { data: memberRow } = await supabase
-      .from("institution_members")
-      .select("role")
-      .eq("profile_id", user.id)
-      .in("role", ["SUPER_ADMIN", "INST_ADMIN", "DEPARTMENT_HEAD", "HOD"])
-      .maybeSingle();
-    if (memberRow) role = "admin";
   }
 
   // Deny access if no recognised role — prevents unknown users becoming admins

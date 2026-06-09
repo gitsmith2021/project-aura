@@ -50,26 +50,46 @@ export async function updateSession(request: NextRequest) {
 
   // ── Authenticated: determine role ─────────────────────────────────────────
   // Read the cached cookie set at login (avoids a DB query on every request)
-  let role = request.cookies.get("aura-role")?.value as "staff" | "admin" | "student" | undefined;
+  let role = request.cookies.get("aura-role")?.value as "staff" | "admin" | "student" | "hod" | undefined;
 
   if (!role) {
     // Cookie missing — query once and cache it
-    const { data: staffRow } = await supabase
-      .from("staff")
-      .select("id")
-      .eq("email", user.email ?? "")
-      .eq("is_active", true)
+    const { data: memberRow } = await supabase
+      .from("institution_members")
+      .select("role")
+      .eq("profile_id", user.id)
       .maybeSingle();
 
-    if (staffRow) {
-      role = "staff";
-    } else {
-      const { data: studentRow } = await supabase
-        .from("students")
+    if (memberRow) {
+      if (memberRow.role === "SUPER_ADMIN" || memberRow.role === "INST_ADMIN") {
+        role = "admin";
+      } else if (memberRow.role === "HOD" || memberRow.role === "DEPARTMENT_HEAD") {
+        role = "hod";
+      } else if (memberRow.role === "STUDENT") {
+        role = "student";
+      } else if (memberRow.role === "STAFF") {
+        role = "staff";
+      }
+    }
+
+    if (!role) {
+      const { data: staffRow } = await supabase
+        .from("staff")
         .select("id")
         .eq("email", user.email ?? "")
+        .eq("is_active", true)
         .maybeSingle();
-      role = studentRow ? "student" : "admin";
+
+      if (staffRow) {
+        role = "staff";
+      } else {
+        const { data: studentRow } = await supabase
+          .from("students")
+          .select("id")
+          .eq("email", user.email ?? "")
+          .maybeSingle();
+        role = studentRow ? "student" : "admin";
+      }
     }
 
     supabaseResponse.cookies.set("aura-role", role, {
@@ -102,8 +122,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Admins cannot enter the staff self-service area, but CAN use /staff-portal/view/*
-  if (role === "admin" && isStaffPortal && !isAdminViewStaff) {
+  // Admins & HODs cannot enter the staff self-service area, but CAN use /staff-portal/view/*
+  if ((role === "admin" || role === "hod") && isStaffPortal && !isAdminViewStaff) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
