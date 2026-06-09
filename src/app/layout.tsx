@@ -17,8 +17,35 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AURA - Institution Manager",
-  description: "High-end Multi-Tenant ERP for Colleges",
+  title: {
+    default: "AURA — Academic ERP for Educational Institutions",
+    template: "%s | AURA",
+  },
+  description:
+    "AURA is a modern Academic ERP platform built for colleges, universities and vocational institutes. Manage timetables, assessments, exams, finance, staff and student portals — with built-in NAAC, NIRF and accreditation compliance.",
+  keywords: [
+    "academic ERP", "college management software", "university ERP",
+    "NAAC compliance software", "NIRF ranking software", "educational institution management",
+    "student portal", "staff portal", "timetable software", "exam management",
+    "fee management software", "multi-tenant ERP", "higher education software",
+  ],
+  authors: [{ name: "AURA Platform" }],
+  creator: "AURA Platform",
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    title: "AURA — Academic ERP for Educational Institutions",
+    description:
+      "One platform for timetables, assessments, exams, finance, portals and accreditation. Built for colleges and universities worldwide.",
+    siteName: "AURA Platform",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AURA — Academic ERP for Educational Institutions",
+    description:
+      "One platform for timetables, assessments, exams, finance, portals and accreditation. Built for colleges and universities worldwide.",
+  },
 };
 
 export default async function RootLayout({
