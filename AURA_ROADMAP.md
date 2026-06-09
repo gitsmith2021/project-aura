@@ -544,7 +544,7 @@ CREATE TABLE exam_results (
 
 ---
 
-### Step 2D — Year Promotion & Graduation
+### Step 2D — Year Promotion & Graduation ✅
 
 **Route:** `/institutions/[id]/promotion`
 
@@ -552,15 +552,16 @@ CREATE TABLE exam_results (
 > and transitions students to the next stage.
 
 #### What to build:
-- [ ] `src/app/institutions/[id]/promotion/page.tsx` — Promotion dashboard with preview before commit
-- [ ] `src/actions/yearPromotion.ts` — previewPromotion, runPromotion, rollbackPromotion
-- [ ] `src/components/promotion/PromotionPreviewTable.tsx` — Shows: student, current year, action (promote/hold/graduate), arrear count
-- [ ] Logic rules:
+- [x] `src/app/institutions/[id]/promotion/page.tsx` — Promotion dashboard with preview before commit
+- [x] `src/actions/yearPromotion.ts` — previewPromotion, runPromotion, rollbackPromotion, getPromotionLogs
+- [x] `src/components/promotion/PromotionPreviewTable.tsx` — Three-tab preview: Promote / Hold—Arrears / Graduate
+- [x] `supabase/migrations/20260609000011_phase2d_year_promotion.sql` — `is_graduated` column on students + `promotion_logs` table with RLS
+- [x] Logic rules:
   * Arrear students: hold in current year, flag arrear subjects
   * Eligible students: increment `student_year` by 1
-  * Graduates (UG year 3 → complete / PG year 2 → complete, no arrears): move to `alumni` table (Phase 5D)
-- [ ] Audit log: who ran promotion, when, how many affected
-- [ ] Rollback: undo promotion within 24h window
+  * Graduates (UG year 3 / PG year 2, no arrears): set `is_graduated = true`
+- [x] Audit log: who ran promotion, when, how many affected
+- [x] Rollback: undo promotion within 24h window (snapshot-based restore)
 
 #### Key features:
 - Admin reviews preview list before committing — no silent bulk changes
@@ -2954,7 +2955,7 @@ CREATE TABLE subscription_invoices (
 | ✅ Phase 2A | Academic Year Calendar + `academic_years` Master Table | Complete |
 | ✅ Phase 2B | Semester Exam Planner + Hall Tickets | Complete |
 | ✅ Phase 2C | Marks & Arrears Management | Complete |
-| 🔲 Phase 2D | Year Promotion & Graduation Workflow | Pending |
+| ✅ Phase 2D | Year Promotion & Graduation Workflow | Complete |
 | 🔲 Phase 2E | CIA / Internal Assessment Ledger (NAAC) | Pending |
 | 🔲 Phase 2F | Syllabus & Curriculum Management | Pending |
 | 🔲 Phase 2G | Teacher Lesson Plan / Daily Diary | Pending |
@@ -3078,4 +3079,4 @@ npx expo start
 
 ---
 
-*Last updated: 2026-06-09 — Completed Foundation Migrations (2-Pre-A through 2-Pre-D), Phase 2A (Academic Calendar), Phase 2B (Semester Exam Planner + Hall Tickets), and Phase 2C (Marks & Arrears Management). Added `exam_results` table with DB-generated grade/arrear columns, bulk marks entry grid, per-student printable marksheet with CGPA, arrear dashboard, and student portal results page. Grading utilities extracted to `src/utils/grading.ts`. Results nav added to Sidebar + StudentPortalShell. UI polish: Subjects page redesigned; redundant back-links removed. Total: **67 tracked modules** across Foundation Migrations + 8 phases. Every NAAC criterion mapped. Next: Phase 2D — Year Promotion & Graduation.*
+*Last updated: 2026-06-09 — Completed Foundation Migrations (2-Pre-A through 2-Pre-D), Phase 2A (Academic Calendar), Phase 2B (Semester Exam Planner + Hall Tickets), Phase 2C (Marks & Arrears Management), and Phase 2D (Year Promotion & Graduation). Phase 2D adds `is_graduated` flag on students, `promotion_logs` audit table with 24h rollback snapshots, `previewPromotion` / `runPromotion` / `rollbackPromotion` server actions, three-tab promotion preview (Promote/Hold/Graduate), confirmation modal, and promotion history tab. Promotion nav added to Sidebar (admin-only). Total: **67 tracked modules** across Foundation Migrations + 8 phases. Every NAAC criterion mapped. Next: Phase 2E — CIA / Internal Assessment Ledger.*

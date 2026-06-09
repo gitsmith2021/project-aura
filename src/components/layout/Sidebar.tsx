@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Users, Settings, Building2, Calendar, GraduationCap,
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
-  ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent, ClipboardList, Award,
+  ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent, ClipboardList, Award, BadgeCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -209,7 +209,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   // ── Active detection helpers ──────────────────────────────────────────────
   const adminNavActive = (key: string, href: string, exact?: boolean) => {
     if (key === "institutions")
-      return (pathname === "/institutions" || pathname.startsWith("/institutions/")) && !pathname.includes("/finance") && !pathname.includes("/calendar") && !pathname.includes("/subjects") && !pathname.includes("/exams") && !pathname.includes("/results");
+      return (pathname === "/institutions" || pathname.startsWith("/institutions/")) && !pathname.includes("/finance") && !pathname.includes("/calendar") && !pathname.includes("/subjects") && !pathname.includes("/exams") && !pathname.includes("/results") && !pathname.includes("/promotion");
     if (key === "calendar")
       return pathname.includes("/calendar");
     if (key === "subjects")
@@ -218,6 +218,8 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
       return pathname.includes("/exams");
     if (key === "results")
       return pathname.includes("/results");
+    if (key === "promotion")
+      return pathname.includes("/promotion");
     if (exact) return pathname === href;
     return pathname.startsWith(href);
   };
@@ -232,9 +234,10 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     const instId = role === "hod" ? userAuth?.tenant_id : activeInstId;
     const calendarHref = instId ? `/institutions/${instId}/calendar` : "/institutions";
 
-    const subjectsHref = instId ? `/institutions/${instId}/subjects` : "/institutions";
-    const examsHref    = instId ? `/institutions/${instId}/exams`    : "/institutions";
-    const resultsHref  = instId ? `/institutions/${instId}/results`  : "/institutions";
+    const subjectsHref   = instId ? `/institutions/${instId}/subjects`   : "/institutions";
+    const examsHref      = instId ? `/institutions/${instId}/exams`      : "/institutions";
+    const resultsHref    = instId ? `/institutions/${instId}/results`    : "/institutions";
+    const promotionHref  = instId ? `/institutions/${instId}/promotion`  : "/institutions";
 
     if (role === "hod") {
       const deptId = userAuth?.department_id;
@@ -261,6 +264,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
       { key: "subjects",     href: subjectsHref,      label: "Subjects",     Icon: BookOpen },
       { key: "exams",        href: examsHref,         label: "Exams",        Icon: ClipboardList },
       { key: "results",      href: resultsHref,       label: "Results",      Icon: Award },
+      { key: "promotion",    href: promotionHref,     label: "Promotion",    Icon: BadgeCheck },
       { key: "calendar",     href: calendarHref,      label: "Calendar",     Icon: CalendarDays },
     ];
   };
