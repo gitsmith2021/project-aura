@@ -569,7 +569,7 @@ CREATE TABLE exam_results (
 - One-click run with confirmation modal
 - Email notification to students (hooks into Phase 3 notifications)
 
-### Step 2E — CIA / Internal Assessment Ledger
+### Step 2E — CIA / Internal Assessment Ledger ✅
 
 **Route:** `/institutions/[id]/cia`
 
@@ -604,13 +604,14 @@ CREATE TABLE cia_marks (
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._cia.sql`
-- [ ] `src/app/institutions/[id]/cia/page.tsx` — CIA component manager: define test/assignment components per dept & semester
-- [ ] `src/app/institutions/[id]/cia/[componentId]/marks/page.tsx` — Bulk marks entry per component, per subject
-- [ ] `src/actions/cia.ts` — getCIAComponents, bulkEnterCIAMarks, getCIAReport, calculateCIATotal
-- [ ] `src/components/cia/CIAMarksGrid.tsx` — Spreadsheet-style marks entry grid per subject
-- [ ] `src/components/cia/CIAReportCard.tsx` — Per-student CIA summary per semester
-- [ ] Student portal: `src/app/student-portal/cia/page.tsx` — Personal CIA marks breakdown per component
+- [x] `supabase/migrations/20260609000013_phase2e_cia.sql` — cia_components + cia_marks tables with RLS (SUPER_ADMIN / INST_ADMIN / DEPARTMENT_HEAD)
+- [x] `src/app/institutions/[id]/cia/page.tsx` — CIA component manager: filter by dept/semester/year, create/delete components, tabs for list and report
+- [x] `src/app/institutions/[id]/cia/[componentId]/marks/page.tsx` — Bulk marks entry per component with CIAMarksGrid
+- [x] `src/actions/cia.ts` — getCIAComponents, createCIAComponent, deleteCIAComponent, bulkSaveCIAMarks, getCIAStudentSummary, getStudentCIAMarks
+- [x] `src/components/cia/CIAMarksGrid.tsx` — Spreadsheet-style marks entry grid with dirty tracking and range validation
+- [x] `src/components/cia/CIAReportCard.tsx` — Per-student CIA summary per semester with color-coded % and pass/fail counts
+- [x] Student portal: `src/app/student-portal/cia/page.tsx` — Personal CIA marks breakdown per component, grouped by semester
+- [x] Sidebar: CIA link added for admin/HOD nav; StudentPortalShell CIA nav item added
 - [ ] Results integration: CIA total auto-included in marksheet grand total (Step 2C)
 
 #### Key features:
@@ -621,7 +622,7 @@ CREATE TABLE cia_marks (
 
 ---
 
-### Step 2F — Syllabus & Curriculum Management
+### Step 2F — Syllabus & Curriculum Management ✅
 
 **Route:** `/institutions/[id]/curriculum`
 
@@ -654,14 +655,15 @@ CREATE TABLE syllabus_completion (
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._curriculum.sql`
-- [ ] `src/app/institutions/[id]/curriculum/page.tsx` — Curriculum overview: subjects list + completion stats per dept
-- [ ] `src/app/institutions/[id]/curriculum/[subjectId]/page.tsx` — Unit-wise syllabus editor (topics, reference books, hours)
-- [ ] `src/actions/curriculum.ts` — getCurriculum, addUnit, updateUnit, markUnitComplete, getSyllabusCompletion
-- [ ] `src/components/curriculum/SyllabusCard.tsx` — Unit card with expandable topic list + completion toggle
-- [ ] `src/components/curriculum/CompletionProgressBar.tsx` — % syllabus covered per subject per staff
-- [ ] Staff portal: `src/app/staff-portal/curriculum/page.tsx` — Staff marks their own units complete as teaching progresses
-- [ ] Student portal: `src/app/student-portal/curriculum/page.tsx` — View syllabus and teacher-reported progress per subject
+- [x] `supabase/migrations/20260609154939_phase2f_curriculum.sql` — curriculum_units + syllabus_completion tables with RLS
+- [x] `src/app/institutions/[id]/curriculum/page.tsx` — Curriculum overview: subjects list with CompletionProgressBar per subject, filter by dept/semester/year
+- [x] `src/app/institutions/[id]/curriculum/[subjectId]/page.tsx` — Unit-wise syllabus editor: add/edit/delete units with topics, reference books, hours
+- [x] `src/actions/curriculum.ts` — getCurriculumUnits, getCurriculumOverview, addCurriculumUnit, updateCurriculumUnit, deleteCurriculumUnit, markUnitComplete, getSyllabusCompletion, getMyCompletionForSubject
+- [x] `src/components/curriculum/SyllabusCard.tsx` — Unit card with expandable topic list, reference books, completion toggle for staff
+- [x] `src/components/curriculum/CompletionProgressBar.tsx` — Colour-coded % progress bar (units + hours) per subject
+- [x] Staff portal: `src/app/staff-portal/curriculum/page.tsx` — Staff marks their own units complete per subject per academic year
+- [x] Student portal: `src/app/student-portal/curriculum/page.tsx` — View syllabus and teacher-reported completion progress per subject
+- [x] Sidebar: Curriculum link added for admin/HOD nav; StaffSidebar and StudentPortalShell updated
 
 #### Key features:
 - Unit-by-unit syllabus definition (topics, reference books, hours allocated)

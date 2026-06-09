@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   GraduationCap, LayoutDashboard, Calendar, ClipboardCheck,
-  CreditCard, Menu, Bell, Sun, Moon, ChevronDown, LogOut, ClipboardList, CalendarDays, Award, BadgePercent,
+  CreditCard, Menu, Bell, Sun, Moon, ChevronDown, LogOut, ClipboardList, CalendarDays, Award, BadgePercent, BookOpen,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { createClient } from "@/utils/supabase/client";
@@ -71,6 +71,7 @@ export function StudentPortalShell({
     { key: "timetable",  href: "/student-portal/timetable",  label: "Timetable",  Icon: Calendar },
     { key: "exams",      href: "/student-portal/exams",      label: "Exams",      Icon: ClipboardList },
     { key: "cia",        href: "/student-portal/cia",        label: "CIA",        Icon: BadgePercent },
+    { key: "curriculum", href: "/student-portal/curriculum", label: "Syllabus",   Icon: BookOpen },
     { key: "results",    href: "/student-portal/results",    label: "Results",    Icon: Award },
     { key: "calendar",   href: "/student-portal/calendar",   label: "Calendar",   Icon: CalendarDays },
     { key: "attendance", href: "/student-portal/attendance",  label: "Attendance", Icon: ClipboardCheck },

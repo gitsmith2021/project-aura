@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Calendar, ClipboardCheck, CalendarOff,
-  Wallet, Building2, Menu, X, LogOut,
+  Wallet, Building2, Menu, X, LogOut, Library,
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -20,7 +20,8 @@ const NAV = [
   { href: "/staff-portal",            label: "Dashboard",   Icon: LayoutDashboard },
   { href: "/staff-portal/schedule",   label: "My Schedule", Icon: Calendar },
   { href: "/staff-portal/attendance", label: "Attendance",  Icon: ClipboardCheck },
-  { href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
+  { href: "/staff-portal/leave",       label: "Leave",       Icon: CalendarOff },
+  { href: "/staff-portal/curriculum", label: "Curriculum",  Icon: Library },
   { href: "/staff-portal/salary",     label: "Salary",      Icon: Wallet },
 ] as const;
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Users, Settings, Building2, Calendar, GraduationCap,
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
-  ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent, ClipboardList, Award, BadgeCheck,
+  ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent, ClipboardList, Award, BadgeCheck, Library,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -279,7 +279,8 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     const examsHref     = instSlug ? `/institutions/${instSlug}/exams`     : "/institutions";
     const resultsHref   = instSlug ? `/institutions/${instSlug}/results`   : "/institutions";
     const promotionHref = instSlug ? `/institutions/${instSlug}/promotion` : "/institutions";
-    const ciaHref       = instSlug ? `/institutions/${instSlug}/cia`       : "/institutions";
+    const ciaHref        = instSlug ? `/institutions/${instSlug}/cia`        : "/institutions";
+    const curriculumHref = instSlug ? `/institutions/${instSlug}/curriculum` : "/institutions";
 
     if (role === "hod") {
       const deptId = userAuth?.department_id;
@@ -290,6 +291,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
         { key: "students",     href: "/users/students", label: "Students",     Icon: GraduationCap },
         { key: "schedules",    href: "/schedules",      label: "Timetable",    Icon: Calendar },
         { key: "subjects",     href: subjectsHref,      label: "Subjects",     Icon: BookOpen },
+        { key: "curriculum",   href: curriculumHref,    label: "Curriculum",   Icon: Library },
         { key: "exams",        href: examsHref,         label: "Exams",        Icon: ClipboardList },
         { key: "cia",          href: ciaHref,           label: "CIA",          Icon: BadgePercent },
         { key: "results",      href: resultsHref,       label: "Results",      Icon: Award },
@@ -305,6 +307,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
       { key: "students",     href: "/users/students", label: "Students",     Icon: GraduationCap },
       { key: "schedules",    href: "/schedules",      label: "Timetable",    Icon: Calendar },
       { key: "subjects",     href: subjectsHref,      label: "Subjects",     Icon: BookOpen },
+      { key: "curriculum",   href: curriculumHref,    label: "Curriculum",   Icon: Library },
       { key: "exams",        href: examsHref,         label: "Exams",        Icon: ClipboardList },
       { key: "cia",          href: ciaHref,           label: "CIA",          Icon: BadgePercent },
       { key: "results",      href: resultsHref,       label: "Results",      Icon: Award },
