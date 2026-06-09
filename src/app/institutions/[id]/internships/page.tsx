@@ -91,7 +91,7 @@ export default function InternshipsAdminPage({ params }: { params: Promise<{ id:
     ]).then(([d, ay, st]) => {
       setDepartments((d.data ?? []) as Department[]);
       setAcademicYears((ay.data ?? []) as AcademicYear[]);
-      setStudents((st.data ?? []) as Student[]);
+      setStudents((st.data ?? []) as unknown as Student[]);
     });
   }, [institutionId]);
 

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 export type GuestLecture = {
@@ -75,7 +76,8 @@ export async function getGuestLectures(
   institutionId: string,
   filters?: GuestLectureFilters,
 ): Promise<Result<GuestLecture[]>> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   let q = supabase
     .from("guest_lectures")
     .select(`
@@ -102,7 +104,8 @@ export async function getGuestLectures(
 export async function createGuestLecture(
   payload: GuestLecturePayload,
 ): Promise<Result<GuestLecture>> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from("guest_lectures")
     .insert(payload)
@@ -118,7 +121,8 @@ export async function updateGuestLecture(
   institutionId: string,
   payload: Partial<GuestLecturePayload>,
 ): Promise<Result<GuestLecture>> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from("guest_lectures")
     .update({ ...payload, updated_at: new Date().toISOString() })
@@ -135,7 +139,8 @@ export async function deleteGuestLecture(
   id: string,
   institutionId: string,
 ): Promise<Result<void>> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { error } = await supabase
     .from("guest_lectures")
     .delete()

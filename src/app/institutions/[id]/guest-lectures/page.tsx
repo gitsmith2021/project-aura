@@ -32,7 +32,7 @@ const MODE_COLORS: Record<string, string> = {
 const EMPTY_FORM = {
   title: "", speakerName: "", speakerDesignation: "", speakerOrg: "",
   speakerEmail: "", speakerPhone: "", eventDate: new Date().toISOString().split("T")[0],
-  startTime: "", endTime: "", venue: "", mode: "in_person" as const,
+  startTime: "", endTime: "", venue: "", mode: "in_person" as "in_person" | "online" | "hybrid",
   departmentId: "", subjectId: "", ayId: "", organizedBy: "",
   studentCount: "", staffCount: "", description: "", outcomes: "", feedbackSummary: "",
   naacCriterion: "1.3",

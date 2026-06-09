@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 
 export type LessonPlan = {
   id: string;
@@ -51,7 +52,8 @@ export async function getLessonPlans(
   institutionId: string,
   filters?: LessonPlanFilters,
 ): Promise<Result<LessonPlan[]>> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   let q = supabase
     .from("lesson_plans")
     .select(`
@@ -87,7 +89,8 @@ export async function getMyLessonPlans(
 export async function createLessonPlan(
   payload: CreateLessonPlanPayload,
 ): Promise<Result<LessonPlan>> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from("lesson_plans")
     .insert({
@@ -114,7 +117,8 @@ export async function updateLessonPlan(
   institutionId: string,
   payload: Partial<Omit<CreateLessonPlanPayload, "institution_id" | "staff_id">>,
 ): Promise<Result<LessonPlan>> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from("lesson_plans")
     .update({ ...payload, updated_at: new Date().toISOString() })
@@ -131,7 +135,8 @@ export async function deleteLessonPlan(
   id: string,
   institutionId: string,
 ): Promise<Result<void>> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { error } = await supabase
     .from("lesson_plans")
     .delete()

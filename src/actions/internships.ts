@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 export type Internship = {
@@ -78,7 +79,8 @@ export async function getInternships(
   institutionId: string,
   filters: InternshipFilters = {}
 ): Promise<{ success: true; data: Internship[] } | { success: false; error: string }> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
 
   let query = supabase
     .from("internships")
@@ -110,7 +112,8 @@ export async function getInternships(
 export async function getMyInternships(
   institutionId: string
 ): Promise<{ success: true; data: Internship[] } | { success: false; error: string }> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: "Not authenticated" };
@@ -137,7 +140,8 @@ export async function getMyInternships(
 export async function createInternship(
   payload: InternshipPayload
 ): Promise<{ success: true; data: Internship } | { success: false; error: string }> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from("internships")
     .insert(payload)
@@ -154,7 +158,8 @@ export async function updateInternship(
   institutionId: string,
   payload: Partial<InternshipPayload>
 ): Promise<{ success: true; data: Internship } | { success: false; error: string }> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from("internships")
     .update({ ...payload, updated_at: new Date().toISOString() })
@@ -171,7 +176,8 @@ export async function deleteInternship(
   id: string,
   institutionId: string
 ): Promise<{ success: true } | { success: false; error: string }> {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { error } = await supabase.from("internships").delete().eq("id", id);
   if (error) return { success: false, error: error.message };
   revalidatePath(`/institutions/${institutionId}/internships`);
