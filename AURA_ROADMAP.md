@@ -2951,84 +2951,109 @@ CREATE TABLE subscription_invoices (
 
 ## 📋 Overall Progress Tracker
 
-| Phase | Feature | Status |
-|-------|---------|--------|
-| ✅ Core | Auth, Multi-tenant, Middleware | Complete |
-| ✅ Core | Institutions & Departments CRUD | Complete |
-| ✅ Core | Staff & Students Directory | Complete |
-| ✅ Core | AI Timetable Scheduler | Complete |
-| ✅ Core | Attendance System (NFC + Manual) | Complete |
-| ✅ Finance | Fee Structures | Complete |
-| ✅ Finance | Fee Payments + Razorpay | Complete |
-| ✅ Finance | Salary Management | Complete |
-| ✅ Finance | Expense Logger | Complete |
-| ✅ Finance | Reports Page | Complete |
-| ✅ Phase 1A | Staff Portal (self-service) | Complete |
-| ✅ Phase 1A | Staff Admin Preview (`/staff-portal/view/[staffId]`) | Complete |
-| ✅ Phase 1A | Staff Portal Credentials (login/password/block per card) | Complete |
-| ✅ Phase 1B | Student Portal (self-service) | Complete |
-| ✅ Phase 1B | Student Admin Preview (`/student-portal/view/[studentId]`) | Complete |
-| ✅ Phase 1B | Student Portal Credentials (login/password/block per row) | Complete |
-| ✅ Phase 1B | Student Portal — Razorpay Pay Page | Complete |
-| ✅ 2-Pre-A | Subjects Master Table + Teaching Assignments | Complete |
-| ✅ 2-Pre-B | `academic_years` FK Migration for Existing Tables | Complete |
-| ✅ 2-Pre-C | HOD Role + Department Head Designation | Complete |
-| ✅ 2-Pre-D | Fee Concession & Waiver Management | Complete |
-| ✅ Phase 2A | Academic Year Calendar + `academic_years` Master Table | Complete |
-| ✅ Phase 2B | Semester Exam Planner + Hall Tickets | Complete |
-| ✅ Phase 2C | Marks & Arrears Management | Complete |
-| ✅ Phase 2D | Year Promotion & Graduation Workflow | Complete |
-| 🔲 Phase 2E | CIA / Internal Assessment Ledger (NAAC) | Pending |
-| 🔲 Phase 2F | Syllabus & Curriculum Management | Pending |
-| 🔲 Phase 2G | Teacher Lesson Plan / Daily Diary | Pending |
-| 🔲 Phase 2H | Guest Lecture & Expert Talk Management | Pending |
-| 🔲 Phase 2I | Internship & Industrial Training (NAAC 1.2 / NIRF 5.2) | Pending |
-| 🔲 Phase 3A | Notification Infrastructure | Pending |
-| 🔲 Phase 3B | Notification Triggers | Pending |
-| 🔲 Phase 3C | Email + SMS + WhatsApp Notifications | Pending |
-| 🔲 Phase 3D | Digital Notice Board & Announcements | Pending |
-| 🔲 Phase 4A | Library Management System | Pending |
-| 🔲 Phase 4B | Auditorium & Space Booking | Pending |
-| 🔲 Phase 4C | Hostel Management + Mess Billing | Pending |
-| 🔲 Phase 4D | Laboratory Management | Pending |
-| 🔲 Phase 4E | Asset & Inventory Management | Pending |
-| 🔲 Phase 4F | Smart ID Card & NFC Card Registry | Pending |
-| 🔲 Phase 4G | Gate Pass & Visitor Management | Pending |
-| 🔲 Phase 4H | Student Clubs & Organizations (NSS/NCC/Cultural) | Pending |
-| 🔲 Phase 4I | Health & Medical Records (Infirmary) | Pending |
-| 🔲 Phase 4J | Sports & Physical Education | Pending |
-| 🔲 Phase 4K | Annual Day & Large Campus Event Management | Pending |
-| 🔲 Phase 5A | Student Admissions System (public-facing) | Pending |
-| 🔲 Phase 5B | Staff Recruitment Module | Pending |
-| 🔲 Phase 5C | Non-Teaching Staff & Payroll | Pending |
-| 🔲 Phase 5D | Alumni System & Panel | Pending |
-| 🔲 Phase 5E | Staff Appraisal & NAAC Workload Reports | Pending |
-| 🔲 Phase 5F | Placement Cell & Career Services | Pending |
-| 🔲 Phase 5G | Scholarship Management | Pending |
-| 🔲 Phase 5H | Disciplinary Records & Anti-Ragging (UGC) | Pending |
-| 🔲 Phase 5I | Research & Publications Management (NAAC Criterion 3) | Pending |
-| 🔲 Phase 5J | Staff Daily Attendance + LOP-Payroll Integration | Pending |
-| 🔲 Phase 5K | Staff Career Lifecycle (Increments, Transfers, Resignation) | Pending |
-| 🔲 Phase 6A | Parent Portal (multi-child via junction table) | Pending |
-| 🔲 Phase 6B | Transport Management + Vehicle Registry | Pending |
-| 🔲 Phase 6C | Certificate & Document Generator (Student + Staff) | Pending |
-| 🔲 Phase 6D | Online Examination System + Anti-Cheating | Pending |
-| 🔲 Phase 6E | Student Feedback & Faculty Ratings | Pending |
-| 🔲 Phase 6F | Grievance Redressal System (NAAC Criterion 6.2) | Pending |
-| 🔲 Phase 6G | E-Learning & Study Materials LMS | Pending |
-| 🔲 Phase 6H | Industry Connect & MOU Management (NAAC Criterion 7.1) | Pending |
-| 🔲 Phase 7A | Super Admin Auth & Layout | Pending |
-| 🔲 Phase 7B | Platform Overview Dashboard | Pending |
-| 🔲 Phase 7C | Per-Institution Drill Down | Pending |
-| 🔲 Phase 7D | Platform Health & Audit | Pending |
-| 🔲 Phase 7E | SaaS Subscription & Billing Management | Pending |
-| 🔲 Phase 7F | IQAC & Govt Compliance Reports (NAAC/NIRF/AISHE) | Pending |
-| 🔲 Phase 8A | React Native Setup | Pending |
-| 🔲 Phase 8B | Staff Mobile App + NFC | Pending |
-| 🔲 Phase 8C | Student Mobile App | Pending |
-| 🔲 Phase 8D | Push Notifications (Staff + Student + Parent) | Pending |
-| 🔲 Phase 8E | CCTV Integration | Pending |
-| 🔲 Phase 8F | Parent Mobile App | Pending |
+> **Last updated:** 2026-06-09  
+> **27 of 76 modules complete — 36% of full platform built**
+
+```
+Overall  ████████████░░░░░░░░░░░░░░░░░░░░  36%  (27/76)
+Phase 1  ████████████████████████████████  100% (7/7  — Staff & Student Portals)
+Phase 2  ████████████████████░░░░░░░░░░░░  63%  (6/9+4 foundations — Academic Ops: 6 done, 3 remain)
+Phase 3  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/4  — Notifications)
+Phase 4  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/11 — Campus Infrastructure)
+Phase 5  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/11 — Admissions & Lifecycle)
+Phase 6  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools)
+Phase 7  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/6  — Super Admin & SaaS)
+Phase 8  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/6  — Mobile Apps & CCTV)
+```
+
+> **Next up:** Phase 2G — Teacher Lesson Plan / Daily Diary
+
+---
+
+### 🔗 Slug URL Convention (applies to all institution routes)
+
+All `/institutions/[id]/...` routes display the institution **slug** in the browser (e.g. `/institutions/bishop-heber-college/curriculum`), not the UUID. Middleware rewrites slug → UUID before pages handle the request. See the **Institution URL Pattern** section in System Context above for full rules.
+
+---
+
+| Phase | Feature | Status | Commit |
+|-------|---------|--------|--------|
+| ✅ Core | Auth, Multi-tenant, Middleware + Slug URL rewrite | Complete | — |
+| ✅ Core | Institutions & Departments CRUD | Complete | — |
+| ✅ Core | Staff & Students Directory | Complete | — |
+| ✅ Core | AI Timetable Scheduler (FastAPI + OR-Tools) | Complete | — |
+| ✅ Core | Attendance System (NFC + Manual) | Complete | — |
+| ✅ Finance | Fee Structures | Complete | — |
+| ✅ Finance | Fee Payments + Razorpay | Complete | — |
+| ✅ Finance | Salary Management | Complete | — |
+| ✅ Finance | Expense Logger | Complete | — |
+| ✅ Finance | Reports Page | Complete | — |
+| ✅ Phase 1A | Staff Portal (self-service) | Complete | — |
+| ✅ Phase 1A | Staff Admin Preview (`/staff-portal/view/[staffId]`) | Complete | — |
+| ✅ Phase 1A | Staff Portal Credentials (login/password/block per card) | Complete | — |
+| ✅ Phase 1B | Student Portal (self-service) | Complete | — |
+| ✅ Phase 1B | Student Admin Preview (`/student-portal/view/[studentId]`) | Complete | — |
+| ✅ Phase 1B | Student Portal Credentials (login/password/block per row) | Complete | — |
+| ✅ Phase 1B | Student Portal — Razorpay Pay Page | Complete | — |
+| ✅ 2-Pre-A | Subjects Master Table + Teaching Assignments | Complete | — |
+| ✅ 2-Pre-B | `academic_years` FK Migration for Existing Tables | Complete | — |
+| ✅ 2-Pre-C | HOD Role + Department Head Designation | Complete | — |
+| ✅ 2-Pre-D | Fee Concession & Waiver Management | Complete | — |
+| ✅ Phase 2A | Academic Year Calendar + `academic_years` Master Table | Complete | — |
+| ✅ Phase 2B | Semester Exam Planner + Hall Tickets | Complete | — |
+| ✅ Phase 2C | Marks & Arrears Management | Complete | — |
+| ✅ Phase 2D | Year Promotion & Graduation Workflow | Complete | — |
+| ✅ Phase 2E | CIA / Internal Assessment Ledger (NAAC) | Complete | `1df3ab8` |
+| ✅ Phase 2F | Syllabus & Curriculum Management | Complete | `f938ff0` |
+| 🔲 Phase 2G | Teacher Lesson Plan / Daily Diary | **Next** | — |
+| 🔲 Phase 2H | Guest Lecture & Expert Talk Management | Pending | — |
+| 🔲 Phase 2I | Internship & Industrial Training (NAAC 1.2 / NIRF 5.2) | Pending | — |
+| 🔲 Phase 3A | Notification Infrastructure | Pending | — |
+| 🔲 Phase 3B | Notification Triggers | Pending | — |
+| 🔲 Phase 3C | Email + SMS + WhatsApp Notifications | Pending | — |
+| 🔲 Phase 3D | Digital Notice Board & Announcements | Pending | — |
+| 🔲 Phase 4A | Library Management System | Pending | — |
+| 🔲 Phase 4B | Auditorium & Space Booking | Pending | — |
+| 🔲 Phase 4C | Hostel Management + Mess Billing | Pending | — |
+| 🔲 Phase 4D | Laboratory Management | Pending | — |
+| 🔲 Phase 4E | Asset & Inventory Management | Pending | — |
+| 🔲 Phase 4F | Smart ID Card & NFC Card Registry | Pending | — |
+| 🔲 Phase 4G | Gate Pass & Visitor Management | Pending | — |
+| 🔲 Phase 4H | Student Clubs & Organizations (NSS/NCC/Cultural) | Pending | — |
+| 🔲 Phase 4I | Health & Medical Records (Infirmary) | Pending | — |
+| 🔲 Phase 4J | Sports & Physical Education | Pending | — |
+| 🔲 Phase 4K | Annual Day & Large Campus Event Management | Pending | — |
+| 🔲 Phase 5A | Student Admissions System (public-facing) | Pending | — |
+| 🔲 Phase 5B | Staff Recruitment Module | Pending | — |
+| 🔲 Phase 5C | Non-Teaching Staff & Payroll | Pending | — |
+| 🔲 Phase 5D | Alumni System & Panel | Pending | — |
+| 🔲 Phase 5E | Staff Appraisal & NAAC Workload Reports | Pending | — |
+| 🔲 Phase 5F | Placement Cell & Career Services | Pending | — |
+| 🔲 Phase 5G | Scholarship Management | Pending | — |
+| 🔲 Phase 5H | Disciplinary Records & Anti-Ragging (UGC) | Pending | — |
+| 🔲 Phase 5I | Research & Publications Management (NAAC Criterion 3) | Pending | — |
+| 🔲 Phase 5J | Staff Daily Attendance + LOP-Payroll Integration | Pending | — |
+| 🔲 Phase 5K | Staff Career Lifecycle (Increments, Transfers, Resignation) | Pending | — |
+| 🔲 Phase 6A | Parent Portal (multi-child via junction table) | Pending | — |
+| 🔲 Phase 6B | Transport Management + Vehicle Registry | Pending | — |
+| 🔲 Phase 6C | Certificate & Document Generator (Student + Staff) | Pending | — |
+| 🔲 Phase 6D | Online Examination System + Anti-Cheating | Pending | — |
+| 🔲 Phase 6E | Student Feedback & Faculty Ratings | Pending | — |
+| 🔲 Phase 6F | Grievance Redressal System (NAAC Criterion 6.2) | Pending | — |
+| 🔲 Phase 6G | E-Learning & Study Materials LMS | Pending | — |
+| 🔲 Phase 6H | Industry Connect & MOU Management (NAAC Criterion 7.1) | Pending | — |
+| 🔲 Phase 7A | Super Admin Auth & Layout | Pending | — |
+| 🔲 Phase 7B | Platform Overview Dashboard | Pending | — |
+| 🔲 Phase 7C | Per-Institution Drill Down | Pending | — |
+| 🔲 Phase 7D | Platform Health & Audit | Pending | — |
+| 🔲 Phase 7E | SaaS Subscription & Billing Management | Pending | — |
+| 🔲 Phase 7F | IQAC & Govt Compliance Reports (NAAC/NIRF/AISHE) | Pending | — |
+| 🔲 Phase 8A | React Native Setup | Pending | — |
+| 🔲 Phase 8B | Staff Mobile App + NFC | Pending | — |
+| 🔲 Phase 8C | Student Mobile App | Pending | — |
+| 🔲 Phase 8D | Push Notifications (Staff + Student + Parent) | Pending | — |
+| 🔲 Phase 8E | CCTV Integration | Pending | — |
+| 🔲 Phase 8F | Parent Mobile App | Pending | — |
 
 ---
 
