@@ -1,0 +1,1 @@
+-- Migration applied directly to remote via Supabase MCP (execute_sql).
