@@ -43,3 +43,8 @@ next-env.d.ts
 # --- AURA Python Scheduler Engine ---
 /aura-scheduler-engine/venv/
 /aura-scheduler-engine/__pycache__/
+
+# Local IDE and sensitive files
+.vs/
+credentials.md
+.claude/settings.local.json
