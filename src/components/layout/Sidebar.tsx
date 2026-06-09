@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, Settings, Building2, Calendar, GraduationCap,
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
-  ClipboardList, Award, BadgeCheck, Library, BookText,
+  ClipboardList, Award, BadgeCheck, Library, BookText, Mic2,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -286,7 +286,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     if (
       path.startsWith("/schedules") || path.includes("/subjects") ||
       path.includes("/curriculum") || path.includes("/lesson-plans") ||
-      path.includes("/exams") || path.includes("/cia") ||
+      path.includes("/guest-lectures") || path.includes("/exams") || path.includes("/cia") ||
       path.includes("/results") || path.includes("/promotion") ||
       path.includes("/calendar")
     ) return "academics";
@@ -322,7 +322,8 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
         !pathname.includes("/results") && !pathname.includes("/promotion") &&
         !pathname.includes("/lesson-plans") && !pathname.includes("/curriculum") &&
         !pathname.includes("/cia");
-    if (key === "lesson-plans") return pathname.includes("/lesson-plans");
+    if (key === "lesson-plans")   return pathname.includes("/lesson-plans");
+    if (key === "guest-lectures") return pathname.includes("/guest-lectures");
     if (key === "curriculum")   return pathname.includes("/curriculum");
     if (key === "cia")          return pathname.includes("/cia");
     if (key === "exams")        return pathname.includes("/exams");
@@ -352,7 +353,8 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const calendarHref     = slug ? `/institutions/${slug}/calendar`      : "/institutions";
   const ciaHref          = slug ? `/institutions/${slug}/cia`           : "/institutions";
   const curriculumHref   = slug ? `/institutions/${slug}/curriculum`    : "/institutions";
-  const lessonPlansHref  = slug ? `/institutions/${slug}/lesson-plans`  : "/institutions";
+  const lessonPlansHref    = slug ? `/institutions/${slug}/lesson-plans`    : "/institutions";
+  const guestLecturesHref  = slug ? `/institutions/${slug}/guest-lectures`  : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -362,8 +364,9 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     { key: "schedules",    href: "/schedules",     label: "Timetable",     Icon: Calendar },
     { key: "subjects",     href: subjectsHref,     label: "Subjects",      Icon: BookOpen },
     { key: "curriculum",   href: curriculumHref,   label: "Curriculum",    Icon: Library },
-    { key: "lesson-plans", href: lessonPlansHref,  label: "Lesson Plans",  Icon: BookText },
-    { key: "exams",        href: examsHref,        label: "Exams",         Icon: ClipboardList },
+    { key: "lesson-plans",    href: lessonPlansHref,    label: "Lesson Plans",   Icon: BookText },
+    { key: "guest-lectures",  href: guestLecturesHref,  label: "Guest Lectures", Icon: Mic2 },
+    { key: "exams",           href: examsHref,           label: "Exams",          Icon: ClipboardList },
     { key: "cia",          href: ciaHref,          label: "CIA",           Icon: BadgePercent },
     { key: "results",      href: resultsHref,      label: "Results",       Icon: Award },
     { key: "promotion",    href: promotionHref,    label: "Promotion",     Icon: BadgeCheck },
@@ -511,7 +514,8 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
               isActive={
                 pathname.startsWith("/schedules") ||
                 pathname.includes("/subjects") || pathname.includes("/curriculum") ||
-                pathname.includes("/lesson-plans") || pathname.includes("/exams") ||
+                pathname.includes("/lesson-plans") || pathname.includes("/guest-lectures") ||
+                pathname.includes("/exams") ||
                 pathname.includes("/cia") || pathname.includes("/results") ||
                 pathname.includes("/promotion") || pathname.includes("/calendar")
               }
