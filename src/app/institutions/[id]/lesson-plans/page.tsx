@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
   getLessonPlans,
   deleteLessonPlan,
@@ -19,8 +20,8 @@ const METHODS = [
   "Problem Solving", "Lab / Practical", "Seminar", "Project Work", "Other",
 ];
 
-export default function LessonPlansAdminPage({ params }: { params: { id: string } }) {
-  const institutionId = params.id;
+export default function LessonPlansAdminPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: institutionId } = use(params);
 
   const [staffList,     setStaffList]     = useState<Staff[]>([]);
   const [subjects,      setSubjects]      = useState<Subject[]>([]);
@@ -101,7 +102,8 @@ export default function LessonPlansAdminPage({ params }: { params: { id: string 
   const totalHours = filtered.reduce((s, p) => s + Number(p.hours_covered), 0);
 
   return (
-    <div className="px-6 py-8 max-w-6xl mx-auto">
+    <DashboardLayout>
+    <div className="px-6 py-8 w-full">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
@@ -251,5 +253,6 @@ export default function LessonPlansAdminPage({ params }: { params: { id: string 
         </div>
       )}
     </div>
+    </DashboardLayout>
   );
 }

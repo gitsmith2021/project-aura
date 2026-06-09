@@ -4,33 +4,24 @@ import { useState, useEffect } from "react";
 import {
   LayoutDashboard, Users, Settings, Building2, Calendar, GraduationCap,
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
-  ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent, ClipboardList, Award, BadgeCheck, Library, BookText,
+  ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
+  ClipboardList, Award, BadgeCheck, Library, BookText,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-// ── Admin nav (Settings rendered separately, always last) ─────────────────────
 
-const ADMIN_MAIN = [
-  { key: "dashboard",    href: "/",               label: "Dashboard",    Icon: LayoutDashboard, exact: true },
-  { key: "institutions", href: "/institutions",   label: "Institutions", Icon: Landmark },
-  { key: "departments",  href: "/departments",    label: "Departments",  Icon: Layers },
-  { key: "staff",        href: "/users/staff",    label: "Staff",        Icon: Users },
-  { key: "students",     href: "/users/students", label: "Students",     Icon: GraduationCap },
-  { key: "schedules",    href: "/schedules",      label: "Schedules",    Icon: Calendar },
-] as const;
-
+// ── Finance sub-items ─────────────────────────────────────────────────────────
 const FINANCE_SUB = [
-  { key: "overview",     label: "Command Center", Icon: LayoutDashboard, href: () => `/finance` },
-  { key: "fees",         label: "Fee Structures",  Icon: Tag,             href: (id: string) => `/institutions/${id}/finance/fees` },
-  { key: "payments",     label: "All Payments",    Icon: CreditCard,      href: (id: string) => `/institutions/${id}/finance/fees/payments` },
-  { key: "concessions",  label: "Concessions",     Icon: BadgePercent,    href: (id: string) => `/institutions/${id}/finance/concessions` },
-  { key: "salary",       label: "Salaries",        Icon: Users,           href: (id: string) => `/institutions/${id}/finance/salary` },
-  { key: "reports",      label: "Reports",         Icon: BarChart2,       href: (id: string) => `/institutions/${id}/finance/reports` },
+  { key: "overview",    label: "Command Center", Icon: LayoutDashboard, href: () => `/finance` },
+  { key: "fees",        label: "Fee Structures",  Icon: Tag,            href: (id: string) => `/institutions/${id}/finance/fees` },
+  { key: "payments",    label: "All Payments",    Icon: CreditCard,     href: (id: string) => `/institutions/${id}/finance/fees/payments` },
+  { key: "concessions", label: "Concessions",     Icon: BadgePercent,   href: (id: string) => `/institutions/${id}/finance/concessions` },
+  { key: "salary",      label: "Salaries",        Icon: Users,          href: (id: string) => `/institutions/${id}/finance/salary` },
+  { key: "reports",     label: "Reports",         Icon: BarChart2,      href: (id: string) => `/institutions/${id}/finance/reports` },
 ] as const;
 
-// ── Staff nav ─────────────────────────────────────────────────────────────────
-
+// ── Staff portal nav (flat — already short) ───────────────────────────────────
 const STAFF_NAV = [
   { key: "dashboard",  href: "/staff-portal",            label: "Dashboard",   Icon: LayoutDashboard, exact: true },
   { key: "schedule",   href: "/staff-portal/schedule",   label: "My Schedule", Icon: Calendar },
@@ -41,7 +32,6 @@ const STAFF_NAV = [
 ] as const;
 
 // ── NavItem ───────────────────────────────────────────────────────────────────
-
 function NavItem({
   icon, label, active = false, isCollapsed, href,
 }: {
@@ -71,13 +61,13 @@ function NavItem({
   );
 }
 
-// ── Accordion wrapper ─────────────────────────────────────────────────────────
-
-function Accordion({
-  icon, label, isActive, isOpen, onToggle, isCollapsed, children,
+// ── NavGroup — collapsible parent with NavItem children ───────────────────────
+function NavGroup({
+  groupKey, icon, label, isActive, isOpen, onToggle, isCollapsed, children,
 }: {
-  icon: React.ReactNode; label: string; isActive: boolean; isOpen: boolean;
-  onToggle: () => void; isCollapsed: boolean; children: React.ReactNode;
+  groupKey: string; icon: React.ReactNode; label: string;
+  isActive: boolean; isOpen: boolean; onToggle: () => void;
+  isCollapsed: boolean; children: React.ReactNode;
 }) {
   if (isCollapsed) {
     return (
@@ -102,21 +92,88 @@ function Accordion({
 
   return (
     <div>
-      <div className={`flex items-center rounded-md text-sm font-medium transition-colors border ${
-        isActive
-          ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-600/20 dark:text-purple-400 dark:border-purple-500/20"
-          : "text-slate-600 hover:bg-slate-200 hover:text-slate-900 border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-      }`}>
-        <button type="button" onClick={onToggle} className="flex items-center gap-3 flex-1 min-w-0 px-3 py-2 text-left">
-          <span className={`shrink-0 ${isActive ? "text-purple-700 dark:text-purple-400" : ""}`}>{icon}</span>
-          <span className="truncate">{label}</span>
-        </button>
-        <button type="button" onClick={onToggle} aria-label={`Toggle ${label}`} className="px-2.5 py-2 shrink-0 hover:opacity-70 transition-opacity">
-          <ChevronDown size={13} strokeWidth={2.5} className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
-        </button>
-      </div>
+      {/* Group header — no href, toggle only */}
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors border ${
+          isActive
+            ? "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-600/10 dark:text-purple-400 dark:border-purple-500/10"
+            : "text-slate-600 hover:bg-slate-200 hover:text-slate-900 border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+        }`}
+      >
+        <span className={`shrink-0 ${isActive ? "text-purple-700 dark:text-purple-400" : ""}`}>{icon}</span>
+        <span className="flex-1 text-left truncate">{label}</span>
+        <ChevronDown
+          size={13}
+          strokeWidth={2.5}
+          className={`shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""} ${
+            isActive ? "text-purple-500" : "text-slate-400"
+          }`}
+        />
+      </button>
+
+      {/* Children */}
       {isOpen && (
-        <div className="mt-0.5 ml-3 pl-3 border-l-2 border-slate-200 dark:border-slate-700 space-y-0.5">
+        <div className="mt-0.5 ml-3 pl-3 border-l-2 border-slate-200 dark:border-slate-700 space-y-0.5 py-0.5">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Finance accordion (sub-links are <Link> not NavItem) ──────────────────────
+function FinanceAccordion({
+  isActive, isOpen, onToggle, isCollapsed, children,
+}: {
+  isActive: boolean; isOpen: boolean; onToggle: () => void;
+  isCollapsed: boolean; children: React.ReactNode;
+}) {
+  if (isCollapsed) {
+    return (
+      <div className="relative group">
+        <button
+          type="button"
+          onClick={onToggle}
+          className={`flex justify-center p-2 mx-auto w-10 h-10 rounded-md text-sm font-medium transition-colors border ${
+            isActive
+              ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-600/20 dark:text-purple-400 dark:border-purple-500/20"
+              : "text-slate-600 hover:bg-slate-200 hover:text-slate-900 border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          }`}
+        >
+          <Wallet size={18} className={isActive ? "text-purple-700 dark:text-purple-400" : ""} />
+        </button>
+        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-slate-700 dark:bg-slate-800 text-slate-100 text-xs rounded-md border border-slate-600 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+          Finance
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors border ${
+          isActive
+            ? "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-600/10 dark:text-purple-400 dark:border-purple-500/10"
+            : "text-slate-600 hover:bg-slate-200 hover:text-slate-900 border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+        }`}
+      >
+        <Wallet size={18} className={`shrink-0 ${isActive ? "text-purple-700 dark:text-purple-400" : ""}`} />
+        <span className="flex-1 text-left">Finance</span>
+        <ChevronDown
+          size={13}
+          strokeWidth={2.5}
+          className={`shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""} ${
+            isActive ? "text-purple-500" : "text-slate-400"
+          }`}
+        />
+      </button>
+      {isOpen && (
+        <div className="mt-0.5 ml-3 pl-3 border-l-2 border-slate-200 dark:border-slate-700 space-y-0.5 py-0.5">
           {children}
         </div>
       )}
@@ -125,13 +182,11 @@ function Accordion({
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
-
 export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const pathname = usePathname();
   const [role, setRole] = useState<string | null>(null);
   const [userAuth, setUserAuth] = useState<{ role: string; tenant_id: string; department_id: string } | null>(null);
 
-  // Read role from cookie on mount and path changes
   useEffect(() => {
     const cookiesList = document.cookie.split("; ");
     const roleCookie = cookiesList.find(row => row.startsWith("aura-role="));
@@ -141,49 +196,35 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     if (currentRole === "hod") {
       const supabase = createClient();
       supabase.rpc("get_user_authorizations").then(({ data }) => {
-        if (data && data.length > 0) {
-          setUserAuth(data[0]);
-        }
+        if (data && data.length > 0) setUserAuth(data[0]);
       });
     }
   }, [pathname]);
 
-  // Staff portal = the staff self-service area (/staff-portal/view/* is admin territory).
   const isStaffPortal = pathname.startsWith("/staff-portal") && !pathname.startsWith("/staff-portal/view") && role === "staff";
 
   // ── Finance accordion ─────────────────────────────────────────────────────
   const isFinanceActive = pathname === "/finance" || pathname.includes("/finance");
   const [financeOpen, setFinanceOpen] = useState(isFinanceActive);
+  useEffect(() => { if (isFinanceActive) setFinanceOpen(true); }, [isFinanceActive]);
 
-  // Slugs are used for link generation; middleware rewrites them → UUID before pages run.
-  // States start null on both server and client to avoid hydration mismatches.
-  // A post-mount effect then reads localStorage / the aura-inst-slug login cookie.
+  // ── Slug resolution ───────────────────────────────────────────────────────
   const [financeInstSlug, setFinanceInstSlug] = useState<string | null>(null);
   const [activeInstSlug,  setActiveInstSlug]  = useState<string | null>(null);
-
   const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-  // Post-mount only — never runs on server, so server/client HTML always matches.
   useEffect(() => {
     const slugFromCookie = document.cookie.split("; ")
       .find(r => r.startsWith("aura-inst-slug="))?.split("=")[1] ?? null;
     const storedSlug = localStorage.getItem("aura_active_inst_slug");
-    // Discard any UUID accidentally stored under the slug key by an older code path
     const slug = (storedSlug && !UUID_RE.test(storedSlug)) ? storedSlug : slugFromCookie;
     if (slug) setActiveInstSlug(slug);
-
     const storedFinance = localStorage.getItem("aura_finance_inst_slug");
     const financeSlug = (storedFinance && !UUID_RE.test(storedFinance)) ? storedFinance : null;
     if (financeSlug) setFinanceInstSlug(financeSlug);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (isFinanceActive) setFinanceOpen(true);
-  }, [isFinanceActive]);
-
-  // Extract slug from pathname — only when the segment is actually a slug (not a UUID).
-  // UUID URLs can appear transiently before the user re-logs in to get the slug cookie.
   useEffect(() => {
     const segs = pathname.split("/");
     const idx  = segs.indexOf("institutions");
@@ -195,7 +236,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
         setFinanceInstSlug(slug);
         localStorage.setItem("aura_finance_inst_slug", slug);
       }
-    } else if (segs.indexOf("institutions") < 0) {
+    } else if (!pathname.includes("/institutions")) {
       const storedSlug = localStorage.getItem("aura_active_inst_slug");
       if (storedSlug && !UUID_RE.test(storedSlug)) setActiveInstSlug(storedSlug);
       const storedFinanceSlug = localStorage.getItem("aura_finance_inst_slug");
@@ -203,7 +244,6 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     }
   }, [pathname]);
 
-  // Admin: auto-load first institution slug on fresh sessions (no URL/localStorage)
   useEffect(() => {
     if (role !== "admin" || activeInstSlug) return;
     const stored = localStorage.getItem("aura_active_inst_slug");
@@ -217,7 +257,6 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     });
   }, [role, activeInstSlug]);
 
-  // HOD: fetch institution slug after get_user_authorizations resolves
   useEffect(() => {
     if (!userAuth?.tenant_id || activeInstSlug) return;
     const supabase = createClient();
@@ -238,6 +277,62 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     return () => window.removeEventListener("aura:finance:inst", handler);
   }, []);
 
+  // ── Group open state ──────────────────────────────────────────────────────
+  // Determine which group the current path belongs to and auto-open it
+  const detectOpenGroup = (path: string): string => {
+    if (path === "/" || path.startsWith("/settings")) return "";
+    if (path.startsWith("/institutions") || path.startsWith("/departments")) return "institution";
+    if (path.startsWith("/users")) return "people";
+    if (
+      path.startsWith("/schedules") || path.includes("/subjects") ||
+      path.includes("/curriculum") || path.includes("/lesson-plans") ||
+      path.includes("/exams") || path.includes("/cia") ||
+      path.includes("/results") || path.includes("/promotion") ||
+      path.includes("/calendar")
+    ) return "academics";
+    if (path.includes("/finance")) return "finance";
+    return "";
+  };
+
+  const [openGroups, setOpenGroups] = useState<Set<string>>(() => {
+    const g = detectOpenGroup(typeof window !== "undefined" ? window.location.pathname : "");
+    return g ? new Set([g]) : new Set();
+  });
+
+  useEffect(() => {
+    const g = detectOpenGroup(pathname);
+    if (g) setOpenGroups(prev => new Set([...prev, g]));
+  }, [pathname]);
+
+  function toggleGroup(key: string) {
+    setOpenGroups(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }
+
+  // ── Active detection ──────────────────────────────────────────────────────
+  const isItemActive = (key: string, href: string, exact?: boolean): boolean => {
+    if (exact) return pathname === href;
+    if (key === "institutions")
+      return (pathname === "/institutions" || pathname.startsWith("/institutions/")) &&
+        !pathname.includes("/finance") && !pathname.includes("/calendar") &&
+        !pathname.includes("/subjects") && !pathname.includes("/exams") &&
+        !pathname.includes("/results") && !pathname.includes("/promotion") &&
+        !pathname.includes("/lesson-plans") && !pathname.includes("/curriculum") &&
+        !pathname.includes("/cia");
+    if (key === "lesson-plans") return pathname.includes("/lesson-plans");
+    if (key === "curriculum")   return pathname.includes("/curriculum");
+    if (key === "cia")          return pathname.includes("/cia");
+    if (key === "exams")        return pathname.includes("/exams");
+    if (key === "results")      return pathname.includes("/results");
+    if (key === "promotion")    return pathname.includes("/promotion");
+    if (key === "calendar")     return pathname.includes("/calendar");
+    if (key === "subjects")     return pathname.includes("/subjects");
+    return pathname.startsWith(href);
+  };
+
   const isFinanceSubActive = (key: string) => {
     if (key === "overview")    return pathname === "/finance";
     if (key === "payments")    return pathname.includes("/finance/fees/payments");
@@ -248,77 +343,51 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     return false;
   };
 
-  // ── Active detection helpers ──────────────────────────────────────────────
-  const adminNavActive = (key: string, href: string, exact?: boolean) => {
-    if (key === "institutions")
-      return (pathname === "/institutions" || pathname.startsWith("/institutions/")) && !pathname.includes("/finance") && !pathname.includes("/calendar") && !pathname.includes("/subjects") && !pathname.includes("/exams") && !pathname.includes("/results") && !pathname.includes("/promotion") && !pathname.includes("/lesson-plans") && !pathname.includes("/curriculum") && !pathname.includes("/cia");
-    if (key === "calendar")
-      return pathname.includes("/calendar");
-    if (key === "subjects")
-      return pathname.includes("/subjects");
-    if (key === "exams")
-      return pathname.includes("/exams");
-    if (key === "results")
-      return pathname.includes("/results");
-    if (key === "promotion")
-      return pathname.includes("/promotion");
-    if (key === "lesson-plans")
-      return pathname.includes("/lesson-plans");
-    if (exact) return pathname === href;
-    return pathname.startsWith(href);
-  };
+  // ── Slug-based hrefs ──────────────────────────────────────────────────────
+  const slug = activeInstSlug;
+  const subjectsHref     = slug ? `/institutions/${slug}/subjects`      : "/institutions";
+  const examsHref        = slug ? `/institutions/${slug}/exams`         : "/institutions";
+  const resultsHref      = slug ? `/institutions/${slug}/results`       : "/institutions";
+  const promotionHref    = slug ? `/institutions/${slug}/promotion`     : "/institutions";
+  const calendarHref     = slug ? `/institutions/${slug}/calendar`      : "/institutions";
+  const ciaHref          = slug ? `/institutions/${slug}/cia`           : "/institutions";
+  const curriculumHref   = slug ? `/institutions/${slug}/curriculum`    : "/institutions";
+  const lessonPlansHref  = slug ? `/institutions/${slug}/lesson-plans`  : "/institutions";
 
-  const staffNavActive = (key: string, href: string, exact?: boolean) => {
-    if (exact) return pathname === href;
-    return pathname.startsWith(href);
-  };
+  const deptId = userAuth?.department_id;
+  const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
 
-  // Build items based on HOD role
-  const getNavItems = () => {
-    const instSlug = activeInstSlug;
-    const calendarHref  = instSlug ? `/institutions/${instSlug}/calendar`  : "/institutions";
-    const subjectsHref  = instSlug ? `/institutions/${instSlug}/subjects`  : "/institutions";
-    const examsHref     = instSlug ? `/institutions/${instSlug}/exams`     : "/institutions";
-    const resultsHref   = instSlug ? `/institutions/${instSlug}/results`   : "/institutions";
-    const promotionHref = instSlug ? `/institutions/${instSlug}/promotion` : "/institutions";
-    const ciaHref          = instSlug ? `/institutions/${instSlug}/cia`           : "/institutions";
-    const curriculumHref   = instSlug ? `/institutions/${instSlug}/curriculum`   : "/institutions";
-    const lessonPlansHref  = instSlug ? `/institutions/${instSlug}/lesson-plans` : "/institutions";
+  // ── Academics items ───────────────────────────────────────────────────────
+  const adminAcademicsItems = [
+    { key: "schedules",    href: "/schedules",     label: "Timetable",     Icon: Calendar },
+    { key: "subjects",     href: subjectsHref,     label: "Subjects",      Icon: BookOpen },
+    { key: "curriculum",   href: curriculumHref,   label: "Curriculum",    Icon: Library },
+    { key: "lesson-plans", href: lessonPlansHref,  label: "Lesson Plans",  Icon: BookText },
+    { key: "exams",        href: examsHref,        label: "Exams",         Icon: ClipboardList },
+    { key: "cia",          href: ciaHref,          label: "CIA",           Icon: BadgePercent },
+    { key: "results",      href: resultsHref,      label: "Results",       Icon: Award },
+    { key: "promotion",    href: promotionHref,    label: "Promotion",     Icon: BadgeCheck },
+    { key: "calendar",     href: calendarHref,     label: "Calendar",      Icon: CalendarDays },
+  ];
 
-    if (role === "hod") {
-      const deptId = userAuth?.department_id;
-      return [
-        { key: "dashboard",    href: "/",               label: "Dashboard",    Icon: LayoutDashboard, exact: true },
-        ...(instSlug && deptId ? [{ key: "my-department", href: `/institutions/${instSlug}/department/${deptId}`, label: "My Department", Icon: Layers }] : []),
-        { key: "staff",        href: "/users/staff",    label: "Staff",        Icon: Users },
-        { key: "students",     href: "/users/students", label: "Students",     Icon: GraduationCap },
-        { key: "schedules",    href: "/schedules",      label: "Timetable",    Icon: Calendar },
-        { key: "subjects",     href: subjectsHref,      label: "Subjects",     Icon: BookOpen },
-        { key: "curriculum",   href: curriculumHref,    label: "Curriculum",   Icon: Library },
-        { key: "exams",        href: examsHref,         label: "Exams",        Icon: ClipboardList },
-        { key: "cia",           href: ciaHref,           label: "CIA",           Icon: BadgePercent },
-        { key: "lesson-plans", href: lessonPlansHref,   label: "Lesson Plans",  Icon: BookText },
-        { key: "results",      href: resultsHref,       label: "Results",       Icon: Award },
-        { key: "calendar",     href: calendarHref,      label: "Calendar",      Icon: CalendarDays },
-      ];
-    }
+  const hodAcademicsItems = adminAcademicsItems.filter(i => i.key !== "promotion");
 
-    return [
-      { key: "dashboard",    href: "/",               label: "Dashboard",    Icon: LayoutDashboard, exact: true },
-      { key: "institutions", href: "/institutions",   label: "Institutions", Icon: Landmark },
-      { key: "departments",  href: "/departments",    label: "Departments",  Icon: Layers },
-      { key: "staff",        href: "/users/staff",    label: "Staff",        Icon: Users },
-      { key: "students",     href: "/users/students", label: "Students",     Icon: GraduationCap },
-      { key: "schedules",    href: "/schedules",      label: "Timetable",    Icon: Calendar },
-      { key: "subjects",     href: subjectsHref,      label: "Subjects",     Icon: BookOpen },
-      { key: "curriculum",   href: curriculumHref,    label: "Curriculum",   Icon: Library },
-      { key: "exams",        href: examsHref,         label: "Exams",        Icon: ClipboardList },
-      { key: "cia",          href: ciaHref,           label: "CIA",          Icon: BadgePercent },
-      { key: "lesson-plans", href: lessonPlansHref,   label: "Lesson Plans", Icon: BookText },
-      { key: "results",      href: resultsHref,       label: "Results",      Icon: Award },
-      { key: "promotion",    href: promotionHref,     label: "Promotion",    Icon: BadgeCheck },
-      { key: "calendar",     href: calendarHref,      label: "Calendar",     Icon: CalendarDays },
-    ];
+  // ── Sub-link renderer for Finance ─────────────────────────────────────────
+  const financeSubLink = (item: typeof FINANCE_SUB[number]) => {
+    const fSlug = financeInstSlug ?? activeInstSlug;
+    const href = item.key === "overview" ? item.href() : fSlug ? item.href(fSlug) : "/finance";
+    return (
+      <Link key={item.key} href={href}
+        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
+          isFinanceSubActive(item.key)
+            ? "bg-purple-100/80 text-purple-700 dark:bg-purple-600/15 dark:text-purple-400"
+            : "text-slate-500 hover:bg-slate-200/80 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+        }`}
+      >
+        <item.Icon size={13} strokeWidth={2} className="shrink-0" />
+        <span className="truncate">{item.label}</span>
+      </Link>
+    );
   };
 
   return (
@@ -354,67 +423,127 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 space-y-1 overflow-y-auto px-2">
+      <nav className="flex-1 py-3 space-y-0.5 overflow-y-auto px-2">
 
-        {/* ═══ STAFF PORTAL NAV (logged in as staff) ═══ */}
+        {/* ══ STAFF PORTAL ══ */}
         {isStaffPortal && STAFF_NAV.map(item => (
           <NavItem
             key={item.key}
             href={item.href}
             icon={<item.Icon size={18} />}
             label={item.label}
-            active={staffNavActive(item.key, item.href, "exact" in item ? item.exact : undefined)}
+            active={"exact" in item && item.exact ? pathname === item.href : pathname.startsWith(item.href)}
             isCollapsed={isCollapsed}
           />
         ))}
 
-        {/* ═══ ADMIN / HOD NAV ═══ */}
+        {/* ══ ADMIN / HOD ══ */}
         {!isStaffPortal && (
           <>
-            {/* Main items */}
-            {getNavItems().map(item => (
+            {/* Dashboard — always standalone */}
+            <NavItem
+              href="/"
+              icon={<LayoutDashboard size={18} />}
+              label="Dashboard"
+              active={pathname === "/"}
+              isCollapsed={isCollapsed}
+            />
+
+            {/* HOD: My Department standalone */}
+            {role === "hod" && slug && deptId && (
               <NavItem
-                key={item.key}
-                href={item.href}
-                icon={<item.Icon size={18} />}
-                label={item.label}
-                active={adminNavActive(item.key, item.href, "exact" in item ? item.exact : undefined)}
+                href={myDeptHref}
+                icon={<Layers size={18} />}
+                label="My Department"
+                active={pathname.includes("/department/")}
                 isCollapsed={isCollapsed}
               />
-            ))}
+            )}
 
-            {/* Finance accordion (Admin only) */}
+            {/* GROUP: Institution (admin only) */}
             {role !== "hod" && (
-              <Accordion
-                icon={<Wallet size={18} />}
-                label="Finance"
+              <NavGroup
+                groupKey="institution"
+                icon={<Landmark size={18} />}
+                label="Institution"
+                isActive={
+                  pathname === "/institutions" ||
+                  pathname.startsWith("/departments") ||
+                  (pathname.startsWith("/institutions/") &&
+                    !pathname.includes("/finance") && !pathname.includes("/calendar") &&
+                    !pathname.includes("/subjects") && !pathname.includes("/exams") &&
+                    !pathname.includes("/results") && !pathname.includes("/promotion") &&
+                    !pathname.includes("/lesson-plans") && !pathname.includes("/curriculum") &&
+                    !pathname.includes("/cia"))
+                }
+                isOpen={openGroups.has("institution")}
+                onToggle={() => toggleGroup("institution")}
+                isCollapsed={isCollapsed}
+              >
+                <NavItem href="/institutions" icon={<Landmark size={14} />} label="Institutions"
+                  active={isItemActive("institutions", "/institutions")} isCollapsed={false} />
+                <NavItem href="/departments" icon={<Layers size={14} />} label="Departments"
+                  active={isItemActive("departments", "/departments")} isCollapsed={false} />
+              </NavGroup>
+            )}
+
+            {/* GROUP: People */}
+            <NavGroup
+              groupKey="people"
+              icon={<Users size={18} />}
+              label="People"
+              isActive={pathname.startsWith("/users")}
+              isOpen={openGroups.has("people")}
+              onToggle={() => toggleGroup("people")}
+              isCollapsed={isCollapsed}
+            >
+              <NavItem href="/users/staff" icon={<Users size={14} />} label="Staff"
+                active={isItemActive("staff", "/users/staff")} isCollapsed={false} />
+              <NavItem href="/users/students" icon={<GraduationCap size={14} />} label="Students"
+                active={isItemActive("students", "/users/students")} isCollapsed={false} />
+            </NavGroup>
+
+            {/* GROUP: Academics */}
+            <NavGroup
+              groupKey="academics"
+              icon={<BookOpen size={18} />}
+              label="Academics"
+              isActive={
+                pathname.startsWith("/schedules") ||
+                pathname.includes("/subjects") || pathname.includes("/curriculum") ||
+                pathname.includes("/lesson-plans") || pathname.includes("/exams") ||
+                pathname.includes("/cia") || pathname.includes("/results") ||
+                pathname.includes("/promotion") || pathname.includes("/calendar")
+              }
+              isOpen={openGroups.has("academics")}
+              onToggle={() => toggleGroup("academics")}
+              isCollapsed={isCollapsed}
+            >
+              {(role === "hod" ? hodAcademicsItems : adminAcademicsItems).map(item => (
+                <NavItem
+                  key={item.key}
+                  href={item.href}
+                  icon={<item.Icon size={14} />}
+                  label={item.label}
+                  active={isItemActive(item.key, item.href)}
+                  isCollapsed={false}
+                />
+              ))}
+            </NavGroup>
+
+            {/* Finance (admin only) */}
+            {role !== "hod" && (
+              <FinanceAccordion
                 isActive={isFinanceActive}
                 isOpen={financeOpen}
                 onToggle={() => setFinanceOpen(o => !o)}
                 isCollapsed={isCollapsed}
               >
-                {FINANCE_SUB.map(item => {
-                  const slug = financeInstSlug ?? activeInstSlug;
-                  const href = item.key === "overview"
-                    ? item.href()
-                    : slug ? item.href(slug) : "/finance";
-                  return (
-                    <Link key={item.key} href={href}
-                      className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
-                        isFinanceSubActive(item.key)
-                          ? "bg-purple-100/80 text-purple-700 dark:bg-purple-600/15 dark:text-purple-400"
-                          : "text-slate-500 hover:bg-slate-200/80 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                      }`}
-                    >
-                      <item.Icon size={13} strokeWidth={2} className="shrink-0" />
-                      <span className="truncate">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </Accordion>
+                {FINANCE_SUB.map(financeSubLink)}
+              </FinanceAccordion>
             )}
 
-            {/* Settings — Admin only */}
+            {/* Settings (admin only) */}
             {role !== "hod" && (
               <NavItem
                 href="/settings"

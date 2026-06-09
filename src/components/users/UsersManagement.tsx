@@ -352,7 +352,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
 
   return (
     <DashboardLayout>
-      <div className="px-6 pt-2 pb-4 w-full relative flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
+      <div className="px-6 pt-6 pb-6 w-full relative flex flex-col h-[calc(100vh-56px)] min-h-0 overflow-hidden">
         {role === "STUDENT" && selectedTenantId && studentsLayoutMode === "grid" ? (
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-3 shrink-0">
             <div className="min-w-0">
