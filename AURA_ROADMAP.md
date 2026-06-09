@@ -3077,4 +3077,4 @@ npx expo start
 
 ---
 
-*Last updated: 2026-06-09 — Completed Foundation Migrations (2-Pre-A through 2-Pre-D), Phase 2A (Academic Calendar), and Phase 2B (Semester Exam Planner + Hall Tickets). `class_schedules.tenant_id` renamed to `institution_id`. Total: **67 tracked modules** across Foundation Migrations + 8 phases. Every NAAC criterion mapped. Next: Phase 2C — Marks & Arrears Management.*
+*Last updated: 2026-06-09 — Completed Foundation Migrations (2-Pre-A through 2-Pre-D), Phase 2A (Academic Calendar), and Phase 2B (Semester Exam Planner + Hall Tickets). `class_schedules.tenant_id` renamed to `institution_id`. UI polish: Subjects page redesigned to AURA design system (icon header, pill badges, staff avatar rows, elevated cards); redundant "Back to Dashboard" back-links removed from Calendar, Department, and Concessions pages. Total: **67 tracked modules** across Foundation Migrations + 8 phases. Every NAAC criterion mapped. Next: Phase 2C — Marks & Arrears Management.*
