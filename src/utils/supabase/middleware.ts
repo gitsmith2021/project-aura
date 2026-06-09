@@ -63,7 +63,8 @@ export async function updateSession(request: NextRequest) {
 
   // ── Unauthenticated ───────────────────────────────────────────────────────
   if (!user) {
-    if (isLoginPage) return supabaseResponse;
+    // Allow landing page and login page without auth
+    if (isLoginPage || pathname === "/") return supabaseResponse;
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     const res = NextResponse.redirect(url);
