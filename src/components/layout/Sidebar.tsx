@@ -279,6 +279,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     const examsHref     = instSlug ? `/institutions/${instSlug}/exams`     : "/institutions";
     const resultsHref   = instSlug ? `/institutions/${instSlug}/results`   : "/institutions";
     const promotionHref = instSlug ? `/institutions/${instSlug}/promotion` : "/institutions";
+    const ciaHref       = instSlug ? `/institutions/${instSlug}/cia`       : "/institutions";
 
     if (role === "hod") {
       const deptId = userAuth?.department_id;
@@ -290,6 +291,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
         { key: "schedules",    href: "/schedules",      label: "Timetable",    Icon: Calendar },
         { key: "subjects",     href: subjectsHref,      label: "Subjects",     Icon: BookOpen },
         { key: "exams",        href: examsHref,         label: "Exams",        Icon: ClipboardList },
+        { key: "cia",          href: ciaHref,           label: "CIA",          Icon: BadgePercent },
         { key: "results",      href: resultsHref,       label: "Results",      Icon: Award },
         { key: "calendar",     href: calendarHref,      label: "Calendar",     Icon: CalendarDays },
       ];
@@ -304,6 +306,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
       { key: "schedules",    href: "/schedules",      label: "Timetable",    Icon: Calendar },
       { key: "subjects",     href: subjectsHref,      label: "Subjects",     Icon: BookOpen },
       { key: "exams",        href: examsHref,         label: "Exams",        Icon: ClipboardList },
+      { key: "cia",          href: ciaHref,           label: "CIA",          Icon: BadgePercent },
       { key: "results",      href: resultsHref,       label: "Results",      Icon: Award },
       { key: "promotion",    href: promotionHref,     label: "Promotion",    Icon: BadgeCheck },
       { key: "calendar",     href: calendarHref,      label: "Calendar",     Icon: CalendarDays },
