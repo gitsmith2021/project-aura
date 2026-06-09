@@ -46,6 +46,26 @@ Branch:       main
 - Always call `revalidatePath()` after every mutation
 - Never expose secrets to the client
 
+### 🔗 Institution URL Pattern (CRITICAL — always use slugs)
+
+All `/institutions/[id]/...` routes display the institution **slug** in the browser URL, not the UUID.
+
+```
+Browser sees:  /institutions/bishop-heber-college/curriculum
+Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (after middleware rewrite)
+```
+
+**How it works:**
+1. `src/utils/supabase/middleware.ts` — detects non-UUID segment after `/institutions/`, looks up `institutions.slug → id`, rewrites to UUID path via `NextResponse.rewrite()` before the page handler runs
+2. `src/components/layout/Sidebar.tsx` — all nav hrefs built from `activeInstSlug` (stored in `localStorage` + `aura-inst-slug` cookie set at login)
+3. Pages receive UUID in `params.id` — **no page code ever changes** — the slug is only visible in the browser URL bar
+
+**Rules for Claude:**
+- When writing page files under `src/app/institutions/[id]/...`: always use `params.id` as-is — it will be a UUID at runtime
+- When writing sidebar or nav links: always use `instSlug` / `activeInstSlug`, never hardcode UUIDs
+- When writing `Link` hrefs or `router.push()` calls in client components: use the slug variable, not the UUID
+- `revalidatePath()` calls in Server Actions should use the UUID form: `revalidatePath(\`/institutions/${institutionId}/...\`)` — this is fine because Next.js matches by internal path
+
 ### ✅ Completed Modules (Do Not Rebuild)
 - [x] Core platform — auth, middleware, multi-tenant routing
 - [x] Institutions CRUD — AddInstitutionModal, EditInstitutionModal
