@@ -113,7 +113,7 @@ export default function PromotionPage({ params }: { params: Promise<{ id: string
 
   return (
     <DashboardLayout breadcrumb={breadcrumb}>
-      <div className="px-6 pt-6 pb-6 w-full max-w-4xl mx-auto">
+      <div className="px-6 pt-6 pb-6 w-full">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6 gap-4">
