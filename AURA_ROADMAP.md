@@ -1543,6 +1543,88 @@ CREATE TABLE asset_maintenance_logs (
 - Allocations mapping: easily see which department, room, or lab possesses specific assets
 - Maintenance tracker: logs servicing schedules and keeps running cost calculations for equipment
 
+---
+
+### Step 4E-sub — Vendor & Purchase Order Management
+
+**Route:** `/institutions/[id]/vendors`
+
+> Colleges purchase lab equipment, stationery, furniture, and IT hardware from external vendors. Without a formal PO process, procurement is undocumented, GST invoices are lost, and budget actuals cannot be reconciled. This module provides a vendor registry, PO approval workflow, and asset receipt integration with Step 4E.
+
+#### Database:
+```sql
+CREATE TABLE vendors (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name            TEXT NOT NULL,
+  gst_number      TEXT,
+  category        TEXT NOT NULL CHECK (category IN (
+                    'lab_equipment','stationery','furniture',
+                    'it_hardware','software','maintenance','other')),
+  contact_person  TEXT,
+  phone           TEXT,
+  email           TEXT,
+  address         TEXT,
+  is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE vendors ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "vendors: institution members can manage"
+  ON public.vendors
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
+  ));
+
+CREATE TABLE purchase_orders (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  department_id   UUID REFERENCES departments(id),
+  vendor_id       UUID NOT NULL REFERENCES vendors(id) ON DELETE RESTRICT,
+  po_number       TEXT NOT NULL,   -- auto-generated: PO-YYYY-NNNN
+  items           JSONB NOT NULL,  -- Array of { name, qty, unit, unit_price, total }
+  total_amount    NUMERIC(12,2) NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'draft'
+                  CHECK (status IN ('draft','submitted','approved','received','paid','cancelled')),
+  raised_by       UUID REFERENCES staff(id),
+  approved_by     UUID REFERENCES auth.users(id),
+  invoice_url     TEXT,   -- GST invoice PDF via Supabase Storage
+  received_at     TIMESTAMPTZ,
+  paid_at         TIMESTAMPTZ,
+  notes           TEXT,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(institution_id, po_number)
+);
+ALTER TABLE purchase_orders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "purchase_orders: institution members can manage"
+  ON public.purchase_orders
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
+  ));
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._vendors_purchase_orders.sql`
+- [ ] Supabase Storage bucket: `purchase-invoices` (authenticated read, staff write by institution)
+- [ ] `src/app/institutions/[id]/vendors/page.tsx` — Vendor registry: list, add, edit, deactivate; filter by category
+- [ ] `src/app/institutions/[id]/vendors/purchase-orders/page.tsx` — PO list: filter by status, department, vendor, date range
+- [ ] `src/app/institutions/[id]/vendors/purchase-orders/[poId]/page.tsx` — PO detail: line items, status timeline, invoice upload, approve/reject actions
+- [ ] `src/actions/vendors.ts` — getVendors, addVendor, updateVendor
+- [ ] `src/actions/purchaseOrders.ts` — createPO, submitPO, approvePO, markReceived, markPaid, getPOStats
+- [ ] `src/components/vendors/VendorCard.tsx` — Card: vendor name, category badge, GST number, active PO count
+- [ ] `src/components/vendors/PurchaseOrderForm.tsx` — Line-item editor: vendor selector, item rows (name, qty, unit price), auto-total
+- [ ] Budget integration: approved PO amount auto-updates `budget_line_items.actual_amt` for the relevant department and category (Step 5L)
+- [ ] Asset receipt: when PO status → `received`, non-consumable items auto-populate the `assets` table (Step 4E)
+
+#### Key features:
+- PO approval workflow: department HOD raises PO → admin approves → vendor supplies → goods received → payment recorded
+- Auto-generated PO numbers per institution (PO-YYYY-NNNN sequence)
+- Line-item breakdown with quantity, unit price, and total — GST-ready
+- GST invoice PDF upload and storage (required for financial audit)
+- Asset receipt integration: received assets auto-appear in inventory registry (Step 4E)
+- Budget actuals integration: approved POs update department budget line items in real time (Step 5L)
+
+---
+
 ### Step 4F — Smart ID Card & NFC Card Registry
 
 **Route:** `/institutions/[id]/id-cards`
@@ -1967,6 +2049,64 @@ CREATE TABLE admissions (
 
 ---
 
+### Step 5A-sub — Admissions CRM & Merit List
+
+**Route:** `/institutions/[id]/admissions/crm`
+
+> The core admissions form (Step 5A) captures formal applications. This sub-step adds a pre-application enquiry layer (CRM) and a post-application merit list generator. Prospective students enquire months before applying — capturing and nurturing these leads converts to higher enrollment. Merit lists are a statutory requirement for most Indian UG/PG programs.
+
+#### Database:
+```sql
+CREATE TABLE admission_enquiries (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  name             TEXT NOT NULL,
+  phone            TEXT NOT NULL,
+  email            TEXT,
+  program_interest TEXT NOT NULL CHECK (program_interest IN ('UG','PG','Diploma','Certificate')),
+  department_id    UUID REFERENCES departments(id),
+  source           TEXT NOT NULL DEFAULT 'website'
+                   CHECK (source IN (
+                     'website','walk_in','phone','referral',
+                     'social_media','fair','other')),
+  enquiry_date     DATE NOT NULL DEFAULT CURRENT_DATE,
+  follow_up_date   DATE,
+  status           TEXT NOT NULL DEFAULT 'new'
+                   CHECK (status IN (
+                     'new','contacted','interested',
+                     'applied','not_interested','lost')),
+  notes            TEXT,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE admission_enquiries ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "admission_enquiries: institution members can manage"
+  ON public.admission_enquiries
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
+  ));
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._admission_enquiries.sql`
+- [ ] `src/app/institutions/[id]/admissions/crm/page.tsx` — CRM board: enquiries by status (Kanban), follow-up calendar, source breakdown chart
+- [ ] `src/app/institutions/[id]/admissions/crm/merit-list/page.tsx` — Merit list generator: filter by program/department, sort by marks %, generate ranked list, export as PDF
+- [ ] `src/actions/admissionsCRM.ts` — createEnquiry, updateEnquiryStatus, scheduleFollowUp, generateMeritList, exportMeritListPDF, generateOfferLetter
+- [ ] `src/components/admissions/EnquiryCard.tsx` — Card: name, program, source badge, last-contact date, follow-up countdown
+- [ ] `src/components/admissions/MeritListTable.tsx` — Ranked table: rank, applicant name, marks %, category, offer status
+- [ ] `src/components/admissions/OfferLetterTemplate.tsx` — Printable offer letter with institution letterhead, program, intake year, fee structure reference
+- [ ] Enquiry → Application conversion: "Convert to Application" button on enquiry card creates a new row in `admissions` table
+- [ ] Offer letter trigger: when application status moves to `admitted`, offer letter auto-generated and linked to the record
+
+#### Key features:
+- CRM funnel: enquiry → contacted → interested → applied → admitted pipeline
+- Source tracking: where did the enquiry come from (website, walk-in, social media, fair)
+- Follow-up scheduling: set a follow-up date per enquiry; overdue follow-ups highlighted in rose
+- Merit list: sort all applicants by qualifying marks % per program; export as PDF for statutory noticeboard posting
+- Offer letter: auto-filled with student name, program, institution letterhead, intake year, and fee structure reference
+- Admission confirmation fee: offer acceptance triggers fee collection (links to existing fee structures module)
+
+---
+
 ### Step 5B — Staff Recruitment Module
 
 **Route:** `/institutions/[id]/recruitment`
@@ -2013,6 +2153,78 @@ ALTER TABLE public.staff
   - Wardens: quick-link widget to hostel room occupancy grid
   - Mess Workers: meal schedule planner
   - Support Staff: shift history and wage reports
+
+---
+
+### Step 5C-sub — Indian Statutory Payroll (TDS / PF / ESI / Form 16)
+
+**Route:** `/institutions/[id]/finance/payroll/statutory`
+
+> Indian colleges must deduct TDS on salaries under Section 192, contribute to EPF, and deduct ESI for eligible employees. Non-compliance attracts heavy penalties from the Income Tax Department, EPFO, and ESIC. This module automates all three statutory deductions and generates Form 16 for each employee at financial year end.
+
+#### Database:
+```sql
+CREATE TABLE statutory_payroll_config (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE UNIQUE,
+  pf_employer_pct  NUMERIC(5,2) NOT NULL DEFAULT 12.00,
+  pf_employee_pct  NUMERIC(5,2) NOT NULL DEFAULT 12.00,
+  esi_employer_pct NUMERIC(5,2) NOT NULL DEFAULT 3.25,
+  esi_employee_pct NUMERIC(5,2) NOT NULL DEFAULT 0.75,
+  esi_wage_ceiling NUMERIC(10,2) NOT NULL DEFAULT 21000,
+  tan_number       TEXT,   -- TAN for TDS filings
+  pf_number        TEXT,   -- EPF establishment code
+  esi_number       TEXT,   -- ESI code number
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE staff_tax_declarations (
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id       UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  staff_id             UUID NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+  academic_year_id     UUID REFERENCES academic_years(id),
+  tax_regime           TEXT NOT NULL DEFAULT 'new' CHECK (tax_regime IN ('old','new')),
+  declared_investments JSONB,   -- 80C, 80D, HRA, LTA declarations
+  total_declared       NUMERIC(12,2) NOT NULL DEFAULT 0,
+  UNIQUE(staff_id, academic_year_id)
+);
+
+CREATE TABLE monthly_statutory_deductions (
+  id                     UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id         UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  staff_id               UUID NOT NULL REFERENCES staff(id) ON DELETE CASCADE,
+  salary_disbursement_id UUID REFERENCES salary_disbursements(id),
+  month                  TEXT NOT NULL,   -- e.g. "2025-07"
+  gross_salary           NUMERIC(10,2) NOT NULL,
+  basic_salary           NUMERIC(10,2) NOT NULL,
+  tds_deducted           NUMERIC(10,2) NOT NULL DEFAULT 0,
+  pf_employee            NUMERIC(10,2) NOT NULL DEFAULT 0,
+  pf_employer            NUMERIC(10,2) NOT NULL DEFAULT 0,
+  esi_employee           NUMERIC(10,2) NOT NULL DEFAULT 0,
+  esi_employer           NUMERIC(10,2) NOT NULL DEFAULT 0,
+  net_salary             NUMERIC(10,2) NOT NULL,
+  created_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(staff_id, month)
+);
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._statutory_payroll.sql`
+- [ ] `src/app/institutions/[id]/finance/payroll/statutory/page.tsx` — Statutory deduction dashboard: TDS summary, PF register, ESI register per month
+- [ ] `src/app/institutions/[id]/finance/payroll/statutory/form16/page.tsx` — Generate Form 16: select academic year, generate per-staff PDF, bulk download as ZIP
+- [ ] `src/actions/statutoryPayroll.ts` — computeTDS (income tax slab calculation old vs new regime), computePF, computeESI, runMonthlyStatutoryDeductions, generateForm16PDF
+- [ ] `src/components/finance/StatutoryDeductionTable.tsx` — Staff-wise monthly breakdown: gross, basic, TDS, PF employee, ESI employee, net
+- [ ] `src/components/finance/Form16Template.tsx` — Printable Form 16 Part B: employer details, TAN, salary breakup, deductions, TDS summary
+- [ ] Update salary slip component to show TDS, PF, ESI as named deduction line items
+- [ ] Staff portal: `src/app/staff-portal/tax-declaration/page.tsx` — Staff selects old/new tax regime, declares 80C/80D investments for TDS computation
+
+#### Key features:
+- TDS computation: old vs new tax regime per staff; applies standard deduction ₹50,000 (new regime); deducts declared 80C/80D (old regime); monthly TDS = annual tax liability ÷ 12
+- PF deduction: 12% employee + 12% employer on basic salary; EPF wage ceiling ₹15,000 for capped employer contribution
+- ESI deduction: 0.75% employee + 3.25% employer on gross; auto-disabled for employees earning > ₹21,000/month
+- Salary slip: TDS, PF, ESI shown as separate named deduction rows — not lumped as "other deductions"
+- Form 16 Part B: generated per employee per financial year in tax-department-prescribed format
+- Statutory registers: PF Form 12A and ESI register downloadable per month as compliance records
 
 ---
 
@@ -3211,6 +3423,32 @@ CREATE POLICY "iqac_action_items: institution members can manage"
 
 ---
 
+### Step 7F-sub — NAAC Self-Study Report (SSR) Builder
+
+**Route:** `/institutions/[id]/iqac/ssr`
+
+> The NAAC SSR is submitted once every 5–7 years. Aggregating data across all modules manually takes months and is error-prone. This module auto-generates the SSR data package by pulling from every NAAC-mapped module across all 7 Criteria, produces criterion-wise Excel sheets in NAAC-prescribed format, and generates the AISHE annual return and NIRF data extract in one click.
+
+#### What to build:
+- [ ] `src/app/institutions/[id]/iqac/ssr/page.tsx` — SSR dashboard: criterion-wise data completeness progress rings (Criteria 1–7), last-export timestamps, academic year selector
+- [ ] `src/app/institutions/[id]/iqac/ssr/[criterion]/page.tsx` — Per-criterion data review: evidence count table, data gaps highlighted, drill-down to source module
+- [ ] `src/app/institutions/[id]/iqac/ssr/export/page.tsx` — Export hub: download criterion-wise Excel (NAAC format), full SSR data ZIP, AISHE return, NIRF extract
+- [ ] `src/actions/ssrBuilder.ts` — aggregateSSRData, getCriterionCompleteness, exportCriterionExcel, exportAISHEReturn, exportNIRFExtract
+- [ ] `src/components/iqac/SSRCriterionCard.tsx` — Card per criterion: data completeness %, evidence count, missing-data warnings, "View Details" link
+- [ ] `src/components/iqac/SSRExportButton.tsx` — Trigger Excel/ZIP export with loading state and download link on completion
+- [ ] AISHE annual return: maps all Aura data fields to AISHE portal schema (leverages AISHE Field-Level Schema Mapping in Step 7F)
+- [ ] NIRF extract: student progression (2D), placement (5F), research output (5I), outreach/alumni (5D), per academic year
+
+#### Key features:
+- Central SSR aggregation: pulls evidence counts from all NAAC-mapped modules (CIA, lesson plans, guest lectures, internships, research papers, placements, grievances, etc.)
+- Criterion-wise completeness meter: shows % of required data fields populated — tells admin exactly what to fill before submission
+- Export: criterion-wise Excel sheets structured in NAAC-prescribed column headers
+- AISHE annual return: auto-populates all AISHE portal fields from Aura database in one export
+- NIRF data extract: five-parameter NIRF submission (Teaching, Research, Graduation, Outreach, Perception) with year-on-year comparison
+- Data gap warnings: highlights missing evidence (e.g., "Criterion 3 — 0 publications logged for 2024-25")
+
+---
+
 ### Phase 7 Completion Checklist
 - [ ] Super admin route fully protected
 - [ ] No cross-institution data leaks to regular admins
@@ -3782,79 +4020,6 @@ export async function logAudit(payload: AuditPayload): Promise<void> {
 - **Admin audit viewer** — institution admin can filter by module, user, and date range to answer "who changed this and when?"
 - **NAAC / UGC evidence** — the audit log page is the primary evidence for data integrity during accreditation visits
 - **ISO 27001 requirement** — audit trails for access and modification of sensitive data are a mandatory ISO 27001 control
-
----
-
-## 🆕 New Modules Added to Roadmap
-
-> These modules were identified as missing from the original roadmap. They have been inserted into the appropriate phases. The master tracker below has been updated accordingly.
-
-### Added to Phase 5C (Non-Teaching Staff & Payroll):
-**Step 5C-sub — Indian Statutory Payroll (TDS / PF / ESI / Form 16)**
-- [ ] TDS computation per employee based on tax slab (old vs new regime)
-- [ ] PF (Provident Fund) deduction: 12% employee + 12% employer on basic salary
-- [ ] ESI (Employee State Insurance): applicable for employees earning < ₹21,000/month
-- [ ] Form 16 generator: annual TDS certificate as PDF (Part A from TRACES + Part B computed)
-- [ ] `src/actions/statutoryPayroll.ts` — computeTDS, computePF, computeESI, generateForm16
-- [ ] Salary slip updated to show statutory deduction line items separately
-
-### Added to Phase 5A (Student Admissions):
-**Step 5A-sub — Admissions CRM & Merit List**
-- [ ] Enquiry management: capture prospective student enquiries (name, phone, program interest, source)
-- [ ] Application form: online application with document upload (marksheets, certificates)
-- [ ] Merit list generator: sort applicants by qualifying marks per program, generate ranked list PDF
-- [ ] Offer letter generator: auto-fill institution letterhead with student name, program, intake year
-- [ ] Admission confirmation + fee collection trigger (links to fee structures module)
-- [ ] `src/app/admissions/page.tsx` — Public-facing application form (no login required)
-
-### Added to Phase 7F (IQAC & Compliance Reports):
-**Step 7F-sub — NAAC Self-Study Report (SSR) Builder**
-- [ ] Central SSR aggregation dashboard: pulls data from all NAAC-mapped modules across Criteria 1–7
-- [ ] Per-criterion data summary with evidence count (guest lectures, internships, research papers, etc.)
-- [ ] Export: criterion-wise Excel sheets in NAAC-prescribed format
-- [ ] AISHE annual return: maps Aura data to AISHE portal field schema
-- [ ] NIRF data extract: student progression, placement, research output per academic year
-
-### Added to Phase 4E (Asset & Inventory):
-**Step 4E-sub — Vendor & Purchase Order Management**
-- [ ] `vendors` table: name, GST number, contact, category (lab equipment, stationery, furniture, IT)
-- [ ] `purchase_orders` table: vendor, items JSONB, total amount, status (draft/approved/received/paid)
-- [ ] PO approval workflow: department raises PO → HOD approves → admin releases payment
-- [ ] Asset receipt: received items auto-populate the asset registry (Step 4E)
-- [ ] GST-compliant purchase invoice storage (Supabase Storage)
-
-### Added to Phase 5 (after Step 5K):
-**Step 5L — Department Budget Management** *(ERP gap fix — NAAC 6.4)*
-- [ ] `department_budgets` table: per-department, per-academic-year, approval workflow
-- [ ] `budget_line_items` table: category-wise planned vs actual amounts
-- [ ] HOD drafts budget → admin approves → actuals auto-pulled from expense logger + POs
-- [ ] Budget vs actuals dashboard with variance highlighting
-- [ ] NAAC Criterion 6.4 export: budget utilisation per department per year
-
-### Added to Phase 6G (LMS scope expansion):
-**E-Learning expanded to full lightweight LMS** *(ERP gap fix — LMS standard)*
-- [ ] `lms_assignments` table: staff creates assignments with deadline and max marks
-- [ ] `lms_submissions` table: students upload work; auto-flagged if late
-- [ ] Gradebook page: student × assignment matrix with marks and averages
-- [ ] SCORM 1.2/2004 content player via iframe + postMessage completion tracking
-- [ ] Staff portal: grade submissions, add feedback per student
-
-### Added to Phase 7D (Security):
-**ISO 27001 Security Audit Checklist** *(ERP gap fix — ISO 27001)*
-- [ ] RLS policy map document (`docs/rls-policy-map.md`)
-- [ ] Security headers in `next.config.js` (CSP, X-Frame-Options, X-Content-Type-Options)
-- [ ] Data retention policy documented in `src/lib/dataRetention.ts`
-- [ ] Penetration test plan (`docs/security-audit-plan.md`)
-- [ ] Security dashboard page at `/admin/security`
-
-### Added to Phase 7F (IQAC):
-**AISHE Field-Level Schema + IQAC Meeting & Action Tracker** *(ERP gap fix — AISHE + NAAC 6.1)*
-- [ ] AISHE field mapping table: every AISHE portal field mapped to Aura data source
-- [ ] `students.category` + `students.is_pwd` migration (SC/ST/OBC/General/EWS + disability flag)
-- [ ] `iqac_meetings` table: meeting date, agenda, minutes, chaired-by
-- [ ] `iqac_action_items` table: description, assignee, due date, status
-- [ ] Meeting register page + action item tracker with inline status updates
-- [ ] NAAC Criterion 6.1 export: meeting count + % action items resolved
 
 ---
 
