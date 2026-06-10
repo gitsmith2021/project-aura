@@ -6,8 +6,7 @@ import {
   GraduationCap, Users, Calendar, ClipboardList, Wallet, BarChart2,
   Shield, Zap, ArrowRight, ArrowUp, Menu, X, Award, Briefcase, Mic2,
   BookText, Library, BadgePercent, Building2, Activity, CheckCircle2,
-  Layers, Database, Moon, Sun, Code2, Server, Cloud, Globe,
-  Cpu, GitBranch,
+  Layers, Database, Moon, Sun,
 } from "lucide-react";
 
 function scrollTo(id: string) {
@@ -108,27 +107,29 @@ const COMPARE = [
   ["Total Cost",             "High annual contracts","Transparent, fraction of cost"],
 ];
 
-const HERO_ICONS = [
-  { Icon: Code2,        s: 8,  top: "7%",  left: "4%",   color: "text-blue-400 dark:text-blue-500",      bg: "bg-blue-50/80   dark:bg-blue-500/10   border-blue-200/70 dark:border-blue-500/25",    delay: "0s",   dur: "5.2s" },
-  { Icon: Zap,          s: 7,  top: "5%",  left: "22%",  color: "text-amber-400 dark:text-amber-500",    bg: "bg-amber-50/80  dark:bg-amber-500/10  border-amber-200/70 dark:border-amber-500/25",  delay: "1.1s", dur: "4.8s" },
-  { Icon: Database,     s: 10, top: "9%",  left: "56%",  color: "text-sky-400 dark:text-sky-500",        bg: "bg-sky-50/80    dark:bg-sky-500/10    border-sky-200/70 dark:border-sky-500/25",      delay: "0.4s", dur: "5.6s" },
-  { Icon: Globe,        s: 8,  top: "6%",  left: "76%",  color: "text-violet-400 dark:text-violet-500",  bg: "bg-violet-50/80 dark:bg-violet-500/10 border-violet-200/70 dark:border-violet-500/25",delay: "1.8s", dur: "4.5s" },
-  { Icon: Cloud,        s: 9,  top: "8%",  left: "90%",  color: "text-purple-400 dark:text-purple-500",  bg: "bg-purple-50/80 dark:bg-purple-500/10 border-purple-200/70 dark:border-purple-500/25",delay: "0.7s", dur: "5.0s" },
-  { Icon: Server,       s: 11, top: "22%", left: "5%",   color: "text-emerald-400 dark:text-emerald-500",bg: "bg-emerald-50/80 dark:bg-emerald-500/10 border-emerald-200/70 dark:border-emerald-500/25",delay:"2.1s",dur:"5.3s" },
-  { Icon: GitBranch,    s: 7,  top: "36%", left: "2%",   color: "text-orange-400 dark:text-orange-500",  bg: "bg-orange-50/80 dark:bg-orange-500/10 border-orange-200/70 dark:border-orange-500/25",delay: "0.3s", dur: "4.7s" },
-  { Icon: Cpu,          s: 9,  top: "52%", left: "6%",   color: "text-pink-400 dark:text-pink-500",      bg: "bg-pink-50/80   dark:bg-pink-500/10   border-pink-200/70 dark:border-pink-500/25",    delay: "1.5s", dur: "5.8s" },
-  { Icon: Layers,       s: 8,  top: "68%", left: "3%",   color: "text-teal-400 dark:text-teal-500",      bg: "bg-teal-50/80   dark:bg-teal-500/10   border-teal-200/70 dark:border-teal-500/25",    delay: "0.9s", dur: "4.4s" },
-  { Icon: BookText,     s: 8,  top: "28%", left: "16%",  color: "text-indigo-400 dark:text-indigo-500",  bg: "bg-indigo-50/80 dark:bg-indigo-500/10 border-indigo-200/70 dark:border-indigo-500/25",delay: "1.3s", dur: "5.1s" },
-  { Icon: Library,      s: 7,  top: "72%", left: "19%",  color: "text-cyan-400 dark:text-cyan-500",      bg: "bg-cyan-50/80   dark:bg-cyan-500/10   border-cyan-200/70 dark:border-cyan-500/25",    delay: "2.4s", dur: "4.9s" },
-  { Icon: Shield,       s: 8,  top: "30%", left: "80%",  color: "text-rose-400 dark:text-rose-500",      bg: "bg-rose-50/80   dark:bg-rose-500/10   border-rose-200/70 dark:border-rose-500/25",    delay: "0.6s", dur: "5.5s" },
-  { Icon: BarChart2,    s: 10, top: "68%", left: "77%",  color: "text-blue-400 dark:text-blue-500",      bg: "bg-blue-50/80   dark:bg-blue-500/10   border-blue-200/70 dark:border-blue-500/25",    delay: "1.7s", dur: "4.6s" },
-  { Icon: Award,        s: 9,  top: "22%", left: "91%",  color: "text-amber-400 dark:text-amber-500",    bg: "bg-amber-50/80  dark:bg-amber-500/10  border-amber-200/70 dark:border-amber-500/25",  delay: "2.2s", dur: "5.4s" },
-  { Icon: Calendar,     s: 7,  top: "42%", left: "94%",  color: "text-violet-400 dark:text-violet-500",  bg: "bg-violet-50/80 dark:bg-violet-500/10 border-violet-200/70 dark:border-violet-500/25",delay: "0.2s", dur: "4.3s" },
-  { Icon: Users,        s: 11, top: "58%", left: "88%",  color: "text-emerald-400 dark:text-emerald-500",bg: "bg-emerald-50/80 dark:bg-emerald-500/10 border-emerald-200/70 dark:border-emerald-500/25",delay:"1.0s",dur:"5.7s" },
-  { Icon: GraduationCap,s: 9,  top: "88%", left: "10%",  color: "text-purple-400 dark:text-purple-500",  bg: "bg-purple-50/80 dark:bg-purple-500/10 border-purple-200/70 dark:border-purple-500/25",delay: "1.6s", dur: "5.2s" },
-  { Icon: Briefcase,    s: 8,  top: "90%", left: "38%",  color: "text-sky-400 dark:text-sky-500",        bg: "bg-sky-50/80    dark:bg-sky-500/10    border-sky-200/70 dark:border-sky-500/25",      delay: "0.5s", dur: "4.8s" },
-  { Icon: Mic2,         s: 7,  top: "87%", left: "62%",  color: "text-pink-400 dark:text-pink-500",      bg: "bg-pink-50/80   dark:bg-pink-500/10   border-pink-200/70 dark:border-pink-500/25",    delay: "1.9s", dur: "5.0s" },
-  { Icon: Wallet,       s: 9,  top: "89%", left: "84%",  color: "text-teal-400 dark:text-teal-500",      bg: "bg-teal-50/80   dark:bg-teal-500/10   border-teal-200/70 dark:border-teal-500/25",    delay: "0.8s", dur: "5.5s" },
+const TESTIMONIALS = [
+  { init: "EC", name: "Engineering College, Tamil Nadu",   quote: "Finally, a system that understands our NAAC workflow." },
+  { init: "AC", name: "Autonomous College, Kerala",        quote: "Setup took one day. Our staff actually use it." },
+  { init: "VI", name: "Vocational Institute, Maharashtra", quote: "The timetable AI alone is worth the price." },
+];
+
+const TESTIMONIAL_MS = 4500;
+
+const MARQUEE_ITEMS = [
+  { Icon: Calendar,      label: "Smart Timetable",       color: "from-blue-500 to-cyan-500" },
+  { Icon: BadgePercent,  label: "CIA Ledger",             color: "from-violet-500 to-purple-500" },
+  { Icon: ClipboardList, label: "Exam Management",        color: "from-orange-500 to-amber-500" },
+  { Icon: Library,       label: "Curriculum & Syllabus",  color: "from-emerald-500 to-teal-500" },
+  { Icon: Mic2,          label: "Guest Lectures",         color: "from-indigo-500 to-blue-500" },
+  { Icon: BookText,      label: "Lesson Plans",           color: "from-pink-500 to-rose-500" },
+  { Icon: Award,         label: "Results & Promotion",    color: "from-teal-500 to-green-500" },
+  { Icon: Wallet,        label: "Fee Management",         color: "from-green-500 to-emerald-500" },
+  { Icon: Briefcase,     label: "Internship Tracker",     color: "from-amber-500 to-yellow-500" },
+  { Icon: Users,         label: "Staff Portal",           color: "from-sky-500 to-blue-500" },
+  { Icon: GraduationCap, label: "Student Portal",         color: "from-purple-500 to-violet-500" },
+  { Icon: BarChart2,     label: "Accreditation Reports",  color: "from-rose-500 to-pink-500" },
+  { Icon: Shield,        label: "NAAC Compliance",        color: "from-violet-500 to-indigo-500" },
+  { Icon: Database,      label: "Secure Data",            color: "from-sky-500 to-teal-500" },
 ];
 
 const INPUT_CLS = "w-full px-3.5 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-400 dark:focus:border-violet-500 transition-colors";
@@ -140,6 +141,9 @@ export function LandingPage() {
   const [showBackTop,   setShowBackTop]   = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [techExpanded,  setTechExpanded]  = useState(false);
+  const [tIdx,          setTIdx]          = useState(0);
+  const [tProg,         setTProg]         = useState(0);
+  const [tPaused,       setTPaused]       = useState(false);
   const [demoForm,      setDemoForm]      = useState<DemoFormData>({
     institutionName: "", yourName: "", phone: "", institutionType: "",
   });
@@ -152,6 +156,16 @@ export function LandingPage() {
     window.addEventListener("scroll", fn, { passive: true });
     return () => window.removeEventListener("scroll", fn);
   }, []);
+
+  useEffect(() => {
+    if (tPaused) return;
+    setTProg(0);
+    const step = 50;
+    const inc  = (step / TESTIMONIAL_MS) * 100;
+    const prog = setInterval(() => setTProg(p => Math.min(p + inc, 100)), step);
+    const adv  = setTimeout(() => setTIdx(i => (i + 1) % TESTIMONIALS.length), TESTIMONIAL_MS);
+    return () => { clearInterval(prog); clearTimeout(adv); };
+  }, [tIdx, tPaused]);
 
   function handleDemoSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -180,11 +194,6 @@ export function LandingPage() {
   return (
     <div className={isDark ? "dark" : ""}>
       <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          33%       { transform: translateY(-10px) rotate(0.5deg); }
-          66%       { transform: translateY(-5px) rotate(-0.5deg); }
-        }
         @keyframes gridPulse {
           0%, 100% { opacity: 0.5; }
           50%       { opacity: 1; }
@@ -194,9 +203,14 @@ export function LandingPage() {
           70%  { box-shadow: 0 0 0 14px rgba(22,163,74,0); }
           100% { box-shadow: 0 0 0 0 rgba(22,163,74,0); }
         }
-        .float-icon { animation: float var(--dur,5s) ease-in-out var(--delay,0s) infinite; }
-        .grid-pulse  { animation: gridPulse 7s ease-in-out infinite; }
-        .wa-pulse    { animation: waPulse 2.2s ease-in-out infinite; }
+        @keyframes marquee {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .grid-pulse     { animation: gridPulse 7s ease-in-out infinite; }
+        .wa-pulse       { animation: waPulse 2.2s ease-in-out infinite; }
+        .marquee-track  { animation: marquee 40s linear infinite; }
+        .marquee-track:hover { animation-play-state: paused; }
       `}</style>
 
       <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white overflow-x-hidden transition-colors duration-300">
@@ -282,15 +296,6 @@ export function LandingPage() {
             <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_75%_55%_at_50%_45%,rgba(255,255,255,0)_30%,rgba(255,255,255,0.97)_100%)] dark:bg-[radial-gradient(ellipse_75%_55%_at_50%_45%,rgba(15,23,42,0)_30%,rgba(15,23,42,0.97)_100%)]" />
             <div className="absolute inset-0 -z-10 bg-gradient-to-b from-violet-50/60 via-transparent to-white dark:from-violet-950/20 dark:via-transparent dark:to-slate-950" />
 
-            {HERO_ICONS.map(({ Icon, s, top, left, color, bg, delay, dur }, i) => (
-              <div key={i}
-                className={`float-icon absolute hidden sm:flex items-center justify-center rounded-xl border backdrop-blur-sm shadow-sm pointer-events-none ${bg} ${color}`}
-                style={{ top, left, width: `${s * 4}px`, height: `${s * 4}px`, "--delay": delay, "--dur": dur } as React.CSSProperties}
-                aria-hidden="true">
-                <Icon size={Math.round(s * 1.6)} />
-              </div>
-            ))}
-
             {/* 2-column hero content */}
             <div className="relative z-10 max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center gap-10 lg:gap-14">
 
@@ -333,30 +338,6 @@ export function LandingPage() {
                   ))}
                 </div>
 
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-widest mb-4 text-center lg:text-left">
-                  Covering every academic workflow
-                </p>
-                <div className="flex flex-wrap justify-center lg:justify-start gap-2 max-w-2xl">
-                  {[
-                    { Icon: Calendar,       label: "Timetable" },
-                    { Icon: BadgePercent,   label: "CIA Ledger" },
-                    { Icon: ClipboardList,  label: "Exam Planner" },
-                    { Icon: Library,        label: "Curriculum" },
-                    { Icon: BookText,       label: "Lesson Plans" },
-                    { Icon: Mic2,           label: "Guest Lectures" },
-                    { Icon: Briefcase,      label: "Internships" },
-                    { Icon: Award,          label: "Results" },
-                    { Icon: Wallet,         label: "Finance" },
-                    { Icon: Users,          label: "Staff Portal" },
-                    { Icon: GraduationCap,  label: "Student Portal" },
-                    { Icon: BarChart2,      label: "Reports" },
-                  ].map(({ Icon, label }) => (
-                    <span key={label}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700/50 hover:border-violet-300 dark:hover:border-violet-500/40 hover:bg-violet-50 dark:hover:bg-slate-900 rounded-full text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-violet-600 dark:hover:text-violet-300 transition-all cursor-default shadow-sm">
-                      <Icon size={11} className="text-violet-500 shrink-0" /> {label}
-                    </span>
-                  ))}
-                </div>
               </div>
 
               {/* RIGHT: Demo form */}
@@ -425,9 +406,31 @@ export function LandingPage() {
             </div>
           </section>
 
+          {/* ════════════════════ MARQUEE ════════════════════ */}
+          <div className="overflow-hidden py-7 border-y border-slate-100 dark:border-slate-800/40 bg-white dark:bg-transparent">
+            <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-600 mb-5">
+              Covering every academic workflow
+            </p>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-20 sm:w-32 z-10 bg-gradient-to-r from-white dark:from-slate-950 to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-20 sm:w-32 z-10 bg-gradient-to-l from-white dark:from-slate-950 to-transparent" />
+              <div className="marquee-track flex gap-3 w-max">
+                {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map(({ Icon, label, color }, i) => (
+                  <span key={i}
+                    className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/60 text-sm font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap shrink-0 shadow-sm">
+                    <span className={`w-7 h-7 rounded-full bg-gradient-to-br ${color} flex items-center justify-center shrink-0 shadow-sm`}>
+                      <Icon size={13} className="text-white" />
+                    </span>
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* ════════════════════ STATS BAR ════════════════════ */}
-          <div className="border-y border-slate-200 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-900/30">
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-700 dark:from-violet-700 dark:via-purple-800 dark:to-violet-800">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               {[
                 { value: "30+",       label: "Modules" },
                 { value: "NAAC 1–7",  label: "Criteria Covered" },
@@ -435,8 +438,8 @@ export function LandingPage() {
                 { value: "Same-Day",  label: "Onboarding" },
               ].map(s => (
                 <div key={s.label}>
-                  <p className="text-3xl md:text-4xl font-black bg-gradient-to-r from-violet-600 to-purple-600 dark:from-violet-400 dark:to-purple-400 bg-clip-text text-transparent">{s.value}</p>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 font-semibold uppercase tracking-widest">{s.label}</p>
+                  <p className="text-3xl md:text-4xl font-black text-white">{s.value}</p>
+                  <p className="text-[11px] text-violet-200 mt-1 font-semibold uppercase tracking-widest">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -490,34 +493,54 @@ export function LandingPage() {
             </div>
           </section>
 
-          {/* ════════════════════ SOCIAL PROOF ════════════════════ */}
+          {/* ════════════════════ SOCIAL PROOF CAROUSEL ════════════════════ */}
           <section aria-label="Social proof" className="py-16 sm:py-20 px-4 sm:px-6 bg-slate-50/80 dark:bg-slate-900/20 border-y border-slate-100 dark:border-slate-800/40">
-            <div className="max-w-5xl mx-auto">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-center text-slate-400 dark:text-slate-500 mb-8 letter-spacing-wider">
+            <div className="max-w-2xl mx-auto">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-center text-slate-400 dark:text-slate-500 mb-8">
                 Currently Onboarding Early Access Institutions
               </p>
 
-              <div className="grid sm:grid-cols-3 gap-4 sm:gap-5 mb-7">
-                {[
-                  { init: "EC", name: "Engineering College, Tamil Nadu",   quote: "Finally, a system that understands our NAAC workflow." },
-                  { init: "AC", name: "Autonomous College, Kerala",        quote: "Setup took one day. Our staff actually use it." },
-                  { init: "VI", name: "Vocational Institute, Maharashtra", quote: "The timetable AI alone is worth the price." },
-                ].map(t => (
-                  <div key={t.name}
-                    className="rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/60 p-5 shadow-sm hover:shadow-md hover:border-violet-200 dark:hover:border-violet-700/40 transition-all">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-violet-100 dark:bg-violet-500/20 border border-violet-200 dark:border-violet-500/30 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-black text-violet-600 dark:text-violet-400">{t.init}</span>
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-slate-800 dark:text-white leading-snug">{t.name}</p>
-                        <span className="inline-block text-[10px] font-semibold bg-teal-100 dark:bg-teal-500/15 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/25 px-2 py-0.5 rounded-full mt-1">
-                          Early Access Partner
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-400 italic leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
+              {/* carousel card */}
+              <div
+                className="rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/60 p-7 sm:p-8 shadow-md mb-5 cursor-default"
+                onMouseEnter={() => setTPaused(true)}
+                onMouseLeave={() => setTPaused(false)}>
+
+                {/* progress bar */}
+                <div className="h-0.5 bg-slate-100 dark:bg-slate-800 rounded-full mb-6 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full"
+                    style={{ width: `${tProg}%`, transition: "width 50ms linear" }} />
+                </div>
+
+                {/* quote */}
+                <p className="text-xl sm:text-2xl font-semibold text-slate-800 dark:text-white leading-snug mb-6 italic">
+                  &ldquo;{TESTIMONIALS[tIdx].quote}&rdquo;
+                </p>
+
+                {/* avatar + name */}
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0 shadow-md">
+                    <span className="text-sm font-black text-white">{TESTIMONIALS[tIdx].init}</span>
                   </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800 dark:text-white">{TESTIMONIALS[tIdx].name}</p>
+                    <span className="inline-block text-[10px] font-semibold bg-teal-100 dark:bg-teal-500/15 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/25 px-2 py-0.5 rounded-full mt-0.5">
+                      Early Access Partner
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* dot navigation */}
+              <div className="flex justify-center items-center gap-2 mb-7">
+                {TESTIMONIALS.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => { setTIdx(i); setTProg(0); }}
+                    className={`rounded-full transition-all duration-300 ${i === tIdx ? "w-6 h-2 bg-violet-600" : "w-2 h-2 bg-slate-300 dark:bg-slate-600 hover:bg-violet-400 dark:hover:bg-violet-500"}`}
+                    aria-label={`Testimonial ${i + 1}`} />
                 ))}
               </div>
 
@@ -872,19 +895,22 @@ export function LandingPage() {
           </section>
 
           {/* ════════════════════ CTA BANNER ════════════════════ */}
-          <section aria-label="Call to action" className="py-24 sm:py-28 px-4 sm:px-6 bg-white dark:bg-transparent">
-            <div className="max-w-4xl mx-auto">
-              <div className="relative rounded-3xl overflow-hidden border border-violet-200 dark:border-violet-700/25 p-10 sm:p-16 md:p-20 text-center shadow-xl shadow-violet-100/60 dark:shadow-none">
-                <div className="absolute inset-0 bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 dark:from-violet-900/50 dark:via-purple-950/60 dark:to-indigo-900/50 -z-10" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(124,58,237,0.12)_0%,_transparent_65%)] dark:bg-[radial-gradient(ellipse_at_center,_rgba(124,58,237,0.25)_0%,_transparent_65%)] -z-10" />
-                <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.04] -z-10"
-                  style={{ backgroundImage: "linear-gradient(rgba(0,0,0,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.5) 1px,transparent 1px)", backgroundSize: "40px 40px" }} />
+          <section aria-label="Call to action" className="py-20 sm:py-24 px-4 sm:px-6 relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-700 to-indigo-700 dark:from-violet-700 dark:via-purple-900 dark:to-indigo-900">
+            {/* dot grid overlay */}
+            <div className="absolute inset-0 opacity-[0.08]"
+              style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
+            {/* ambient glows */}
+            <div className="absolute -top-32 -left-32 w-80 h-80 bg-violet-400/30 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-indigo-400/20 rounded-full blur-3xl pointer-events-none" />
 
+            <div className="max-w-4xl mx-auto relative z-10">
+              {/* white card */}
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 sm:p-16 md:p-20 text-center shadow-2xl shadow-black/25">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 mb-5">Get Started Today</p>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-5 leading-tight">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-5 leading-tight text-slate-900 dark:text-white">
                   Stop managing chaos.
                   <br />
-                  <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 dark:from-violet-300 dark:via-fuchsia-300 dark:to-pink-300 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 dark:from-violet-400 dark:via-fuchsia-400 dark:to-pink-400 bg-clip-text text-transparent">
                     Start running your institution.
                   </span>
                 </h2>
@@ -892,12 +918,12 @@ export function LandingPage() {
                   No 6-month implementation. No ₹50L consulting fees. One platform, every workflow, accreditation-ready from day one.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-                  <button type="button" onClick={() => scrollTo("features")}
-                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl transition-all hover:scale-105 shadow-2xl shadow-violet-500/30 border border-violet-500 text-base">
+                  <button type="button" onClick={() => scrollTo("contact")}
+                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl transition-all hover:scale-105 shadow-xl shadow-violet-500/25 border border-violet-500 text-base">
                     Schedule a Free Demo <ArrowRight size={18} />
                   </button>
                   <button type="button" onClick={() => scrollTo("features")}
-                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 text-slate-700 dark:text-white font-semibold rounded-xl border border-slate-200 dark:border-white/10 hover:border-violet-300 transition-all text-base">
+                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-semibold rounded-xl border border-slate-200 dark:border-slate-700 transition-all text-base">
                     See All Features
                   </button>
                 </div>
