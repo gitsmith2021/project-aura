@@ -144,6 +144,7 @@ export function LandingPage() {
   const [tIdx,          setTIdx]          = useState(0);
   const [tProg,         setTProg]         = useState(0);
   const [tPaused,       setTPaused]       = useState(false);
+  const [heroMouse,     setHeroMouse]     = useState({ x: 0, y: 0 });
   const [demoForm,      setDemoForm]      = useState<DemoFormData>({
     institutionName: "", yourName: "", phone: "", institutionType: "",
   });
@@ -180,6 +181,14 @@ export function LandingPage() {
     setDemoForm(prev => ({ ...prev, [key]: value }));
   }
 
+  function handleHeroMouseMove(e: React.MouseEvent<HTMLElement>) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setHeroMouse({
+      x: ((e.clientX - rect.left) / rect.width  - 0.5) * 28,
+      y: ((e.clientY - rect.top)  / rect.height - 0.5) * 28,
+    });
+  }
+
   const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919XXXXXXXXX";
 
   const NAV_LINKS = [
@@ -211,6 +220,14 @@ export function LandingPage() {
         .wa-pulse       { animation: waPulse 2.2s ease-in-out infinite; }
         .marquee-track  { animation: marquee 40s linear infinite; }
         .marquee-track:hover { animation-play-state: paused; }
+        @keyframes floatOrb {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33%       { transform: translate(15px, -20px) scale(1.08); }
+          66%       { transform: translate(-10px, 15px) scale(0.94); }
+        }
+        .float-orb-1 { animation: floatOrb 10s ease-in-out infinite; }
+        .float-orb-2 { animation: floatOrb 14s ease-in-out infinite reverse; }
+        .float-orb-3 { animation: floatOrb 8s ease-in-out infinite 3s; }
       `}</style>
 
       <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white overflow-x-hidden transition-colors duration-300">
@@ -286,14 +303,16 @@ export function LandingPage() {
 
         <main>
           {/* ════════════════════ HERO ════════════════════ */}
-          <section aria-label="Hero" className="relative min-h-[calc(100vh-64px)] flex flex-col items-center justify-center pt-10 pb-20 px-4 sm:px-6 overflow-hidden">
+          <section aria-label="Hero" className="relative min-h-[calc(100vh-64px)] flex flex-col items-center justify-center pt-10 pb-20 px-4 sm:px-6 overflow-hidden" onMouseMove={handleHeroMouseMove} onMouseLeave={() => setHeroMouse({ x: 0, y: 0 })}>
 
             <div className="absolute inset-0 -z-10 grid-pulse"
               style={{
-                backgroundImage: "linear-gradient(rgba(139,92,246,0.09) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,0.09) 1px,transparent 1px)",
-                backgroundSize: "56px 56px",
+                backgroundImage: "radial-gradient(circle, rgba(139,92,246,0.45) 1.5px, transparent 1.5px)",
+                backgroundSize: "28px 28px",
+                transform: `translate(${heroMouse.x}px, ${heroMouse.y}px) scale(1.08)`,
+                transition: "transform 0.35s ease-out",
               }} />
-            <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_75%_55%_at_50%_45%,rgba(255,255,255,0)_30%,rgba(255,255,255,0.97)_100%)] dark:bg-[radial-gradient(ellipse_75%_55%_at_50%_45%,rgba(15,23,42,0)_30%,rgba(15,23,42,0.97)_100%)]" />
+            <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_75%_55%_at_50%_45%,rgba(255,255,255,0)_55%,rgba(255,255,255,0.85)_100%)] dark:bg-[radial-gradient(ellipse_75%_55%_at_50%_45%,rgba(15,23,42,0)_55%,rgba(15,23,42,0.85)_100%)]" />
             <div className="absolute inset-0 -z-10 bg-gradient-to-b from-violet-50/60 via-transparent to-white dark:from-violet-950/20 dark:via-transparent dark:to-slate-950" />
 
             {/* 2-column hero content */}
@@ -406,28 +425,6 @@ export function LandingPage() {
             </div>
           </section>
 
-          {/* ════════════════════ MARQUEE ════════════════════ */}
-          <div className="overflow-hidden py-7 border-y border-slate-100 dark:border-slate-800/40 bg-white dark:bg-transparent">
-            <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-600 mb-5">
-              Covering every academic workflow
-            </p>
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-20 sm:w-32 z-10 bg-gradient-to-r from-white dark:from-slate-950 to-transparent" />
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-20 sm:w-32 z-10 bg-gradient-to-l from-white dark:from-slate-950 to-transparent" />
-              <div className="marquee-track flex gap-3 w-max">
-                {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map(({ Icon, label, color }, i) => (
-                  <span key={i}
-                    className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/60 text-sm font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap shrink-0 shadow-sm">
-                    <span className={`w-7 h-7 rounded-full bg-gradient-to-br ${color} flex items-center justify-center shrink-0 shadow-sm`}>
-                      <Icon size={13} className="text-white" />
-                    </span>
-                    {label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-
           {/* ════════════════════ STATS BAR ════════════════════ */}
           <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-700 dark:from-violet-700 dark:via-purple-800 dark:to-violet-800">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
@@ -494,8 +491,11 @@ export function LandingPage() {
           </section>
 
           {/* ════════════════════ SOCIAL PROOF CAROUSEL ════════════════════ */}
-          <section aria-label="Social proof" className="py-16 sm:py-20 px-4 sm:px-6 bg-slate-50/80 dark:bg-slate-900/20 border-y border-slate-100 dark:border-slate-800/40">
-            <div className="max-w-2xl mx-auto">
+          <section aria-label="Social proof" className="py-16 sm:py-20 px-4 sm:px-6 relative overflow-hidden bg-gradient-to-br from-indigo-50 via-violet-50/70 to-purple-50 dark:from-indigo-950/40 dark:via-violet-950/25 dark:to-purple-950/30 border-y border-indigo-100/60 dark:border-violet-900/20">
+            <div className="absolute -top-20 -left-20 w-80 h-80 bg-violet-300/25 dark:bg-violet-600/10 rounded-full blur-3xl pointer-events-none float-orb-1" />
+            <div className="absolute -bottom-16 -right-16 w-72 h-72 bg-indigo-300/20 dark:bg-indigo-600/8 rounded-full blur-3xl pointer-events-none float-orb-2" />
+            <div className="absolute top-1/3 right-1/4 w-56 h-56 bg-purple-300/15 dark:bg-purple-600/8 rounded-full blur-3xl pointer-events-none float-orb-3" />
+            <div className="relative z-10 max-w-2xl mx-auto">
               <p className="text-[11px] font-bold uppercase tracking-widest text-center text-slate-400 dark:text-slate-500 mb-8">
                 Currently Onboarding Early Access Institutions
               </p>
@@ -633,6 +633,28 @@ export function LandingPage() {
               </div>
             </div>
           </section>
+
+          {/* ════════════════════ MARQUEE ════════════════════ */}
+          <div className="overflow-hidden py-7 border-y border-slate-100 dark:border-slate-800/40 bg-white dark:bg-transparent">
+            <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-600 mb-5">
+              Covering every academic workflow
+            </p>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-20 sm:w-32 z-10 bg-gradient-to-r from-white dark:from-slate-950 to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-20 sm:w-32 z-10 bg-gradient-to-l from-white dark:from-slate-950 to-transparent" />
+              <div className="marquee-track flex gap-3 w-max">
+                {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map(({ Icon, label, color }, i) => (
+                  <span key={i}
+                    className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900/60 text-sm font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap shrink-0 shadow-sm">
+                    <span className={`w-7 h-7 rounded-full bg-gradient-to-br ${color} flex items-center justify-center shrink-0 shadow-sm`}>
+                      <Icon size={13} className="text-white" />
+                    </span>
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
 
           {/* ════════════════════ ACCREDITATION ════════════════════ */}
           <section id="naac" aria-label="Accreditation alignment" className="py-24 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-violet-50 via-purple-50/50 to-white dark:from-violet-950/25 dark:via-purple-950/20 dark:to-transparent border-y border-violet-100 dark:border-violet-900/20">
@@ -894,8 +916,8 @@ export function LandingPage() {
             </div>
           </section>
 
-          {/* ════════════════════ CTA BANNER ════════════════════ */}
-          <section aria-label="Call to action" className="py-20 sm:py-24 px-4 sm:px-6 relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-700 to-indigo-700 dark:from-violet-700 dark:via-purple-900 dark:to-indigo-900">
+          {/* ════════════════════ CTA + CONTACT ════════════════════ */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-700 to-indigo-700 dark:from-violet-700 dark:via-purple-900 dark:to-indigo-900">
             {/* dot grid overlay */}
             <div className="absolute inset-0 opacity-[0.08]"
               style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.6) 1px, transparent 1px)", backgroundSize: "28px 28px" }} />
@@ -903,46 +925,49 @@ export function LandingPage() {
             <div className="absolute -top-32 -left-32 w-80 h-80 bg-violet-400/30 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-indigo-400/20 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="max-w-4xl mx-auto relative z-10">
-              {/* white card */}
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 sm:p-16 md:p-20 text-center shadow-2xl shadow-black/25">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 mb-5">Get Started Today</p>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-5 leading-tight text-slate-900 dark:text-white">
-                  Stop managing chaos.
-                  <br />
-                  <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 dark:from-violet-400 dark:via-fuchsia-400 dark:to-pink-400 bg-clip-text text-transparent">
-                    Start running your institution.
-                  </span>
-                </h2>
-                <p className="text-slate-500 dark:text-slate-400 mb-10 max-w-md mx-auto text-sm leading-relaxed">
-                  No 6-month implementation. No ₹50L consulting fees. One platform, every workflow, accreditation-ready from day one.
-                </p>
-                <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-                  <button type="button" onClick={() => scrollTo("contact")}
-                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl transition-all hover:scale-105 shadow-xl shadow-violet-500/25 border border-violet-500 text-base">
-                    Schedule a Free Demo <ArrowRight size={18} />
-                  </button>
-                  <button type="button" onClick={() => scrollTo("features")}
-                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-semibold rounded-xl border border-slate-200 dark:border-slate-700 transition-all text-base">
-                    See All Features
-                  </button>
+            {/* CTA */}
+            <section aria-label="Call to action" className="pt-20 sm:pt-24 px-4 sm:px-6 relative z-10">
+              <div className="max-w-4xl mx-auto">
+                {/* white card */}
+                <div className="bg-white dark:bg-slate-900 rounded-3xl p-10 sm:p-16 md:p-20 text-center shadow-2xl shadow-black/25">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 mb-5">Get Started Today</p>
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-5 leading-tight text-slate-900 dark:text-white">
+                    Stop managing chaos.
+                    <br />
+                    <span className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 dark:from-violet-400 dark:via-fuchsia-400 dark:to-pink-400 bg-clip-text text-transparent">
+                      Start running your institution.
+                    </span>
+                  </h2>
+                  <p className="text-slate-500 dark:text-slate-400 mb-10 max-w-md mx-auto text-sm leading-relaxed">
+                    No 6-month implementation. No ₹50L consulting fees. One platform, every workflow, accreditation-ready from day one.
+                  </p>
+                  <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                    <button type="button" onClick={() => scrollTo("contact")}
+                      className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-violet-600 hover:bg-violet-500 text-white font-black rounded-xl transition-all hover:scale-105 shadow-xl shadow-violet-500/25 border border-violet-500 text-base">
+                      Schedule a Free Demo <ArrowRight size={18} />
+                    </button>
+                    <button type="button" onClick={() => scrollTo("features")}
+                      className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white font-semibold rounded-xl border border-slate-200 dark:border-slate-700 transition-all text-base">
+                      See All Features
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
 
-          {/* ════════════════════ CONTACT ════════════════════ */}
-          <section id="contact" aria-label="Contact" className="pb-12 px-4 sm:px-6 bg-white dark:bg-transparent">
-            <div className="max-w-4xl mx-auto text-center">
-              <div className="inline-flex flex-wrap justify-center items-center gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400">
-                <Activity size={12} />
-                Questions, demos or custom requirements?
-                <a href="mailto:hello@aura.edu" className="text-violet-600 dark:text-violet-400 hover:underline font-semibold transition-colors">
-                  hello@aura.edu
-                </a>
+            {/* Contact */}
+            <section id="contact" aria-label="Contact" className="py-10 px-4 sm:px-6 relative z-10">
+              <div className="max-w-4xl mx-auto text-center">
+                <div className="inline-flex flex-wrap justify-center items-center gap-2 px-5 py-3 bg-white/15 border border-white/25 rounded-xl text-xs text-white/80 backdrop-blur-sm">
+                  <Activity size={12} />
+                  Questions, demos or custom requirements?
+                  <a href="mailto:hello@aura.edu" className="text-white font-semibold hover:text-white/80 hover:underline transition-colors">
+                    hello@aura.edu
+                  </a>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
         </main>
 
         {/* ════════════════════ FOOTER ════════════════════ */}
