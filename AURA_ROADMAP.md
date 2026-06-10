@@ -4023,8 +4023,6 @@ export async function logAudit(payload: AuditPayload): Promise<void> {
 
 ---
 
----
-
 ## 🏃 How to Run Full Stack Locally
 
 ```bash
