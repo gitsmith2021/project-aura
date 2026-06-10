@@ -843,18 +843,173 @@ CREATE POLICY "internships: institution members can manage"
 
 ---
 
-### Phase 2 Completion Checklist
-- [ ] All pre-requisite Foundation Migrations (2-Pre-A through 2-Pre-D) committed before starting this phase
-- [ ] Academic years table live; at least one year marked `is_current = true`
-- [ ] All nine sub-steps (2A–2I) built and tested
-- [ ] Academic calendar visible in all three portals (admin, staff, student)
-- [ ] Marks entry → arrear detection → year promotion pipeline working end-to-end
-- [ ] CIA marks integrate into marksheet totals correctly
-- [ ] Syllabus completion tracking working for at least one department
-- [ ] Lesson plan diary accessible to admin (NAAC site visit ready)
-- [ ] Guest lectures logged and linked to curriculum units
-- [ ] Marksheet printable as PDF
-- [ ] `git commit -m "feat: Phase 2 — Academic Operations complete"`
+### Phase 2 Completion Checklist ✅ COMPLETE
+- [x] All pre-requisite Foundation Migrations (2-Pre-A through 2-Pre-D) committed before starting this phase
+- [x] Academic years table live; at least one year marked `is_current = true`
+- [x] All nine sub-steps (2A–2I) built and tested
+- [x] Academic calendar visible in all three portals (admin, staff, student)
+- [x] Marks entry → arrear detection → year promotion pipeline working end-to-end
+- [x] CIA marks integrate into marksheet totals correctly
+- [x] Syllabus completion tracking working for at least one department
+- [x] Lesson plan diary accessible to admin (NAAC site visit ready)
+- [x] Guest lectures logged and linked to curriculum units
+- [x] Marksheet printable as PDF
+- [x] `git commit -m "feat: Phase 2 — Academic Operations complete"`
+- [x] `git push origin main`
+
+---
+
+## 🚨 Phase 2.5 — Immediate Critical Fixes (Do Before Phase 3)
+
+> **Why this phase exists:** Three high-risk gaps were identified after Phase 2 completion that must be patched before any new feature work. These are not new features — they are security and reliability fixes to modules already live. Do not skip this phase.
+
+### Step 2.5A — Razorpay Webhook Signature Verification 🔒
+
+> **Risk:** The live fee payment module accepts Razorpay webhook events without verifying the `X-Razorpay-Signature` header. A malicious actor can POST a fake `payment.captured` event and mark a fee as paid without actual payment.
+
+#### What to fix:
+- [ ] `src/app/api/razorpay-webhook/route.ts` — Add HMAC-SHA256 signature verification using `RAZORPAY_WEBHOOK_SECRET`
+- [ ] Verify: `crypto.createHmac('sha256', secret).update(rawBody).digest('hex') === X-Razorpay-Signature`
+- [ ] Use `req.text()` to get the raw body **before** JSON parsing — parsed body breaks HMAC
+- [ ] Return `400` immediately on signature mismatch; log the attempt for audit
+- [ ] Add `RAZORPAY_WEBHOOK_SECRET` to `.env.local` and Vercel env vars
+- [ ] Test with Razorpay webhook simulator in test mode
+
+#### Code pattern:
+```typescript
+// src/app/api/razorpay-webhook/route.ts
+import crypto from 'crypto';
+
+export async function POST(req: Request) {
+  const rawBody = await req.text();
+  const signature = req.headers.get('x-razorpay-signature') ?? '';
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET!;
+  const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+  if (!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
+    return new Response('Invalid signature', { status: 400 });
+  }
+  const event = JSON.parse(rawBody);
+  // ... process event
+}
+```
+
+#### Env var to add:
+```env
+RAZORPAY_WEBHOOK_SECRET=   # From Razorpay Dashboard → Webhooks → Secret
+```
+
+---
+
+### Step 2.5B — Data Privacy & DPDP Act 2023 Compliance Framework 🔐
+
+> **Risk:** India's Digital Personal Data Protection Act 2023 is enforceable. Aura stores student PII (name, DOB, medical records, financial data, biometric NFC). Operating without consent capture and data subject rights exposes every institution client to regulatory liability.
+
+#### Database:
+```sql
+CREATE TABLE data_consent_logs (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  user_id         UUID NOT NULL REFERENCES auth.users(id),
+  consent_type    TEXT NOT NULL CHECK (consent_type IN (
+                    'platform_terms','data_processing','marketing_comms',
+                    'biometric_nfc','medical_records','photo_usage')),
+  consented       BOOLEAN NOT NULL,
+  ip_address      TEXT,
+  user_agent      TEXT,
+  consented_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  withdrawn_at    TIMESTAMPTZ
+);
+ALTER TABLE data_consent_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE data_erasure_requests (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id  UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  requested_by    UUID NOT NULL REFERENCES auth.users(id),
+  subject_type    TEXT NOT NULL CHECK (subject_type IN ('student','staff','parent')),
+  subject_id      UUID NOT NULL,
+  reason          TEXT,
+  status          TEXT NOT NULL DEFAULT 'pending'
+                  CHECK (status IN ('pending','in_review','completed','rejected')),
+  admin_notes     TEXT,
+  requested_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  resolved_at     TIMESTAMPTZ
+);
+ALTER TABLE data_erasure_requests ENABLE ROW LEVEL SECURITY;
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._dpdp_compliance.sql` — consent_logs + erasure_requests tables
+- [ ] `src/app/privacy-policy/page.tsx` — Public privacy policy page (required by DPDP)
+- [ ] `src/components/auth/ConsentBanner.tsx` — Consent capture on first login (checkboxes for data processing, marketing, biometric if applicable)
+- [ ] `src/actions/privacy.ts` — recordConsent, withdrawConsent, requestErasure, getConsentStatus
+- [ ] `src/app/institutions/[id]/compliance/page.tsx` — Admin view: erasure requests queue, consent audit log
+- [ ] Student/Staff portal: `src/app/[portal]/privacy/page.tsx` — View consents given, withdraw specific consent, submit erasure request
+- [ ] Data retention policy: define retention periods per data type in `src/lib/dataRetention.ts` (e.g. financial records: 7 years; medical: 5 years; attendance: 3 years)
+- [ ] Add privacy policy link to all portal footers and login pages
+
+#### Key rules (DPDP 2023):
+- Consent must be free, specific, informed, and unambiguous
+- Users have the right to withdraw consent at any time
+- Data erasure requests must be fulfilled within 72 hours (or documented reason for refusal)
+- Children under 18 require verifiable parental consent for data processing
+
+---
+
+### Step 2.5C — Backup, Disaster Recovery & Scheduler Resilience ☁️
+
+> **Risk:** No documented backup strategy for a live SaaS holding marks, financial, and attendance data. The Python scheduler on port 8000 has no health check or fallback — if it goes down, timetable generation is completely broken with no user-facing error.
+
+#### Supabase Backup Configuration:
+- [ ] Enable **Point-in-Time Recovery (PITR)** on the Supabase project dashboard (requires Pro plan)
+- [ ] Set backup retention to minimum 7 days (30 days recommended for production)
+- [ ] Document RTO (Recovery Time Objective): target < 4 hours
+- [ ] Document RPO (Recovery Point Objective): target < 1 hour with PITR
+- [ ] Set up weekly manual export via `supabase db dump` in a GitHub Actions cron workflow → store encrypted in a private S3 bucket or Supabase Storage private bucket
+
+#### Scheduler Health & Fallback:
+- [ ] `src/lib/scheduler.ts` — Wrap all `SCHEDULER_API_URL` calls in a `callScheduler()` helper that:
+  - Sets a 30s timeout
+  - Catches network errors and returns `{ success: false, error: 'Scheduler unavailable' }`
+  - Logs the failure to a `scheduler_error_logs` table for admin visibility
+- [ ] `src/app/api/scheduler-health/route.ts` — Health check endpoint that pings `SCHEDULER_API_URL/health` and returns status
+- [ ] `src/app/institutions/[id]/timetable/page.tsx` — Show a visible banner when scheduler is unreachable: "AI Scheduler is offline — you can still publish a manually built draft"
+- [ ] Add uptime monitoring for scheduler (use UptimeRobot free tier or similar) and alert admin via email if down > 5 minutes
+- [ ] Document manual timetable fallback procedure in the admin guide
+
+#### GitHub Actions backup workflow:
+```yaml
+# .github/workflows/db-backup.yml
+name: Weekly DB Backup
+on:
+  schedule:
+    - cron: '0 2 * * 0'  # Every Sunday at 2 AM UTC
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: supabase/setup-cli@v1
+      - run: supabase db dump --db-url ${{ secrets.SUPABASE_DB_URL }} > backup.sql
+      - run: gzip backup.sql
+      # Upload to storage of your choice
+```
+
+#### Env var to add:
+```env
+SUPABASE_DB_URL=   # postgres://... direct connection string (from Supabase dashboard)
+```
+
+---
+
+### Phase 2.5 Completion Checklist
+- [ ] Razorpay webhook signature verified and tested with simulator
+- [ ] `RAZORPAY_WEBHOOK_SECRET` added to all environments
+- [ ] Consent capture shown on first login for all new users
+- [ ] Privacy policy page live at `/privacy-policy`
+- [ ] Erasure request flow working end-to-end
+- [ ] Supabase PITR enabled on production project
+- [ ] Scheduler health check endpoint live
+- [ ] Scheduler unavailability banner showing in timetable page
+- [ ] `git commit -m "fix: Phase 2.5 — Security & Compliance patches"`
 - [ ] `git push origin main`
 
 ---
@@ -2313,6 +2468,79 @@ CREATE POLICY "staff_career_events: institution members can manage"
 
 ---
 
+### Step 5L — Department Budget Management
+
+**Route:** `/institutions/[id]/finance/budgets`
+
+> Institutions allocate annual budgets per department. HODs plan expenditure, admin approves, and the system tracks actual spend vs budget in real time. Integrates with Expense Logger (core) and Purchase Orders (4E-sub) for actuals. NAAC Criterion 6.4 (Financial Management) requires evidence of budget planning and utilisation.
+
+#### Database:
+```sql
+CREATE TABLE department_budgets (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  department_id    UUID NOT NULL REFERENCES departments(id) ON DELETE CASCADE,
+  academic_year_id UUID NOT NULL REFERENCES academic_years(id),
+  total_allocated  NUMERIC(12,2) NOT NULL DEFAULT 0,
+  status           TEXT NOT NULL DEFAULT 'draft'
+                   CHECK (status IN ('draft','submitted','approved','rejected')),
+  submitted_by     UUID REFERENCES staff(id),
+  approved_by      UUID REFERENCES auth.users(id),
+  admin_notes      TEXT,
+  submitted_at     TIMESTAMPTZ,
+  approved_at      TIMESTAMPTZ,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(department_id, academic_year_id)
+);
+ALTER TABLE department_budgets ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "department_budgets: institution members can manage"
+  ON public.department_budgets
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
+  ));
+
+CREATE TABLE budget_line_items (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  budget_id   UUID NOT NULL REFERENCES department_budgets(id) ON DELETE CASCADE,
+  category    TEXT NOT NULL CHECK (category IN (
+                'lab_equipment','stationery','furniture','it_hardware',
+                'software','maintenance','travel','training','events','other')),
+  description TEXT NOT NULL,
+  planned_amt NUMERIC(10,2) NOT NULL,
+  actual_amt  NUMERIC(10,2) NOT NULL DEFAULT 0,  -- updated by expense/PO actuals
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE budget_line_items ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "budget_line_items: institution members can manage"
+  ON public.budget_line_items
+  USING (budget_id IN (
+    SELECT id FROM department_budgets WHERE institution_id IN (
+      SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
+    )
+  ));
+```
+
+#### What to build:
+- [ ] `supabase/migrations/..._department_budgets.sql` — department_budgets + budget_line_items + RLS
+- [ ] `src/app/institutions/[id]/finance/budgets/page.tsx` — Budget overview: all departments, allocated vs spent progress bars, approval status
+- [ ] `src/app/institutions/[id]/finance/budgets/[deptId]/page.tsx` — Department budget detail: line items, actuals auto-pulled from expenses + POs
+- [ ] `src/actions/budgets.ts` — createBudget, submitBudget, approveBudget, rejectBudget, addLineItem, getBudgetVsActuals
+- [ ] `src/components/finance/BudgetCard.tsx` — Department card: total allocated, total spent, utilisation % progress bar
+- [ ] `src/components/finance/BudgetLineItemTable.tsx` — Line items table: category, planned, actual, variance (with colour coding)
+- [ ] HOD portal addition: HODs can draft and submit their department's annual budget from the admin panel
+- [ ] Actuals integration: link approved purchase orders (4E-sub) and expenses (core expense logger) to `budget_line_items.actual_amt`
+- [ ] NAAC Criterion 6.4 export: budget allocation and utilisation per department per academic year as Excel
+
+#### Key features:
+- Draft → Submitted → Approved workflow (HOD drafts, admin approves)
+- Category-wise breakdown (lab equipment, IT, travel, events, etc.)
+- Real-time actuals pulled from expense logger + PO payments — no manual entry of actuals
+- Variance highlighting: over-budget line items shown in rose, under-budget in emerald
+- Year-on-year comparison: current year vs previous year allocation per department
+- NAAC 6.4 evidence: budget utilisation summary downloadable as PDF / Excel
+
+---
+
 ### Phase 5 Completion Checklist
 - [ ] Admissions public form live and accepting applications
 - [ ] Enroll actions correctly create student and staff profiles
@@ -2326,6 +2554,7 @@ CREATE POLICY "staff_career_events: institution members can manage"
 - [ ] Research: publications with Scopus/UGC flags and NIRF export working
 - [ ] Staff daily attendance register live; LOP auto-calculation integrated with payroll run
 - [ ] Staff career lifecycle: joining events seeded for all existing staff; increment and resignation workflows working end-to-end
+- [ ] Department budgets: at least one budget submitted and approved; actuals pulling from expense logger
 - [ ] `git commit -m "feat: Phase 5 — Admissions, Recruitment & Alumni complete"`
 - [ ] `git push origin main`
 
@@ -2546,7 +2775,7 @@ CREATE TABLE grievances (
 
 **Route:** `/institutions/[id]/lms`
 
-> Post-COVID necessity. Every college needs teachers to upload notes, slides, and lecture recordings. Students access materials any time. Linked to syllabus units (Step 2F) for organized delivery.
+> Post-COVID necessity. Every college needs teachers to upload notes, slides, and lecture recordings. Students access materials any time. Linked to syllabus units (Step 2F) for organized delivery. **Scope expanded** to include assignment submissions and a gradebook — making this a full lightweight LMS (not just a file repository).
 
 #### Database:
 ```sql
@@ -2557,7 +2786,7 @@ CREATE TABLE study_materials (
   curriculum_unit_id UUID REFERENCES curriculum_units(id),
   title              TEXT NOT NULL,
   material_type      TEXT NOT NULL CHECK (material_type IN (
-                       'notes','slides','video_link','assignment',
+                       'notes','slides','video_link','scorm_package',
                        'question_paper','reference')),
   file_url           TEXT,         -- Supabase Storage path
   external_url       TEXT,         -- YouTube, Google Drive link
@@ -2565,24 +2794,82 @@ CREATE TABLE study_materials (
   is_published       BOOLEAN NOT NULL DEFAULT TRUE,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Assignments (staff creates → students submit)
+CREATE TABLE lms_assignments (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  subject_id       UUID NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+  academic_year_id UUID REFERENCES academic_years(id),
+  title            TEXT NOT NULL,
+  description      TEXT,
+  due_date         TIMESTAMPTZ NOT NULL,
+  max_marks        INTEGER NOT NULL DEFAULT 10,
+  allow_late       BOOLEAN NOT NULL DEFAULT FALSE,
+  created_by       UUID REFERENCES staff(id),
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE lms_assignments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "lms_assignments: institution members can manage"
+  ON public.lms_assignments
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
+  ));
+
+-- Student submissions
+CREATE TABLE lms_submissions (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  assignment_id   UUID NOT NULL REFERENCES lms_assignments(id) ON DELETE CASCADE,
+  student_id      UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  file_url        TEXT,
+  notes           TEXT,
+  submitted_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  is_late         BOOLEAN NOT NULL DEFAULT FALSE,
+  marks_awarded   NUMERIC(5,2),
+  feedback        TEXT,
+  graded_by       UUID REFERENCES staff(id),
+  graded_at       TIMESTAMPTZ,
+  UNIQUE(assignment_id, student_id)
+);
+ALTER TABLE lms_submissions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "lms_submissions: institution members can manage"
+  ON public.lms_submissions
+  USING (assignment_id IN (
+    SELECT id FROM lms_assignments WHERE institution_id IN (
+      SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
+    )
+  ));
 ```
 
 #### What to build:
 - [ ] `supabase/migrations/..._study_materials.sql`
+- [ ] `supabase/migrations/..._lms_assignments.sql` — assignments + submissions tables + RLS
 - [ ] Supabase Storage bucket: `study-materials` (authenticated read for enrolled students, staff write)
+- [ ] Supabase Storage bucket: `lms-submissions` (student write own files, staff/admin read)
 - [ ] `src/app/institutions/[id]/lms/page.tsx` — LMS overview: subjects with material count, recent uploads
 - [ ] `src/app/institutions/[id]/lms/[subjectId]/page.tsx` — Subject materials management by unit
+- [ ] `src/app/institutions/[id]/lms/assignments/page.tsx` — Assignment manager: create, set deadline, view submissions
+- [ ] `src/app/institutions/[id]/lms/assignments/[assignmentId]/submissions/page.tsx` — Grade submissions: marks + feedback per student
+- [ ] `src/app/institutions/[id]/lms/gradebook/page.tsx` — **Gradebook**: student × assignment matrix with marks, average per student, average per assignment
 - [ ] `src/actions/studyMaterials.ts` — uploadMaterial, getMaterials, deleteMaterial, publishMaterial
+- [ ] `src/actions/lmsAssignments.ts` — createAssignment, getAssignments, submitAssignment, gradeSubmission, getGradebook
 - [ ] `src/components/lms/MaterialCard.tsx` — Card: type icon (PDF/video/slides), unit tag, download/view link
-- [ ] Student portal: `src/app/student-portal/lms/page.tsx` — My subjects → materials organized per syllabus unit
-- [ ] Staff portal: `src/app/staff-portal/lms/page.tsx` — Upload and manage own subject materials
+- [ ] `src/components/lms/AssignmentCard.tsx` — Card: deadline countdown, submission count, graded/pending badges
+- [ ] `src/components/lms/GradebookTable.tsx` — Student × assignment grid with marks, colour-coded (pass/fail/missing)
+- [ ] Student portal: `src/app/student-portal/lms/page.tsx` — My subjects → materials + assignments organized per syllabus unit
+- [ ] Student portal: `src/app/student-portal/lms/assignments/page.tsx` — View assignments, upload submission, view grade + feedback
+- [ ] Staff portal: `src/app/staff-portal/lms/page.tsx` — Upload materials and manage assignments for own subjects
+- [ ] SCORM: `src/components/lms/ScormPlayer.tsx` — Embed SCORM 1.2/2004 packages via iframe + `postMessage` completion tracking
 
 #### Key features:
 - Materials organized by curriculum units (Step 2F) — students know which unit each material covers
-- Supports PDF upload, PPT, video links (YouTube embed), external URLs
+- Supports PDF upload, PPT, video links (YouTube embed), external URLs, SCORM packages
+- **Assignment workflow:** staff creates → students submit file before deadline → staff grades + adds feedback → student sees mark
+- **Late submission flag:** auto-set if submitted after `due_date`; staff configures `allow_late` per assignment
+- **Gradebook:** subject-wise marks matrix per academic year; average scores; identifies students with missing submissions
 - Supabase Storage RLS: only students of the relevant department can access materials
 - Staff draft/publish control per material
-- Student portal: type-filtered tabs (notes, videos, question papers)
+- Student portal: type-filtered tabs (notes, videos, assignments, question papers)
 
 ---
 
@@ -2706,7 +2993,7 @@ CREATE TABLE industry_interactions (
 
 ---
 
-### Step 7D — Platform Health & Audit
+### Step 7D — Platform Health, Audit & Security
 
 **Route:** `/admin/health/page.tsx`
 
@@ -2716,6 +3003,18 @@ CREATE TABLE industry_interactions (
 - [ ] Scheduler engine health check (ping FastAPI /health endpoint)
 - [ ] Database size and row counts per table
 - [ ] Error rate monitoring (failed logins, failed payments)
+
+#### ISO 27001 Security Audit Checklist (resolve during this step):
+- [ ] `docs/rls-policy-map.md` — document every table, its RLS policy, and which roles can read/write/delete
+- [ ] Verify `createAdminClient()` (service role) is used only in server-only files — grep for any client-side usage
+- [ ] Run `EXPLAIN ANALYZE` on the 10 most-used queries and document results in `docs/query-performance.md`
+- [ ] Confirm all Supabase Storage buckets have RLS enabled — no public buckets for sensitive data
+- [ ] Review all API routes for missing auth checks — every route under `/api/` must verify `supabase.auth.getUser()`
+- [ ] Document data retention periods for all PII tables in `src/lib/dataRetention.ts` (marks: 10yr, attendance: 5yr, medical: 7yr, financial: 7yr)
+- [ ] Penetration test plan: document scope, methodology, and schedule (at minimum annual) in `docs/security-audit-plan.md`
+- [ ] Verify `RAZORPAY_KEY_SECRET` and `SUPABASE_SERVICE_ROLE_KEY` are never in client bundles (`NEXT_PUBLIC_` prefix check)
+- [ ] Add `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options` headers to `next.config.js`
+- [ ] `src/app/admin/security/page.tsx` — Security dashboard: RLS coverage %, last audit date, open findings list
 
 ---
 
@@ -2808,6 +3107,7 @@ CREATE TABLE subscription_invoices (
 - [ ] `src/app/institutions/[id]/iqac/naac/page.tsx` — NAAC criterion-wise data view with evidence count per criterion
 - [ ] `src/app/institutions/[id]/iqac/nirf/page.tsx` — NIRF data export (Teaching, Research, Graduation, Outreach, Perception)
 - [ ] `src/app/institutions/[id]/iqac/aishe/page.tsx` — AISHE annual report auto-population from student/staff counts
+- [ ] `src/app/institutions/[id]/iqac/meetings/page.tsx` — **IQAC Meeting & Action Tracker** (see sub-section below)
 - [ ] `src/actions/iqac.ts` — aggregateNAACData, generateAQAR, exportNIRFData, exportAISHEData, getCriterionCompleteness
 - [ ] `src/components/iqac/CriterionDataCard.tsx` — Per-criterion completeness card with progress ring and data count
 - [ ] `src/components/iqac/NIRFExportButton.tsx` — One-click NIRF-formatted CSV/Excel export
@@ -2819,6 +3119,95 @@ CREATE TABLE subscription_invoices (
 - AISHE annual report: student headcount, staff count, program-wise enrollment
 - Best practices documentation editor (NAAC Criterion 7 evidence)
 - Super admin can see NAAC readiness score across all institutions
+
+---
+
+#### AISHE Field-Level Schema Mapping
+
+> AISHE (All India Survey on Higher Education) requires annual data submission. Every field in Aura must map to a specific AISHE portal field. This mapping drives the auto-population in `/iqac/aishe`.
+
+| AISHE Field | Aura Data Source | Notes |
+|---|---|---|
+| Total Enrolled Students (by gender) | `students` table — count by `gender` | Filter by `academic_year_id` |
+| Students by Social Category (SC/ST/OBC/General) | `students.category` column (add if missing) | Requires `category` enum on students |
+| Programme-wise enrollment | `students` grouped by `program` + `year` | Map programme names to AISHE codes |
+| Teaching Staff (by gender, qualification) | `staff` table — `role = 'STAFF'` or `'HOD'` | Filter by `qualification` field |
+| Non-Teaching Staff (by gender) | `staff` table — `role = 'NON_TEACHING'` | Phase 5C adds this role |
+| Number of classrooms / labs | `departments` + assets (Phase 4E) | Count rooms tagged as classroom/lab |
+| Library volumes | `library_books` table (Phase 4A) | Count by book type |
+| Annual income (grants, fees) | `fee_payments` + `department_budgets` (Phase 5L) | Sum by category |
+| Annual expenditure | `salary_disbursements` + `expenses` | Sum all outflows |
+
+**Database change required:**
+```sql
+-- Add AISHE-required fields to students table
+ALTER TABLE students
+  ADD COLUMN IF NOT EXISTS category TEXT CHECK (category IN ('general','obc','sc','st','ews','other')),
+  ADD COLUMN IF NOT EXISTS is_pwd   BOOLEAN NOT NULL DEFAULT FALSE;  -- Persons with Disability flag
+```
+
+- [ ] `supabase/migrations/..._students_aishe_fields.sql` — Add `category` + `is_pwd` to students
+- [ ] Update student admission form (Phase 5A) and bulk import CSV template to include these fields
+- [ ] `src/app/institutions/[id]/iqac/aishe/page.tsx` — auto-populate all AISHE fields from above mappings
+- [ ] Validate: warn admin if any required AISHE field has null/zero values before export
+
+---
+
+#### IQAC Meeting & Action Tracker
+
+> NAAC Criterion 6.1 requires evidence of IQAC meetings (minimum 2 per year) with documented agendas, minutes, and action-taken reports. Without this, institutions lose points in governance criteria.
+
+**Database:**
+```sql
+CREATE TABLE iqac_meetings (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id   UUID NOT NULL REFERENCES institutions(id) ON DELETE CASCADE,
+  academic_year_id UUID REFERENCES academic_years(id),
+  meeting_date     DATE NOT NULL,
+  meeting_number   INTEGER NOT NULL,   -- e.g. 1st meeting, 2nd meeting of the year
+  agenda           TEXT NOT NULL,
+  minutes          TEXT,               -- Full minutes text or rich content
+  chaired_by       UUID REFERENCES staff(id),
+  status           TEXT NOT NULL DEFAULT 'scheduled'
+                   CHECK (status IN ('scheduled','completed','minutes_pending')),
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+ALTER TABLE iqac_meetings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "iqac_meetings: institution members can manage"
+  ON public.iqac_meetings
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
+  ));
+
+CREATE TABLE iqac_action_items (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  meeting_id  UUID NOT NULL REFERENCES iqac_meetings(id) ON DELETE CASCADE,
+  description TEXT NOT NULL,
+  assigned_to UUID REFERENCES staff(id),
+  due_date    DATE,
+  status      TEXT NOT NULL DEFAULT 'open'
+              CHECK (status IN ('open','in_progress','completed','deferred')),
+  resolved_at TIMESTAMPTZ,
+  remarks     TEXT
+);
+ALTER TABLE iqac_action_items ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "iqac_action_items: institution members can manage"
+  ON public.iqac_action_items
+  USING (meeting_id IN (
+    SELECT id FROM iqac_meetings WHERE institution_id IN (
+      SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
+    )
+  ));
+```
+
+**What to build:**
+- [ ] `supabase/migrations/..._iqac_meetings.sql` — iqac_meetings + iqac_action_items + RLS
+- [ ] `src/app/institutions/[id]/iqac/meetings/page.tsx` — Meeting register: list by academic year, status badges, minutes upload
+- [ ] `src/app/institutions/[id]/iqac/meetings/[meetingId]/page.tsx` — Meeting detail: agenda, minutes editor, action items table
+- [ ] `src/actions/iqacMeetings.ts` — createMeeting, updateMinutes, addActionItem, updateActionStatus, getMeetingStats
+- [ ] `src/components/iqac/MeetingCard.tsx` — Card: date, meeting number, status badge, open action items count
+- [ ] `src/components/iqac/ActionItemRow.tsx` — Row: description, assigned staff, due date, status dropdown (inline update)
+- [ ] NAAC evidence export: meeting count per academic year, % action items resolved — feeds into Criterion 6.1 data
 
 ---
 
@@ -2951,22 +3340,24 @@ CREATE TABLE subscription_invoices (
 
 ## 📋 Overall Progress Tracker
 
-> **Last updated:** 2026-06-09  
-> **30 of 76 modules complete — 39% of full platform built**
+> **Last updated:** 2026-06-10  
+> **30 of 87 modules complete — 34% of full platform built**
 
 ```
-Overall  █████████████░░░░░░░░░░░░░░░░░░░  39%  (30/76)
-Phase 1  ████████████████████████████████  100% (7/7  — Staff & Student Portals)
-Phase 2  █████████████████████████░░░░░░░  78%  (9/9+4 foundations — Academic Ops: all 9 done!)
-Phase 3  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/4  — Notifications)
-Phase 4  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/11 — Campus Infrastructure)
-Phase 5  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/11 — Admissions & Lifecycle)
-Phase 6  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools)
-Phase 7  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/6  — Super Admin & SaaS)
-Phase 8  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/6  — Mobile Apps & CCTV)
+Overall  ███████████░░░░░░░░░░░░░░░░░░░░░░  34%  (30/87)
+Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
+Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
+Phase 2.5  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/3  — Critical Security & Compliance Fixes ← NEXT)
+Phase 3    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/4  — Notifications)
+Phase 4    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/12 — Campus Infrastructure + Vendor POs)
+Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions CRM + Statutory Payroll + Budget Mgmt)
+Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
+Phase 7    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Super Admin + SSR Builder + IQAC Tracker)
+Phase 8    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/6  — Mobile Apps & CCTV)
+Arch       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — RLS, Testing, Indexes, CI/CD, Billing, Audit Log)
 ```
 
-> **Next up:** Phase 3A — Notification Infrastructure
+> **Next up:** Phase 2.5A — Razorpay Webhook Security Fix
 
 ---
 
@@ -3008,7 +3399,10 @@ All `/institutions/[id]/...` routes display the institution **slug** in the brow
 | ✅ Phase 2G | Teacher Lesson Plan / Daily Diary | Complete | `986bfd2` |
 | ✅ Phase 2H | Guest Lecture & Expert Talk Management | Complete | `76ac333` |
 | ✅ Phase 2I | Internship & Industrial Training (NAAC 1.2 / NIRF 5.2) | Complete | — |
-| 🔲 Phase 3A | Notification Infrastructure | **Next** | — |
+| 🔲 Phase 2.5A | Razorpay Webhook Signature Verification 🔒 | **Next** | — |
+| 🔲 Phase 2.5B | DPDP 2023 Compliance — Consent & Erasure Framework 🔐 | Pending | — |
+| 🔲 Phase 2.5C | Backup Strategy + Scheduler Resilience ☁️ | Pending | — |
+| 🔲 Phase 3A | Notification Infrastructure | Pending | — |
 | 🔲 Phase 3B | Notification Triggers | Pending | — |
 | 🔲 Phase 3C | Email + SMS + WhatsApp Notifications | Pending | — |
 | 🔲 Phase 3D | Digital Notice Board & Announcements | Pending | — |
@@ -3017,6 +3411,7 @@ All `/institutions/[id]/...` routes display the institution **slug** in the brow
 | 🔲 Phase 4C | Hostel Management + Mess Billing | Pending | — |
 | 🔲 Phase 4D | Laboratory Management | Pending | — |
 | 🔲 Phase 4E | Asset & Inventory Management | Pending | — |
+| 🔲 Phase 4E-sub | Vendor & Purchase Order Management | Pending | — |
 | 🔲 Phase 4F | Smart ID Card & NFC Card Registry | Pending | — |
 | 🔲 Phase 4G | Gate Pass & Visitor Management | Pending | — |
 | 🔲 Phase 4H | Student Clubs & Organizations (NSS/NCC/Cultural) | Pending | — |
@@ -3024,8 +3419,10 @@ All `/institutions/[id]/...` routes display the institution **slug** in the brow
 | 🔲 Phase 4J | Sports & Physical Education | Pending | — |
 | 🔲 Phase 4K | Annual Day & Large Campus Event Management | Pending | — |
 | 🔲 Phase 5A | Student Admissions System (public-facing) | Pending | — |
+| 🔲 Phase 5A-sub | Admissions CRM + Enquiry Management + Merit List | Pending | — |
 | 🔲 Phase 5B | Staff Recruitment Module | Pending | — |
 | 🔲 Phase 5C | Non-Teaching Staff & Payroll | Pending | — |
+| 🔲 Phase 5C-sub | Indian Statutory Payroll (TDS / PF / ESI / Form 16) | Pending | — |
 | 🔲 Phase 5D | Alumni System & Panel | Pending | — |
 | 🔲 Phase 5E | Staff Appraisal & NAAC Workload Reports | Pending | — |
 | 🔲 Phase 5F | Placement Cell & Career Services | Pending | — |
@@ -3034,6 +3431,7 @@ All `/institutions/[id]/...` routes display the institution **slug** in the brow
 | 🔲 Phase 5I | Research & Publications Management (NAAC Criterion 3) | Pending | — |
 | 🔲 Phase 5J | Staff Daily Attendance + LOP-Payroll Integration | Pending | — |
 | 🔲 Phase 5K | Staff Career Lifecycle (Increments, Transfers, Resignation) | Pending | — |
+| 🔲 Phase 5L | Department Budget Management (NAAC 6.4) | Pending | — |
 | 🔲 Phase 6A | Parent Portal (multi-child via junction table) | Pending | — |
 | 🔲 Phase 6B | Transport Management + Vehicle Registry | Pending | — |
 | 🔲 Phase 6C | Certificate & Document Generator (Student + Staff) | Pending | — |
@@ -3048,6 +3446,16 @@ All `/institutions/[id]/...` routes display the institution **slug** in the brow
 | 🔲 Phase 7D | Platform Health & Audit | Pending | — |
 | 🔲 Phase 7E | SaaS Subscription & Billing Management | Pending | — |
 | 🔲 Phase 7F | IQAC & Govt Compliance Reports (NAAC/NIRF/AISHE) | Pending | — |
+| 🔲 Phase 7F-sub | NAAC SSR Builder + AISHE Return + NIRF Extract | Pending | — |
+| 🔲 Phase 7F-sub2 | IQAC Meeting & Action Tracker (NAAC 6.1) | Pending | — |
+| 🔲 Arch A1 | Fine-grained RLS Policies (HOD/STAFF/ADMIN) | Pending | — |
+| 🔲 Arch A2 | Testing Strategy (Vitest + Playwright) | Pending | — |
+| 🔲 Arch A3 | Database Index Strategy | Pending | — |
+| 🔲 Arch A4 | Institution Onboarding Wizard | Pending | — |
+| 🔲 Arch A5 | CI/CD Pipeline (GitHub Actions) | Pending | — |
+| 🔲 Arch A6 | Multi-currency & Multi-timezone Support | Pending | — |
+| 🔲 Arch A7 | SaaS Billing — Minimal Viable (Trial + Expiry) | Pending | — |
+| 🔲 Arch A8 | Platform-Wide Audit Log — `audit_logs` table + `logAudit()` helper | Pending | — |
 | 🔲 Phase 8A | React Native Setup | Pending | — |
 | 🔲 Phase 8B | Staff Mobile App + NFC | Pending | — |
 | 🔲 Phase 8C | Student Mobile App | Pending | — |
@@ -3069,7 +3477,13 @@ All `/institutions/[id]/...` routes display the institution **slug** in the brow
 8. **Indian locale** — all currency formatted as INR with `en-IN` locale
 9. **Git discipline** — commit message format: `feat: Phase X — Description`
 10. **Never expose secrets** — `RAZORPAY_KEY_SECRET`, `SUPABASE_SERVICE_ROLE_KEY` server-only
-
+11. **Webhook security** — all incoming webhooks (Razorpay, NFC) must verify HMAC signatures before processing any payload
+12. **Consent before PII** — any new page or action collecting personal data must check `data_consent_logs` for valid consent
+13. **Audit trail** — every Server Action mutating `marks`, `cia_marks`, `fee_payments`, `salary_disbursements`, `student_promotions`, `fee_concessions`, `leave_requests`, `institution_members`, `lms_submissions`, or `department_budgets` **must** call `logAudit()` from `src/lib/auditLog.ts` — no exceptions
+14. **Scheduler resilience** — all calls to the Python scheduler must go through the `callScheduler()` wrapper with timeout and fallback error handling
+15. **Privacy by default** — new tables storing PII must document their data retention period in `src/lib/dataRetention.ts`
+16. **No RLS bypass without justification** — `createAdminClient()` (service role) may only be used in server-only files; add a comment above each use explaining why RLS bypass is necessary
+17. **Audit logs are immutable** — never add an UPDATE or DELETE RLS policy to `audit_logs`; never call `.delete()` or `.update()` on that table from any Server Action
 ---
 
 ## 🔐 Environment Variables Reference
@@ -3102,7 +3516,347 @@ WHATSAPP_PHONE_NUMBER_ID=
 # NFC Webhook
 AURA_NFC_WEBHOOK_SECRET=
 AURA_INSTITUTION_TIMEZONE=Asia/Kolkata
+
+# Razorpay Webhook (Phase 2.5A — REQUIRED)
+RAZORPAY_WEBHOOK_SECRET=
+
+# Database (for GitHub Actions backup workflow)
+SUPABASE_DB_URL=
+
+# Per-institution locale (future multi-region support)
+# Override at institution level in institutions table:
+# institutions.locale (default: 'en-IN')
+# institutions.currency (default: 'INR')
+# institutions.timezone (default: 'Asia/Kolkata')
 ```
+
+---
+
+## 🌐 Global Academic ERP Standards — Alignment & Gap Register
+
+> This section tracks Aura's compliance against global academic ERP standards. Review at the start of each major phase and update the status column as modules are completed.
+
+| Status     | Standard / Framework              | Coverage in Aura                                                              | Phase         |
+|:----------:|:----------------------------------|:------------------------------------------------------------------------------|:--------------|
+| ✅ Strong  | NAAC Criteria 1–7 (India)         | CIA, lesson plans, syllabus, guest lectures, internships, grievances — mapped | Ongoing       |
+| ✅ Strong  | NIRF (India rankings)             | Internships (5.2), sports achievements, placement cell (5F)                   | Phase 5F      |
+| ✅ Strong  | Student Information System (SIS)  | Enrollment, marks, attendance, promotion pipeline — complete                  | Done          |
+| ✅ Strong  | Financial Management              | Fee structures, payments, salary, expenses, reports. TDS/Form 16 via 5C-sub  | Phase 5C-sub  |
+| ✅ Strong  | Parent engagement                 | Phase 6A — parent portal with multi-child sibling support                     | Phase 6A      |
+| 🔲 Planned | AISHE reporting                   | Field-level schema in Phase 7F; `students.category` + `is_pwd` migration      | Phase 7F      |
+| 🔲 Planned | Learning Management (LMS)         | Phase 6G expanded — SCORM, assignment submissions, gradebook                  | Phase 6G      |
+| 🔲 Planned | HR / Payroll (Indian statutory)   | 5C-sub: TDS computation, PF/ESI deductions, Form 16 generator                 | Phase 5C-sub  |
+| 🔲 Planned | DPDP Act 2023 (India privacy)     | Phase 2.5B — consent logs, erasure requests, privacy policy page              | Phase 2.5B    |
+| 🔲 Planned | ISO 27001 (Data security)         | Phase 7D — CSP headers, RLS policy map, data retention doc, pen test plan     | Phase 7D      |
+| 🔲 Planned | Audit trail / data integrity      | Arch A8 — central `audit_logs` table + `logAudit()` helper, append-only      | Arch A8       |
+| 🔲 Planned | Accreditation export formats      | Phase 7F-sub — central NAAC SSR Builder + AISHE return + NIRF extract         | Phase 7F-sub  |
+| 🔲 Planned | Alumni management                 | Phase 5D — alumni portal auto-populated from year promotion workflow           | Phase 5D      |
+| 🔲 Planned | Admissions / CRM funnel           | 5A-sub — enquiry management, merit list, offer letter generator               | Phase 5A-sub  |
+| 🔲 Planned | Budget & financial planning       | Step 5L — department budgets, line items, actuals vs planned, NAAC 6.4 export | Phase 5L      |
+| 🔲 Planned | IQAC management                   | Phase 7F — IQAC Meeting & Action Tracker, agendas, minutes, action items      | Phase 7F      |
+| 🔲 Planned | Vendor & procurement              | 4E-sub — vendor registry, purchase orders, PO approval workflow               | Phase 4E-sub  |
+| 🔲 Planned | Central NAAC SSR builder          | 7F-sub — criterion-wise aggregation + Excel export in NAAC format             | Phase 7F-sub  |
+
+---
+
+## 🔧 Architecture & Quality Improvement Register
+
+> These are non-feature improvements that must be addressed progressively. Each item is tagged with the phase by which it should be resolved.
+
+### A1 — Fine-grained Supabase RLS Policies (Resolve by: Phase 3)
+> Current RLS policies check `institution_members` membership only. There is no DB-level enforcement of HOD vs STAFF vs ADMIN permissions — this is handled entirely at the app layer, which is fragile.
+
+#### What to build:
+- [ ] Define `get_my_role(institution_id UUID)` PostgreSQL function that returns the caller's role within an institution
+- [ ] Add role-restricted RLS policies to sensitive tables: `marks`, `salary_disbursements`, `cia_marks`, `lesson_plans`
+  - Example: only HOD or ADMIN can read all department marks; staff can only read marks they entered
+- [ ] `supabase/migrations/..._role_based_rls.sql`
+- [ ] Audit all existing RLS policies and document which tables need role-gating in `docs/rls-policy-map.md`
+
+---
+
+### A2 — Testing Strategy (Resolve by: Phase 4)
+> No unit, integration, or e2e tests defined. For a multi-tenant ERP handling fees and marks, regression risk is high.
+
+#### What to build:
+- [ ] Add **Vitest** for unit testing Server Actions: `npm install -D vitest @vitejs/plugin-react`
+- [ ] Priority test targets: `src/actions/marks.ts`, `src/actions/feePayments.ts`, `src/actions/promotion.ts`
+- [ ] Add **Playwright** for e2e: `npm install -D @playwright/test`
+- [ ] Priority e2e flows: student login → view attendance, admin → add fee → student pays → verify status
+- [ ] Add TypeScript check to CI: `npx tsc --noEmit` must pass on every PR
+- [ ] `docs/testing-guide.md` — testing conventions and how to run
+
+---
+
+### A3 — Database Index Strategy (Resolve by: Phase 4)
+> Tables like `attendance_sessions`, `fee_payments`, and `marks` will grow to millions of rows. No composite indexes or query plan documentation beyond basic PKs.
+
+#### Indexes to add:
+```sql
+-- attendance_sessions: most queries filter by institution + date range
+CREATE INDEX idx_att_sessions_inst_date ON attendance_sessions(institution_id, session_date DESC);
+
+-- fee_payments: filter by institution + student + academic year
+CREATE INDEX idx_fee_payments_student ON fee_payments(institution_id, student_id, academic_year_id);
+
+-- marks: filter by subject + exam type + academic year
+CREATE INDEX idx_marks_subject_exam ON marks(subject_id, exam_type, academic_year_id);
+
+-- notifications: already indexed (recipient_id, is_read) — covered in Phase 3A
+
+-- lesson_plans: filter by staff + date
+CREATE INDEX idx_lesson_plans_staff_date ON lesson_plans(staff_id, plan_date DESC);
+```
+- [ ] `supabase/migrations/..._performance_indexes.sql`
+- [ ] Run `EXPLAIN ANALYZE` on the top 5 slowest queries after Phase 4 and document results
+
+---
+
+### A4 — Institution Onboarding Wizard (Resolve by: Phase 5)
+> A new institution signs up with no guidance. There is no setup wizard for departments, academic year, fee structures, or staff import. This is a critical SaaS adoption blocker.
+
+**Route:** `/onboarding/[institutionId]`
+
+#### What to build:
+- [ ] `src/app/onboarding/[institutionId]/page.tsx` — Multi-step wizard: Welcome → Add Departments → Set Academic Year → Configure Fee Structures → Import Staff (CSV) → Done
+- [ ] `src/components/onboarding/OnboardingProgress.tsx` — Step indicator showing completion %
+- [ ] Auto-redirect new institutions to `/onboarding/[id]` on first login if `institutions.is_onboarded = false`
+- [ ] `src/actions/onboarding.ts` — completeOnboardingStep, markOnboardingComplete
+- [ ] Add `is_onboarded BOOLEAN DEFAULT FALSE` column to `institutions` table
+
+---
+
+### A5 — CI/CD Pipeline (Resolve by: Phase 5)
+> Manual git push to Vercel is implied. No automated migration runner, type check, or preview deployment strategy.
+
+#### What to build:
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on: [push, pull_request]
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci
+      - run: npx tsc --noEmit
+
+  migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: supabase/setup-cli@v1
+      - run: supabase db push --dry-run  # validate migrations without applying
+```
+- [ ] `.github/workflows/ci.yml` — TypeScript check + migration dry-run on every PR
+- [ ] `.github/workflows/db-backup.yml` — Weekly backup (see Phase 2.5C)
+- [ ] Configure Vercel preview deployments for every PR branch
+- [ ] Add branch protection rule: PRs require CI green before merge
+
+---
+
+### A6 — Multi-currency & Multi-timezone Support (Resolve by: Phase 7)
+> Aura is hardcoded to INR + Asia/Kolkata. As a multi-tenant SaaS, even one institution outside India breaks finance and scheduling.
+
+#### What to build:
+- [ ] Add `locale TEXT DEFAULT 'en-IN'`, `currency TEXT DEFAULT 'INR'`, `timezone TEXT DEFAULT 'Asia/Kolkata'` columns to `institutions` table
+- [ ] `src/lib/locale.ts` — `formatCurrency(amount, currency, locale)` and `formatDate(date, timezone)` helpers
+- [ ] Replace all hardcoded `en-IN` / `INR` / `Asia/Kolkata` references with calls to these helpers
+- [ ] Institution settings page: allow admin to configure locale, currency, timezone
+- [ ] All `TIMESTAMPTZ` storage stays UTC; display layer converts using institution timezone
+
+---
+
+### A7 — SaaS Billing (Minimal viable — Resolve by: Phase 3)
+> Platform subscription billing (Phase 7E) is planned too late. You need a revenue mechanism before onboarding real institutions. A minimal billing setup should exist by Phase 3.
+
+#### Minimal viable billing (Phase 3 addition):
+- [ ] Add `subscription_plan TEXT DEFAULT 'trial'`, `trial_ends_at TIMESTAMPTZ`, `is_active BOOLEAN DEFAULT TRUE` to `institutions` table
+- [ ] `src/middleware.ts` — Check `is_active` and `trial_ends_at`; redirect inactive institutions to `/subscription-expired`
+- [ ] `src/app/subscription-expired/page.tsx` — Expired plan page with upgrade CTA
+- [ ] Wire up Razorpay Subscriptions API or a simple manual invoice flow for initial clients
+- [ ] Full subscription management portal deferred to Phase 7E as planned
+
+---
+
+### A8 — Platform-Wide Audit Log (Resolve by: Phase 2.5 / before Phase 3)
+
+> **Critical for NAAC, UGC, and ISO 27001.** Marks edits, fee adjustments, salary disbursements, and year promotions all mutate high-stakes records — but there is currently no centralized, tamper-evident trail. Individual modules have partial logs (`promotion_logs`, etc.) but there is no unified view. A single `audit_logs` table and `logAudit()` helper closes this entirely.
+>
+> **Resolve by Phase 2.5** — this is a cross-cutting concern. Every sensitive Server Action written from this point forward must call `logAudit()` before returning.
+
+#### Database:
+```sql
+CREATE TABLE public.audit_logs (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  institution_id UUID REFERENCES public.institutions(id) ON DELETE SET NULL,
+  performed_by   UUID NOT NULL REFERENCES auth.users(id),
+  table_name     TEXT NOT NULL,          -- e.g. 'marks', 'fee_payments', 'salary_disbursements'
+  record_id      UUID NOT NULL,          -- PK of the affected row
+  action         TEXT NOT NULL CHECK (action IN ('INSERT','UPDATE','DELETE','PROMOTE','REVERT')),
+  before_data    JSONB,                  -- snapshot of row before change (NULL for INSERT)
+  after_data     JSONB,                  -- snapshot of row after change (NULL for DELETE)
+  ip_address     TEXT,
+  user_agent     TEXT,
+  notes          TEXT,                   -- optional human-readable reason (e.g. "Corrected marks entry")
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_audit_logs_institution ON public.audit_logs(institution_id, created_at DESC);
+CREATE INDEX idx_audit_logs_table_record ON public.audit_logs(table_name, record_id);
+CREATE INDEX idx_audit_logs_performed_by ON public.audit_logs(performed_by);
+
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+-- Admins can read their own institution's audit logs; super admins read all
+CREATE POLICY "audit_logs: admins can read own institution"
+  ON public.audit_logs FOR SELECT
+  USING (institution_id IN (
+    SELECT institution_id FROM institution_members
+    WHERE profile_id = auth.uid()
+      AND role IN ('ADMIN','HOD')
+  ));
+-- No UPDATE or DELETE policy — audit logs are append-only (immutable)
+```
+
+#### Server-side helper (`src/lib/auditLog.ts`):
+```typescript
+import { createAdminClient } from '@/utils/supabase/admin';
+
+interface AuditPayload {
+  institutionId: string | null;
+  performedBy: string;
+  tableName: string;
+  recordId: string;
+  action: 'INSERT' | 'UPDATE' | 'DELETE' | 'PROMOTE' | 'REVERT';
+  beforeData?: Record<string, unknown>;
+  afterData?: Record<string, unknown>;
+  notes?: string;
+}
+
+// Use createAdminClient so the INSERT bypasses RLS (audit logs must always be written)
+export async function logAudit(payload: AuditPayload): Promise<void> {
+  const supabase = createAdminClient();
+  await supabase.from('audit_logs').insert(payload);
+  // Intentionally fire-and-forget — never let audit failure block the primary action
+}
+```
+
+#### Tables that MUST call `logAudit()` on every mutation:
+| Table | Actions to log | Notes |
+|---|---|---|
+| `marks` | INSERT, UPDATE, DELETE | Before/after marks values; log who changed and why |
+| `cia_marks` | INSERT, UPDATE, DELETE | Same as marks |
+| `fee_payments` | INSERT, UPDATE (status change) | Log payment capture and any manual status overrides |
+| `salary_disbursements` | INSERT, UPDATE | Log disbursement runs and any adjustments |
+| `student_promotions` | INSERT (PROMOTE), UPDATE (REVERT) | Full before/after cohort snapshot |
+| `fee_concessions` | INSERT, UPDATE | Who granted and who approved |
+| `leave_requests` | UPDATE (approve/reject) | Who took action and when |
+| `institution_members` | INSERT, UPDATE, DELETE | Role changes, new member adds, removals |
+| `lms_submissions` | UPDATE (graded) | Before/after marks_awarded and feedback |
+| `department_budgets` | UPDATE (approve/reject) | Before/after status and admin_notes |
+
+#### What to build:
+- [ ] `supabase/migrations/..._audit_logs.sql` — audit_logs table + indexes + RLS (append-only)
+- [ ] `src/lib/auditLog.ts` — `logAudit()` helper (uses admin client, fire-and-forget)
+- [ ] Retrofit existing Server Actions: add `logAudit()` call to all actions listed in the table above
+  - [ ] `src/actions/marks.ts` — log INSERT/UPDATE/DELETE on marks
+  - [ ] `src/actions/cia.ts` — log INSERT/UPDATE/DELETE on cia_marks
+  - [ ] `src/actions/feePayments.ts` — log payment capture + status overrides
+  - [ ] `src/actions/salary.ts` — log disbursement runs
+  - [ ] `src/actions/promotion.ts` — log PROMOTE and REVERT actions
+  - [ ] `src/actions/concessions.ts` — log grant and approval
+  - [ ] `src/actions/staffPortal.ts` — log leave approve/reject
+  - [ ] `src/actions/lmsAssignments.ts` — log grade submission
+  - [ ] `src/actions/budgets.ts` — log budget approve/reject
+- [ ] `src/app/institutions/[id]/audit-log/page.tsx` — Admin audit viewer: filterable by table, user, date range, action type; shows before/after diff
+- [ ] `src/components/audit/AuditLogTable.tsx` — Table with expandable rows showing before/after JSONB diff (highlight changed fields)
+- [ ] `src/app/admin/audit/page.tsx` — Super admin: cross-institution audit search (by user, table, date)
+- [ ] Verify: `audit_logs` table has no DELETE RLS policy — rows must be immutable once written
+
+#### Key features:
+- **Append-only** — no UPDATE or DELETE policy on the table; even super admins cannot erase entries
+- **Before/after snapshots** — every UPDATE stores the full row state before and after so any change can be reconstructed
+- **Fire-and-forget** — `logAudit()` never throws or blocks the primary Server Action; audit failure is logged server-side but does not surface to the user
+- **Admin audit viewer** — institution admin can filter by module, user, and date range to answer "who changed this and when?"
+- **NAAC / UGC evidence** — the audit log page is the primary evidence for data integrity during accreditation visits
+- **ISO 27001 requirement** — audit trails for access and modification of sensitive data are a mandatory ISO 27001 control
+
+---
+
+## 🆕 New Modules Added to Roadmap
+
+> These modules were identified as missing from the original roadmap. They have been inserted into the appropriate phases. The master tracker below has been updated accordingly.
+
+### Added to Phase 5C (Non-Teaching Staff & Payroll):
+**Step 5C-sub — Indian Statutory Payroll (TDS / PF / ESI / Form 16)**
+- [ ] TDS computation per employee based on tax slab (old vs new regime)
+- [ ] PF (Provident Fund) deduction: 12% employee + 12% employer on basic salary
+- [ ] ESI (Employee State Insurance): applicable for employees earning < ₹21,000/month
+- [ ] Form 16 generator: annual TDS certificate as PDF (Part A from TRACES + Part B computed)
+- [ ] `src/actions/statutoryPayroll.ts` — computeTDS, computePF, computeESI, generateForm16
+- [ ] Salary slip updated to show statutory deduction line items separately
+
+### Added to Phase 5A (Student Admissions):
+**Step 5A-sub — Admissions CRM & Merit List**
+- [ ] Enquiry management: capture prospective student enquiries (name, phone, program interest, source)
+- [ ] Application form: online application with document upload (marksheets, certificates)
+- [ ] Merit list generator: sort applicants by qualifying marks per program, generate ranked list PDF
+- [ ] Offer letter generator: auto-fill institution letterhead with student name, program, intake year
+- [ ] Admission confirmation + fee collection trigger (links to fee structures module)
+- [ ] `src/app/admissions/page.tsx` — Public-facing application form (no login required)
+
+### Added to Phase 7F (IQAC & Compliance Reports):
+**Step 7F-sub — NAAC Self-Study Report (SSR) Builder**
+- [ ] Central SSR aggregation dashboard: pulls data from all NAAC-mapped modules across Criteria 1–7
+- [ ] Per-criterion data summary with evidence count (guest lectures, internships, research papers, etc.)
+- [ ] Export: criterion-wise Excel sheets in NAAC-prescribed format
+- [ ] AISHE annual return: maps Aura data to AISHE portal field schema
+- [ ] NIRF data extract: student progression, placement, research output per academic year
+
+### Added to Phase 4E (Asset & Inventory):
+**Step 4E-sub — Vendor & Purchase Order Management**
+- [ ] `vendors` table: name, GST number, contact, category (lab equipment, stationery, furniture, IT)
+- [ ] `purchase_orders` table: vendor, items JSONB, total amount, status (draft/approved/received/paid)
+- [ ] PO approval workflow: department raises PO → HOD approves → admin releases payment
+- [ ] Asset receipt: received items auto-populate the asset registry (Step 4E)
+- [ ] GST-compliant purchase invoice storage (Supabase Storage)
+
+### Added to Phase 5 (after Step 5K):
+**Step 5L — Department Budget Management** *(ERP gap fix — NAAC 6.4)*
+- [ ] `department_budgets` table: per-department, per-academic-year, approval workflow
+- [ ] `budget_line_items` table: category-wise planned vs actual amounts
+- [ ] HOD drafts budget → admin approves → actuals auto-pulled from expense logger + POs
+- [ ] Budget vs actuals dashboard with variance highlighting
+- [ ] NAAC Criterion 6.4 export: budget utilisation per department per year
+
+### Added to Phase 6G (LMS scope expansion):
+**E-Learning expanded to full lightweight LMS** *(ERP gap fix — LMS standard)*
+- [ ] `lms_assignments` table: staff creates assignments with deadline and max marks
+- [ ] `lms_submissions` table: students upload work; auto-flagged if late
+- [ ] Gradebook page: student × assignment matrix with marks and averages
+- [ ] SCORM 1.2/2004 content player via iframe + postMessage completion tracking
+- [ ] Staff portal: grade submissions, add feedback per student
+
+### Added to Phase 7D (Security):
+**ISO 27001 Security Audit Checklist** *(ERP gap fix — ISO 27001)*
+- [ ] RLS policy map document (`docs/rls-policy-map.md`)
+- [ ] Security headers in `next.config.js` (CSP, X-Frame-Options, X-Content-Type-Options)
+- [ ] Data retention policy documented in `src/lib/dataRetention.ts`
+- [ ] Penetration test plan (`docs/security-audit-plan.md`)
+- [ ] Security dashboard page at `/admin/security`
+
+### Added to Phase 7F (IQAC):
+**AISHE Field-Level Schema + IQAC Meeting & Action Tracker** *(ERP gap fix — AISHE + NAAC 6.1)*
+- [ ] AISHE field mapping table: every AISHE portal field mapped to Aura data source
+- [ ] `students.category` + `students.is_pwd` migration (SC/ST/OBC/General/EWS + disability flag)
+- [ ] `iqac_meetings` table: meeting date, agenda, minutes, chaired-by
+- [ ] `iqac_action_items` table: description, assignee, due date, status
+- [ ] Meeting register page + action item tracker with inline status updates
+- [ ] NAAC Criterion 6.1 export: meeting count + % action items resolved
+
+---
 
 ---
 
@@ -3126,4 +3880,4 @@ npx expo start
 
 ---
 
-*Last updated: 2026-06-09 — Completed Foundation Migrations (2-Pre-A through 2-Pre-D), Phase 2A (Academic Calendar), Phase 2B (Semester Exam Planner + Hall Tickets), Phase 2C (Marks & Arrears Management), and Phase 2D (Year Promotion & Graduation). Phase 2D adds `is_graduated` flag on students, `promotion_logs` audit table with 24h rollback snapshots, `previewPromotion` / `runPromotion` / `rollbackPromotion` server actions, three-tab promotion preview (Promote/Hold/Graduate), confirmation modal, and promotion history tab. Promotion nav added to Sidebar (admin-only). Total: **67 tracked modules** across Foundation Migrations + 8 phases. Every NAAC criterion mapped. Next: Phase 2E — CIA / Internal Assessment Ledger.*
+*Last updated: 2026-06-10 — ERP Standards gap audit completed. Added Phase 2.5 (Razorpay webhook security, DPDP 2023 privacy, backup & scheduler resilience). Added Global ERP Standards register + Architecture & Quality register (8 items). Added 5A-sub (Admissions CRM), 5C-sub (Statutory Payroll — TDS/PF/ESI/Form 16), 4E-sub (Vendor & Purchase Orders), 7F-sub (NAAC SSR Builder + AISHE + NIRF). Closed all ERP gaps: Step 5L (Department Budget Management — NAAC 6.4), Phase 6G expanded to full LMS (SCORM + assignments + gradebook), Phase 7D expanded with ISO 27001 security audit checklist, Phase 7F expanded with AISHE field-level schema + IQAC Meeting & Action Tracker (NAAC 6.1). Added Arch A8 — Platform-Wide Audit Log (`audit_logs` table, `logAudit()` helper, append-only, NAAC/UGC/ISO 27001 compliant — resolves audit trail gap). Extended Dev Rules 10 → 17. Total: **87 tracked modules** across Foundation Migrations + 9 phases + Architecture track. Every NAAC criterion mapped. Next: Phase 2.5A — Razorpay Webhook Security Fix.*
