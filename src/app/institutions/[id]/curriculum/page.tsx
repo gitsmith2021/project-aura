@@ -55,10 +55,11 @@ export default function CurriculumPage({ params }: { params: Promise<{ id: strin
 
   useEffect(() => { load(); }, [load]);
 
-  // Group by semester
+  // Group by semester (subjects without a semester set fall back to 0 = "Unassigned")
   const bySemester = subjects.reduce<Record<number, SubjectWithProgress[]>>((acc, s) => {
-    if (!acc[s.semester]) acc[s.semester] = [];
-    acc[s.semester].push(s);
+    const sem = s.semester ?? 0;
+    if (!acc[sem]) acc[sem] = [];
+    acc[sem].push(s);
     return acc;
   }, {});
   const semesters = Object.keys(bySemester).map(Number).sort((a, b) => a - b);
@@ -128,7 +129,7 @@ export default function CurriculumPage({ params }: { params: Promise<{ id: strin
               return (
                 <div key={sem}>
                   <div className="flex items-center gap-3 mb-3">
-                    <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Semester {sem}</h2>
+                    <h2 className="text-xs font-bold text-slate-500 uppercase tracking-wider">{sem === 0 ? "Unassigned" : `Semester ${sem}`}</h2>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${semesterColor(semPct)}`}>
                       {semPct}% done
                     </span>

@@ -22,15 +22,18 @@
 ---
 
 ### A2 — Testing Strategy (Resolve by: Phase 4)
-> No unit, integration, or e2e tests defined. For a multi-tenant ERP handling fees and marks, regression risk is high.
+> No unit, integration, or e2e tests defined. For a multi-tenant ERP handling fees and marks, regression risk is high. Scope covers **both**: retroactive coverage of the 30 modules already built (Core, Phase 1, Phase 2) and a forward-looking gate so untested surface area doesn't keep growing through Phases 3–8.
 
 #### What to build:
 - [ ] Add **Vitest** for unit testing Server Actions: `npm install -D vitest @vitejs/plugin-react`
-- [ ] Priority test targets: `src/actions/marks.ts`, `src/actions/feePayments.ts`, `src/actions/promotion.ts`
+- [ ] Retroactive unit coverage — all calculation/aggregation logic in already-built `src/actions/*` (fees, marks, attendance %, curriculum completion, payroll, promotion eligibility), not just the original priority files below
+- [ ] Priority test targets (first pass): `src/actions/marks.ts`, `src/actions/feePayments.ts`, `src/actions/promotion.ts`, `src/actions/curriculum.ts`
 - [ ] Add **Playwright** for e2e: `npm install -D @playwright/test`
+- [ ] Route-crawl smoke test — visit every page under `src/app/**` (all `/institutions/[id]/...`, `/staff-portal/...`, `/student-portal/...` routes) with seeded data and assert no unhandled runtime/console error. Catches null/undefined-data crashes (e.g. the curriculum `semester` null crash, fixed 2026-06-12) across the whole app cheaply.
 - [ ] Priority e2e flows: student login → view attendance, admin → add fee → student pays → verify status
 - [ ] Add TypeScript check to CI: `npx tsc --noEmit` must pass on every PR
 - [ ] `docs/testing-guide.md` — testing conventions and how to run
+- [ ] **Definition of Done, Phase 3 onward:** every new Server Action ships with a Vitest unit test for its core logic, every new page is added to the route-crawl smoke test, and every new user-facing flow gets a Playwright e2e test (see Dev Rule 18)
 
 ---
 
