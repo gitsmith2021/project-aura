@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
+import { logAudit } from "@/lib/auditLog";
 import type {
   StaffProfile, StaffScheduleSlot, AttendanceSummaryRow,
   LeaveRequest, SalarySlip, StaffDashboardStats, AdminLeaveRequest,
@@ -385,6 +386,12 @@ export async function reviewLeaveRequest(
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) return { success: false, error: "Unauthorized." };
 
+    const { data: before } = await supabase
+      .from("leave_requests")
+      .select("status, staff_id, leave_type, from_date, to_date, review_note")
+      .eq("id", leaveId)
+      .maybeSingle();
+
     const { error } = await supabase
       .from("leave_requests")
       .update({
@@ -398,6 +405,17 @@ export async function reviewLeaveRequest(
       .eq("institution_id", institutionId);
 
     if (error) return { success: false, error: error.message };
+
+    await logAudit({
+      institutionId,
+      performedBy: user.id,
+      tableName: "leave_requests",
+      recordId: leaveId,
+      action: "UPDATE",
+      beforeData: before ?? null,
+      afterData: { status: payload.status, review_note: payload.review_note?.trim() || null },
+      notes: `Leave ${payload.status}`,
+    });
 
     revalidatePath(`/institutions/${institutionId}/leave`);
     return { success: true };

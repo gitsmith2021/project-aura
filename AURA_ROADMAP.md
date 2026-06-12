@@ -109,10 +109,10 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-12  
-> **33 of 87 modules complete — 38% of full platform built**
+> **34 of 87 modules complete — 39% of full platform built**
 
 ```
-Overall  ████████████░░░░░░░░░░░░░░░░░░░░░  38%  (33/87)
+Overall  █████████████░░░░░░░░░░░░░░░░░░░░  39%  (34/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
@@ -122,7 +122,7 @@ Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
 Phase 7    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Super Admin + SSR Builder + IQAC Tracker)
 Phase 8    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/6  — Mobile Apps & CCTV)
-Arch       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — RLS, Testing, Indexes, CI/CD, Billing, Audit Log)
+Arch       ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%  (1/8  — Audit Log ✅ · RLS, Testing, Indexes, CI/CD, Billing pending)
 ```
 
 > **Next up:** Phase 3A — Notification Infrastructure (see [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md)). Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
@@ -217,7 +217,7 @@ Arch       ░░░░░░░░░░░░░░░░░░░░░░░
 | 🔲 Arch A5 | CI/CD Pipeline (GitHub Actions) | Pending | — |
 | 🔲 Arch A6 | Multi-currency & Multi-timezone Support | Pending | — |
 | 🔲 Arch A7 | SaaS Billing — Minimal Viable (Trial + Expiry) | Pending | — |
-| 🔲 Arch A8 | Platform-Wide Audit Log — `audit_logs` table + `logAudit()` helper | Pending | — |
+| ✅ Arch A8 | Platform-Wide Audit Log — `audit_logs` table + `logAudit()` helper | Complete | — |
 | 🔲 Phase 8A | React Native Setup | Pending | — |
 | 🔲 Phase 8B | Staff Mobile App + NFC | Pending | — |
 | 🔲 Phase 8C | Student Mobile App | Pending | — |

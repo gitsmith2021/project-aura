@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { logAudit } from "@/lib/auditLog";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -193,6 +194,23 @@ export async function runPromotion(
 
   if (logError) return { success: false as const, error: `Log write failed: ${logError.message}` };
 
+  // Platform audit trail (Arch A8). promotion_logs holds the full per-student
+  // rollback snapshot; this entry makes the run visible in the unified log.
+  await logAudit({
+    institutionId,
+    performedBy: user?.id ?? null,
+    tableName: "promotion_logs",
+    recordId: log.id as string,
+    action: "PROMOTE",
+    afterData: {
+      academic_year_label: academicYearLabel,
+      promoted: toPromote.length,
+      held: toHold.length,
+      graduated: toGraduate.length,
+    },
+    notes: `Year promotion run for ${academicYearLabel}`,
+  });
+
   revalidatePath(`/institutions/${institutionId}/promotion`);
   return {
     success:  true as const,
@@ -242,6 +260,22 @@ export async function rollbackPromotion(logId: string, institutionId: string) {
     .from("promotion_logs")
     .update({ rolled_back_at: new Date().toISOString() })
     .eq("id", logId);
+
+  const { data: { user } } = await supabase.auth.getUser();
+  await logAudit({
+    institutionId,
+    performedBy: user?.id ?? null,
+    tableName: "promotion_logs",
+    recordId: logId,
+    action: "REVERT",
+    beforeData: {
+      total_promoted: log.total_promoted,
+      total_graduated: log.total_graduated,
+      academic_year_label: log.academic_year_label,
+    },
+    afterData: { students_restored: snapshot.length },
+    notes: `Promotion run rolled back (${log.academic_year_label ?? "unknown year"})`,
+  });
 
   revalidatePath(`/institutions/${institutionId}/promotion`);
   return { success: true as const };

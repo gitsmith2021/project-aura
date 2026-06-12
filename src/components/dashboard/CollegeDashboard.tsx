@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { getDeptColor } from "@/lib/deptColors";
 import { fundingTypeShortLabel } from "@/lib/deptFunding";
+import { reviewLeaveRequest } from "@/actions/staffPortal";
 import Link from "next/link";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -263,9 +264,12 @@ function ActionRequiredCard({ tenantId }: { tenantId: string }) {
 
   const handleAction = async (id: string, newStatus: "approved" | "rejected") => {
     setActionLoading(id);
-    const supabase = createClient();
-    await supabase.from("leave_requests").update({ status: newStatus }).eq("id", id);
-    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
+    // Server Action (not a direct client update) so reviewer identity and
+    // before/after state land in the audit trail — Dev Rule 13.
+    const result = await reviewLeaveRequest(id, tenantId, { status: newStatus });
+    if (result.success) {
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
+    }
     setActionLoading(null);
   };
 

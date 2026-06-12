@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { X, CreditCard } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { recordManualPayment } from "@/actions/feePayments";
+import type { PaymentMode } from "@/types/finance";
 
 type Student = { id: string; full_name: string };
 type FeeStructure = { id: string; name: string; amount: number; fee_type: string };
@@ -23,11 +25,11 @@ const PAYMENT_MODES = [
   { value: "dd",            label: "Demand Draft" },
 ];
 
+// Manual entry can only record completed or pending payments —
+// failed/refunded states come from the Razorpay flow, not manual entry.
 const STATUSES = [
   { value: "completed", label: "Completed" },
   { value: "pending",   label: "Pending" },
-  { value: "failed",    label: "Failed" },
-  { value: "refunded",  label: "Refunded" },
 ];
 
 export function RecordPaymentPanel({ isOpen, tenantId, onClose, onSuccess }: Props) {
@@ -87,23 +89,24 @@ export function RecordPaymentPanel({ isOpen, tenantId, onClose, onSuccess }: Pro
     if (!studentId || !amountPaid) return;
     setLoading(true);
 
-    const supabase = createClient();
-    const { error } = await supabase.from("fee_payments").insert([{
+    // Server Action (not a direct client insert) so the mutation is
+    // audit-logged centrally — Dev Rule 13.
+    const result = await recordManualPayment({
       institution_id:   tenantId,
       student_id:       studentId,
       fee_structure_id: feeStructureId || null,
       amount_paid:      parseFloat(amountPaid),
-      payment_mode:     paymentMode,
-      payment_status:   paymentStatus,
+      payment_mode:     paymentMode as PaymentMode,
+      payment_status:   paymentStatus as "completed" | "pending",
       receipt_number:   receiptNumber.trim() || null,
       paid_at:          paymentStatus === "completed" ? new Date(paidAt).toISOString() : null,
       notes:            notes.trim() || null,
-    }]);
+    });
 
     setLoading(false);
 
-    if (error) {
-      alert("Failed to record payment: " + error.message);
+    if (!result.success) {
+      alert("Failed to record payment: " + result.error);
     } else {
       reset();
       onSuccess();

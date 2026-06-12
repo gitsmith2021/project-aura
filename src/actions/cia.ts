@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { logAuditBatch } from "@/lib/auditLog";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -176,11 +177,37 @@ export async function bulkSaveCIAMarks(
       entered_by:       user?.id ?? null,
     }));
 
-    const { error } = await supabase
+    // Snapshot existing marks so the audit trail captures before → after
+    const { data: beforeRows } = await supabase
       .from("cia_marks")
-      .upsert(rows, { onConflict: "student_id,cia_component_id" });
+      .select("id, student_id, marks_scored")
+      .eq("cia_component_id", input.cia_component_id)
+      .in("student_id", rows.map(r => r.student_id));
+    const beforeByStudent = new Map((beforeRows ?? []).map(r => [r.student_id as string, r]));
+
+    const { data: saved, error } = await supabase
+      .from("cia_marks")
+      .upsert(rows, { onConflict: "student_id,cia_component_id" })
+      .select("id, student_id, marks_scored");
 
     if (error) return { success: false, error: error.message };
+
+    await logAuditBatch(
+      (saved ?? []).map(after => {
+        const before = beforeByStudent.get(after.student_id as string);
+        return {
+          institutionId: input.institution_id,
+          performedBy: user?.id ?? null,
+          tableName: "cia_marks",
+          recordId: after.id as string,
+          action: before ? ("UPDATE" as const) : ("INSERT" as const),
+          beforeData: before ?? null,
+          afterData: after,
+          notes: "CIA marks entry",
+        };
+      })
+    );
+
     revalidatePath(`/institutions/${input.institution_id}/cia`);
     return { success: true, count: rows.length };
   } catch (e) {

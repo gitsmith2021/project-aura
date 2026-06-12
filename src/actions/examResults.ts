@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { logAudit, logAuditBatch } from "@/lib/auditLog";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -143,14 +144,45 @@ export async function bulkEnterResults(input: BulkResultInput) {
     entered_by:       user?.id ?? null,
   }));
 
-  const { error } = await supabase
+  // Snapshot existing rows so the audit trail captures before → after marks
+  let beforeQuery = supabase
+    .from("exam_results")
+    .select("id, student_id, marks_scored, max_marks, is_arrear")
+    .eq("institution_id", input.institution_id)
+    .eq("subject_name", input.subject_name)
+    .eq("semester", input.semester)
+    .in("student_id", rows.map(r => r.student_id));
+  beforeQuery = input.exam_schedule_id
+    ? beforeQuery.eq("exam_schedule_id", input.exam_schedule_id)
+    : beforeQuery.is("exam_schedule_id", null);
+  const { data: beforeRows } = await beforeQuery;
+  const beforeByStudent = new Map((beforeRows ?? []).map(r => [r.student_id as string, r]));
+
+  const { data: saved, error } = await supabase
     .from("exam_results")
     .upsert(rows, {
       onConflict: "student_id,subject_name,semester,exam_schedule_id",
       ignoreDuplicates: false,
-    });
+    })
+    .select("id, student_id, marks_scored, max_marks, is_arrear");
 
   if (error) return { success: false as const, error: error.message };
+
+  await logAuditBatch(
+    (saved ?? []).map(after => {
+      const before = beforeByStudent.get(after.student_id as string);
+      return {
+        institutionId: input.institution_id,
+        performedBy: user?.id ?? null,
+        tableName: "exam_results",
+        recordId: after.id as string,
+        action: before ? ("UPDATE" as const) : ("INSERT" as const),
+        beforeData: before ?? null,
+        afterData: after,
+        notes: `Marks entry: ${input.subject_name}, semester ${input.semester}`,
+      };
+    })
+  );
 
   revalidatePath(`/institutions/${input.institution_id}/results`);
   return { success: true as const, count: rows.length };
@@ -158,8 +190,24 @@ export async function bulkEnterResults(input: BulkResultInput) {
 
 export async function deleteResult(id: string, institutionId: string) {
   const supabase = createClient(await cookies());
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Snapshot before deleting — a deleted mark must remain reconstructable
+  const { data: before } = await supabase
+    .from("exam_results").select("*").eq("id", id).maybeSingle();
+
   const { error } = await supabase.from("exam_results").delete().eq("id", id);
   if (error) return { success: false as const, error: error.message };
+
+  await logAudit({
+    institutionId,
+    performedBy: user?.id ?? null,
+    tableName: "exam_results",
+    recordId: id,
+    action: "DELETE",
+    beforeData: before ?? null,
+  });
+
   revalidatePath(`/institutions/${institutionId}/results`);
   return { success: true as const };
 }

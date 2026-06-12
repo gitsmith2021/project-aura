@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { logAudit } from "@/lib/auditLog";
 import type { StudentProgram } from "@/lib/studentProgram";
 
 export async function updatePersonProfile(payload: {
@@ -136,19 +137,31 @@ export async function registerUser(prevState: any, formData: FormData) {
     }
 
     // 3. Insert into institution_members
-    const { error: tenantUserError } = await supabase
+    const { data: memberRow, error: tenantUserError } = await supabase
       .from("institution_members")
       .insert([{
         profile_id: profile.id,
         institution_id: currentTenantId,
         role: mappedRole
-      }]);
+      }])
+      .select("id")
+      .single();
 
     if (tenantUserError) {
       // In a real app, we might want to rollback the profile creation here,
       // but for now we'll just return the error.
       return { error: `Failed to create tenant user: ${tenantUserError.message}`, success: false };
     }
+
+    await logAudit({
+      institutionId: currentTenantId,
+      performedBy: user.id,
+      tableName: "institution_members",
+      recordId: memberRow.id as string,
+      action: "INSERT",
+      afterData: { profile_id: profile.id, role: mappedRole, full_name: fullName, email },
+      notes: `New ${mappedRole} member added`,
+    });
 
     revalidatePath("/users/staff");
     revalidatePath("/users/students");

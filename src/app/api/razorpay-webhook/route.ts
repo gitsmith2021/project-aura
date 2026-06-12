@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 // session, so cookie-based auth is impossible. Every request is instead
 // authenticated cryptographically via the HMAC-SHA256 signature below.
 import { createAdminClient } from "@/utils/supabase/admin";
+import { logAudit } from "@/lib/auditLog";
 
 /**
  * Razorpay webhook receiver (Phase 2.5A).
@@ -196,6 +197,18 @@ export async function POST(req: Request) {
       await finishLedger({ ...ledgerContext, status: "error", error_message: updateErr.message });
       return NextResponse.json({ error: "Payment update failed" }, { status: 500 });
     }
+
+    // performedBy null = system action (Razorpay, HMAC-verified)
+    await logAudit({
+      institutionId: payment.institution_id,
+      performedBy: null,
+      tableName: "fee_payments",
+      recordId: payment.id,
+      action: "UPDATE",
+      beforeData: { payment_status: payment.payment_status },
+      afterData: { payment_status: "completed", razorpay_payment_id: entity.id },
+      notes: "Razorpay webhook: payment.captured",
+    });
   } else {
     // payment.failed — only a still-pending row may move to failed.
     const { error: updateErr } = await supabase
@@ -212,6 +225,17 @@ export async function POST(req: Request) {
       await finishLedger({ ...ledgerContext, status: "error", error_message: updateErr.message });
       return NextResponse.json({ error: "Payment update failed" }, { status: 500 });
     }
+
+    await logAudit({
+      institutionId: payment.institution_id,
+      performedBy: null,
+      tableName: "fee_payments",
+      recordId: payment.id,
+      action: "UPDATE",
+      beforeData: { payment_status: payment.payment_status },
+      afterData: { payment_status: "failed", razorpay_payment_id: entity.id },
+      notes: "Razorpay webhook: payment.failed",
+    });
   }
 
   await finishLedger({ ...ledgerContext, status: "processed" });

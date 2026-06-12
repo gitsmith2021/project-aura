@@ -207,22 +207,25 @@ export async function logAudit(payload: AuditPayload): Promise<void> {
 | `department_budgets` | UPDATE (approve/reject) | Before/after status and admin_notes |
 
 #### What to build:
-- [ ] `supabase/migrations/..._audit_logs.sql` — audit_logs table + indexes + RLS (append-only)
-- [ ] `src/lib/auditLog.ts` — `logAudit()` helper (uses admin client, fire-and-forget)
-- [ ] Retrofit existing Server Actions: add `logAudit()` call to all actions listed in the table above
-  - [ ] `src/actions/marks.ts` — log INSERT/UPDATE/DELETE on marks
-  - [ ] `src/actions/cia.ts` — log INSERT/UPDATE/DELETE on cia_marks
-  - [ ] `src/actions/feePayments.ts` — log payment capture + status overrides
-  - [ ] `src/actions/salary.ts` — log disbursement runs
-  - [ ] `src/actions/promotion.ts` — log PROMOTE and REVERT actions
-  - [ ] `src/actions/concessions.ts` — log grant and approval
-  - [ ] `src/actions/staffPortal.ts` — log leave approve/reject
-  - [ ] `src/actions/lmsAssignments.ts` — log grade submission
-  - [ ] `src/actions/budgets.ts` — log budget approve/reject
-- [ ] `src/app/institutions/[id]/audit-log/page.tsx` — Admin audit viewer: filterable by table, user, date range, action type; shows before/after diff
-- [ ] `src/components/audit/AuditLogTable.tsx` — Table with expandable rows showing before/after JSONB diff (highlight changed fields)
-- [ ] `src/app/admin/audit/page.tsx` — Super admin: cross-institution audit search (by user, table, date)
-- [ ] Verify: `audit_logs` table has no DELETE RLS policy — rows must be immutable once written
+- [x] `supabase/migrations/20260612200000_arch_a8_audit_logs.sql` ✅ Applied via MCP (June 12) — table + indexes + RLS. Deviations from spec, both justified: `performed_by` is **nullable** (NULL = system action, e.g. Razorpay webhook capture); SELECT policy uses real roles `SUPER_ADMIN`/`INST_ADMIN` via `private.get_user_authorizations()` (spec's `'ADMIN','HOD'` don't exist; HODs excluded — trail includes salary/fee data). Default grants revoked, `GRANT SELECT` only — verified on live DB
+- [x] `src/lib/auditLog.ts` ✅ `logAudit()` + `logAuditBatch()` (bulk ops log in one insert); fire-and-forget, admin client, auto-captures IP + user-agent
+- [x] Retrofit existing Server Actions (actual file/table names differ from spec):
+  - [x] `src/actions/examResults.ts` (spec said marks.ts; table is `exam_results`) — bulk upsert logs per-row INSERT/UPDATE with before→after marks; delete logs full before-snapshot
+  - [x] `src/actions/cia.ts` — bulkSaveCIAMarks logs per-row before→after
+  - [x] `src/actions/feePayments.ts` — manual record, Razorpay order creation, checkout verification, manual status override
+  - [x] `src/actions/salary.ts` — disbursement run generation (batch), single + bulk processing with before-snapshots
+  - [x] `src/actions/yearPromotion.ts` (spec said promotion.ts; table is `promotion_logs`) — PROMOTE + REVERT entries; per-student snapshot stays in promotion_logs.rollback_snapshot
+  - [x] `src/actions/concessions.ts` — grant, approve, reject with before-snapshots
+  - [x] `src/actions/staffPortal.ts` — reviewLeaveRequest (approve/reject) with before-snapshot
+  - [x] `src/actions/user.ts` + `src/actions/departments.ts` — institution_members INSERT (new member) and role UPDATEs (HOD appoint/demote/remove)
+  - [x] `src/app/api/razorpay-webhook/route.ts` — webhook capture/failure logged with `performed_by = NULL` (system)
+  - [ ] `src/actions/lmsAssignments.ts` — module doesn't exist yet (Phase 6G); wire logAudit when built
+  - [ ] `src/actions/budgets.ts` — module doesn't exist yet (Phase 5L); wire logAudit when built
+- [x] **Found & fixed two unaudited client-side direct mutations** (browser → Supabase, bypassing Server Actions entirely): leave approve/reject in `CollegeDashboard.tsx` now calls `reviewLeaveRequest`; manual fee entry in `RecordPaymentPanel.tsx` now calls `recordManualPayment` (its UI also no longer offers failed/refunded — those states come only from the Razorpay flow)
+- [x] `src/app/institutions/[id]/audit-log/page.tsx` ✅ filterable by module, action, date range; paginated (25/page)
+- [x] `src/components/audit/AuditLogTable.tsx` ✅ expandable rows, before/after diff with changed fields highlighted, System vs user attribution; "Audit Log" added to Institution sidebar group
+- [ ] `src/app/admin/audit/page.tsx` — deferred to Phase 7A: no super-admin layout/auth exists yet to host a cross-institution view
+- [x] Verify: no UPDATE/DELETE policy or grant on `audit_logs` — confirmed on live DB (authenticated has SELECT only)
 
 #### Key features:
 - **Append-only** — no UPDATE or DELETE policy on the table; even super admins cannot erase entries

@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck,
+  ShieldCheck, ScrollText,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -319,8 +319,10 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     if (exact) return pathname === href;
     if (key === "institutions")
       return (pathname === "/institutions" || pathname.startsWith("/institutions/")) &&
-        !pathname.includes("/finance") && !pathname.includes("/compliance") && !isAcademicPath(pathname);
+        !pathname.includes("/finance") && !pathname.includes("/compliance") &&
+        !pathname.includes("/audit-log") && !isAcademicPath(pathname);
     if (key === "compliance")     return pathname.includes("/compliance");
+    if (key === "audit-log")      return pathname.includes("/audit-log");
     if (key === "lesson-plans")   return pathname.includes("/lesson-plans");
     if (key === "guest-lectures") return pathname.includes("/guest-lectures");
     if (key === "internships")    return pathname.includes("/internships");
@@ -357,6 +359,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const guestLecturesHref  = slug ? `/institutions/${slug}/guest-lectures`  : "/institutions";
   const internshipsHref    = slug ? `/institutions/${slug}/internships`      : "/institutions";
   const complianceHref     = slug ? `/institutions/${slug}/compliance`       : "/institutions";
+  const auditLogHref       = slug ? `/institutions/${slug}/audit-log`        : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -488,6 +491,8 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
                   active={isItemActive("departments", "/departments")} isCollapsed={false} />
                 <NavItem href={complianceHref} icon={<ShieldCheck size={14} />} label="Compliance"
                   active={isItemActive("compliance", complianceHref)} isCollapsed={false} />
+                <NavItem href={auditLogHref} icon={<ScrollText size={14} />} label="Audit Log"
+                  active={isItemActive("audit-log", auditLogHref)} isCollapsed={false} />
               </NavGroup>
             )}
 

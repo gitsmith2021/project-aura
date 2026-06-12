@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { logAudit } from "@/lib/auditLog";
 
 export type ConcessionType =
   | "staff_ward"
@@ -70,6 +71,23 @@ export async function grantConcession(payload: {
 
     if (error) throw error;
 
+    const { data: { user } } = await supabase.auth.getUser();
+    await logAudit({
+      institutionId: payload.institution_id,
+      performedBy: user?.id ?? null,
+      tableName: "fee_concessions",
+      recordId: (data as FeeConcession).id,
+      action: "INSERT",
+      afterData: {
+        student_id: payload.student_id,
+        concession_type: payload.concession_type,
+        amount: payload.amount,
+        percentage: payload.percentage,
+        status: "pending",
+      },
+      notes: `Concession granted: ${payload.reason}`,
+    });
+
     revalidatePath(`/institutions/${payload.institution_id}/finance/concessions`);
     return { success: true as const, data: data as FeeConcession };
   } catch (err: any) {
@@ -85,6 +103,12 @@ export async function approveConcession(id: string, institutionId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
+    const { data: before } = await supabase
+      .from("fee_concessions")
+      .select("status, approved_by, amount, percentage, student_id")
+      .eq("id", id)
+      .maybeSingle();
+
     const { data, error } = await supabase
       .from("fee_concessions")
       .update({
@@ -97,6 +121,17 @@ export async function approveConcession(id: string, institutionId: string) {
       .single();
 
     if (error) throw error;
+
+    await logAudit({
+      institutionId,
+      performedBy: user.id,
+      tableName: "fee_concessions",
+      recordId: id,
+      action: "UPDATE",
+      beforeData: before ?? null,
+      afterData: { status: "approved", approved_by: user.id },
+      notes: "Concession approved",
+    });
 
     revalidatePath(`/institutions/${institutionId}/finance/concessions`);
     return { success: true as const, data: data as FeeConcession };
@@ -113,6 +148,12 @@ export async function rejectConcession(id: string, institutionId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
+    const { data: before } = await supabase
+      .from("fee_concessions")
+      .select("status, approved_by, amount, percentage, student_id")
+      .eq("id", id)
+      .maybeSingle();
+
     const { data, error } = await supabase
       .from("fee_concessions")
       .update({
@@ -125,6 +166,17 @@ export async function rejectConcession(id: string, institutionId: string) {
       .single();
 
     if (error) throw error;
+
+    await logAudit({
+      institutionId,
+      performedBy: user.id,
+      tableName: "fee_concessions",
+      recordId: id,
+      action: "UPDATE",
+      beforeData: before ?? null,
+      afterData: { status: "rejected", approved_by: user.id },
+      notes: "Concession rejected",
+    });
 
     revalidatePath(`/institutions/${institutionId}/finance/concessions`);
     return { success: true as const, data: data as FeeConcession };

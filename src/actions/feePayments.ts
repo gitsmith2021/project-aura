@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { logAudit } from "@/lib/auditLog";
 import type { FeePayment, PaymentMode, PaymentStatus, PaymentSummary } from "@/types/finance";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -145,6 +146,22 @@ export async function recordManualPayment(
 
     if (error) return { success: false, error: error.message };
 
+    await logAudit({
+      institutionId: payload.institution_id,
+      performedBy: user.id,
+      tableName: "fee_payments",
+      recordId: (data as { id: string }).id,
+      action: "INSERT",
+      afterData: {
+        student_id: payload.student_id,
+        amount_paid: payload.amount_paid,
+        payment_mode: payload.payment_mode,
+        payment_status: payload.payment_status,
+        receipt_number: receiptNumber,
+      },
+      notes: "Manual payment recorded",
+    });
+
     revalidatePayments(payload.institution_id);
     return { success: true, data: data as unknown as FeePayment };
   } catch (err: unknown) {
@@ -208,6 +225,22 @@ export async function createRazorpayOrder(payload: {
 
     if (dbErr) return { success: false, error: dbErr.message };
 
+    await logAudit({
+      institutionId: payload.institutionId,
+      performedBy: user.id,
+      tableName: "fee_payments",
+      recordId: paymentRow.id as string,
+      action: "INSERT",
+      afterData: {
+        student_id: payload.studentId,
+        amount_paid: payload.amount,
+        payment_mode: "razorpay",
+        payment_status: "pending",
+        razorpay_order_id: order.id,
+      },
+      notes: "Razorpay order created (pending payment)",
+    });
+
     return {
       success:       true,
       orderId:       order.id,
@@ -248,6 +281,12 @@ export async function verifyRazorpayPayment(payload: {
 
     const isValid = expected === payload.razorpay_signature;
 
+    const { data: before } = await supabase
+      .from("fee_payments")
+      .select("payment_status, razorpay_payment_id, paid_at")
+      .eq("id", payload.fee_payment_id)
+      .maybeSingle();
+
     const { error } = await supabase
       .from("fee_payments")
       .update({
@@ -260,6 +299,22 @@ export async function verifyRazorpayPayment(payload: {
       .eq("id", payload.fee_payment_id);
 
     if (error) return { success: false, error: error.message };
+
+    await logAudit({
+      institutionId: payload.institutionId,
+      performedBy: user.id,
+      tableName: "fee_payments",
+      recordId: payload.fee_payment_id,
+      action: "UPDATE",
+      beforeData: before ?? null,
+      afterData: {
+        payment_status: isValid ? "completed" : "failed",
+        razorpay_payment_id: payload.razorpay_payment_id,
+      },
+      notes: isValid
+        ? "Razorpay checkout signature verified"
+        : "Razorpay checkout signature INVALID — marked failed",
+    });
 
     revalidatePayments(payload.institutionId);
 
@@ -331,6 +386,12 @@ export async function markPaymentCompleted(
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return { success: false, error: "Unauthorized." };
 
+    const { data: before } = await supabase
+      .from("fee_payments")
+      .select("payment_status, paid_at, amount_paid, student_id")
+      .eq("id", paymentId)
+      .maybeSingle();
+
     const { error } = await supabase
       .from("fee_payments")
       .update({
@@ -341,6 +402,17 @@ export async function markPaymentCompleted(
       .eq("id", paymentId);
 
     if (error) return { success: false, error: error.message };
+
+    await logAudit({
+      institutionId,
+      performedBy: user.id,
+      tableName: "fee_payments",
+      recordId: paymentId,
+      action: "UPDATE",
+      beforeData: before ?? null,
+      afterData: { payment_status: "completed" },
+      notes: "Manual status override: marked completed",
+    });
 
     revalidatePayments(institutionId);
     return { success: true };

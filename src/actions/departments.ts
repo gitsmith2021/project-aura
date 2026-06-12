@@ -3,11 +3,13 @@
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { logAudit } from "@/lib/auditLog";
 
 export async function setHOD(departmentId: string, staffId: string, institutionId: string) {
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
+    const { data: { user } } = await supabase.auth.getUser();
 
     // 1. Get the department to see if there is an existing HOD
     const { data: dept, error: deptError } = await supabase
@@ -44,15 +46,42 @@ export async function setHOD(departmentId: string, staffId: string, institutionI
       const oldProfileId = oldStaff?.profile_id;
 
       if (oldProfileId) {
+        const { data: oldMember } = await supabase
+          .from("institution_members")
+          .select("id, role")
+          .eq("profile_id", oldProfileId)
+          .eq("institution_id", institutionId)
+          .maybeSingle();
+
         await supabase
           .from("institution_members")
           .update({ role: "STAFF" })
           .eq("profile_id", oldProfileId)
           .eq("institution_id", institutionId);
+
+        if (oldMember) {
+          await logAudit({
+            institutionId,
+            performedBy: user?.id ?? null,
+            tableName: "institution_members",
+            recordId: oldMember.id as string,
+            action: "UPDATE",
+            beforeData: { role: oldMember.role },
+            afterData: { role: "STAFF" },
+            notes: "Previous HOD demoted (department head reassigned)",
+          });
+        }
       }
     }
 
     // 4. Update new HOD's role in institution_members to 'HOD'
+    const { data: newMember } = await supabase
+      .from("institution_members")
+      .select("id, role")
+      .eq("profile_id", newProfileId)
+      .eq("institution_id", institutionId)
+      .maybeSingle();
+
     const { error: memberError } = await supabase
       .from("institution_members")
       .update({ role: "HOD" })
@@ -60,6 +89,19 @@ export async function setHOD(departmentId: string, staffId: string, institutionI
       .eq("institution_id", institutionId);
 
     if (memberError) throw memberError;
+
+    if (newMember) {
+      await logAudit({
+        institutionId,
+        performedBy: user?.id ?? null,
+        tableName: "institution_members",
+        recordId: newMember.id as string,
+        action: "UPDATE",
+        beforeData: { role: newMember.role },
+        afterData: { role: "HOD" },
+        notes: "Appointed department head",
+      });
+    }
 
     // 5. Update departments.hod_id to staffId
     const { error: updateDeptError } = await supabase
@@ -81,6 +123,7 @@ export async function removeHOD(departmentId: string, institutionId: string) {
   try {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
+    const { data: { user } } = await supabase.auth.getUser();
 
     // 1. Get the department to identify the current HOD
     const { data: dept, error: deptError } = await supabase
@@ -104,11 +147,31 @@ export async function removeHOD(departmentId: string, institutionId: string) {
 
       // 3. Revert HOD role to 'STAFF'
       if (profileId) {
+        const { data: member } = await supabase
+          .from("institution_members")
+          .select("id, role")
+          .eq("profile_id", profileId)
+          .eq("institution_id", institutionId)
+          .maybeSingle();
+
         await supabase
           .from("institution_members")
           .update({ role: "STAFF" })
           .eq("profile_id", profileId)
           .eq("institution_id", institutionId);
+
+        if (member) {
+          await logAudit({
+            institutionId,
+            performedBy: user?.id ?? null,
+            tableName: "institution_members",
+            recordId: member.id as string,
+            action: "UPDATE",
+            beforeData: { role: member.role },
+            afterData: { role: "STAFF" },
+            notes: "Department head removed",
+          });
+        }
       }
     }
 

@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { logAudit, logAuditBatch } from "@/lib/auditLog";
 import type {
   SalaryStructure, SalaryDisbursement, SalarySummary,
   StaffWithoutSalary, DisbursementMode, DisbursementStatus,
@@ -276,8 +277,23 @@ export async function generateMonthlyDisbursements(
       return { success: true, data: { generated: 0, skipped } };
     }
 
-    const { error: insErr } = await supabase.from("salary_disbursements").insert(toInsert);
+    const { data: inserted, error: insErr } = await supabase
+      .from("salary_disbursements")
+      .insert(toInsert)
+      .select("id, staff_id, month, amount_disbursed, status");
     if (insErr) return { success: false, error: insErr.message };
+
+    await logAuditBatch(
+      (inserted ?? []).map(row => ({
+        institutionId,
+        performedBy: user.id,
+        tableName: "salary_disbursements",
+        recordId: row.id as string,
+        action: "INSERT" as const,
+        afterData: row,
+        notes: `Disbursement run generated for ${month}`,
+      }))
+    );
 
     revalidateSalary(institutionId);
     return { success: true, data: { generated: toInsert.length, skipped } };
@@ -300,6 +316,12 @@ export async function processDisbursement(
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) return { success: false, error: "Unauthorized." };
 
+    const { data: before } = await supabase
+      .from("salary_disbursements")
+      .select("status, amount_disbursed, payment_mode, transaction_ref, staff_id, month")
+      .eq("id", disbursementId)
+      .maybeSingle();
+
     const { error } = await supabase
       .from("salary_disbursements")
       .update({
@@ -314,6 +336,21 @@ export async function processDisbursement(
       .eq("id", disbursementId);
 
     if (error) return { success: false, error: error.message };
+
+    await logAudit({
+      institutionId,
+      performedBy: user.id,
+      tableName: "salary_disbursements",
+      recordId: disbursementId,
+      action: "UPDATE",
+      beforeData: before ?? null,
+      afterData: {
+        status: "processed",
+        payment_mode: payload.payment_mode,
+        transaction_ref: payload.transaction_ref?.trim() || null,
+      },
+      notes: "Salary disbursement processed",
+    });
 
     revalidateSalary(institutionId);
     return { success: true };
@@ -343,6 +380,13 @@ export async function bulkProcessDisbursements(
     let processed = 0;
     let failed    = 0;
 
+    // One before-snapshot for the whole batch (audit trail)
+    const { data: beforeRows } = await supabase
+      .from("salary_disbursements")
+      .select("id, status, amount_disbursed, payment_mode, staff_id, month")
+      .in("id", disbursementIds);
+    const beforeById = new Map((beforeRows ?? []).map(r => [r.id as string, r]));
+
     // Process in chunks of 10 to avoid query size limits
     for (let i = 0; i < disbursementIds.length; i += 10) {
       const chunk = disbursementIds.slice(i, i + 10);
@@ -358,8 +402,21 @@ export async function bulkProcessDisbursements(
         })
         .in("id", chunk);
 
-      if (error) { failed += chunk.length; }
-      else        { processed += chunk.length; }
+      if (error) { failed += chunk.length; continue; }
+      processed += chunk.length;
+
+      await logAuditBatch(
+        chunk.map(id => ({
+          institutionId,
+          performedBy: user.id,
+          tableName: "salary_disbursements",
+          recordId: id,
+          action: "UPDATE" as const,
+          beforeData: beforeById.get(id) ?? null,
+          afterData: { status: "processed", payment_mode: payload.payment_mode },
+          notes: "Bulk salary disbursement run",
+        }))
+      );
     }
 
     revalidateSalary(institutionId);
