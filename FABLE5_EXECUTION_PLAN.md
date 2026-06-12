@@ -128,9 +128,10 @@ Key rules (non-negotiable):
 [PASTE FULL MODULE SPEC HERE]
 
 After all files are built and TypeScript passes:
+npm run build   # must pass clean before committing — never skip
 git add -A
 git commit -m "feat: [Phase X] — [Module Name] complete"
-git push origin main
+# Do NOT auto-push — review the build locally, then push manually when ready
 ```
 
 ---

@@ -38,6 +38,20 @@
 - [ ] Revenue chart: total fee collections per month across all institutions
 - [ ] Top performing institutions by fee collection rate
 
+#### Premium enhancements (decided — no new dependencies):
+> Deliberately scoped: **no Three.js / globe / socket.io.** This is an operator analytics
+> tool for an all-India tenant base — data-density and scan-speed win over 3D eye-candy
+> (that lives on the Landing Page). Only two enhancements, both using already-installed packages.
+
+- [ ] **Supabase Realtime — live "Active Sessions Today" card.** Subscribe to the relevant
+  table (e.g. attendance/live-class sessions) via `supabase.channel(...)` so the active-sessions
+  KPI ticks live as classes start/end — no manual refresh. Use `@supabase/supabase-js` Realtime
+  (already installed). Clean up the channel on unmount. This is the dashboard's real-time moment.
+- [ ] **GSAP count-up on KPI cards.** Animate the headline numbers (total institutions, students,
+  staff, revenue) counting up on mount using `gsap` + `@gsap/react` `useGSAP` (already installed,
+  same as Landing Page). Tasteful only — animate the KPI numbers, **not** the charts. Respect
+  `prefers-reduced-motion`. Format the final value as INR / `en-IN` where applicable.
+
 ---
 
 ### Step 7C — Per-Institution Drill Down
