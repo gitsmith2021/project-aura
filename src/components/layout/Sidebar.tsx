@@ -21,6 +21,15 @@ const FINANCE_SUB = [
   { key: "reports",     label: "Reports",         Icon: BarChart2,      href: (id: string) => `/institutions/${id}/finance/reports` },
 ] as const;
 
+// ── Academics path fragments — shared between group/active detection ──────────
+// Any path containing one of these belongs to the "Academics" sidebar group,
+// not "Institution". Add new Phase 3+ academic routes here only.
+const ACADEMIC_PATH_FRAGMENTS = [
+  "/schedules", "/subjects", "/curriculum", "/lesson-plans", "/guest-lectures",
+  "/internships", "/exams", "/cia", "/results", "/promotion", "/calendar",
+] as const;
+const isAcademicPath = (path: string) => ACADEMIC_PATH_FRAGMENTS.some(f => path.includes(f));
+
 // ── Staff portal nav (flat — already short) ───────────────────────────────────
 const STAFF_NAV = [
   { key: "dashboard",  href: "/staff-portal",            label: "Dashboard",   Icon: LayoutDashboard, exact: true },
@@ -281,16 +290,9 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   // Determine which group the current path belongs to and auto-open it
   const detectOpenGroup = (path: string): string => {
     if (path === "/" || path.startsWith("/settings")) return "";
+    if (isAcademicPath(path)) return "academics";
     if (path.startsWith("/institutions") || path.startsWith("/departments")) return "institution";
     if (path.startsWith("/users")) return "people";
-    if (
-      path.startsWith("/schedules") || path.includes("/subjects") ||
-      path.includes("/curriculum") || path.includes("/lesson-plans") ||
-      path.includes("/guest-lectures") || path.includes("/internships") ||
-      path.includes("/exams") || path.includes("/cia") ||
-      path.includes("/results") || path.includes("/promotion") ||
-      path.includes("/calendar")
-    ) return "academics";
     if (path.includes("/finance")) return "finance";
     return "";
   };
@@ -315,11 +317,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     if (exact) return pathname === href;
     if (key === "institutions")
       return (pathname === "/institutions" || pathname.startsWith("/institutions/")) &&
-        !pathname.includes("/finance") && !pathname.includes("/calendar") &&
-        !pathname.includes("/subjects") && !pathname.includes("/exams") &&
-        !pathname.includes("/results") && !pathname.includes("/promotion") &&
-        !pathname.includes("/lesson-plans") && !pathname.includes("/curriculum") &&
-        !pathname.includes("/cia") && !pathname.includes("/internships");
+        !pathname.includes("/finance") && !isAcademicPath(pathname);
     if (key === "lesson-plans")   return pathname.includes("/lesson-plans");
     if (key === "guest-lectures") return pathname.includes("/guest-lectures");
     if (key === "internships")    return pathname.includes("/internships");
@@ -474,11 +472,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
                   pathname === "/institutions" ||
                   pathname.startsWith("/departments") ||
                   (pathname.startsWith("/institutions/") &&
-                    !pathname.includes("/finance") && !pathname.includes("/calendar") &&
-                    !pathname.includes("/subjects") && !pathname.includes("/exams") &&
-                    !pathname.includes("/results") && !pathname.includes("/promotion") &&
-                    !pathname.includes("/lesson-plans") && !pathname.includes("/curriculum") &&
-                    !pathname.includes("/cia") && !pathname.includes("/internships"))
+                    !pathname.includes("/finance") && !isAcademicPath(pathname))
                 }
                 isOpen={openGroups.has("institution")}
                 onToggle={() => toggleGroup("institution")}
@@ -512,15 +506,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
               groupKey="academics"
               icon={<BookOpen size={18} />}
               label="Academics"
-              isActive={
-                pathname.startsWith("/schedules") ||
-                pathname.includes("/subjects") || pathname.includes("/curriculum") ||
-                pathname.includes("/lesson-plans") || pathname.includes("/guest-lectures") ||
-                pathname.includes("/internships") ||
-                pathname.includes("/exams") ||
-                pathname.includes("/cia") || pathname.includes("/results") ||
-                pathname.includes("/promotion") || pathname.includes("/calendar")
-              }
+              isActive={isAcademicPath(pathname)}
               isOpen={openGroups.has("academics")}
               onToggle={() => toggleGroup("academics")}
               isCollapsed={isCollapsed}

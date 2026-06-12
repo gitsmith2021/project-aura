@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 export type InstitutionOption = {
   id: string;
   name: string;
+  slug: string | null;
   session_types?: string[] | null;
 };
 
@@ -42,7 +43,7 @@ export function InstitutionProvider({ children, userId }: { children: React.Reac
     const fetchInsts = () => {
       supabase
         .from("institutions")
-        .select("id, name, session_types")
+        .select("id, name, slug, session_types")
         .order("name")
         .then(({ data }) => {
           if (data && data.length > 0) {

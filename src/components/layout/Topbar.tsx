@@ -30,8 +30,11 @@ export function Topbar({
   // Finance sub-page suffix (e.g. /finance/fees/payments)
   const urlInstSuffix = urlInstMatch?.[2] ?? "";
 
-  // Active tab: URL-based routes use the URL's institution ID; others use context
-  const activeInstId = urlInstId ?? selectedId;
+  // Active tab: URL-based routes carry the institution *slug*, so resolve it to
+  // an id via the institutions list; other routes use the context selection.
+  const activeInstId = urlInstId
+    ? institutions.find(i => i.slug === urlInstId)?.id ?? null
+    : selectedId;
 
 
 
@@ -42,11 +45,11 @@ export function Topbar({
     });
   }, []);
 
-  const handleTabClick = (instId: string) => {
-    setSelectedId(instId);
+  const handleTabClick = (inst: { id: string; slug: string | null }) => {
+    setSelectedId(inst.id);
     // On URL-based institution routes, navigate to the equivalent page for the new institution
     if (urlInstId) {
-      router.push(`/institutions/${instId}${urlInstSuffix}`);
+      router.push(`/institutions/${inst.slug ?? inst.id}${urlInstSuffix}`);
     }
   };
 
@@ -83,7 +86,7 @@ export function Topbar({
               <button
                 key={inst.id}
                 type="button"
-                onClick={() => handleTabClick(inst.id)}
+                onClick={() => handleTabClick(inst)}
                 className={`relative flex h-14 shrink-0 items-center whitespace-nowrap px-5 text-xs font-semibold transition-colors
                   after:absolute after:bottom-0 after:inset-x-0 after:h-0.5 ${
                   activeInstId === inst.id
