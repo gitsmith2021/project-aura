@@ -95,7 +95,8 @@ ALTER TABLE data_erasure_requests ENABLE ROW LEVEL SECURITY;
 - [x] Student/Staff portal: `/student-portal/privacy` + `/staff-portal/privacy` (shared `src/components/privacy/PrivacyCenter.tsx`) — view consents, withdraw/re-grant optional consents, submit + track erasure requests; "Privacy" nav item in both portal sidebars
 - [x] Data retention policy: `src/lib/dataRetention.ts` — single source of truth (rendered on both /privacy-policy and the admin compliance tab); financial 7y, academic 7y, attendance 3y, medical 5y, consent logs 3y post-closure
 - [x] Privacy policy link added to login page and landing footer
-- [ ] Apply migration `20260612160000_phase2_5b_dpdp_compliance.sql` to the Supabase project (MCP session needs re-auth) + run security advisors
+- [x] Apply migration `20260612160000_phase2_5b_dpdp_compliance.sql` to the Supabase project ✅ Applied via MCP (June 12) — RLS verified on both tables, security advisors clean (only pre-existing findings: razorpay_webhook_events deliberate no-policy RLS + auth leaked-password setting)
+- [x] Follow-up `20260612170000_phase2_5b_tighten_grants.sql` ✅ Applied — Supabase's default `GRANT ALL` to anon/authenticated on new tables had silently widened the column-level UPDATE grants; revoked defaults so authenticated can UPDATE only `withdrawn_at` (consent) / `status, admin_notes, resolved_at` (erasure), no DELETE, anon nothing. **Lesson for future migrations: column-level grants on new tables require revoking Supabase's defaults first**
 
 #### Key rules (DPDP 2023):
 - Consent must be free, specific, informed, and unambiguous
