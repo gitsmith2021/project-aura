@@ -109,10 +109,10 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-12  
-> **34 of 87 modules complete — 39% of full platform built**
+> **36 of 87 modules complete — 41% of full platform built**
 
 ```
-Overall  █████████████░░░░░░░░░░░░░░░░░░░░  39%  (34/87)
+Overall  ██████████████░░░░░░░░░░░░░░░░░░░  41%  (36/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
@@ -120,7 +120,7 @@ Phase 3    ░░░░░░░░░░░░░░░░░░░░░░░
 Phase 4    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/12 — Campus Infrastructure + Vendor POs)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
-Phase 7    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Super Admin + SSR Builder + IQAC Tracker)
+Phase 7    ████████░░░░░░░░░░░░░░░░░░░░░░░░  25%  (2/8  — 7A Auth & Layout ✅ · 7B Platform Overview ✅)
 Phase 8    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/6  — Mobile Apps & CCTV)
 Arch       ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%  (1/8  — Audit Log ✅ · RLS, Testing, Indexes, CI/CD, Billing pending)
 ```
@@ -202,8 +202,8 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 | 🔲 Phase 6F | Grievance Redressal System (NAAC Criterion 6.2) | Pending | — |
 | 🔲 Phase 6G | E-Learning & Study Materials LMS | Pending | — |
 | 🔲 Phase 6H | Industry Connect & MOU Management (NAAC Criterion 7.1) | Pending | — |
-| 🔲 Phase 7A | Super Admin Auth & Layout | Pending | — |
-| 🔲 Phase 7B | Platform Overview Dashboard | Pending | — |
+| ✅ Phase 7A | Super Admin Auth & Layout | Complete | `24f64f1` |
+| ✅ Phase 7B | Platform Overview Dashboard | Complete | `24f64f1` |
 | 🔲 Phase 7C | Per-Institution Drill Down | Pending | — |
 | 🔲 Phase 7D | Platform Health & Audit | Pending | — |
 | 🔲 Phase 7E | SaaS Subscription & Billing Management | Pending | — |
