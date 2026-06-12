@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import {
   Building2, Users, GraduationCap, IndianRupee, Radio, TrendingUp,
   Trophy, ArrowUpRight, ArrowDownRight, Minus, type LucideIcon,
@@ -12,33 +11,11 @@ import {
 import { gsap, useGSAP, prefersReducedMotion } from "@/lib/gsap";
 import { createClient } from "@/utils/supabase/client";
 import { getActiveSessionsToday, type PlatformOverview } from "@/actions/superAdmin";
+import { InstitutionsTable } from "./InstitutionsTable";
+import { formatINRCompact, formatINRFull, intFmt } from "./format";
 
-// ── Formatting (Indian locale — Dev Rule 8) ───────────────────────────────────
-const intFmt = new Intl.NumberFormat("en-IN");
-
-/** ₹1,23,456 → "₹1.23L"; crores as "₹x.xCr". Full value stays in the tooltip/title. */
-function formatINRCompact(value: number): string {
-  if (value >= 1_00_00_000) return `₹${(value / 1_00_00_000).toFixed(value >= 10_00_00_000 ? 1 : 2)}Cr`;
-  if (value >= 1_00_000) return `₹${(value / 1_00_000).toFixed(value >= 10_00_000 ? 1 : 2)}L`;
-  return `₹${intFmt.format(Math.round(value))}`;
-}
-
-function formatINRFull(value: number): string {
-  return `₹${intFmt.format(Math.round(value))}`;
-}
-
-function formatLastActivity(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  const days = Math.floor((Date.now() - d.getTime()) / 86_400_000);
-  if (days <= 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 30) return `${days}d ago`;
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
-
-// ── GSAP count-up (Phase 7B premium enhancement) ──────────────────────────────
-function CountUp({ value, format }: { value: number; format: (n: number) => string }) {
+// ── GSAP count-up (Phase 7B premium enhancement; reused by 7C drill-down) ─────
+export function CountUp({ value, format }: { value: number; format: (n: number) => string }) {
   const ref = useRef<HTMLSpanElement>(null);
 
   useGSAP(() => {
@@ -62,8 +39,8 @@ function CountUp({ value, format }: { value: number; format: (n: number) => stri
   return <span ref={ref}>{format(value)}</span>;
 }
 
-// ── KPI card ──────────────────────────────────────────────────────────────────
-function KPICard({ icon: Icon, label, value, format, sub, iconClass, live }: {
+// ── KPI card (shared with the 7C drill-down) ──────────────────────────────────
+export function KPICard({ icon: Icon, label, value, format, sub, iconClass, live }: {
   icon: LucideIcon;
   label: string;
   value: number;
@@ -118,8 +95,10 @@ function MonthDelta({ current, previous }: { current: number; previous: number }
 
 // ── Chart tooltip (matches CollegeDashboard's DarkTooltip) ────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function DarkTooltip({ active, payload, label, isCurrency }: any) {
+export function DarkTooltip({ active, payload, label, isCurrency, isPercent }: any) {
   if (!active || !payload?.length) return null;
+  const fmt = (v: number) =>
+    isCurrency ? formatINRFull(v) : isPercent ? `${Number(v).toFixed(1)}%` : intFmt.format(v);
   return (
     <div className="bg-slate-900 text-white rounded-lg px-3 py-2 text-xs shadow-xl border border-slate-700">
       <p className="font-semibold text-slate-300 mb-1">{label}</p>
@@ -127,8 +106,7 @@ function DarkTooltip({ active, payload, label, isCurrency }: any) {
       {payload.map((p: any, i: number) => (
         <p key={i} className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full" style={{ background: p.stroke || p.fill || p.color }} />
-          {p.name}:{" "}
-          <span className="font-bold">{isCurrency ? formatINRFull(p.value) : intFmt.format(p.value)}</span>
+          {p.name}: <span className="font-bold">{p.value == null ? "—" : fmt(p.value)}</span>
         </p>
       ))}
     </div>
@@ -283,64 +261,11 @@ export function PlatformDashboard({ initial }: { initial: PlatformOverview }) {
       )}
 
       {/* ── Institutions table ── */}
-      <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-white/20 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
-        <div className="px-4 pt-4 pb-2">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">All Institutions</h3>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500">Sorted by lifetime collections · last activity = most recent completed payment</p>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">
-                <th className="px-4 py-2 font-semibold">Institution</th>
-                <th className="px-4 py-2 font-semibold">Type</th>
-                <th className="px-4 py-2 font-semibold text-right">Students</th>
-                <th className="px-4 py-2 font-semibold text-right">Staff</th>
-                <th className="px-4 py-2 font-semibold text-right">Revenue</th>
-                <th className="px-4 py-2 font-semibold">Last Activity</th>
-                <th className="px-4 py-2 font-semibold">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {institutions.map((inst) => (
-                <tr key={inst.id} className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-violet-50/40 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="px-4 py-2.5">
-                    <Link
-                      href={`/institutions/${inst.slug}`}
-                      className="text-xs font-semibold text-slate-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
-                    >
-                      {inst.name}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-2.5 text-xs text-slate-500 dark:text-slate-400">{inst.collegeType ?? "—"}</td>
-                  <td className="px-4 py-2.5 text-xs text-slate-700 dark:text-slate-300 text-right tabular-nums">{intFmt.format(inst.students)}</td>
-                  <td className="px-4 py-2.5 text-xs text-slate-700 dark:text-slate-300 text-right tabular-nums">{intFmt.format(inst.staff)}</td>
-                  <td className="px-4 py-2.5 text-xs font-semibold text-slate-900 dark:text-white text-right tabular-nums" title={formatINRFull(inst.revenue)}>
-                    {formatINRCompact(inst.revenue)}
-                  </td>
-                  <td className="px-4 py-2.5 text-xs text-slate-500 dark:text-slate-400">{formatLastActivity(inst.lastActivity)}</td>
-                  <td className="px-4 py-2.5">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                      inst.status === "Active"
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
-                        : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                    }`}>
-                      {inst.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {institutions.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-xs text-slate-400">
-                    No institutions registered yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <InstitutionsTable
+        institutions={institutions}
+        title="All Institutions"
+        subtitle="Sorted by lifetime collections · last activity = most recent completed payment · click a name to drill down"
+      />
     </div>
   );
 }

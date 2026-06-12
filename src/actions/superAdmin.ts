@@ -136,16 +136,19 @@ export async function getPlatformOverview(): Promise<
   const lastMonthStart = istMonthStartISO(1);
   const yearAgoStart = istMonthStartISO(11);
 
+  // .range() lifts PostgREST's silent 1000-row default cap. Generous ceilings
+  // for now; Arch A3 moves these to SQL-side aggregation when scale demands.
   const [instRes, studentRes, staffRes, paymentRes, attendanceRes] = await Promise.all([
-    admin.from("institutions").select("id, name, slug, college_type, status, created_at"),
-    admin.from("students").select("institution_id"),
-    admin.from("staff").select("institution_id"),
+    admin.from("institutions").select("id, name, slug, college_type, status, created_at").range(0, 9_999),
+    admin.from("students").select("institution_id").range(0, 99_999),
+    admin.from("staff").select("institution_id").range(0, 99_999),
     // fee_payments still carries the legacy tenant_id column name
     admin
       .from("fee_payments")
       .select("tenant_id, amount_paid, paid_at, created_at")
-      .eq("payment_status", "completed"),
-    admin.from("attendance").select("schedule_id").gte("created_at", todayStart),
+      .eq("payment_status", "completed")
+      .range(0, 99_999),
+    admin.from("attendance").select("schedule_id").gte("created_at", todayStart).range(0, 99_999),
   ]);
 
   const firstError =
@@ -234,6 +237,256 @@ export async function getPlatformOverview(): Promise<
       institutionGrowth,
       revenueByMonth,
       institutions: institutionRows,
+    },
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 7C — Per-institution drill down
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type DeptBreakdownRow = {
+  id: string;
+  name: string;
+  color: string | null;
+  fundingType: string | null;
+  students: number;
+  staff: number;
+};
+
+export type AttendancePoint = {
+  month: string;
+  /** Attendance rate 0–100 (present + late count as attended), null = no marks that month. */
+  rate: number | null;
+};
+
+export type RatioPoint = {
+  month: string;
+  revenue: number;
+  payroll: number;
+};
+
+export type InstitutionAnalytics = {
+  institution: {
+    id: string;
+    name: string;
+    slug: string;
+    collegeType: string | null;
+    status: string;
+    createdAt: string;
+  };
+  totals: {
+    students: number;
+    staff: number;
+    departments: number;
+    /** Lifetime completed collections. */
+    revenue: number;
+    /** Pending (uncollected) payment amount. */
+    pending: number;
+    /** completed / (completed + pending), 0–100; null when no payment data. */
+    collectionRate: number | null;
+    /** Lifetime processed payroll. */
+    payroll: number;
+    /** payroll / revenue, 0–100+; null when no revenue. */
+    payrollRatio: number | null;
+  };
+  /** Students by year of study, e.g. [{label:"Year 1", value:120}, …]. */
+  enrollmentByYear: { label: string; value: number }[];
+  /** New student admissions per month, last 12 months. */
+  admissionsByMonth: MonthPoint[];
+  /** Attendance rate per month, last 6 months. */
+  attendanceTrend: AttendancePoint[];
+  /** Revenue vs payroll per month, last 12 months. */
+  revenueVsPayroll: RatioPoint[];
+  departments: DeptBreakdownRow[];
+};
+
+/**
+ * Phase 7C — full analytics for one institution. Same gate + service-role
+ * pattern as getPlatformOverview (see header comment for the Dev Rule 16
+ * justification). Attendance is scoped to the institution through the
+ * attendance → class_schedules → departments join (attendance itself has no
+ * institution column), counted with head:true queries so no row caps apply.
+ */
+export async function getInstitutionAnalytics(institutionId: string): Promise<
+  | { success: true; data: InstitutionAnalytics }
+  | { success: false; error: string }
+> {
+  const userId = await requireSuperAdmin();
+  if (!userId) return { success: false, error: "Super admin access required." };
+
+  const admin = createAdminClient();
+
+  const { data: inst, error: instError } = await admin
+    .from("institutions")
+    .select("id, name, slug, college_type, status, created_at")
+    .eq("id", institutionId)
+    .single();
+  if (instError || !inst) return { success: false, error: instError?.message ?? "Institution not found." };
+
+  const months12 = lastMonths(12);
+  const months6 = lastMonths(6);
+
+  // Month boundaries as UTC ISO, oldest→newest, plus one trailing edge ("now")
+  const boundaries12 = months12.map((_, i) => istMonthStartISO(11 - i));
+  const boundaries6 = months6.map((_, i) => istMonthStartISO(5 - i));
+  const nowISO = new Date().toISOString();
+
+  // Attendance rate per month: 2 head-count queries per month (total, attended),
+  // filtered through the nested join — cheap COUNTs, no rows transferred.
+  const attendanceCounts = Promise.all(
+    months6.map(async (_, i) => {
+      const from = boundaries6[i];
+      const to = i + 1 < boundaries6.length ? boundaries6[i + 1] : nowISO;
+      const base = () =>
+        admin
+          .from("attendance")
+          .select("id, class_schedules!inner(departments!inner(institution_id))", { count: "exact", head: true })
+          .eq("class_schedules.departments.institution_id", institutionId)
+          .gte("created_at", from)
+          .lt("created_at", to);
+      const [totalRes, attendedRes] = await Promise.all([
+        base(),
+        base().in("status", ["present", "late"]),
+      ]);
+      return { total: totalRes.count ?? 0, attended: attendedRes.count ?? 0, error: totalRes.error ?? attendedRes.error };
+    })
+  );
+
+  const [studentRes, staffCountRes, deptRes, paymentRes, payrollRes, attendanceByMonth] = await Promise.all([
+    // One institution's students; .range lifts the 1000-row cap
+    admin
+      .from("students")
+      .select("year, department_id, created_at")
+      .eq("institution_id", institutionId)
+      .range(0, 49_999),
+    // Head count (department FK counts would miss staff with no department)
+    admin
+      .from("staff")
+      .select("id", { count: "exact", head: true })
+      .eq("institution_id", institutionId),
+    // Department breakdown with FK-embedded counts (server-side, cap-free)
+    admin
+      .from("departments")
+      .select("id, name, color, funding_type, students!department_id(count), staff!department_id(count)")
+      .eq("institution_id", institutionId),
+    admin
+      .from("fee_payments")
+      .select("amount_paid, payment_status, paid_at, created_at")
+      .eq("tenant_id", institutionId)
+      .in("payment_status", ["completed", "pending"])
+      .range(0, 99_999),
+    admin
+      .from("salary_disbursements")
+      .select("amount_disbursed, disbursed_at, created_at")
+      .eq("tenant_id", institutionId)
+      .eq("status", "processed")
+      .range(0, 99_999),
+    attendanceCounts,
+  ]);
+
+  const firstError = studentRes.error ?? staffCountRes.error ?? deptRes.error ?? paymentRes.error
+    ?? payrollRes.error ?? attendanceByMonth.find((m) => m.error)?.error ?? null;
+  if (firstError) return { success: false, error: firstError.message };
+
+  const students = studentRes.data ?? [];
+  const payments = paymentRes.data ?? [];
+  const payroll = payrollRes.data ?? [];
+
+  // ── Enrollment ─────────────────────────────────────────────────────────────
+  const byYear = new Map<string, number>();
+  for (const s of students) {
+    const label = s.year != null && `${s.year}`.trim() !== "" ? `Year ${s.year}` : "Unassigned";
+    byYear.set(label, (byYear.get(label) ?? 0) + 1);
+  }
+  const enrollmentByYear = [...byYear.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
+
+  const admissionBuckets = new Map<string, number>();
+  for (const s of students) {
+    const key = istMonthKey(s.created_at);
+    admissionBuckets.set(key, (admissionBuckets.get(key) ?? 0) + 1);
+  }
+  const admissionsByMonth = months12.map(({ key, month }) => ({ month, value: admissionBuckets.get(key) ?? 0 }));
+
+  // ── Finance ────────────────────────────────────────────────────────────────
+  let revenue = 0;
+  let pending = 0;
+  const revBuckets = new Map<string, number>();
+  for (const p of payments) {
+    const amount = Number(p.amount_paid) || 0;
+    if (p.payment_status === "completed") {
+      revenue += amount;
+      revBuckets.set(istMonthKey(p.paid_at ?? p.created_at), (revBuckets.get(istMonthKey(p.paid_at ?? p.created_at)) ?? 0) + amount);
+    } else {
+      pending += amount;
+    }
+  }
+
+  let payrollTotal = 0;
+  const payrollBuckets = new Map<string, number>();
+  for (const d of payroll) {
+    const amount = Number(d.amount_disbursed) || 0;
+    payrollTotal += amount;
+    const key = istMonthKey(d.disbursed_at ?? d.created_at);
+    payrollBuckets.set(key, (payrollBuckets.get(key) ?? 0) + amount);
+  }
+
+  const revenueVsPayroll = months12.map(({ key, month }) => ({
+    month,
+    revenue: revBuckets.get(key) ?? 0,
+    payroll: payrollBuckets.get(key) ?? 0,
+  }));
+
+  // ── Attendance trend ───────────────────────────────────────────────────────
+  const attendanceTrend = months6.map(({ month }, i) => {
+    const { total, attended } = attendanceByMonth[i];
+    return { month, rate: total > 0 ? Math.round((attended / total) * 1000) / 10 : null };
+  });
+
+  // ── Departments ────────────────────────────────────────────────────────────
+  type DeptRow = {
+    id: string; name: string; color: string | null; funding_type: string | null;
+    students: { count: number }[] | null; staff: { count: number }[] | null;
+  };
+  const departments: DeptBreakdownRow[] = ((deptRes.data ?? []) as DeptRow[])
+    .map((d) => ({
+      id: d.id,
+      name: d.name,
+      color: d.color,
+      fundingType: d.funding_type,
+      students: d.students?.[0]?.count ?? 0,
+      staff: d.staff?.[0]?.count ?? 0,
+    }))
+    .sort((a, b) => b.students - a.students);
+
+  return {
+    success: true,
+    data: {
+      institution: {
+        id: inst.id,
+        name: inst.name,
+        slug: inst.slug,
+        collegeType: inst.college_type,
+        status: inst.status,
+        createdAt: inst.created_at,
+      },
+      totals: {
+        students: students.length,
+        staff: staffCountRes.count ?? 0,
+        departments: departments.length,
+        revenue,
+        pending,
+        collectionRate: revenue + pending > 0 ? Math.round((revenue / (revenue + pending)) * 1000) / 10 : null,
+        payroll: payrollTotal,
+        payrollRatio: revenue > 0 ? Math.round((payrollTotal / revenue) * 1000) / 10 : null,
+      },
+      enrollmentByYear,
+      admissionsByMonth,
+      attendanceTrend,
+      revenueVsPayroll,
+      departments,
     },
   };
 }
