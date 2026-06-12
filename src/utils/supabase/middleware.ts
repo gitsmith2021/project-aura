@@ -68,6 +68,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   const isLoginPage      = pathname === "/login";
+  const isSuperAdminArea = pathname === "/admin" || pathname.startsWith("/admin/");
   // /staff-portal/view/* is the admin's read-only window into a staff member's portal.
   // Admins are allowed there; only /staff-portal (no /view) is staff-only.
   const isAdminViewStaff    = pathname.startsWith("/staff-portal/view");
@@ -137,6 +138,27 @@ export async function updateSession(request: NextRequest) {
       sameSite: "lax",
       secure:   process.env.NODE_ENV === "production",
     });
+  }
+
+  // ── Super admin area (/admin) — SUPER_ADMIN only ───────────────────────────
+  // The aura-role cookie collapses SUPER_ADMIN and INST_ADMIN into "admin", so
+  // the platform-operator area re-checks the actual membership row on every
+  // request. This is deliberate: /admin is low-traffic, and a revoked
+  // SUPER_ADMIN must lose access immediately rather than when a cookie expires.
+  if (isSuperAdminArea) {
+    const { data: superRow } = await supabase
+      .from("institution_members")
+      .select("id")
+      .eq("profile_id", user.id)
+      .eq("role", "SUPER_ADMIN")
+      .limit(1)
+      .maybeSingle();
+    if (!superRow) {
+      const url = request.nextUrl.clone();
+      url.pathname = role === "staff" ? "/staff-portal" : role === "student" ? "/student-portal" : "/";
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
   }
 
   // Logged-in user lands on /login → send to their home

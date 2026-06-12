@@ -1,0 +1,261 @@
+"use server";
+
+import { cookies } from "next/headers";
+import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 7A/7B — Super Admin cross-institution analytics.
+//
+// RLS scopes every table to the caller's institutions, so a platform-wide
+// dashboard cannot be built on the cookie client. After verifying the caller
+// holds a SUPER_ADMIN membership row (cookie client, RLS-checked), the
+// aggregate queries below use createAdminClient() — service role, RLS bypass.
+// This bypass is justified (Dev Rule 16): the data is read-only, aggregated
+// across all institutions by design, and reachable only behind the
+// SUPER_ADMIN gate enforced here AND in middleware AND in the /admin layout.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type PlatformTotals = {
+  institutions: number;
+  students: number;
+  staff: number;
+  /** Lifetime completed fee collections, INR. */
+  revenue: number;
+  /** Completed collections in the current calendar month (IST). */
+  collectionsThisMonth: number;
+  /** Completed collections in the previous calendar month (IST). */
+  collectionsLastMonth: number;
+  /** Distinct class sessions with attendance marked today (IST). */
+  activeSessionsToday: number;
+};
+
+export type MonthPoint = {
+  /** e.g. "Jul 25" — chart axis label */
+  month: string;
+  value: number;
+};
+
+export type InstitutionRow = {
+  id: string;
+  name: string;
+  slug: string;
+  collegeType: string | null;
+  status: string;
+  students: number;
+  staff: number;
+  revenue: number;
+  /** ISO timestamp of the latest completed fee payment, null if none yet. */
+  lastActivity: string | null;
+  createdAt: string;
+};
+
+export type PlatformOverview = {
+  totals: PlatformTotals;
+  /** New institutions onboarded per month, last 12 months. */
+  institutionGrowth: MonthPoint[];
+  /** Completed fee collections per month, last 12 months. */
+  revenueByMonth: MonthPoint[];
+  institutions: InstitutionRow[];
+};
+
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+/** Midnight today in IST, as a UTC ISO string (platform operates on Asia/Kolkata). */
+function istTodayStartISO(): string {
+  const ist = new Date(Date.now() + IST_OFFSET_MS);
+  ist.setUTCHours(0, 0, 0, 0);
+  return new Date(ist.getTime() - IST_OFFSET_MS).toISOString();
+}
+
+/** First day of the IST month `offset` months before the current one, as UTC ISO. */
+function istMonthStartISO(offset = 0): string {
+  const ist = new Date(Date.now() + IST_OFFSET_MS);
+  const d = new Date(Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth() - offset, 1));
+  return new Date(d.getTime() - IST_OFFSET_MS).toISOString();
+}
+
+/** Bucket key ("2026-06") and axis label ("Jun 26") for a timestamp, in IST. */
+function istMonthKey(iso: string): string {
+  const ist = new Date(new Date(iso).getTime() + IST_OFFSET_MS);
+  return `${ist.getUTCFullYear()}-${String(ist.getUTCMonth() + 1).padStart(2, "0")}`;
+}
+
+const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** The last `n` IST month buckets, oldest first: [{key:"2025-07", month:"Jul 25"}, …] */
+function lastMonths(n: number): { key: string; month: string }[] {
+  const ist = new Date(Date.now() + IST_OFFSET_MS);
+  const out: { key: string; month: string }[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth() - i, 1));
+    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+    out.push({ key, month: `${MONTH_LABELS[d.getUTCMonth()]} ${String(d.getUTCFullYear()).slice(2)}` });
+  }
+  return out;
+}
+
+/** Resolves to the caller's user id when they hold a SUPER_ADMIN membership, else null. */
+async function requireSuperAdmin(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  // RLS lets members read their own membership rows, so the cookie client is
+  // sufficient for this check — no service role needed yet.
+  const { data: row } = await supabase
+    .from("institution_members")
+    .select("id")
+    .eq("profile_id", user.id)
+    .eq("role", "SUPER_ADMIN")
+    .limit(1)
+    .maybeSingle();
+
+  return row ? user.id : null;
+}
+
+/**
+ * Everything the /admin overview needs in one round trip.
+ * Aggregation happens in TS over narrow column selects — at current platform
+ * scale (thousands of rows) this is cheaper and simpler than shipping a
+ * Postgres RPC, and keeps this step migration-free. Revisit via Arch A3 when
+ * row counts demand it.
+ */
+export async function getPlatformOverview(): Promise<
+  | { success: true; data: PlatformOverview }
+  | { success: false; error: string }
+> {
+  const userId = await requireSuperAdmin();
+  if (!userId) return { success: false, error: "Super admin access required." };
+
+  // Service role: cross-institution read-only aggregates (see header comment).
+  const admin = createAdminClient();
+  const todayStart = istTodayStartISO();
+  const thisMonthStart = istMonthStartISO(0);
+  const lastMonthStart = istMonthStartISO(1);
+  const yearAgoStart = istMonthStartISO(11);
+
+  const [instRes, studentRes, staffRes, paymentRes, attendanceRes] = await Promise.all([
+    admin.from("institutions").select("id, name, slug, college_type, status, created_at"),
+    admin.from("students").select("institution_id"),
+    admin.from("staff").select("institution_id"),
+    // fee_payments still carries the legacy tenant_id column name
+    admin
+      .from("fee_payments")
+      .select("tenant_id, amount_paid, paid_at, created_at")
+      .eq("payment_status", "completed"),
+    admin.from("attendance").select("schedule_id").gte("created_at", todayStart),
+  ]);
+
+  const firstError =
+    instRes.error ?? studentRes.error ?? staffRes.error ?? paymentRes.error ?? attendanceRes.error;
+  if (firstError) return { success: false, error: firstError.message };
+
+  const institutions = instRes.data ?? [];
+  const students = studentRes.data ?? [];
+  const staff = staffRes.data ?? [];
+  const payments = paymentRes.data ?? [];
+
+  // ── Per-institution rollups ────────────────────────────────────────────────
+  const studentCount = new Map<string, number>();
+  for (const s of students) {
+    if (s.institution_id) studentCount.set(s.institution_id, (studentCount.get(s.institution_id) ?? 0) + 1);
+  }
+  const staffCount = new Map<string, number>();
+  for (const s of staff) {
+    if (s.institution_id) staffCount.set(s.institution_id, (staffCount.get(s.institution_id) ?? 0) + 1);
+  }
+
+  const revenueByInst = new Map<string, number>();
+  const lastPaymentByInst = new Map<string, string>();
+  let revenue = 0;
+  let collectionsThisMonth = 0;
+  let collectionsLastMonth = 0;
+  const revenueBuckets = new Map<string, number>();
+
+  for (const p of payments) {
+    const amount = Number(p.amount_paid) || 0;
+    const when = p.paid_at ?? p.created_at;
+    revenue += amount;
+    if (p.tenant_id) {
+      revenueByInst.set(p.tenant_id, (revenueByInst.get(p.tenant_id) ?? 0) + amount);
+      const prev = lastPaymentByInst.get(p.tenant_id);
+      if (!prev || when > prev) lastPaymentByInst.set(p.tenant_id, when);
+    }
+    if (when >= thisMonthStart) collectionsThisMonth += amount;
+    else if (when >= lastMonthStart) collectionsLastMonth += amount;
+    if (when >= yearAgoStart) {
+      const key = istMonthKey(when);
+      revenueBuckets.set(key, (revenueBuckets.get(key) ?? 0) + amount);
+    }
+  }
+
+  // Distinct class sessions with attendance marked today
+  const activeSessionsToday = new Set((attendanceRes.data ?? []).map((a) => a.schedule_id)).size;
+
+  // ── Monthly series (last 12 months, zero-filled) ───────────────────────────
+  const months = lastMonths(12);
+  const instBuckets = new Map<string, number>();
+  for (const inst of institutions) {
+    const key = istMonthKey(inst.created_at);
+    instBuckets.set(key, (instBuckets.get(key) ?? 0) + 1);
+  }
+  const institutionGrowth = months.map(({ key, month }) => ({ month, value: instBuckets.get(key) ?? 0 }));
+  const revenueByMonth = months.map(({ key, month }) => ({ month, value: revenueBuckets.get(key) ?? 0 }));
+
+  const institutionRows: InstitutionRow[] = institutions
+    .map((inst) => ({
+      id: inst.id,
+      name: inst.name,
+      slug: inst.slug,
+      collegeType: inst.college_type,
+      status: inst.status,
+      students: studentCount.get(inst.id) ?? 0,
+      staff: staffCount.get(inst.id) ?? 0,
+      revenue: revenueByInst.get(inst.id) ?? 0,
+      lastActivity: lastPaymentByInst.get(inst.id) ?? null,
+      createdAt: inst.created_at,
+    }))
+    .sort((a, b) => b.revenue - a.revenue || b.students - a.students);
+
+  return {
+    success: true,
+    data: {
+      totals: {
+        institutions: institutions.length,
+        students: students.length,
+        staff: staff.length,
+        revenue,
+        collectionsThisMonth,
+        collectionsLastMonth,
+        activeSessionsToday,
+      },
+      institutionGrowth,
+      revenueByMonth,
+      institutions: institutionRows,
+    },
+  };
+}
+
+/**
+ * Lightweight re-count used by the realtime "Active Sessions Today" card —
+ * called whenever a new attendance row arrives over the realtime channel.
+ */
+export async function getActiveSessionsToday(): Promise<
+  | { success: true; data: number }
+  | { success: false; error: string }
+> {
+  const userId = await requireSuperAdmin();
+  if (!userId) return { success: false, error: "Super admin access required." };
+
+  // Service role: same justified cross-institution read as getPlatformOverview.
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("attendance")
+    .select("schedule_id")
+    .gte("created_at", istTodayStartISO());
+
+  if (error) return { success: false, error: error.message };
+  return { success: true, data: new Set((data ?? []).map((a) => a.schedule_id)).size };
+}
