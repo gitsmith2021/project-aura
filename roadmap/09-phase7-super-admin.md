@@ -54,18 +54,18 @@
 
 ---
 
-### Step 7C — Per-Institution Drill Down
+### Step 7C — Per-Institution Drill Down ✅ (commit `d21e9bd`)
 
-**Route:** `/admin/institutions/[id]/page.tsx`
+**Route:** `/admin/institutions/[id]/page.tsx` (+ `/admin/institutions` register)
 
 #### What to build:
-- [ ] Full institution analytics:
-  * Enrollment trends (students per semester)
-  * Attendance rate trends
-  * Fee collection rate
-  * Payroll vs revenue ratio
-  * Department-wise breakdown
-- [ ] Quick actions: View institution, Impersonate admin (with audit log)
+- [x] Full institution analytics:
+  * Enrollment trends — students by year of study + admissions/month (12m)
+  * Attendance rate trends — 6 months, head-count queries via attendance → class_schedules → departments join; present+late = attended
+  * Fee collection rate — completed vs pending payment amounts
+  * Payroll vs revenue ratio — KPI + 12-month grouped bars (processed disbursements vs completed collections)
+  * Department-wise breakdown — students/staff/ratio per department with colors + funding labels
+- [x] Quick actions: View institution ("Open dashboard" → `/institutions/[slug]`); **Impersonate admin deferred to Phase 7D** — needs an audited `auth.admin` magic-link flow + an `IMPERSONATE` audit action type; shipping it without the audit trail would violate Dev Rule 13's spirit. Stubbed disabled in the UI with tooltip.
 
 ---
 
