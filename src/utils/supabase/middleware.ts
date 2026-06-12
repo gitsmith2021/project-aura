@@ -1,8 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Server-to-server webhook endpoints. They have no cookie session — each one
+// authenticates its own requests (Razorpay: HMAC signature, NFC: bearer
+// secret) — so they must never be redirected to /login.
+const WEBHOOK_PATHS = ["/api/razorpay-webhook", "/api/attendance/nfc"];
+
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (WEBHOOK_PATHS.includes(pathname)) {
+    return NextResponse.next();
+  }
 
   // Forward pathname so server layouts can read it via headers()
   const forwardedHeaders = new Headers(request.headers);

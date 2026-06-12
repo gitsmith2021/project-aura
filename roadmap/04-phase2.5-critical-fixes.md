@@ -19,6 +19,7 @@
 - [x] Use `req.text()` to get the raw body **before** JSON parsing — parsed body breaks HMAC
 - [x] Return `400` immediately on signature mismatch; log the attempt for audit (`razorpay_webhook_events` table, status `rejected_signature`)
 - [x] Idempotency / replay prevention: `x-razorpay-event-id` recorded with UNIQUE constraint — duplicates acknowledged but never reprocessed; `payment.captured` cross-checks paise amount before completing
+- [x] Auth middleware bypass for webhook paths — `updateSession()` was redirecting ALL unauthenticated requests (incl. `/api/*`) to `/login`, so Razorpay/NFC servers could never reach their endpoints. `/api/razorpay-webhook` + `/api/attendance/nfc` now skip the cookie-session redirect (they authenticate via HMAC / bearer secret). Found by live-testing the endpoint; this also un-breaks the existing NFC webhook
 - [ ] Add `RAZORPAY_WEBHOOK_SECRET` value to `.env.local` and Vercel env vars (placeholder added to `.env.local`; secret comes from Razorpay Dashboard → Settings → Webhooks)
 - [ ] Apply migration `20260612094928_phase2_5a_razorpay_webhook_events.sql` to the Supabase project
 - [ ] Test with Razorpay webhook simulator in test mode
