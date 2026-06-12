@@ -6,6 +6,7 @@ import {
   Plus, Search, Filter, Paperclip, Pencil, Trash2,
   ChevronLeft, ChevronRight, AlertTriangle, Target,
   Zap, Wrench, ShoppingBag, Calendar, FileText, Building, Monitor, Package,
+  type LucideIcon,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { LogExpenseDrawer }    from "@/components/finance/LogExpenseDrawer";
@@ -20,7 +21,7 @@ import type {
 
 // ── Category config ───────────────────────────────────────────────────────────
 
-type CatCfg = { label: string; Icon: React.ElementType; cls: string; barColor: string };
+type CatCfg = { label: string; Icon: LucideIcon; cls: string; barColor: string };
 const CAT_CFG: Record<ExpenseCategory, CatCfg> = {
   utilities:      { label: "Utilities",      Icon: Zap,        cls: "bg-yellow-100/80 text-yellow-700 border-yellow-200/60 dark:bg-yellow-900/25 dark:text-yellow-300 dark:border-yellow-800/40",  barColor: "#eab308" },
   maintenance:    { label: "Maintenance",    Icon: Wrench,     cls: "bg-orange-100/80 text-orange-700 border-orange-200/60 dark:bg-orange-900/25 dark:text-orange-300 dark:border-orange-800/40",  barColor: "#f97316" },

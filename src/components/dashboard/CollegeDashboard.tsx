@@ -5,7 +5,8 @@ import { createClient } from "@/utils/supabase/client";
 import {
   Users, BookOpen, GraduationCap, CalendarCheck, Clock, CheckCircle2,
   XCircle, AlertCircle, ChevronLeft, ChevronRight, FileText, Building2,
-  ThumbsUp, ThumbsDown, User
+  ThumbsUp, ThumbsDown, User,
+  type LucideIcon,
 } from "lucide-react";
 import { getDeptColor } from "@/lib/deptColors";
 import { fundingTypeShortLabel } from "@/lib/deptFunding";
@@ -76,7 +77,7 @@ const AURA_COLORS = ["#7c3aed", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b
 
 // ── KPI Card ─────────────────────────────────────────────────────────────────
 function KPICard({ icon: Icon, label, value, sub, color }: {
-  icon: React.ElementType; label: string; value: number | string;
+  icon: LucideIcon; label: string; value: number | string;
   sub?: string; color: string;
 }) {
   return (

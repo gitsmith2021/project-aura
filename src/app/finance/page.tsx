@@ -16,6 +16,7 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
+  type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { LogExpensePanel } from "@/components/finance/LogExpensePanel";
@@ -78,7 +79,7 @@ function KpiCard({
   title: string;
   value: string;
   subtitle?: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   trend?: "up" | "down" | "neutral";
   trendLabel?: string;
   iconColor: string;
@@ -106,7 +107,7 @@ function KpiCard({
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const cfg: Record<string, { label: string; cls: string; Icon: React.ElementType }> = {
+  const cfg: Record<string, { label: string; cls: string; Icon: LucideIcon }> = {
     completed: { label: "Paid",    cls: "bg-emerald-50 text-emerald-700 border-emerald-100", Icon: CheckCircle2 },
     pending:   { label: "Pending", cls: "bg-amber-50 text-amber-700 border-amber-100",       Icon: Clock },
     failed:    { label: "Failed",  cls: "bg-red-50 text-red-600 border-red-100",             Icon: AlertCircle },

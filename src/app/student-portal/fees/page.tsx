@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentProfile, getStudentFeeHistory, getStudentFeeStructures } from "@/actions/studentPortal";
-import { CheckCircle2, Clock, XCircle, AlertCircle, CreditCard, ChevronRight } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, AlertCircle, CreditCard, ChevronRight, type LucideIcon } from "lucide-react";
 
 const FEE_TYPE_LABEL: Record<string, string> = {
   tuition: "Tuition Fee",
@@ -22,7 +22,7 @@ function fmtDate(d: string | null) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { cls: string; Icon: React.ElementType; label: string }> = {
+  const map: Record<string, { cls: string; Icon: LucideIcon; label: string }> = {
     completed: { cls: "bg-emerald-100/80 text-emerald-700 border-emerald-200/60 dark:bg-emerald-900/25 dark:text-emerald-300 dark:border-emerald-800/40", Icon: CheckCircle2, label: "Paid" },
     pending:   { cls: "bg-amber-100/80   text-amber-700   border-amber-200/60   dark:bg-amber-900/25   dark:text-amber-300   dark:border-amber-800/40",   Icon: Clock,        label: "Pending" },
     failed:    { cls: "bg-rose-100/80    text-rose-700    border-rose-200/60    dark:bg-rose-900/25    dark:text-rose-300    dark:border-rose-800/40",    Icon: XCircle,      label: "Failed" },

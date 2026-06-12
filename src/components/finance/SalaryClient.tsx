@@ -6,6 +6,7 @@ import {
   Users, CheckCircle2, Clock, XCircle, PauseCircle,
   AlertTriangle, Pencil, IndianRupee, Zap, ChevronRight,
   CheckSquare, Square,
+  type LucideIcon,
 } from "lucide-react";
 import { SalaryStructureDrawer }    from "@/components/finance/SalaryStructureDrawer";
 import { ProcessDisbursementModal } from "@/components/finance/ProcessDisbursementModal";
@@ -21,7 +22,7 @@ import type {
 
 // ── Badge configs ─────────────────────────────────────────────────────────────
 
-type StatusCfg = { Icon: React.ElementType; cls: string; label: string };
+type StatusCfg = { Icon: LucideIcon; cls: string; label: string };
 const STATUS_CFG: Record<DisbursementStatus, StatusCfg> = {
   pending:   { Icon: Clock,        label: "Pending",   cls: "bg-amber-100/80 text-amber-700 border-amber-200/60 dark:bg-amber-900/25 dark:text-amber-300 dark:border-amber-800/40" },
   processed: { Icon: CheckCircle2, label: "Processed", cls: "bg-emerald-100/80 text-emerald-700 border-emerald-200/60 dark:bg-emerald-900/25 dark:text-emerald-300 dark:border-emerald-800/40" },

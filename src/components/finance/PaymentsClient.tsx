@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Plus, Search, CheckCircle2, Clock, XCircle, RefreshCw,
   Receipt, ChevronLeft, ChevronRight, Filter, CheckCheck, CreditCard,
+  type LucideIcon,
 } from "lucide-react";
 import { RecordPaymentDrawer }   from "@/components/finance/RecordPaymentDrawer";
 import { PaymentReceiptModal }   from "@/components/finance/PaymentReceiptModal";
@@ -27,7 +28,7 @@ const MODE_LABELS: Record<PaymentMode, string> = {
   bank_transfer: "Bank Transfer", cheque: "Cheque", dd: "DD",
 };
 
-type StatusCfg = { cls: string; Icon: React.ElementType };
+type StatusCfg = { cls: string; Icon: LucideIcon };
 const STATUS_CFG: Record<PaymentStatus, StatusCfg> = {
   completed: { Icon: CheckCircle2, cls: "bg-emerald-100/80 text-emerald-700 border-emerald-200/60 dark:bg-emerald-900/25 dark:text-emerald-300 dark:border-emerald-800/40" },
   pending:   { Icon: Clock,        cls: "bg-amber-100/80 text-amber-700 border-amber-200/60 dark:bg-amber-900/25 dark:text-amber-300 dark:border-amber-800/40" },
