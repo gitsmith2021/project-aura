@@ -85,7 +85,7 @@ Fable 5 is included in Pro/Max/Team plans until June 22 — but it counts
 [x] Day 4  — June 12 (Today) 🔐  Phase 2.5C — Platform-Wide Audit Log (A8)
 [x] Day 5  — June 12 (Today) 📊  Super Admin Analytics Dashboard (roadmap Phase 7A+7B)
 [x] Day 6  — June 12 (Today) 📊  Per-institution drill down + reports (roadmap Phase 7C)
-[ ] Day 7  — June 15         📚  Phase 4A — CIA Assessment Engine
+[x] Day 7  — June 12 (Today) 📚  CIA Assessment Engine — weighted results + publish flow
 [ ] Day 8  — June 16         📚  Phase 4A continued (CO/PO mapping + reports)
 [ ] Day 9  — June 17         🏛️  Phase 7A — NAAC SSR Builder (scaffold)
 [ ] Day 10 — June 18         🏛️  Phase 7A continued (PDF export + criteria map)
@@ -188,7 +188,7 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 | DPDP Act 2023 Compliance | Fable 5 | ✅ Complete (June 12) | `d75993d` |
 | Platform Audit Log (A8) | Fable 5 | ✅ Complete (June 12) | `b3c2ed0` |
 | Super Admin Dashboard | Fable 5 | ✅ Complete (7A+7B `24f64f1` · 7C drill-down `d21e9bd`) | `d21e9bd` |
-| CIA Assessment Engine | Fable 5 | 🔲 Pending | — |
+| CIA Assessment Engine | Fable 5 | ✅ Engine + publish flow (June 12); CO/PO mapping = Day 8 | `aa1a694` |
 | NAAC SSR Builder | Fable 5 | 🔲 Pending | — |
 | React Native + NFC Setup | Fable 5 | 🔲 Pending | — |
 | Notifications Infrastructure | Opus/Sonnet | 🔲 Pending | — |
