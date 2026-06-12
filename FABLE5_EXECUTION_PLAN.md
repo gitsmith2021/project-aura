@@ -182,7 +182,7 @@ git push origin main
 | Module | Model Used | Status | Commit |
 |--------|-----------|--------|--------|
 | Landing Page (GSAP + Three.js) | Fable 5 | ✅ Complete (June 12) | `de2d7df` |
-| Razorpay Webhook Security | Fable 5 | 🔲 Pending | — |
+| Razorpay Webhook Security | Fable 5 | ✅ Complete (June 12) | `924abe9` |
 | DPDP Act 2023 Compliance | Fable 5 | 🔲 Pending | — |
 | Platform Audit Log (A8) | Fable 5 | 🔲 Pending | — |
 | Super Admin Dashboard | Fable 5 | 🔲 Pending | — |

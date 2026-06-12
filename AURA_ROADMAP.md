@@ -93,7 +93,7 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 1 | [roadmap/01-phase1-portals.md](roadmap/01-phase1-portals.md) | Phase 1 — Staff & Student Portals | ✅ Complete |
 | 2 | [roadmap/02-foundation-migrations.md](roadmap/02-foundation-migrations.md) | Foundation Migrations (2-Pre-A – 2-Pre-D) | ✅ Complete |
 | 3 | [roadmap/03-phase2-academic-operations.md](roadmap/03-phase2-academic-operations.md) | Phase 2 — Academic Operations (2A–2I) | ✅ Complete |
-| 4 | [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md) | Phase 2.5 — Critical Security & Compliance Fixes | 🔲 **Next** |
+| 4 | [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md) | Phase 2.5 — Critical Security & Compliance Fixes | 🟡 In progress (2.5A ✅) |
 | 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🔲 Pending |
 | 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🔲 Pending |
 | 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | 🔲 Pending |
@@ -108,14 +108,14 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 
 ## 📋 Overall Progress Tracker
 
-> **Last updated:** 2026-06-10  
-> **30 of 87 modules complete — 34% of full platform built**
+> **Last updated:** 2026-06-12  
+> **31 of 87 modules complete — 36% of full platform built**
 
 ```
-Overall  ███████████░░░░░░░░░░░░░░░░░░░░░░  34%  (30/87)
+Overall  ███████████░░░░░░░░░░░░░░░░░░░░░░  36%  (31/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
-Phase 2.5  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/3  — Critical Security & Compliance Fixes ← NEXT)
+Phase 2.5  ███████████░░░░░░░░░░░░░░░░░░░░░  33%  (1/3  — Critical Security & Compliance Fixes ← IN PROGRESS)
 Phase 3    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/4  — Notifications)
 Phase 4    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/12 — Campus Infrastructure + Vendor POs)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
@@ -125,7 +125,7 @@ Phase 8    ░░░░░░░░░░░░░░░░░░░░░░░
 Arch       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — RLS, Testing, Indexes, CI/CD, Billing, Audit Log)
 ```
 
-> **Next up:** Phase 2.5A — Razorpay Webhook Security Fix (see [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md))
+> **Next up:** Phase 2.5B — DPDP Act 2023 Compliance Framework (see [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md))
 
 ---
 
@@ -161,8 +161,8 @@ Arch       ░░░░░░░░░░░░░░░░░░░░░░░
 | ✅ Phase 2G | Teacher Lesson Plan / Daily Diary | Complete | `986bfd2` |
 | ✅ Phase 2H | Guest Lecture & Expert Talk Management | Complete | `76ac333` |
 | ✅ Phase 2I | Internship & Industrial Training (NAAC 1.2 / NIRF 5.2) | Complete | — |
-| 🔲 Phase 2.5A | Razorpay Webhook Signature Verification 🔒 | **Next** | — |
-| 🔲 Phase 2.5B | DPDP 2023 Compliance — Consent & Erasure Framework 🔐 | Pending | — |
+| ✅ Phase 2.5A | Razorpay Webhook Signature Verification 🔒 | Complete | `924abe9` |
+| 🔲 Phase 2.5B | DPDP 2023 Compliance — Consent & Erasure Framework 🔐 | **Next** | — |
 | 🔲 Phase 2.5C | Backup Strategy + Scheduler Resilience ☁️ | Pending | — |
 | 🔲 Phase 3A | Notification Infrastructure | Pending | — |
 | 🔲 Phase 3B | Notification Triggers | Pending | — |

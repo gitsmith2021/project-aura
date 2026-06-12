@@ -14,11 +14,13 @@
 > **Risk:** The live fee payment module accepts Razorpay webhook events without verifying the `X-Razorpay-Signature` header. A malicious actor can POST a fake `payment.captured` event and mark a fee as paid without actual payment.
 
 #### What to fix:
-- [ ] `src/app/api/razorpay-webhook/route.ts` — Add HMAC-SHA256 signature verification using `RAZORPAY_WEBHOOK_SECRET`
-- [ ] Verify: `crypto.createHmac('sha256', secret).update(rawBody).digest('hex') === X-Razorpay-Signature`
-- [ ] Use `req.text()` to get the raw body **before** JSON parsing — parsed body breaks HMAC
-- [ ] Return `400` immediately on signature mismatch; log the attempt for audit
-- [ ] Add `RAZORPAY_WEBHOOK_SECRET` to `.env.local` and Vercel env vars
+- [x] `src/app/api/razorpay-webhook/route.ts` — Add HMAC-SHA256 signature verification using `RAZORPAY_WEBHOOK_SECRET` ✅ `924abe9`
+- [x] Verify: `crypto.createHmac('sha256', secret).update(rawBody).digest('hex') === X-Razorpay-Signature` (timing-safe compare via `crypto.timingSafeEqual`)
+- [x] Use `req.text()` to get the raw body **before** JSON parsing — parsed body breaks HMAC
+- [x] Return `400` immediately on signature mismatch; log the attempt for audit (`razorpay_webhook_events` table, status `rejected_signature`)
+- [x] Idempotency / replay prevention: `x-razorpay-event-id` recorded with UNIQUE constraint — duplicates acknowledged but never reprocessed; `payment.captured` cross-checks paise amount before completing
+- [ ] Add `RAZORPAY_WEBHOOK_SECRET` value to `.env.local` and Vercel env vars (placeholder added to `.env.local`; secret comes from Razorpay Dashboard → Settings → Webhooks)
+- [ ] Apply migration `20260612094928_phase2_5a_razorpay_webhook_events.sql` to the Supabase project
 - [ ] Test with Razorpay webhook simulator in test mode
 
 #### Code pattern:
