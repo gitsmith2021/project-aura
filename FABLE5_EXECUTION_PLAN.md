@@ -79,17 +79,18 @@ Fable 5 is included in Pro/Max/Team plans until June 22 — but it counts
 > **11 days · 8 Tier 1 modules · Maximum ROI**
 
 ```
-Day 1  — June 12 (Today)  🎨  Landing Page (GSAP + Three.js + Lenis)
-Day 2  — June 13          🔐  Phase 2.5A — Razorpay Webhook Security
-Day 3  — June 14          🔐  Phase 2.5B — DPDP Act 2023 Compliance
-Day 4  — June 15          🔐  Phase 2.5C — Platform-Wide Audit Log (A8)
-Day 5  — June 16          📊  Phase 3B — Super Admin Analytics Dashboard
-Day 6  — June 17          📊  Phase 3B continued (reports + drill down)
-Day 7  — June 18          📚  Phase 4A — CIA Assessment Engine
-Day 8  — June 19          📚  Phase 4A continued (CO/PO mapping + reports)
-Day 9  — June 20          🏛️  Phase 7A — NAAC SSR Builder (scaffold)
-Day 10 — June 21          🏛️  Phase 7A continued (PDF export + criteria map)
-Day 11 — June 22          📱  Phase 8A — React Native Setup + NFC scaffold
+[x] Day 1  — June 12 (Today) 🎨  Landing Page (GSAP + Three.js + Lenis)
+[x] Day 2  — June 12 (Today) 🔐  Phase 2.5A — Razorpay Webhook Security
+[x] Day 3  — June 12 (Today) 🔐  Phase 2.5B — DPDP Act 2023 Compliance
+[x] Day 4  — June 12 (Today) 🔐  Phase 2.5C — Platform-Wide Audit Log (A8)
+[ ] Day 5  — June 13 (Tmrw)  📊  Phase 3B — Super Admin Analytics Dashboard
+[ ] Day 6  — June 14         📊  Phase 3B continued (reports + drill down)
+[ ] Day 7  — June 15         📚  Phase 4A — CIA Assessment Engine
+[ ] Day 8  — June 16         📚  Phase 4A continued (CO/PO mapping + reports)
+[ ] Day 9  — June 17         🏛️  Phase 7A — NAAC SSR Builder (scaffold)
+[ ] Day 10 — June 18         🏛️  Phase 7A continued (PDF export + criteria map)
+[ ] Day 11 — June 19         📱  Phase 8A — React Native Setup + NFC scaffold
+[ ] Buffer — June 20–22      ⏳  Buffer for Tier 1 refinements / Tier 2 work
 ─────────────────────────────────────────────────────
 June 23 onwards → Switch to Opus 4.8 / Sonnet 4.6 for Tier 2 & 3
 ```
@@ -181,10 +182,10 @@ git push origin main
 
 | Module | Model Used | Status | Commit |
 |--------|-----------|--------|--------|
-| Landing Page (GSAP + Three.js) | Fable 5 | ✅ Complete (June 12) | `de2d7df` |
+| Landing Page (GSAP + Three.js) | Fable 5 | ✅ Complete (June 12) | `f86eeb7` |
 | Razorpay Webhook Security | Fable 5 | ✅ Complete (June 12) | `924abe9` |
-| DPDP Act 2023 Compliance | Fable 5 | ✅ Complete (June 12) | see `feat: Phase 2.5B` |
-| Platform Audit Log (A8) | Fable 5 | ✅ Complete (June 12) | see `feat: Arch A8` |
+| DPDP Act 2023 Compliance | Fable 5 | ✅ Complete (June 12) | `d75993d` |
+| Platform Audit Log (A8) | Fable 5 | ✅ Complete (June 12) | `b3c2ed0` |
 | Super Admin Dashboard | Fable 5 | 🔲 Pending | — |
 | CIA Assessment Engine | Fable 5 | 🔲 Pending | — |
 | NAAC SSR Builder | Fable 5 | 🔲 Pending | — |

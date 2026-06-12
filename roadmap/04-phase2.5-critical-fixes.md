@@ -158,7 +158,7 @@ SUPABASE_DB_URL=   # postgres://... direct connection string (from Supabase dash
 - [ ] Supabase PITR enabled on production project — **manual dashboard step** (see `docs/DISASTER_RECOVERY.md`)
 - [x] Scheduler health check endpoint live (`/api/scheduler-health`)
 - [x] Scheduler unavailability banner showing in the AI scheduler panel
-- [x] Committed & pushed (2.5A `924abe9`, 2.5B `d75993d`+`b26d4c4`, 2.5C `feat: Phase 2.5C`)
+- [x] Committed & pushed (2.5A `924abe9`, 2.5B `d75993d`+`b26d4c4`, 2.5C `8509ae6`)
 
 ---
 

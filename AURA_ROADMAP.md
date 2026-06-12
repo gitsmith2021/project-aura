@@ -162,8 +162,8 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 | ✅ Phase 2H | Guest Lecture & Expert Talk Management | Complete | `76ac333` |
 | ✅ Phase 2I | Internship & Industrial Training (NAAC 1.2 / NIRF 5.2) | Complete | — |
 | ✅ Phase 2.5A | Razorpay Webhook Signature Verification 🔒 | Complete | `924abe9` |
-| ✅ Phase 2.5B | DPDP 2023 Compliance — Consent & Erasure Framework 🔐 | Complete | — |
-| ✅ Phase 2.5C | Backup Strategy + Scheduler Resilience ☁️ | Complete | — |
+| ✅ Phase 2.5B | DPDP 2023 Compliance — Consent & Erasure Framework 🔐 | Complete | `d75993d` |
+| ✅ Phase 2.5C | Backup Strategy + Scheduler Resilience ☁️ | Complete | `8509ae6` |
 | 🔲 Phase 3A | Notification Infrastructure | **Next** | — |
 | 🔲 Phase 3B | Notification Triggers | Pending | — |
 | 🔲 Phase 3C | Email + SMS + WhatsApp Notifications | Pending | — |
@@ -217,7 +217,7 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 | 🔲 Arch A5 | CI/CD Pipeline (GitHub Actions) | Pending | — |
 | 🔲 Arch A6 | Multi-currency & Multi-timezone Support | Pending | — |
 | 🔲 Arch A7 | SaaS Billing — Minimal Viable (Trial + Expiry) | Pending | — |
-| ✅ Arch A8 | Platform-Wide Audit Log — `audit_logs` table + `logAudit()` helper | Complete | — |
+| ✅ Arch A8 | Platform-Wide Audit Log — `audit_logs` table + `logAudit()` helper | Complete | `b3c2ed0` |
 | 🔲 Phase 8A | React Native Setup | Pending | — |
 | 🔲 Phase 8B | Staff Mobile App + NFC | Pending | — |
 | 🔲 Phase 8C | Student Mobile App | Pending | — |
