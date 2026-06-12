@@ -1,0 +1,53 @@
+# Phase 2.5C — Weekly encrypted database backup
+#
+# Dumps the production Postgres database every Sunday 02:00 UTC
+# (07:30 IST), encrypts it with AES-256, and stores it as a GitHub
+# Actions artifact (private to repo collaborators, 30-day retention —
+# four rolling weekly snapshots). This complements (does not replace)
+# Supabase PITR — see docs/DISASTER_RECOVERY.md.
+#
+# Required repository secrets:
+#   SUPABASE_DB_URL        postgres://... direct connection string
+#                          (Supabase Dashboard → Settings → Database)
+#   BACKUP_ENCRYPTION_KEY  long random passphrase, e.g. `openssl rand -base64 32`
+#                          — store a copy outside GitHub or backups are unrecoverable
+
+name: Weekly DB Backup
+
+on:
+  schedule:
+    - cron: "0 2 * * 0" # Every Sunday at 02:00 UTC
+  workflow_dispatch: {} # allow manual backups before risky migrations
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Dump database
+        run: supabase db dump --db-url "$SUPABASE_DB_URL" -f backup.sql
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+
+      - name: Compress and encrypt
+        run: |
+          gzip backup.sql
+          openssl enc -aes-256-cbc -pbkdf2 -salt \
+            -in backup.sql.gz \
+            -out "aura-backup-$(date -u +%Y%m%d).sql.gz.enc" \
+            -pass env:BACKUP_ENCRYPTION_KEY
+          rm backup.sql.gz
+        env:
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+
+      - name: Upload encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: aura-db-backup-${{ github.run_id }}
+          path: aura-backup-*.sql.gz.enc
+          retention-days: 30
+          if-no-files-found: error

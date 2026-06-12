@@ -111,21 +111,19 @@ ALTER TABLE data_erasure_requests ENABLE ROW LEVEL SECURITY;
 > **Risk:** No documented backup strategy for a live SaaS holding marks, financial, and attendance data. The Python scheduler on port 8000 has no health check or fallback — if it goes down, timetable generation is completely broken with no user-facing error.
 
 #### Supabase Backup Configuration:
-- [ ] Enable **Point-in-Time Recovery (PITR)** on the Supabase project dashboard (requires Pro plan)
-- [ ] Set backup retention to minimum 7 days (30 days recommended for production)
-- [ ] Document RTO (Recovery Time Objective): target < 4 hours
-- [ ] Document RPO (Recovery Point Objective): target < 1 hour with PITR
-- [ ] Set up weekly manual export via `supabase db dump` in a GitHub Actions cron workflow → store encrypted in a private S3 bucket or Supabase Storage private bucket
+- [ ] Enable **Point-in-Time Recovery (PITR)** on the Supabase project dashboard (requires Pro plan) — **manual dashboard step**, procedure documented in `docs/DISASTER_RECOVERY.md`
+- [ ] Set backup retention to minimum 7 days (30 days recommended for production) — **manual dashboard step**
+- [x] Document RTO (Recovery Time Objective): target < 4 hours ✅ `docs/DISASTER_RECOVERY.md`
+- [x] Document RPO (Recovery Point Objective): target < 1 hour with PITR ✅ `docs/DISASTER_RECOVERY.md`
+- [x] Weekly export via `supabase db dump` in GitHub Actions ✅ `.github/workflows/db-backup.yml` — Sunday 02:00 UTC + manual `workflow_dispatch`, AES-256-encrypted (openssl, `BACKUP_ENCRYPTION_KEY` secret), stored as private artifact with 30-day retention. **Needs repo secrets `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` added on GitHub before first run**
 
 #### Scheduler Health & Fallback:
-- [ ] `src/lib/scheduler.ts` — Wrap all `SCHEDULER_API_URL` calls in a `callScheduler()` helper that:
-  - Sets a 30s timeout
-  - Catches network errors and returns `{ success: false, error: 'Scheduler unavailable' }`
-  - Logs the failure to a `scheduler_error_logs` table for admin visibility
-- [ ] `src/app/api/scheduler-health/route.ts` — Health check endpoint that pings `SCHEDULER_API_URL/health` and returns status
-- [ ] `src/app/institutions/[id]/timetable/page.tsx` — Show a visible banner when scheduler is unreachable: "AI Scheduler is offline — you can still publish a manually built draft"
-- [ ] Add uptime monitoring for scheduler (use UptimeRobot free tier or similar) and alert admin via email if down > 5 minutes
-- [ ] Document manual timetable fallback procedure in the admin guide
+- [x] `src/lib/scheduler.ts` — `callScheduler()` wrapper ✅ 30s AbortController timeout, returns typed `{ success: false, error }` on network/timeout/HTTP/parse failures, logs every failure to `scheduler_error_logs` via service-role client; `generateDepartmentSchedule` refactored to use it (Dev Rule 14 satisfied — it was the only direct call site)
+- [x] `scheduler_error_logs` migration ✅ `20260612180000_phase2_5c_scheduler_error_logs.sql` — applied via MCP (June 12), RLS on with no policies + default grants revoked (service-role only), advisors clean
+- [x] `src/app/api/scheduler-health/route.ts` ✅ pings engine `/health` (already existed in FastAPI `main.py`), returns 200 ok / 503 offline; added to middleware no-auth list so external uptime monitors can reach it
+- [x] Offline banner ✅ `SchedulerStatusBanner` mounted in the AI Auto-Scheduler panel (the generation UI on /schedules — there is no `/institutions/[id]/timetable` route): "AI Scheduler is offline — you can still publish a manually built draft", with retry button
+- [ ] Add uptime monitoring (UptimeRobot free tier on `https://<prod-domain>/api/scheduler-health`, 5-min interval) — **manual external setup**, steps in `docs/DISASTER_RECOVERY.md`
+- [x] Manual timetable fallback procedure documented ✅ `docs/DISASTER_RECOVERY.md` (incl. engine restart command + incident quick-reference table)
 
 #### GitHub Actions backup workflow:
 ```yaml
@@ -152,16 +150,15 @@ SUPABASE_DB_URL=   # postgres://... direct connection string (from Supabase dash
 ---
 
 ### Phase 2.5 Completion Checklist
-- [ ] Razorpay webhook signature verified and tested with simulator
-- [ ] `RAZORPAY_WEBHOOK_SECRET` added to all environments
-- [ ] Consent capture shown on first login for all new users
-- [ ] Privacy policy page live at `/privacy-policy`
-- [ ] Erasure request flow working end-to-end
-- [ ] Supabase PITR enabled on production project
-- [ ] Scheduler health check endpoint live
-- [ ] Scheduler unavailability banner showing in timetable page
-- [ ] `git commit -m "fix: Phase 2.5 — Security & Compliance patches"`
-- [ ] `git push origin main`
+- [x] Razorpay webhook signature verified (local signed-request E2E ✅; simulator test still needs deployed URL + real secret)
+- [ ] `RAZORPAY_WEBHOOK_SECRET` added to all environments (placeholder in `.env.local`; Vercel pending)
+- [x] Consent capture shown on first login for all new users
+- [x] Privacy policy page live at `/privacy-policy`
+- [x] Erasure request flow working end-to-end
+- [ ] Supabase PITR enabled on production project — **manual dashboard step** (see `docs/DISASTER_RECOVERY.md`)
+- [x] Scheduler health check endpoint live (`/api/scheduler-health`)
+- [x] Scheduler unavailability banner showing in the AI scheduler panel
+- [x] Committed & pushed (2.5A `924abe9`, 2.5B `d75993d`+`b26d4c4`, 2.5C `feat: Phase 2.5C`)
 
 ---
 

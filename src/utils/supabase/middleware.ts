@@ -1,10 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Server-to-server webhook endpoints. They have no cookie session — each one
-// authenticates its own requests (Razorpay: HMAC signature, NFC: bearer
-// secret) — so they must never be redirected to /login.
-const WEBHOOK_PATHS = ["/api/razorpay-webhook", "/api/attendance/nfc"];
+// Server-to-server endpoints with no cookie session. Webhooks authenticate
+// their own requests (Razorpay: HMAC signature, NFC: bearer secret); the
+// scheduler health probe is public for external uptime monitors and exposes
+// only up/down status. None of these may be redirected to /login.
+const WEBHOOK_PATHS = ["/api/razorpay-webhook", "/api/attendance/nfc", "/api/scheduler-health"];
 
 // Pages every visitor may read regardless of auth state or role —
 // /privacy-policy is legally required to be public (DPDP Act 2023).

@@ -29,8 +29,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { SHIFT_PERIOD_TIMES } from "@/lib/scheduleConstants";
-
-const SCHEDULER_URL = process.env.SCHEDULER_API_URL ?? "http://127.0.0.1:8000";
+import { callScheduler } from "@/lib/scheduler";
 
 // Cohort definitions are fixed per academic structure. Adjust required_hours_per_day
 // to match your institution's timetable grid.
@@ -340,36 +339,22 @@ export async function generateDepartmentSchedule(
     };
 
     // ── Step D: Call the Python scheduling engine ────────────────────────
-    let solverResponse: SolverResponse;
+    // Dev Rule 14: always via callScheduler() — 30s timeout, failures
+    // logged to scheduler_error_logs, never throws.
+    const call = await callScheduler<SolverResponse>("/generate-schedule", {
+      method: "POST",
+      body: payload,
+      institutionId,
+    });
 
-    try {
-      const res = await fetch(`${SCHEDULER_URL}/generate-schedule`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        cache: "no-store",
-      });
-
-      const body = await res.json();
-
-      if (!res.ok) {
-        // The Python API returns { detail: { message, solver_status, error } } on 400.
-        const detail = body?.detail;
-        const message =
-          detail?.message ??
-          detail?.error ??
-          `Scheduling engine returned HTTP ${res.status}.`;
-        return { success: false, error: message };
-      }
-
-      solverResponse = body as SolverResponse;
-    } catch (err) {
-      const message =
-        err instanceof Error
-          ? `Network error: ${err.message}`
-          : "Could not reach the scheduling engine. Make sure it is running on port 8000.";
+    if (!call.success) {
+      // The Python API returns { detail: { message, solver_status, error } } on 400.
+      const detail = (call.detail as { detail?: { message?: string; error?: string } } | null)?.detail;
+      const message = detail?.message ?? detail?.error ?? call.error;
       return { success: false, error: message };
     }
+
+    const solverResponse: SolverResponse = call.data;
 
     // ── Step E: Persist as a draft schedule in Supabase ─────────────────
     const { data: draft, error: insertError } = await supabase

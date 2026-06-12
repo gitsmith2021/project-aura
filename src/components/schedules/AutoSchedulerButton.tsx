@@ -19,6 +19,7 @@ import {
   type DraftSummary,
 } from "@/actions/scheduler";
 import { DraftPreviewPanel } from "./DraftPreviewPanel";
+import { SchedulerStatusBanner } from "./SchedulerStatusBanner";
 
 type Department = { id: string; name: string; session_type?: string | null; funding_type?: string | null };
 type Props = { tenantId: string; onPublished?: () => void };
@@ -239,6 +240,9 @@ export function AutoSchedulerButton({ tenantId, onPublished }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
+
+      {/* Scheduler offline warning (Phase 2.5C) */}
+      <SchedulerStatusBanner />
 
       {/* Department picker */}
       <div className="flex flex-col gap-1.5">
