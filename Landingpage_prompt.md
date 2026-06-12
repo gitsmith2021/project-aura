@@ -33,6 +33,12 @@ animation must serve the message.
 npm install gsap @gsap/react lenis @react-three/fiber @react-three/drei three
 npm install --save-dev @types/three
 ```
+> **React 19 compatibility:** this project is on React 19.2.4. React Three Fiber
+> only supports React 19 from **v9+** (`@react-three/fiber` v8 is React 18-only).
+> After installing, confirm the resolved `@react-three/fiber` major version is ≥9
+> (and `@react-three/drei` is its matching React-19-compatible release) before
+> building HeroScene — peer-dependency friction here is the most likely install
+> or runtime failure, and it is NOT covered by the Next.js docs.
 
 ## File Structure to Create
 
