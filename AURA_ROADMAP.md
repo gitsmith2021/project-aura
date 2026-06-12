@@ -247,6 +247,7 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 16. **No RLS bypass without justification** — `createAdminClient()` (service role) may only be used in server-only files; add a comment above each use explaining why RLS bypass is necessary
 17. **Audit logs are immutable** — never add an UPDATE or DELETE RLS policy to `audit_logs`; never call `.delete()` or `.update()` on that table from any Server Action
 18. **Tests are part of Definition of Done (Phase 3 onward)** — every new Server Action ships with a Vitest unit test for its core logic, every new page is added to the Playwright route-crawl smoke test, and every new user-facing flow gets a Playwright e2e test. See Arch A2
+19. **Synchronize trackers** — upon completing any development phase or major step, immediately update `AURA_ROADMAP.md`, the corresponding roadmap phase file in `roadmap/`, and `FABLE5_EXECUTION_PLAN.md` with correct completion status and the exact git commit hashes, then commit these updates before proceeding.
 
 ---
 
