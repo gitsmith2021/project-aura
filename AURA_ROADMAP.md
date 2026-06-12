@@ -109,13 +109,13 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-12  
-> **31 of 87 modules complete — 36% of full platform built**
+> **32 of 87 modules complete — 37% of full platform built**
 
 ```
-Overall  ███████████░░░░░░░░░░░░░░░░░░░░░░  36%  (31/87)
+Overall  ████████████░░░░░░░░░░░░░░░░░░░░░  37%  (32/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
-Phase 2.5  ███████████░░░░░░░░░░░░░░░░░░░░░  33%  (1/3  — Critical Security & Compliance Fixes ← IN PROGRESS)
+Phase 2.5  █████████████████████░░░░░░░░░░░  67%  (2/3  — Critical Security & Compliance Fixes ← IN PROGRESS)
 Phase 3    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/4  — Notifications)
 Phase 4    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/12 — Campus Infrastructure + Vendor POs)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
@@ -125,7 +125,7 @@ Phase 8    ░░░░░░░░░░░░░░░░░░░░░░░
 Arch       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — RLS, Testing, Indexes, CI/CD, Billing, Audit Log)
 ```
 
-> **Next up:** Phase 2.5B — DPDP Act 2023 Compliance Framework (see [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md))
+> **Next up:** Phase 2.5C — Backup Strategy + Scheduler Resilience (see [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md))
 
 ---
 
@@ -162,8 +162,8 @@ Arch       ░░░░░░░░░░░░░░░░░░░░░░░
 | ✅ Phase 2H | Guest Lecture & Expert Talk Management | Complete | `76ac333` |
 | ✅ Phase 2I | Internship & Industrial Training (NAAC 1.2 / NIRF 5.2) | Complete | — |
 | ✅ Phase 2.5A | Razorpay Webhook Signature Verification 🔒 | Complete | `924abe9` |
-| 🔲 Phase 2.5B | DPDP 2023 Compliance — Consent & Erasure Framework 🔐 | **Next** | — |
-| 🔲 Phase 2.5C | Backup Strategy + Scheduler Resilience ☁️ | Pending | — |
+| ✅ Phase 2.5B | DPDP 2023 Compliance — Consent & Erasure Framework 🔐 | Complete | — |
+| 🔲 Phase 2.5C | Backup Strategy + Scheduler Resilience ☁️ | **Next** | — |
 | 🔲 Phase 3A | Notification Infrastructure | Pending | — |
 | 🔲 Phase 3B | Notification Triggers | Pending | — |
 | 🔲 Phase 3C | Email + SMS + WhatsApp Notifications | Pending | — |

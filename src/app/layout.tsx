@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { InstitutionProvider } from "@/context/InstitutionContext";
+import { ConsentBanner } from "@/components/auth/ConsentBanner";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import "./globals.css";
@@ -65,7 +66,10 @@ export default async function RootLayout({
     >
       <body suppressHydrationWarning className="font-sans min-h-screen flex flex-col">
         <ThemeProvider>
-          <InstitutionProvider userId={userId}>{children}</InstitutionProvider>
+          <InstitutionProvider userId={userId}>
+            {children}
+            <ConsentBanner />
+          </InstitutionProvider>
         </ThemeProvider>
       </body>
     </html>

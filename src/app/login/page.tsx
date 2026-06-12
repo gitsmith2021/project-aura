@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { login } from './actions'
 import { Building2 } from 'lucide-react'
 
@@ -77,6 +78,13 @@ export default async function LoginPage({
             </div>
           </form>
         </div>
+
+        <p className="mt-4 text-center text-xs text-slate-400">
+          By signing in you agree to our{' '}
+          <Link href="/privacy-policy" className="text-purple-600 hover:text-purple-700 font-medium">
+            Privacy Policy
+          </Link>
+        </p>
       </div>
     </div>
   )

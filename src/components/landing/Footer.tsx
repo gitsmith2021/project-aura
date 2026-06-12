@@ -41,6 +41,9 @@ export function Footer() {
                 {l.label}
               </button>
             ))}
+            <Link href="/privacy-policy" className="hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+              Privacy Policy
+            </Link>
             <Link href="/login" className="hover:text-violet-600 dark:hover:text-violet-400 transition-colors font-semibold text-slate-500 dark:text-slate-400">
               Login →
             </Link>

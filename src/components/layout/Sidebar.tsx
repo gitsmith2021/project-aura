@@ -6,6 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
+  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -38,6 +39,7 @@ const STAFF_NAV = [
   { key: "attendance", href: "/staff-portal/attendance", label: "Attendance",  Icon: ClipboardCheck },
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
   { key: "salary",     href: "/staff-portal/salary",     label: "Salary",      Icon: Wallet },
+  { key: "privacy",    href: "/staff-portal/privacy",    label: "Privacy",     Icon: ShieldCheck },
 ] as const;
 
 // ── NavItem ───────────────────────────────────────────────────────────────────
@@ -317,7 +319,8 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     if (exact) return pathname === href;
     if (key === "institutions")
       return (pathname === "/institutions" || pathname.startsWith("/institutions/")) &&
-        !pathname.includes("/finance") && !isAcademicPath(pathname);
+        !pathname.includes("/finance") && !pathname.includes("/compliance") && !isAcademicPath(pathname);
+    if (key === "compliance")     return pathname.includes("/compliance");
     if (key === "lesson-plans")   return pathname.includes("/lesson-plans");
     if (key === "guest-lectures") return pathname.includes("/guest-lectures");
     if (key === "internships")    return pathname.includes("/internships");
@@ -353,6 +356,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const lessonPlansHref    = slug ? `/institutions/${slug}/lesson-plans`    : "/institutions";
   const guestLecturesHref  = slug ? `/institutions/${slug}/guest-lectures`  : "/institutions";
   const internshipsHref    = slug ? `/institutions/${slug}/internships`      : "/institutions";
+  const complianceHref     = slug ? `/institutions/${slug}/compliance`       : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -482,6 +486,8 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
                   active={isItemActive("institutions", "/institutions")} isCollapsed={false} />
                 <NavItem href="/departments" icon={<Layers size={14} />} label="Departments"
                   active={isItemActive("departments", "/departments")} isCollapsed={false} />
+                <NavItem href={complianceHref} icon={<ShieldCheck size={14} />} label="Compliance"
+                  active={isItemActive("compliance", complianceHref)} isCollapsed={false} />
               </NavGroup>
             )}
 

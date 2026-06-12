@@ -87,14 +87,15 @@ ALTER TABLE data_erasure_requests ENABLE ROW LEVEL SECURITY;
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._dpdp_compliance.sql` — consent_logs + erasure_requests tables
-- [ ] `src/app/privacy-policy/page.tsx` — Public privacy policy page (required by DPDP)
-- [ ] `src/components/auth/ConsentBanner.tsx` — Consent capture on first login (checkboxes for data processing, marketing, biometric if applicable)
-- [ ] `src/actions/privacy.ts` — recordConsent, withdrawConsent, requestErasure, getConsentStatus
-- [ ] `src/app/institutions/[id]/compliance/page.tsx` — Admin view: erasure requests queue, consent audit log
-- [ ] Student/Staff portal: `src/app/[portal]/privacy/page.tsx` — View consents given, withdraw specific consent, submit erasure request
-- [ ] Data retention policy: define retention periods per data type in `src/lib/dataRetention.ts` (e.g. financial records: 7 years; medical: 5 years; attendance: 3 years)
-- [ ] Add privacy policy link to all portal footers and login pages
+- [x] `supabase/migrations/20260612160000_phase2_5b_dpdp_compliance.sql` — consent_logs + erasure_requests tables. Both RLS-on; consent rows are immutable except `withdrawn_at` (column-level `GRANT UPDATE`), erasure requests admin-editable only on `status`/`admin_notes`/`resolved_at`; no DELETE grants on either (audit trail)
+- [x] `src/app/privacy-policy/page.tsx` — Public privacy policy page; `/privacy-policy` added to middleware `PUBLIC_PATHS` and exempted from the staff/student portal fences so every role (and anonymous visitors) can read it
+- [x] `src/components/auth/ConsentBanner.tsx` — Consent modal on first login, mounted once in the root layout; blocks UI until the two required consents (`platform_terms`, `data_processing`) are recorded; optional consents (NFC, photo, marketing) recorded as given/declined; "Decline & sign out" path
+- [x] `src/actions/privacy.ts` — recordConsent(s), withdrawConsent, requestErasure, getConsentStatus, getMyConsents, getMyErasureRequests + admin getErasureRequests/updateErasureRequest/getConsentLogs. IP + user-agent captured as proof of consent; rejection without documented reason is refused (DPDP)
+- [x] `src/app/institutions/[id]/compliance/page.tsx` — Admin view: erasure queue with pending → in_review → completed/rejected workflow + 72h SLA breach flag, consent audit log, retention policy register; "Compliance" link added to the Institution sidebar group
+- [x] Student/Staff portal: `/student-portal/privacy` + `/staff-portal/privacy` (shared `src/components/privacy/PrivacyCenter.tsx`) — view consents, withdraw/re-grant optional consents, submit + track erasure requests; "Privacy" nav item in both portal sidebars
+- [x] Data retention policy: `src/lib/dataRetention.ts` — single source of truth (rendered on both /privacy-policy and the admin compliance tab); financial 7y, academic 7y, attendance 3y, medical 5y, consent logs 3y post-closure
+- [x] Privacy policy link added to login page and landing footer
+- [ ] Apply migration `20260612160000_phase2_5b_dpdp_compliance.sql` to the Supabase project (MCP session needs re-auth) + run security advisors
 
 #### Key rules (DPDP 2023):
 - Consent must be free, specific, informed, and unambiguous

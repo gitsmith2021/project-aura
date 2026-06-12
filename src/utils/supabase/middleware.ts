@@ -6,6 +6,10 @@ import { NextResponse, type NextRequest } from "next/server";
 // secret) — so they must never be redirected to /login.
 const WEBHOOK_PATHS = ["/api/razorpay-webhook", "/api/attendance/nfc"];
 
+// Pages every visitor may read regardless of auth state or role —
+// /privacy-policy is legally required to be public (DPDP Act 2023).
+const PUBLIC_PATHS = ["/", "/login", "/privacy-policy"];
+
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -72,8 +76,8 @@ export async function updateSession(request: NextRequest) {
 
   // ── Unauthenticated ───────────────────────────────────────────────────────
   if (!user) {
-    // Allow landing page and login page without auth
-    if (isLoginPage || pathname === "/") return supabaseResponse;
+    // Allow landing, login and privacy policy pages without auth
+    if (PUBLIC_PATHS.includes(pathname)) return supabaseResponse;
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     const res = NextResponse.redirect(url);
@@ -140,6 +144,10 @@ export async function updateSession(request: NextRequest) {
     url.pathname = role === "staff" ? "/staff-portal" : role === "student" ? "/student-portal" : "/";
     return NextResponse.redirect(url);
   }
+
+  // Privacy policy stays reachable for every authenticated role —
+  // it must be exempt from the portal fences below
+  if (pathname === "/privacy-policy") return supabaseResponse;
 
   // Staff must stay inside /staff-portal
   if (role === "staff" && !isStaffPortal) {
