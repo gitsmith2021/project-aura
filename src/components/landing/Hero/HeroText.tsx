@@ -6,14 +6,14 @@ import { gsap, useGSAP, prefersReducedMotion } from "@/lib/gsap";
 import { TRUST_BADGES } from "../data";
 
 // Headline: "The Academic ERP that actually works." — split into words so each
-// can animate independently; gradient spans preserved from the current page.
+// can animate independently; gradient spans preserved from the original page.
 const HEADLINE_WORDS: { text: string; gradient?: string }[] = [
   { text: "The" },
-  { text: "Academic", gradient: "bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400" },
-  { text: "ERP",      gradient: "bg-gradient-to-r from-fuchsia-400 to-pink-400" },
+  { text: "Academic", gradient: "bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 dark:from-violet-400 dark:via-fuchsia-400 dark:to-pink-400" },
+  { text: "ERP",      gradient: "bg-gradient-to-r from-fuchsia-500 to-pink-500 dark:from-fuchsia-400 dark:to-pink-400" },
   { text: "that" },
   { text: "actually" },
-  { text: "works.",   gradient: "bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400" },
+  { text: "works.",   gradient: "bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-500 dark:from-cyan-400 dark:via-blue-400 dark:to-indigo-400" },
 ];
 
 export function HeroText() {
@@ -33,11 +33,11 @@ export function HeroText() {
 
   return (
     <div ref={scopeRef} className="flex-1 text-center lg:text-left max-w-2xl mx-auto lg:mx-0">
-      <div className="hero-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-300 text-xs font-semibold mb-7 backdrop-blur-sm">
+      <div className="hero-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/8 text-violet-600 dark:text-violet-300 text-xs font-semibold mb-7">
         <Zap size={11} /> Purpose-built Academic Management · Trusted by Educational Institutions Worldwide
       </div>
 
-      <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[72px] font-black tracking-tighter leading-[0.95] mb-5 text-white">
+      <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[72px] font-black tracking-tighter leading-[0.95] mb-5 text-slate-900 dark:text-white">
         {HEADLINE_WORDS.map((w, i) => (
           <span key={i} className="inline-block">
             <span
@@ -52,7 +52,7 @@ export function HeroText() {
         ))}
       </h1>
 
-      <p className="hero-sub text-base sm:text-lg text-slate-400 leading-relaxed mb-7">
+      <p className="hero-sub text-base sm:text-lg text-slate-500 dark:text-slate-400 leading-relaxed mb-7">
         AURA replaces disconnected spreadsheets, outdated portals and manual accreditation work with one unified platform —
         built for colleges, universities and vocational institutes that demand more.
       </p>
@@ -60,7 +60,7 @@ export function HeroText() {
       <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
         {TRUST_BADGES.map(badge => (
           <span key={badge}
-            className="hero-badge inline-flex items-center px-3 py-1 rounded-full border border-slate-600 text-[11px] font-semibold text-slate-300 bg-slate-800/40 backdrop-blur-sm hover:border-teal-500/60 hover:text-teal-300 transition-colors cursor-default">
+            className="hero-badge inline-flex items-center px-3 py-1 rounded-full border border-slate-300 dark:border-slate-600 text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-white/60 dark:bg-slate-800/40 hover:border-teal-400 dark:hover:border-teal-500/60 hover:text-teal-700 dark:hover:text-teal-300 transition-colors cursor-default">
             {badge}
           </span>
         ))}

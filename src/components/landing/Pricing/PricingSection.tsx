@@ -52,12 +52,12 @@ export function PricingSection() {
   useGSAP(() => {
     if (prefersReducedMotion()) return;
     gsap.from(".pricing-head", {
-      y: 40, opacity: 0, duration: 0.8, ease: "power3.out",
-      scrollTrigger: { trigger: sectionRef.current, start: "top 75%", once: true },
+      y: 40, opacity: 0, duration: 0.8, ease: "power3.out", immediateRender: false,
+      scrollTrigger: { trigger: sectionRef.current, start: "top 88%", once: true },
     });
     gsap.from(".pricing-card", {
-      scale: 0.92, opacity: 0, duration: 0.7, stagger: 0.12, ease: "power2.out",
-      scrollTrigger: { trigger: ".pricing-grid", start: "top 80%", once: true },
+      scale: 0.92, opacity: 0, duration: 0.7, stagger: 0.12, ease: "power2.out", immediateRender: false,
+      scrollTrigger: { trigger: ".pricing-grid", start: "top 92%", once: true },
     });
   }, { scope: sectionRef });
 

@@ -70,7 +70,7 @@ export function FeaturesSection() {
       id="features"
       ref={sectionRef}
       aria-label="Platform features"
-      className="relative overflow-hidden bg-[#030712]"
+      className="relative overflow-hidden bg-white dark:bg-slate-950 transition-colors duration-300"
     >
       <div ref={trackRef} className="flex flex-col md:flex-row md:w-max will-change-transform">
         {FEATURE_PANELS.map((feature, i) => (

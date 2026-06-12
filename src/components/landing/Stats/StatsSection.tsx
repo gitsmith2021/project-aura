@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { gsap, useGSAP, prefersReducedMotion } from "@/lib/gsap";
-import { TESTIMONIALS, TESTIMONIAL_MS, MARQUEE_ITEMS } from "../data";
+import { TESTIMONIALS, MARQUEE_ITEMS } from "../data";
 
 // Aura's real numbers — no generic market-size placeholders.
 type Stat = { value: string; label: string; countTo: number | null; suffix?: string };
@@ -15,31 +15,12 @@ const STATS: Stat[] = [
 
 export function StatsSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const [tIdx,    setTIdx]    = useState(0);
-  const [tProg,   setTProg]   = useState(0);
-  const [tPaused, setTPaused] = useState(false);
-
-  // testimonial auto-advance with progress bar (carried over from old page)
-  useEffect(() => {
-    if (tPaused) return;
-    setTProg(0);
-    const step = 50;
-    const inc  = (step / TESTIMONIAL_MS) * 100;
-    const prog = setInterval(() => setTProg(p => Math.min(p + inc, 100)), step);
-    const adv  = setTimeout(() => setTIdx(i => (i + 1) % TESTIMONIALS.length), TESTIMONIAL_MS);
-    return () => { clearInterval(prog); clearTimeout(adv); };
-  }, [tIdx, tPaused]);
 
   useGSAP(() => {
     if (prefersReducedMotion()) return;
 
-    // section entrance
-    gsap.from(".stats-wrap", {
-      y: 60, opacity: 0, duration: 0.9, ease: "power3.out",
-      scrollTrigger: { trigger: sectionRef.current, start: "top 75%", once: true },
-    });
-
-    // numeric stat counts up; text stats fade/scale in
+    // Numeric stat counts up; text stats scale in. immediateRender:false on
+    // every scroll entrance — if a trigger ever misfires, content stays visible.
     gsap.utils.toArray<HTMLElement>(".stat-value").forEach(el => {
       const countTo = el.dataset.countTo;
       if (countTo) {
@@ -48,15 +29,20 @@ export function StatsSection() {
         const counter = { val: 0 };
         gsap.to(counter, {
           val: target, duration: 2, ease: "power2.out",
-          scrollTrigger: { trigger: el, start: "top 85%", once: true },
+          scrollTrigger: { trigger: el, start: "top 92%", once: true },
           onUpdate: () => { el.textContent = `${Math.round(counter.val)}${suffix}`; },
         });
       } else {
         gsap.from(el, {
-          scale: 0.8, opacity: 0, duration: 0.8, ease: "power2.out",
-          scrollTrigger: { trigger: el, start: "top 85%", once: true },
+          scale: 0.8, opacity: 0, duration: 0.8, ease: "power2.out", immediateRender: false,
+          scrollTrigger: { trigger: el, start: "top 92%", once: true },
         });
       }
+    });
+
+    gsap.from(".testimonial-card", {
+      y: 24, opacity: 0, duration: 0.7, stagger: 0.12, ease: "power2.out", immediateRender: false,
+      scrollTrigger: { trigger: ".testimonial-grid", start: "top 92%", once: true },
     });
   }, { scope: sectionRef });
 
@@ -64,78 +50,66 @@ export function StatsSection() {
     <section
       ref={sectionRef}
       aria-label="Stats and social proof"
-      className="bg-white dark:bg-slate-950 py-20 sm:py-24 px-4 sm:px-6 transition-colors duration-300"
+      className="bg-white dark:bg-slate-950 transition-colors duration-300"
     >
-      <div className="stats-wrap max-w-5xl mx-auto">
-        {/* ── Stats row ── */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center mb-20">
+      {/* ── Purple stats band — inline gradient so the global dark-mode
+            `.bg-gradient-to-br` override can't flatten it ── */}
+      <div style={{ backgroundImage: "linear-gradient(100deg, #7C3AED 0%, #6D28D9 50%, #7C3AED 100%)" }}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {STATS.map(s => (
             <div key={s.label}>
               <p
-                className="stat-value text-3xl md:text-4xl font-black text-slate-900 dark:text-white"
+                className="stat-value text-3xl md:text-4xl font-black text-white"
                 data-count-to={s.countTo ?? undefined}
                 data-suffix={s.countTo ? s.suffix : undefined}
               >
                 {s.value}
               </p>
-              <p className="text-[11px] text-violet-600 dark:text-violet-400 mt-1.5 font-semibold uppercase tracking-widest">
+              <p className="text-[11px] text-violet-200 mt-1.5 font-semibold uppercase tracking-widest">
                 {s.label}
               </p>
             </div>
           ))}
         </div>
+      </div>
 
-        {/* ── Testimonial carousel ── */}
-        <div className="max-w-2xl mx-auto">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-center text-slate-400 dark:text-slate-500 mb-8">
-            Currently Onboarding Early Access Institutions
-          </p>
-
-          <div
-            className="rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/60 p-7 sm:p-8 shadow-md mb-5 cursor-default"
-            onMouseEnter={() => setTPaused(true)}
-            onMouseLeave={() => setTPaused(false)}
-          >
-            <div className="h-0.5 bg-slate-200 dark:bg-slate-800 rounded-full mb-6 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full"
-                style={{ width: `${tProg}%`, transition: "width 50ms linear" }} />
-            </div>
-
-            <p className="text-xl sm:text-2xl font-semibold text-slate-800 dark:text-white leading-snug mb-6 italic">
-              &ldquo;{TESTIMONIALS[tIdx].quote}&rdquo;
+      {/* ── Social proof ── */}
+      <div className="py-20 sm:py-24 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 mb-3">
+              Social Proof
             </p>
-
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 shadow-md"
-                style={{ backgroundImage: "linear-gradient(135deg, #8B5CF6, #7C3AED)" }}>
-                <span className="text-sm font-black text-white">{TESTIMONIALS[tIdx].init}</span>
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-800 dark:text-white">{TESTIMONIALS[tIdx].name}</p>
-                <span className="inline-block text-[10px] font-semibold bg-teal-100 dark:bg-teal-500/15 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/25 px-2 py-0.5 rounded-full mt-0.5">
-                  Early Access Partner
-                </span>
-              </div>
-            </div>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+              Early access institutions
+              <span className="bg-gradient-to-r from-violet-600 to-pink-500 dark:from-violet-400 dark:to-pink-400 bg-clip-text text-transparent"> already love it.</span>
+            </h2>
           </div>
 
-          <div className="flex justify-center items-center gap-2 mb-7">
-            {TESTIMONIALS.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => { setTIdx(i); setTProg(0); }}
-                className={`rounded-full transition-all duration-300 ${
-                  i === tIdx
-                    ? "w-6 h-2 bg-violet-600"
-                    : "w-2 h-2 bg-slate-300 dark:bg-slate-600 hover:bg-violet-400 dark:hover:bg-violet-500"
-                }`}
-                aria-label={`Testimonial ${i + 1}`} />
+          <div className="testimonial-grid grid sm:grid-cols-3 gap-4 sm:gap-5 mb-8">
+            {TESTIMONIALS.map(t => (
+              <figure key={t.init}
+                className="testimonial-card rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/60 p-6 sm:p-7 shadow-sm hover:shadow-md hover:border-violet-300 dark:hover:border-violet-500/30 transition-all flex flex-col">
+                <blockquote className="text-base sm:text-lg font-semibold text-slate-800 dark:text-white leading-snug italic flex-1 mb-5">
+                  &ldquo;{t.quote}&rdquo;
+                </blockquote>
+                <figcaption className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-md"
+                    style={{ backgroundImage: "linear-gradient(135deg, #8B5CF6, #7C3AED)" }}>
+                    <span className="text-xs font-black text-white">{t.init}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-800 dark:text-white truncate">{t.name}</p>
+                    <span className="inline-block text-[10px] font-semibold bg-teal-100 dark:bg-teal-500/15 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/25 px-2 py-0.5 rounded-full mt-0.5">
+                      Early Access Partner
+                    </span>
+                  </div>
+                </figcaption>
+              </figure>
             ))}
           </div>
 
-          <div className="rounded-2xl bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-700/40 p-5 text-center">
+          <div className="max-w-2xl mx-auto rounded-2xl bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-700/40 p-5 text-center">
             <p className="text-sm text-violet-800 dark:text-violet-300 font-medium leading-relaxed">
               🚀 Aura is currently in early access with pilot institutions across India.
               Spots are limited — join now to shape the product.
@@ -145,7 +119,7 @@ export function StatsSection() {
       </div>
 
       {/* ── Workflow marquee ── */}
-      <div className="overflow-hidden pt-16">
+      <div className="overflow-hidden pb-16">
         <p className="text-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-600 mb-5">
           Covering every academic workflow
         </p>

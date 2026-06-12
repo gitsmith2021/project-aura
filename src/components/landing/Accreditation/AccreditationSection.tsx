@@ -11,12 +11,12 @@ export function AccreditationSection() {
   useGSAP(() => {
     if (prefersReducedMotion()) return;
     gsap.from(".naac-intro", {
-      y: 40, opacity: 0, duration: 0.8, ease: "power3.out",
-      scrollTrigger: { trigger: sectionRef.current, start: "top 75%", once: true },
+      y: 40, opacity: 0, duration: 0.8, ease: "power3.out", immediateRender: false,
+      scrollTrigger: { trigger: sectionRef.current, start: "top 88%", once: true },
     });
     gsap.from(".naac-row", {
-      y: 20, opacity: 0, duration: 0.6, stagger: 0.08, ease: "power2.out",
-      scrollTrigger: { trigger: ".naac-rows", start: "top 80%", once: true },
+      y: 20, opacity: 0, duration: 0.6, stagger: 0.08, ease: "power2.out", immediateRender: false,
+      scrollTrigger: { trigger: ".naac-rows", start: "top 92%", once: true },
     });
   }, { scope: sectionRef });
 

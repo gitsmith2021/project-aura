@@ -29,11 +29,11 @@ export function CTASection() {
         clipPath: "circle(150% at 50% 50%)",
         duration: 1.2,
         ease: "power3.inOut",
-        scrollTrigger: { trigger: sectionRef.current, start: "top 65%", once: true },
+        scrollTrigger: { trigger: sectionRef.current, start: "top 70%", once: true },
       });
     gsap.from(".cta-content", {
-      y: 40, opacity: 0, duration: 0.8, delay: 0.5, ease: "power3.out",
-      scrollTrigger: { trigger: sectionRef.current, start: "top 65%", once: true },
+      y: 40, opacity: 0, duration: 0.8, delay: 0.4, ease: "power3.out", immediateRender: false,
+      scrollTrigger: { trigger: sectionRef.current, start: "top 70%", once: true },
     });
   }, { scope: sectionRef });
 
@@ -42,13 +42,14 @@ export function CTASection() {
       id="contact"
       ref={sectionRef}
       aria-label="Call to action"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#030712] px-4 sm:px-6 py-24"
+      className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-violet-950 px-4 sm:px-6 py-24"
     >
       {/* clip-path-revealed gradient background — inline style so the global
-          `.dark .bg-gradient-to-br` override can't flatten it */}
+          `.dark .bg-gradient-to-br` override can't flatten it. The section's
+          violet-950 base keeps this purple even before the reveal plays. */}
       <div
         className="cta-bg absolute inset-0"
-        style={{ backgroundImage: "linear-gradient(135deg, #4C1D95 0%, #581C87 100%)" }}
+        style={{ backgroundImage: "linear-gradient(135deg, #6D28D9 0%, #581C87 55%, #4C1D95 100%)" }}
         aria-hidden="true"
       />
 

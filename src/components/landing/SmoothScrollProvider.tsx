@@ -41,11 +41,14 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
 
     setLenis(instance);
 
-    // Pinned sections shift layout once fonts/canvas settle — recompute.
+    // Pinned sections shift layout after mount (pin spacers, fonts) — the
+    // delayed refresh recomputes trigger positions once everything settles.
     const refresh = () => ScrollTrigger.refresh();
     window.addEventListener("load", refresh);
+    const settle = setTimeout(refresh, 600);
 
     return () => {
+      clearTimeout(settle);
       window.removeEventListener("load", refresh);
       gsap.ticker.remove(tick);
       instance.destroy();

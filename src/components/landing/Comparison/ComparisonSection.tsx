@@ -11,12 +11,12 @@ export function ComparisonSection() {
   useGSAP(() => {
     if (prefersReducedMotion()) return;
     gsap.from(".compare-head", {
-      y: 40, opacity: 0, duration: 0.8, ease: "power3.out",
-      scrollTrigger: { trigger: sectionRef.current, start: "top 75%", once: true },
+      y: 40, opacity: 0, duration: 0.8, ease: "power3.out", immediateRender: false,
+      scrollTrigger: { trigger: sectionRef.current, start: "top 88%", once: true },
     });
     gsap.from(".compare-row", {
-      y: 20, opacity: 0, duration: 0.5, stagger: 0.08, ease: "power2.out",
-      scrollTrigger: { trigger: ".compare-table", start: "top 80%", once: true },
+      y: 20, opacity: 0, duration: 0.5, stagger: 0.08, ease: "power2.out", immediateRender: false,
+      scrollTrigger: { trigger: ".compare-table", start: "top 92%", once: true },
     });
   }, { scope: sectionRef });
 
