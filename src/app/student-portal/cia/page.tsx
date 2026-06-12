@@ -2,11 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { getStudentCIAMarks } from "@/actions/cia";
+import { getStudentCIAMarks, getStudentCIAResults } from "@/actions/cia";
 import type { CIAComponent } from "@/actions/cia";
-import { ClipboardList, Loader2, AlertCircle, Award } from "lucide-react";
+import { ClipboardList, Loader2, AlertCircle, Award, BadgeCheck } from "lucide-react";
 
 type Entry = { component: CIAComponent; marks_scored: number | null };
+type FinalResult = {
+  semester: number;
+  final_percentage: number;
+  computation_mode: "weighted" | "raw";
+  published_at: string | null;
+  academic_year: string | null;
+};
 
 const TYPE_LABELS: Record<string, string> = {
   unit_test:        "Unit Test",
@@ -36,6 +43,7 @@ function pctColor(pct: number) {
 
 export default function StudentCIAPage() {
   const [entries,  setEntries]  = useState<Entry[]>([]);
+  const [finals,   setFinals]   = useState<FinalResult[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState<string | null>(null);
 
@@ -49,9 +57,13 @@ export default function StudentCIAPage() {
         .eq("profile_id", user.id)
         .single();
       if (!student) { setError("Student record not found."); setLoading(false); return; }
-      const res = await getStudentCIAMarks(student.id, student.institution_id);
+      const [res, finalsRes] = await Promise.all([
+        getStudentCIAMarks(student.id, student.institution_id),
+        getStudentCIAResults(student.id, student.institution_id),
+      ]);
       if (!res.success) { setError(res.error); setLoading(false); return; }
       setEntries(res.data);
+      if (finalsRes.success) setFinals(finalsRes.data);
       setLoading(false);
     });
   }, []);
@@ -89,6 +101,35 @@ export default function StudentCIAPage() {
           </div>
         )}
       </div>
+
+      {/* Official published CIA results (Phase 4A — weighted engine output) */}
+      {!loading && finals.length > 0 && (
+        <div className="mb-6 bg-white border border-emerald-200 rounded-xl overflow-hidden">
+          <div className="px-4 py-2.5 bg-emerald-50/60 border-b border-emerald-100 flex items-center gap-2">
+            <BadgeCheck size={14} className="text-emerald-600" />
+            <h2 className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Official CIA Results</h2>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {finals.map((f) => (
+              <div key={`${f.semester}-${f.academic_year ?? ""}`} className="flex items-center justify-between px-4 py-3 gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-800">Semester {f.semester}</p>
+                  <p className="text-[11px] text-slate-400">
+                    {f.academic_year ? `${f.academic_year} · ` : ""}
+                    {f.computation_mode === "weighted" ? "weighted score" : "raw total"}
+                    {f.published_at
+                      ? ` · published ${new Date(f.published_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}`
+                      : ""}
+                  </p>
+                </div>
+                <p className={`text-xl font-extrabold ${pctColor(f.final_percentage)}`}>
+                  {f.final_percentage.toFixed(1)}%
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 size={22} className="animate-spin text-violet-500" /></div>

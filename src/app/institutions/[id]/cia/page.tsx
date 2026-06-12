@@ -8,10 +8,11 @@ import {
   getCIAStudentSummary, type CIAComponent,
 } from "@/actions/cia";
 import { CIAReportCard } from "@/components/cia/CIAReportCard";
+import { CIAResultsPanel } from "@/components/cia/CIAResultsPanel";
 import Link from "next/link";
 import {
   Plus, Trash2, ClipboardList, BookOpen, Users,
-  ChevronRight, Loader2, X, AlertCircle, BarChart2,
+  ChevronRight, Loader2, X, AlertCircle, BarChart2, Award,
 } from "lucide-react";
 
 type Department   = { id: string; name: string };
@@ -49,7 +50,7 @@ export default function CIAPage({ params }: { params: Promise<{ id: string }> })
   const [deptId,   setDeptId]   = useState("");
   const [ayId,     setAyId]     = useState("");
   const [semester, setSemester] = useState("");
-  const [tab,      setTab]      = useState<"components" | "report">("components");
+  const [tab,      setTab]      = useState<"components" | "report" | "results">("components");
 
   const [loading,  setLoading]  = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -203,13 +204,14 @@ export default function CIAPage({ params }: { params: Promise<{ id: string }> })
           <>
             {/* Tabs */}
             <div className="flex gap-1 mb-4 bg-slate-100 rounded-xl p-1 w-fit">
-              {(["components", "report"] as const).map(t => (
+              {(["components", "report", "results"] as const).map(t => (
                 <button key={t} onClick={() => setTab(t)}
                   className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                     tab === t ? "bg-white text-violet-700 shadow-sm" : "text-slate-500 hover:text-slate-700"
                   }`}>
                   {t === "components" ? <span className="flex items-center gap-1.5"><BookOpen size={12} />Components</span>
-                                     : <span className="flex items-center gap-1.5"><BarChart2 size={12} />Report</span>}
+                   : t === "report"   ? <span className="flex items-center gap-1.5"><BarChart2 size={12} />Report</span>
+                                      : <span className="flex items-center gap-1.5"><Award size={12} />Results</span>}
                 </button>
               ))}
             </div>
@@ -274,6 +276,15 @@ export default function CIAPage({ params }: { params: Promise<{ id: string }> })
                   </div>
                 )}
               </div>
+            )}
+
+            {tab === "results" && (
+              <CIAResultsPanel
+                institutionId={institutionId}
+                departmentId={deptId}
+                semester={Number(semester)}
+                academicYearId={ayId || undefined}
+              />
             )}
           </>
         )}

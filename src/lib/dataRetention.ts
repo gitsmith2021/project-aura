@@ -38,7 +38,7 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     key: "academic-records",
     category: "Academic records (marks, results, promotions, hall tickets)",
     tables: [
-      "exam_results", "cia_marks", "student_promotions", "exam_schedules",
+      "exam_results", "cia_marks", "cia_results", "student_promotions", "exam_schedules",
     ],
     period: "Duration of enrolment + 7 years (transcripts permanently)",
     years: 7,
