@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Aura",
+    "slug": "aura-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "aura",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#7C3AED"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "edu.aura.mobile"
+    },
+    "android": {
+      "package": "edu.aura.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#7C3AED"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      }
+    }
+  }
+}
