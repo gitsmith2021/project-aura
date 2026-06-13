@@ -320,9 +320,10 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     if (key === "institutions")
       return (pathname === "/institutions" || pathname.startsWith("/institutions/")) &&
         !pathname.includes("/finance") && !pathname.includes("/compliance") &&
-        !pathname.includes("/audit-log") && !isAcademicPath(pathname);
+        !pathname.includes("/audit-log") && !pathname.includes("/iqac") && !isAcademicPath(pathname);
     if (key === "compliance")     return pathname.includes("/compliance");
     if (key === "audit-log")      return pathname.includes("/audit-log");
+    if (key === "iqac")           return pathname.includes("/iqac");
     if (key === "lesson-plans")   return pathname.includes("/lesson-plans");
     if (key === "guest-lectures") return pathname.includes("/guest-lectures");
     if (key === "internships")    return pathname.includes("/internships");
@@ -360,6 +361,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const internshipsHref    = slug ? `/institutions/${slug}/internships`      : "/institutions";
   const complianceHref     = slug ? `/institutions/${slug}/compliance`       : "/institutions";
   const auditLogHref       = slug ? `/institutions/${slug}/audit-log`        : "/institutions";
+  const iqacSsrHref        = slug ? `/institutions/${slug}/iqac/ssr`         : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -493,6 +495,8 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
                   active={isItemActive("compliance", complianceHref)} isCollapsed={false} />
                 <NavItem href={auditLogHref} icon={<ScrollText size={14} />} label="Audit Log"
                   active={isItemActive("audit-log", auditLogHref)} isCollapsed={false} />
+                <NavItem href={iqacSsrHref} icon={<Landmark size={14} />} label="IQAC / NAAC SSR"
+                  active={isItemActive("iqac", iqacSsrHref)} isCollapsed={false} />
               </NavGroup>
             )}
 
