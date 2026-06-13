@@ -9,20 +9,28 @@
 
 > **Goal:** A native mobile app for staff and students. Primary use cases: NFC-based attendance marking, live CCTV feed access, push notifications, and a mobile-optimized portal experience.
 
-### Step 8A — React Native Project Setup
+### Step 8A — React Native Project Setup  🟡 Foundation (commit `301be79`)
+
+> **Decision:** ONE unified, role-adaptive app (not separate per-role apps) serving
+> all six roles — login detects the `institution_members` role and renders the
+> matching experience, mirroring the web. Built with **Expo SDK 52 + Expo Router**.
+> NFC/push/CCTV/online-pay deferred (need Phase 4F / Phase 3 / native EAS builds).
+> Scaffolded without a device — first on-device `expo start` is the real test.
+> See `aura-mobile/README.md`.
 
 #### What to build:
-- [ ] Initialize new React Native project: `npx create-expo-app aura-mobile`
-- [ ] Folder: `/aura-mobile` at monorepo root (alongside `/aura-scheduler-engine`)
-- [ ] Install dependencies:
-  * `@supabase/supabase-js`
-  * `expo-secure-store` (for auth token storage)
-  * `react-native-nfc-manager` (NFC scanning)
-  * `expo-camera` (QR code fallback)
-  * `expo-notifications` (push notifications)
-  * `react-native-vlc-media-player` (CCTV RTSP streams)
-- [ ] Supabase auth with Expo SecureStore session persistence
-- [ ] Shared type definitions from `/src/types/` (symlink or copy)
+- [x] Initialize Expo project (manual scaffold equivalent to `create-expo-app`, SDK 52 + Expo Router)
+- [x] Folder: `/aura-mobile` at monorepo root (alongside `/aura-scheduler-engine`)
+- [x] Install dependencies (declared in `package.json`):
+  * [x] `@supabase/supabase-js`
+  * [x] `expo-secure-store` (auth token storage — via SecureStore-encrypted AsyncStorage, 2KB-limit-safe)
+  * [ ] `react-native-nfc-manager` (NFC scanning — deferred to 8B; needs Phase 4F + EAS dev client)
+  * [ ] `expo-camera` (QR fallback — deferred to 8B)
+  * [ ] `expo-notifications` (push — deferred to 8D; needs Phase 3)
+  * [ ] `react-native-vlc-media-player` (CCTV RTSP — deferred to 8E; needs EAS)
+- [x] Supabase auth with Expo SecureStore session persistence
+- [x] Role-adaptive shell (all 6 roles) + read-only portal screens (student attendance/fees, staff schedule, HOD/admin snapshots)
+- [ ] Shared type definitions from `/src/types/` — *currently the mobile app defines its own lean row shapes; a shared-types extraction is a follow-up*
 
 ---
 

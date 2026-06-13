@@ -220,7 +220,7 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 | 🔲 Arch A6 | Multi-currency & Multi-timezone Support | Pending | — |
 | 🔲 Arch A7 | SaaS Billing — Minimal Viable (Trial + Expiry) | Pending | — |
 | ✅ Arch A8 | Platform-Wide Audit Log — `audit_logs` table + `logAudit()` helper | Complete | `b3c2ed0` |
-| 🔲 Phase 8A | React Native Setup | Pending | — |
+| 🟡 Phase 8A | React Native Setup — Expo app + role-adaptive shell + auth + portal screens (NFC deferred to Phase 4F + EAS) | Foundation | `301be79` |
 | 🔲 Phase 8B | Staff Mobile App + NFC | Pending | — |
 | 🔲 Phase 8C | Student Mobile App | Pending | — |
 | 🔲 Phase 8D | Push Notifications (Staff + Student + Parent) | Pending | — |
