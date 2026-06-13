@@ -83,7 +83,8 @@ export const SSR_CRITERIA: SSRCriterion[] = [
     title: "Infrastructure & Learning Resources",
     description: "Physical, academic and IT infrastructure; library as learning resource",
     sources: [
-      { key: "timetable", label: "Classroom & facility utilization via timetable (4.1)", status: "live", table: "schedules", column: "institution_id" },
+      // schedules is one of two tables still on the legacy tenant_id column
+      { key: "timetable", label: "Classroom & facility utilization via timetable (4.1)", status: "live", table: "schedules", column: "tenant_id" },
       { key: "library", label: "Library automation & volumes (4.2)", status: "pending", phase: "Phase 4A — Library Management System" },
       { key: "labs", label: "Laboratory management (4.1, 4.3)", status: "pending", phase: "Phase 4D — Laboratory Management" },
       { key: "assets", label: "Asset & infrastructure registry (4.4)", status: "pending", phase: "Phase 4E — Asset & Inventory Management" },
@@ -110,8 +111,8 @@ export const SSR_CRITERIA: SSRCriterion[] = [
     sources: [
       { key: "members", label: "Role-based governance structure (6.1)", status: "live", table: "institution_members", column: "institution_id" },
       { key: "audit_logs", label: "Tamper-evident audit trail (6.2, 6.5)", status: "live", table: "audit_logs", column: "institution_id" },
-      { key: "leave_requests", label: "Staff welfare & HR workflows (6.3)", status: "live", table: "leave_requests", column: "tenant_id" },
-      { key: "salary", label: "Payroll & financial governance (6.4)", status: "live", table: "salary_disbursements", column: "tenant_id" },
+      { key: "leave_requests", label: "Staff welfare & HR workflows (6.3)", status: "live", table: "leave_requests", column: "institution_id" },
+      { key: "salary", label: "Payroll & financial governance (6.4)", status: "live", table: "salary_disbursements", column: "institution_id" },
       { key: "iqac_meetings", label: "IQAC meetings, minutes & action items (6.5)", status: "pending", phase: "Phase 7F-sub2 — IQAC Meeting & Action Tracker" },
       { key: "budgets", label: "Department budget planning (6.4)", status: "pending", phase: "Phase 5L — Department Budget Management" },
       { key: "appraisals", label: "Staff appraisals & workload reports (6.3)", status: "pending", phase: "Phase 5E — Staff Appraisal" },

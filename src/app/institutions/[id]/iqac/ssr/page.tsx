@@ -91,6 +91,10 @@ function CriterionCard({ criterion }: { criterion: SSRCriterionReport }) {
                 <span className="text-[10px] text-slate-400 italic shrink-0" title={source.phase}>
                   {source.phase?.split("—")[0].trim()}
                 </span>
+              ) : source.countError ? (
+                <span className="text-[10px] text-rose-500 font-semibold shrink-0" title={source.countError}>
+                  count failed
+                </span>
               ) : (
                 <span className={`text-xs font-bold tabular-nums shrink-0 ${(source.count ?? 0) > 0 ? "text-slate-900" : "text-amber-600"}`}>
                   {intFmt.format(source.count ?? 0)} record{(source.count ?? 0) === 1 ? "" : "s"}

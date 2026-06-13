@@ -142,10 +142,11 @@ export async function getPlatformOverview(): Promise<
     admin.from("institutions").select("id, name, slug, college_type, status, created_at").range(0, 9_999),
     admin.from("students").select("institution_id").range(0, 99_999),
     admin.from("staff").select("institution_id").range(0, 99_999),
-    // fee_payments still carries the legacy tenant_id column name
+    // NB: live fee_payments uses institution_id (the migration file's
+    // tenant_id was renamed by a later wave) — verified against the DB
     admin
       .from("fee_payments")
-      .select("tenant_id, amount_paid, paid_at, created_at")
+      .select("institution_id, amount_paid, paid_at, created_at")
       .eq("payment_status", "completed")
       .range(0, 99_999),
     admin.from("attendance").select("schedule_id").gte("created_at", todayStart).range(0, 99_999),
@@ -181,10 +182,10 @@ export async function getPlatformOverview(): Promise<
     const amount = Number(p.amount_paid) || 0;
     const when = p.paid_at ?? p.created_at;
     revenue += amount;
-    if (p.tenant_id) {
-      revenueByInst.set(p.tenant_id, (revenueByInst.get(p.tenant_id) ?? 0) + amount);
-      const prev = lastPaymentByInst.get(p.tenant_id);
-      if (!prev || when > prev) lastPaymentByInst.set(p.tenant_id, when);
+    if (p.institution_id) {
+      revenueByInst.set(p.institution_id, (revenueByInst.get(p.institution_id) ?? 0) + amount);
+      const prev = lastPaymentByInst.get(p.institution_id);
+      if (!prev || when > prev) lastPaymentByInst.set(p.institution_id, when);
     }
     if (when >= thisMonthStart) collectionsThisMonth += amount;
     else if (when >= lastMonthStart) collectionsLastMonth += amount;
@@ -374,13 +375,13 @@ export async function getInstitutionAnalytics(institutionId: string): Promise<
     admin
       .from("fee_payments")
       .select("amount_paid, payment_status, paid_at, created_at")
-      .eq("tenant_id", institutionId)
+      .eq("institution_id", institutionId)
       .in("payment_status", ["completed", "pending"])
       .range(0, 99_999),
     admin
       .from("salary_disbursements")
       .select("amount_disbursed, disbursed_at, created_at")
-      .eq("tenant_id", institutionId)
+      .eq("institution_id", institutionId)
       .eq("status", "processed")
       .range(0, 99_999),
     attendanceCounts,

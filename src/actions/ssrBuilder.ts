@@ -20,8 +20,10 @@ import { SSR_CRITERIA, type SSRCriterion, type SSREvidenceSource } from "@/lib/s
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type SSREvidenceCount = SSREvidenceSource & {
-  /** null for pending sources (nothing to count yet). */
+  /** null for pending sources (nothing to count yet) or when the count failed. */
   count: number | null;
+  /** Set when a live source's count query failed — surfaced in the UI. */
+  countError?: string;
 };
 
 export type SSRCriterionReport = Omit<SSRCriterion, "sources"> & {
@@ -61,31 +63,40 @@ export async function aggregateSSRData(institutionId: string): Promise<
       .maybeSingle();
     if (!membership) return { success: false, error: "You are not a member of this institution." };
 
-    const countSource = async (source: SSREvidenceSource): Promise<number | null> => {
-      if (source.status !== "live" || !source.table || !source.column) return null;
-      if (source.column === "join:attendance") {
+    // One broken source must never sink the whole readiness report — a count
+    // failure is reported on that row (count null + countError) and the rest
+    // of the criteria still render.
+    const countSource = async (
+      source: SSREvidenceSource
+    ): Promise<{ count: number | null; countError?: string }> => {
+      if (source.status !== "live" || !source.table || !source.column) return { count: null };
+      try {
+        if (source.column === "join:attendance") {
+          const { count, error } = await supabase
+            .from("attendance")
+            .select("id, class_schedules!inner(departments!inner(institution_id))", { count: "exact", head: true })
+            .eq("class_schedules.departments.institution_id", institutionId);
+          if (error) return { count: null, countError: error.message };
+          return { count: count ?? 0 };
+        }
         const { count, error } = await supabase
-          .from("attendance")
-          .select("id, class_schedules!inner(departments!inner(institution_id))", { count: "exact", head: true })
-          .eq("class_schedules.departments.institution_id", institutionId);
-        if (error) throw new Error(`${source.table}: ${error.message}`);
-        return count ?? 0;
+          .from(source.table)
+          .select("*", { count: "exact", head: true })
+          .eq(source.column, institutionId);
+        if (error) return { count: null, countError: error.message };
+        return { count: count ?? 0 };
+      } catch (e) {
+        return { count: null, countError: e instanceof Error ? e.message : String(e) };
       }
-      const { count, error } = await supabase
-        .from(source.table)
-        .select("*", { count: "exact", head: true })
-        .eq(source.column, institutionId);
-      if (error) throw new Error(`${source.table}: ${error.message}`);
-      return count ?? 0;
     };
 
     const criteria: SSRCriterionReport[] = await Promise.all(
       SSR_CRITERIA.map(async (criterion) => {
         const sources: SSREvidenceCount[] = await Promise.all(
-          criterion.sources.map(async (source) => ({ ...source, count: await countSource(source) }))
+          criterion.sources.map(async (source) => ({ ...source, ...(await countSource(source)) }))
         );
         const liveWithData = sources.filter((s) => s.status === "live" && (s.count ?? 0) > 0).length;
-        const liveEmpty = sources.filter((s) => s.status === "live" && (s.count ?? 0) === 0).length;
+        const liveEmpty = sources.filter((s) => s.status === "live" && !s.countError && (s.count ?? 0) === 0).length;
         const pendingModules = sources.filter((s) => s.status === "pending").length;
         return {
           number: criterion.number,
@@ -186,19 +197,19 @@ export async function getAISHEData(institutionId: string): Promise<
       supabase
         .from("fee_payments")
         .select("amount_paid")
-        .eq("tenant_id", institutionId)
+        .eq("institution_id", institutionId)
         .eq("payment_status", "completed")
         .range(0, 99_999),
       supabase
         .from("salary_disbursements")
         .select("amount_disbursed")
-        .eq("tenant_id", institutionId)
+        .eq("institution_id", institutionId)
         .eq("status", "processed")
         .range(0, 99_999),
       supabase
         .from("expenses")
         .select("amount")
-        .eq("tenant_id", institutionId)
+        .eq("institution_id", institutionId)
         .range(0, 99_999),
     ]);
 

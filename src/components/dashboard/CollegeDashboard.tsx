@@ -389,8 +389,11 @@ export function CollegeDashboard({
           .eq("institution_id", college.id),
         supabase
           .from("schedules")
+          // schedules still uses the legacy tenant_id column — filtering on
+          // institution_id made PostgREST reject the query, so today's
+          // sessions list always rendered empty
           .select("id, subject_name, start_time, end_time, status, staff:staff(full_name)")
-          .eq("institution_id", college.id)
+          .eq("tenant_id", college.id)
           .eq("day_of_week", today)
           .order("start_time"),
       ]);
