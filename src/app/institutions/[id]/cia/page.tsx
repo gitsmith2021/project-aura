@@ -12,7 +12,7 @@ import { CIAResultsPanel } from "@/components/cia/CIAResultsPanel";
 import Link from "next/link";
 import {
   Plus, Trash2, ClipboardList, BookOpen, Users,
-  ChevronRight, Loader2, X, AlertCircle, BarChart2, Award,
+  ChevronRight, Loader2, X, AlertCircle, BarChart2, Award, Target,
 } from "lucide-react";
 
 type Department   = { id: string; name: string };
@@ -166,14 +166,22 @@ export default function CIAPage({ params }: { params: Promise<{ id: string }> })
               <p className="text-xs text-slate-500">Manage assessment components and enter marks</p>
             </div>
           </div>
-          {filtersSet && (
-            <button
-              onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold rounded-xl shadow-sm transition-colors"
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/institutions/${institutionId}/cia/outcomes`}
+              className="flex items-center gap-2 px-4 py-2 border border-violet-200 text-violet-600 hover:bg-violet-50 text-xs font-semibold rounded-xl transition-colors"
             >
-              <Plus size={14} /> Add Component
-            </button>
-          )}
+              <Target size={14} /> Outcomes (CO/PO)
+            </Link>
+            {filtersSet && (
+              <button
+                onClick={() => setShowForm(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold rounded-xl shadow-sm transition-colors"
+              >
+                <Plus size={14} /> Add Component
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Filters */}
