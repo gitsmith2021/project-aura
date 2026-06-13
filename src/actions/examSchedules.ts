@@ -146,13 +146,27 @@ export async function getExamForHallTicket(examId: string) {
 
   if (error || !exam) return { success: false as const, error: error?.message ?? "Exam not found" };
 
+  // NB: no "year" column on students (it's student_year) — selecting it made
+  // PostgREST reject the whole query, so hall tickets listed zero students.
+  // Fetch student_year and alias it to keep HallTicketCard's contract.
   const { data: students } = await supabase
     .from("students")
-    .select("id, full_name, roll_number, year")
+    .select("id, full_name, roll_number, student_year")
     .eq("department_id", exam.department_id)
     .order("roll_number", { ascending: true, nullsFirst: false });
 
-  return { success: true as const, data: { exam, students: students ?? [] } };
+  return {
+    success: true as const,
+    data: {
+      exam,
+      students: (students ?? []).map((s) => ({
+        id: s.id,
+        full_name: s.full_name,
+        roll_number: s.roll_number,
+        year: s.student_year ?? null,
+      })),
+    },
+  };
 }
 
 function capitalize(s: string) {

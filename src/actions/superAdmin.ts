@@ -354,10 +354,11 @@ export async function getInstitutionAnalytics(institutionId: string): Promise<
   );
 
   const [studentRes, staffCountRes, deptRes, paymentRes, payrollRes, attendanceByMonth] = await Promise.all([
-    // One institution's students; .range lifts the 1000-row cap
+    // One institution's students; .range lifts the 1000-row cap.
+    // NB: the column is student_year — students.year does not exist.
     admin
       .from("students")
-      .select("year, department_id, created_at")
+      .select("student_year, department_id, created_at")
       .eq("institution_id", institutionId)
       .range(0, 49_999),
     // Head count (department FK counts would miss staff with no department)
@@ -396,7 +397,7 @@ export async function getInstitutionAnalytics(institutionId: string): Promise<
   // ── Enrollment ─────────────────────────────────────────────────────────────
   const byYear = new Map<string, number>();
   for (const s of students) {
-    const label = s.year != null && `${s.year}`.trim() !== "" ? `Year ${s.year}` : "Unassigned";
+    const label = s.student_year != null && `${s.student_year}`.trim() !== "" ? `Year ${s.student_year}` : "Unassigned";
     byYear.set(label, (byYear.get(label) ?? 0) + 1);
   }
   const enrollmentByYear = [...byYear.entries()]

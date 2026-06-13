@@ -74,25 +74,25 @@ Fable 5 is included in Pro/Max/Team plans until June 22 — but it counts
 
 ---
 
-## 📅 Fable 5 Battle Plan — June 12 to June 22
+## 📅 Fable 5 Battle Plan — Module Sequence
 
-> **11 days · 8 Tier 1 modules · Maximum ROI**
+> **8 Tier 1 modules · run in order · well ahead of the June 22 window close**
 
 ```
-[x] Day 1  — June 12 (Today) 🎨  Landing Page (GSAP + Three.js + Lenis)
-[x] Day 2  — June 12 (Today) 🔐  Phase 2.5A — Razorpay Webhook Security
-[x] Day 3  — June 12 (Today) 🔐  Phase 2.5B — DPDP Act 2023 Compliance
-[x] Day 4  — June 12 (Today) 🔐  Phase 2.5C — Platform-Wide Audit Log (A8)
-[x] Day 5  — June 12 (Today) 📊  Super Admin Analytics Dashboard (roadmap Phase 7A+7B)
-[x] Day 6  — June 12 (Today) 📊  Per-institution drill down + reports (roadmap Phase 7C)
-[x] Day 7  — June 12 (Today) 📚  CIA Assessment Engine — weighted results + publish flow
-[x] Day 8  — June 12 (Today) 📚  CO/PO outcome mapping + attainment reports (OBE)
-[x] Day 9  — June 12 (Today) 🏛️  NAAC SSR Builder scaffold (roadmap 7F-sub: registry + readiness)
-[ ] Day 10 — June 18         🏛️  Phase 7A continued (PDF export + criteria map)
-[ ] Day 11 — June 19         📱  Phase 8A — React Native Setup + NFC scaffold
-[ ] Buffer — June 20–22      ⏳  Buffer for Tier 1 refinements / Tier 2 work
+[x] 1   🎨  Landing Page (GSAP + Lenis)
+[x] 2   🔐  Phase 2.5A — Razorpay Webhook Security
+[x] 3   🔐  Phase 2.5B — DPDP Act 2023 Compliance
+[x] 4   🔐  Phase 2.5C — Platform-Wide Audit Log (A8)
+[x] 5   📊  Super Admin Analytics Dashboard (roadmap Phase 7A+7B)
+[x] 6   📊  Per-institution drill down + reports (roadmap Phase 7C)
+[x] 7   📚  CIA Assessment Engine — weighted results + publish flow
+[x] 8   📚  CO/PO outcome mapping + attainment reports (OBE)
+[x] 9   🏛️  NAAC SSR Builder scaffold (roadmap 7F-sub: registry + readiness)
+[ ] 10  🏛️  NAAC SSR exports (Excel workbook, AISHE return, NIRF extract, print report)
+[ ] 11  📱  Phase 8A — React Native Setup + NFC scaffold
+[ ] —   ⏳  Remaining window → Tier 1 refinements / Tier 2 work
 ─────────────────────────────────────────────────────
-June 23 onwards → Switch to Opus 4.8 / Sonnet 4.6 for Tier 2 & 3
+After the free window → Switch to Opus 4.8 / Sonnet 4.6 for Tier 2 & 3
 ```
 
 ---
@@ -204,5 +204,5 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 
 ---
 
-*Last updated: June 12, 2026 — Fable 5 free window active (11 days remaining)*
+*Fable 5 free window active until June 22, 2026 — running well ahead of schedule (9 of 11 modules done).*
 *Reference: AURA_ROADMAP.md for full technical specifications per module*

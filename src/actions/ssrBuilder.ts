@@ -115,3 +115,228 @@ export async function aggregateSSRData(institutionId: string): Promise<
     return { success: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Export data: AISHE annual return & NIRF extract (roadmap 7F field mapping).
+// Both return plain row data; the client renders it into a multi-sheet
+// workbook via src/lib/excelXml.ts. Pending-module fields are reported as
+// "Module pending (Phase X)" rather than zeros — an AISHE return must never
+// silently claim 0 library volumes because the library module isn't built.
+// ─────────────────────────────────────────────────────────────────────────────
+
+type LabeledCount = { label: string; count: number };
+
+export type AISHEData = {
+  institutionName: string;
+  students: {
+    total: number;
+    byGender: LabeledCount[];
+    byCategory: LabeledCount[];
+    pwd: number;
+    byProgramme: LabeledCount[];
+    byYear: LabeledCount[];
+    notRecorded: { gender: number; category: number };
+  };
+  staff: {
+    teachingTotal: number;
+    byGender: LabeledCount[];
+    byQualification: LabeledCount[];
+    genderNotRecorded: number;
+  };
+  finance: {
+    incomeFees: number;
+    expenditureSalary: number;
+    expenditureOther: number;
+  };
+  pendingFields: { field: string; phase: string }[];
+  generatedAt: string;
+};
+
+const tally = (values: (string | null | undefined)[], fallback: string): LabeledCount[] => {
+  const map = new Map<string, number>();
+  for (const v of values) {
+    const key = v && v.trim() !== "" ? v : fallback;
+    map.set(key, (map.get(key) ?? 0) + 1);
+  }
+  return [...map.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count);
+};
+
+export async function getAISHEData(institutionId: string): Promise<
+  | { success: true; data: AISHEData }
+  | { success: false; error: string }
+> {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
+    const [instRes, studentRes, staffRes, feeRes, salaryRes, expenseRes] = await Promise.all([
+      supabase.from("institutions").select("name").eq("id", institutionId).single(),
+      supabase
+        .from("students")
+        .select("gender, category, is_pwd, programme, student_year")
+        .eq("institution_id", institutionId)
+        .range(0, 49_999),
+      supabase
+        .from("staff")
+        .select("gender, qualification")
+        .eq("institution_id", institutionId)
+        .range(0, 49_999),
+      supabase
+        .from("fee_payments")
+        .select("amount_paid")
+        .eq("tenant_id", institutionId)
+        .eq("payment_status", "completed")
+        .range(0, 99_999),
+      supabase
+        .from("salary_disbursements")
+        .select("amount_disbursed")
+        .eq("tenant_id", institutionId)
+        .eq("status", "processed")
+        .range(0, 99_999),
+      supabase
+        .from("expenses")
+        .select("amount")
+        .eq("tenant_id", institutionId)
+        .range(0, 99_999),
+    ]);
+
+    const firstError = instRes.error ?? studentRes.error ?? staffRes.error ?? feeRes.error ?? salaryRes.error ?? expenseRes.error;
+    if (firstError) return { success: false, error: firstError.message };
+
+    const students = studentRes.data ?? [];
+    const staff = staffRes.data ?? [];
+
+    return {
+      success: true,
+      data: {
+        institutionName: instRes.data?.name ?? "",
+        students: {
+          total: students.length,
+          byGender: tally(students.map((s) => s.gender), "Not recorded"),
+          byCategory: tally(students.map((s) => s.category), "Not recorded"),
+          pwd: students.filter((s) => s.is_pwd === true).length,
+          byProgramme: tally(students.map((s) => s.programme), "Not recorded"),
+          byYear: tally(students.map((s) => (s.student_year != null ? `Year ${s.student_year}` : null)), "Not recorded"),
+          notRecorded: {
+            gender: students.filter((s) => !s.gender).length,
+            category: students.filter((s) => !s.category).length,
+          },
+        },
+        staff: {
+          teachingTotal: staff.length,
+          byGender: tally(staff.map((s) => s.gender), "Not recorded"),
+          byQualification: tally(staff.map((s) => s.qualification), "Not recorded"),
+          genderNotRecorded: staff.filter((s) => !s.gender).length,
+        },
+        finance: {
+          incomeFees: (feeRes.data ?? []).reduce((sum, r) => sum + (Number(r.amount_paid) || 0), 0),
+          expenditureSalary: (salaryRes.data ?? []).reduce((sum, r) => sum + (Number(r.amount_disbursed) || 0), 0),
+          expenditureOther: (expenseRes.data ?? []).reduce((sum, r) => sum + (Number(r.amount) || 0), 0),
+        },
+        pendingFields: [
+          { field: "Non-teaching staff (by gender)", phase: "Phase 5C — Non-Teaching Staff & Payroll" },
+          { field: "Number of classrooms / labs", phase: "Phase 4D/4E — Labs, Assets & Inventory" },
+          { field: "Library volumes", phase: "Phase 4A — Library Management System" },
+          { field: "Hostel intake & occupancy", phase: "Phase 4C — Hostel Management" },
+        ],
+        generatedAt: new Date().toISOString(),
+      },
+    };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+export type NIRFData = {
+  institutionName: string;
+  teachingLearning: {
+    students: number;
+    teachingStaff: number;
+    /** students per teacher, 1dp; null when no staff. */
+    facultyStudentRatio: number | null;
+  };
+  graduationOutcome: {
+    promotionEvents: number;
+    examResults: number;
+    arrears: number;
+  };
+  outreach: {
+    internships: number;
+    guestLectures: number;
+    /** female share of students, 0–100; null when gender unrecorded. */
+    womenEnrollmentPct: number | null;
+  };
+  pendingParameters: { parameter: string; phase: string }[];
+  generatedAt: string;
+};
+
+export async function getNIRFData(institutionId: string): Promise<
+  | { success: true; data: NIRFData }
+  | { success: false; error: string }
+> {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const count = async (table: string, column: string, extra?: (q: any) => any) => {
+      let q = supabase.from(table).select("*", { count: "exact", head: true }).eq(column, institutionId);
+      if (extra) q = extra(q);
+      const { count: n, error } = await q;
+      if (error) throw new Error(`${table}: ${error.message}`);
+      return n ?? 0;
+    };
+
+    const [instRes, studentsTotal, genderRows, staffTotal, promotions, results, arrears, internships, lectures] =
+      await Promise.all([
+        supabase.from("institutions").select("name").eq("id", institutionId).single(),
+        count("students", "institution_id"),
+        supabase.from("students").select("gender").eq("institution_id", institutionId).range(0, 49_999),
+        count("staff", "institution_id"),
+        count("promotion_logs", "institution_id"),
+        count("exam_results", "institution_id"),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        count("exam_results", "institution_id", (q: any) => q.eq("is_arrear", true)),
+        count("internships", "institution_id"),
+        count("guest_lectures", "institution_id"),
+      ]);
+
+    if (instRes.error) return { success: false, error: instRes.error.message };
+    if (genderRows.error) return { success: false, error: genderRows.error.message };
+
+    const genders = (genderRows.data ?? []).map((r) => r.gender).filter((g): g is string => !!g);
+    const women = genders.filter((g) => g === "female").length;
+
+    return {
+      success: true,
+      data: {
+        institutionName: instRes.data?.name ?? "",
+        teachingLearning: {
+          students: studentsTotal,
+          teachingStaff: staffTotal,
+          facultyStudentRatio: staffTotal > 0 ? Math.round((studentsTotal / staffTotal) * 10) / 10 : null,
+        },
+        graduationOutcome: {
+          promotionEvents: promotions,
+          examResults: results,
+          arrears,
+        },
+        outreach: {
+          internships,
+          guestLectures: lectures,
+          womenEnrollmentPct: genders.length > 0 ? Math.round((women / genders.length) * 1000) / 10 : null,
+        },
+        pendingParameters: [
+          { parameter: "Research & Professional Practice (RP)", phase: "Phase 5I — Research & Publications" },
+          { parameter: "Placement & Higher Studies (GO-Placement)", phase: "Phase 5F — Placement Cell" },
+          { parameter: "Perception (PR)", phase: "External survey — outside Aura scope" },
+        ],
+        generatedAt: new Date().toISOString(),
+      },
+    };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}

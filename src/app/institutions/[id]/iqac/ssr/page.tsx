@@ -4,9 +4,13 @@ import { use, useCallback, useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import {
   Landmark, Loader2, AlertCircle, RefreshCw, Download, ChevronDown,
-  CheckCircle2, CircleDashed, Hourglass, FileSpreadsheet,
+  CheckCircle2, CircleDashed, Hourglass, FileSpreadsheet, Printer, Globe2,
 } from "lucide-react";
-import { aggregateSSRData, type SSRReport, type SSRCriterionReport } from "@/actions/ssrBuilder";
+import {
+  aggregateSSRData, getAISHEData, getNIRFData,
+  type SSRReport, type SSRCriterionReport,
+} from "@/actions/ssrBuilder";
+import { downloadWorkbook, type Sheet } from "@/lib/excelXml";
 
 const intFmt = new Intl.NumberFormat("en-IN");
 
@@ -106,6 +110,7 @@ export default function SSRBuilderPage({ params }: { params: Promise<{ id: strin
   const [report, setReport] = useState<SSRReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState<"workbook" | "aishe" | "nirf" | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -117,6 +122,203 @@ export default function SSRBuilderPage({ params }: { params: Promise<{ id: strin
   }, [institutionId]);
 
   useEffect(() => { load(); }, [load]);
+
+  /** SSR evidence workbook — one sheet per criterion, NAAC column layout. */
+  const exportWorkbook = () => {
+    if (!report) return;
+    setExporting("workbook");
+    const sheets: Sheet[] = [
+      {
+        name: "Overview",
+        rows: [
+          ["NAAC SSR Evidence Workbook", ""],
+          ["Generated", new Date(report.generatedAt).toLocaleString("en-IN")],
+          ["Overall readiness", `${report.overallCompleteness}%`],
+          [],
+          ["Criterion", "Title", "Readiness %", "Sources with evidence", "Live, no data", "Modules pending"],
+          ...report.criteria.map((c) => [
+            `Criterion ${c.number}`, c.title, c.completeness, c.liveWithData, c.liveEmpty, c.pendingModules,
+          ]),
+        ],
+      },
+      ...report.criteria.map((c) => ({
+        name: `Criterion ${c.number}`,
+        rows: [
+          ["Evidence Source (NAAC metric)", "Status", "Evidence Records", "Pending Roadmap Phase"],
+          ...c.sources.map((s) => [
+            s.label,
+            s.status === "pending" ? "Module pending" : (s.count ?? 0) > 0 ? "Evidence available" : "No data entered",
+            s.status === "pending" ? null : s.count ?? 0,
+            s.status === "pending" ? s.phase ?? "" : "",
+          ]),
+        ] as Sheet["rows"],
+      })),
+    ];
+    downloadWorkbook("naac-ssr-evidence-workbook.xls", sheets);
+    setExporting(null);
+  };
+
+  /** AISHE annual return — enrollment/staff/finance sheets from live data. */
+  const exportAISHE = async () => {
+    setExporting("aishe");
+    const res = await getAISHEData(institutionId);
+    if (!res.success) { setError(res.error); setExporting(null); return; }
+    const d = res.data;
+    const warn =
+      d.students.notRecorded.gender > 0 || d.students.notRecorded.category > 0
+        ? `WARNING: ${d.students.notRecorded.gender} students missing gender, ${d.students.notRecorded.category} missing category — backfill before filing the AISHE return`
+        : "All gender/category fields recorded";
+    downloadWorkbook("aishe-annual-return.xls", [
+      {
+        name: "Enrollment",
+        rows: [
+          ["AISHE Annual Return — Student Enrollment", ""],
+          ["Institution", d.institutionName],
+          ["Generated", new Date(d.generatedAt).toLocaleString("en-IN")],
+          ["Data quality", warn],
+          [],
+          ["Total enrolled students", d.students.total],
+          ["Persons with Disability (PwD)", d.students.pwd],
+          [],
+          ["By Gender", "Count"],
+          ...d.students.byGender.map((g): (string | number)[] => [g.label, g.count]),
+          [],
+          ["By Social Category", "Count"],
+          ...d.students.byCategory.map((c): (string | number)[] => [c.label, c.count]),
+          [],
+          ["By Programme", "Count"],
+          ...d.students.byProgramme.map((p): (string | number)[] => [p.label, p.count]),
+          [],
+          ["By Year of Study", "Count"],
+          ...d.students.byYear.map((y): (string | number)[] => [y.label, y.count]),
+        ],
+      },
+      {
+        name: "Staff",
+        rows: [
+          ["Teaching Staff", "Count"],
+          ["Total teaching staff", d.staff.teachingTotal],
+          [],
+          ["By Gender", "Count"],
+          ...d.staff.byGender.map((g): (string | number)[] => [g.label, g.count]),
+          [],
+          ["By Qualification", "Count"],
+          ...d.staff.byQualification.map((q): (string | number)[] => [q.label, q.count]),
+        ],
+      },
+      {
+        name: "Finance",
+        rows: [
+          ["Head", "Amount (INR)"],
+          ["Income — fee collections (completed)", d.finance.incomeFees],
+          ["Expenditure — salary disbursements (processed)", d.finance.expenditureSalary],
+          ["Expenditure — other logged expenses", d.finance.expenditureOther],
+        ],
+      },
+      {
+        name: "Pending Fields",
+        rows: [
+          ["AISHE Field", "Available After"],
+          ...d.pendingFields.map((p): (string | number)[] => [p.field, p.phase]),
+        ],
+      },
+    ]);
+    setExporting(null);
+  };
+
+  /** NIRF data extract — available parameters + pending ones flagged. */
+  const exportNIRF = async () => {
+    setExporting("nirf");
+    const res = await getNIRFData(institutionId);
+    if (!res.success) { setError(res.error); setExporting(null); return; }
+    const d = res.data;
+    downloadWorkbook("nirf-data-extract.xls", [
+      {
+        name: "Teaching-Learning",
+        rows: [
+          ["NIRF Data Extract", ""],
+          ["Institution", d.institutionName],
+          ["Generated", new Date(d.generatedAt).toLocaleString("en-IN")],
+          [],
+          ["Parameter", "Value"],
+          ["Enrolled students", d.teachingLearning.students],
+          ["Teaching staff", d.teachingLearning.teachingStaff],
+          ["Faculty–student ratio (students per teacher)", d.teachingLearning.facultyStudentRatio ?? "No staff recorded"],
+        ],
+      },
+      {
+        name: "Graduation Outcome",
+        rows: [
+          ["Parameter", "Value"],
+          ["Promotion / progression events", d.graduationOutcome.promotionEvents],
+          ["Exam results recorded", d.graduationOutcome.examResults],
+          ["Arrear results", d.graduationOutcome.arrears],
+        ],
+      },
+      {
+        name: "Outreach & Inclusivity",
+        rows: [
+          ["Parameter", "Value"],
+          ["Internships logged", d.outreach.internships],
+          ["Guest lectures / expert talks", d.outreach.guestLectures],
+          ["Women enrollment % (of recorded genders)", d.outreach.womenEnrollmentPct ?? "Gender not recorded yet"],
+        ],
+      },
+      {
+        name: "Pending Parameters",
+        rows: [
+          ["NIRF Parameter", "Available After"],
+          ...d.pendingParameters.map((p): (string | number)[] => [p.parameter, p.phase]),
+        ],
+      },
+    ]);
+    setExporting(null);
+  };
+
+  /** Print-friendly readiness report — browser print dialog → Save as PDF. */
+  const printReport = () => {
+    if (!report) return;
+    const rows = report.criteria
+      .map(
+        (c) => `
+      <h2>Criterion ${c.number} — ${c.title} <span class="pct">${c.completeness}%</span></h2>
+      <table>
+        <tr><th>Evidence source</th><th>Status</th><th>Records</th></tr>
+        ${c.sources
+          .map(
+            (s) => `<tr>
+          <td>${s.label}</td>
+          <td>${s.status === "pending" ? `Module pending — ${s.phase ?? ""}` : (s.count ?? 0) > 0 ? "Evidence available" : "No data entered"}</td>
+          <td class="num">${s.status === "pending" ? "—" : s.count ?? 0}</td>
+        </tr>`
+          )
+          .join("")}
+      </table>`
+      )
+      .join("");
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(`<!doctype html><html><head><title>NAAC SSR Readiness Report</title>
+      <style>
+        body { font-family: Georgia, serif; color: #1e293b; margin: 40px; }
+        h1 { font-size: 22px; margin-bottom: 2px; }
+        .sub { color: #64748b; font-size: 12px; margin-bottom: 24px; }
+        h2 { font-size: 14px; margin: 22px 0 6px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
+        .pct { float: right; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #e2e8f0; }
+        th { text-transform: uppercase; font-size: 9px; letter-spacing: 0.05em; color: #64748b; }
+        .num { text-align: right; font-variant-numeric: tabular-nums; }
+        @media print { body { margin: 12mm; } }
+      </style></head><body>
+      <h1>NAAC SSR Readiness Report</h1>
+      <p class="sub">Overall readiness ${report.overallCompleteness}% · generated ${new Date(report.generatedAt).toLocaleString("en-IN")} · completeness = sources with evidence ÷ all mapped sources (pending modules included)</p>
+      ${rows}
+      </body></html>`);
+    win.document.close();
+    win.focus();
+    win.print();
+  };
 
   const exportCSV = () => {
     if (!report) return;
@@ -209,13 +411,47 @@ export default function SSRBuilderPage({ params }: { params: Promise<{ id: strin
               ))}
             </div>
 
-            {/* Day-10 exports placeholder */}
-            <div className="rounded-xl border border-dashed border-slate-200 px-4 py-3 flex items-center gap-3 text-slate-400">
-              <FileSpreadsheet size={15} className="shrink-0" />
-              <p className="text-xs">
-                Criterion-wise Excel in NAAC format, AISHE return and NIRF extract land in the next build step
-                (roadmap 7F-sub export hub).
+            {/* ── Export hub (roadmap 7F-sub) ── */}
+            <div className="bg-white border border-slate-200 rounded-xl p-4">
+              <h3 className="text-sm font-bold text-slate-900 mb-1">Export Hub</h3>
+              <p className="text-[11px] text-slate-400 mb-3">
+                Multi-sheet Excel workbooks (.xls) generated from live data — pending-module fields are labelled
+                with their roadmap phase, never silently zeroed.
               </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
+                <button onClick={exportWorkbook} disabled={!report || exporting !== null}
+                  className="flex items-center gap-2.5 rounded-lg border border-slate-200 hover:border-violet-300 hover:bg-violet-50/40 disabled:opacity-50 px-3 py-2.5 text-left transition-colors">
+                  {exporting === "workbook" ? <Loader2 size={16} className="animate-spin text-violet-600 shrink-0" /> : <FileSpreadsheet size={16} className="text-violet-600 shrink-0" />}
+                  <span>
+                    <span className="block text-xs font-semibold text-slate-800">SSR Evidence Workbook</span>
+                    <span className="block text-[10px] text-slate-400">One sheet per criterion</span>
+                  </span>
+                </button>
+                <button onClick={exportAISHE} disabled={exporting !== null}
+                  className="flex items-center gap-2.5 rounded-lg border border-slate-200 hover:border-violet-300 hover:bg-violet-50/40 disabled:opacity-50 px-3 py-2.5 text-left transition-colors">
+                  {exporting === "aishe" ? <Loader2 size={16} className="animate-spin text-violet-600 shrink-0" /> : <Globe2 size={16} className="text-sky-600 shrink-0" />}
+                  <span>
+                    <span className="block text-xs font-semibold text-slate-800">AISHE Annual Return</span>
+                    <span className="block text-[10px] text-slate-400">Enrollment · staff · finance</span>
+                  </span>
+                </button>
+                <button onClick={exportNIRF} disabled={exporting !== null}
+                  className="flex items-center gap-2.5 rounded-lg border border-slate-200 hover:border-violet-300 hover:bg-violet-50/40 disabled:opacity-50 px-3 py-2.5 text-left transition-colors">
+                  {exporting === "nirf" ? <Loader2 size={16} className="animate-spin text-violet-600 shrink-0" /> : <FileSpreadsheet size={16} className="text-emerald-600 shrink-0" />}
+                  <span>
+                    <span className="block text-xs font-semibold text-slate-800">NIRF Data Extract</span>
+                    <span className="block text-[10px] text-slate-400">Available parameters + gaps</span>
+                  </span>
+                </button>
+                <button onClick={printReport} disabled={!report}
+                  className="flex items-center gap-2.5 rounded-lg border border-slate-200 hover:border-violet-300 hover:bg-violet-50/40 disabled:opacity-50 px-3 py-2.5 text-left transition-colors">
+                  <Printer size={16} className="text-slate-600 shrink-0" />
+                  <span>
+                    <span className="block text-xs font-semibold text-slate-800">Readiness Report (PDF)</span>
+                    <span className="block text-[10px] text-slate-400">Print dialog → Save as PDF</span>
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         ) : null}
