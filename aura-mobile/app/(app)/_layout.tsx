@@ -12,7 +12,11 @@ import { colors } from "@/lib/theme";
 export default function AppLayout() {
   const { session, identity, loading } = useAuth();
 
-  if (loading) {
+  // Hold on a loader until the role is resolved. Without this, a freshly
+  // logged-in session has session-but-no-identity for a moment, the tier
+  // would default to "student", and the bar would briefly show the student
+  // tab set before snapping to the real role — the flash of wrong tabs.
+  if (loading || (session && !identity)) {
     return (
       <View style={styles.center}>
         <ActivityIndicator color={colors.violet} size="large" />
