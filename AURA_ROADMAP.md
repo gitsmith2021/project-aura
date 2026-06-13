@@ -210,7 +210,7 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 | 🔲 Phase 7D | Platform Health & Audit | Pending | — |
 | 🔲 Phase 7E | SaaS Subscription & Billing Management | Pending | — |
 | 🔲 Phase 7F | IQAC & Govt Compliance Reports (NAAC/NIRF/AISHE) | Pending | — |
-| 🔲 Phase 7F-sub | NAAC SSR Builder + AISHE Return + NIRF Extract | Pending | — |
+| 🟡 Phase 7F-sub | NAAC SSR Builder — registry + readiness dashboard ✅ (`e254e47`) · Excel/AISHE/NIRF exports pending | In Progress | `e254e47` |
 | 🔲 Phase 7F-sub2 | IQAC Meeting & Action Tracker (NAAC 6.1) | Pending | — |
 | 🔲 Arch A1 | Fine-grained RLS Policies (HOD/STAFF/ADMIN) | Pending | — |
 | 🔲 Arch A2 | Testing Strategy (Vitest + Playwright) | Pending | — |
