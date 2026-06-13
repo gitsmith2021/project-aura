@@ -82,6 +82,8 @@
 
 #### ISO 27001 Security Audit Checklist (resolve during this step):
 - [ ] `docs/rls-policy-map.md` — document every table, its RLS policy, and which roles can read/write/delete
+  - Include the **intentional deny-all tables**: `razorpay_webhook_events` and `scheduler_error_logs` have RLS enabled with **no policies on purpose** — they are written exclusively through `createAdminClient()` (service role) and no client role should ever read them. The Supabase advisor flags this as "RLS Enabled No Policy" (INFO) — document the rationale here so audits don't mistake it for an oversight; add explicit deny-all policies only if/when the linter or a compliance requirement makes it mandatory (carry-over note from the 2026-06-12 advisor run).
+- [ ] **Enable leaked-password protection** (Supabase Auth → checks passwords against HaveIBeenPwned) — advisor WARN from 2026-06-12, one toggle in the dashboard. ⏸️ Deliberately deferred: requires the Supabase **Pro plan** — flip it as part of this step once the Pro upgrade is purchased.
 - [ ] Verify `createAdminClient()` (service role) is used only in server-only files — grep for any client-side usage
 - [ ] Run `EXPLAIN ANALYZE` on the 10 most-used queries and document results in `docs/query-performance.md`
 - [ ] Confirm all Supabase Storage buckets have RLS enabled — no public buckets for sensitive data
