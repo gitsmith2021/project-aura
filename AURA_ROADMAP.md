@@ -158,6 +158,7 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 | ✅ Phase 2D | Year Promotion & Graduation Workflow | Complete | — |
 | ✅ Phase 2E | CIA / Internal Assessment Ledger (NAAC) | Complete | `1df3ab8` |
 | ✅ Phase 2E+ | CIA Assessment Engine — weighted results, compute → publish (`cia_results`) | Complete | `aa1a694` |
+| ✅ Phase 2E++ | CO/PO Outcome Mapping & Attainment (OBE — NBA/NAAC) | Complete | `2b65093` |
 | ✅ Phase 2F | Syllabus & Curriculum Management | Complete | `f938ff0` |
 | ✅ Phase 2G | Teacher Lesson Plan / Daily Diary | Complete | `986bfd2` |
 | ✅ Phase 2H | Guest Lecture & Expert Talk Management | Complete | `76ac333` |
