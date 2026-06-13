@@ -122,7 +122,7 @@ Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
 Phase 7    ████████████████░░░░░░░░░░░░░░░░  50%  (4/8  — 7A ✅ · 7B ✅ · 7C ✅ · 7F-sub SSR Builder ✅)
 Phase 8    █████░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%  (1/6  — 8A ✅ · 8B/8C screens built · NFC/push/CCTV/Parent pending)
-Arch       ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%  (1/8  — Audit Log ✅ · RLS, Testing, Indexes, CI/CD, Billing pending)
+Arch       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░  19%  (1/8 + A2 🟡 — Audit Log ✅ · Test infra (Vitest+Playwright) foundation · RLS, Indexes, CI/CD, Billing pending)
 ```
 
 > **Next up:** Phase 3A — Notification Infrastructure (see [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md)). Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
@@ -213,7 +213,7 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 | ✅ Phase 7F-sub | NAAC SSR Builder — registry, readiness dashboard, Excel workbook + AISHE return + NIRF extract + print-PDF report | Complete | `3944ed7` |
 | 🔲 Phase 7F-sub2 | IQAC Meeting & Action Tracker (NAAC 6.1) | Pending | — |
 | 🔲 Arch A1 | Fine-grained RLS Policies (HOD/STAFF/ADMIN) | Pending | — |
-| 🔲 Arch A2 | Testing Strategy (Vitest + Playwright) | Pending | — |
+| 🟡 Arch A2 | Testing Strategy — Vitest + Playwright infra, assessment-engine unit tests (CIA/CO-PO/role), public-route smoke crawl, `docs/testing-guide.md` (retroactive action coverage + authed e2e flows progressive) | Foundation | `ea779f2`+ |
 | 🔲 Arch A3 | Database Index Strategy | Pending | — |
 | 🔲 Arch A4 | Institution Onboarding Wizard | Pending | — |
 | 🔲 Arch A5 | CI/CD Pipeline (GitHub Actions) | Pending | — |
