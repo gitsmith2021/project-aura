@@ -26,7 +26,7 @@ export default async function AdminStaffSalary({ params }: { params: Promise<{ s
 
   const { data: staff } = await supabase
     .from("staff")
-    .select("full_name, title, designation, departments(name)")
+    .select("full_name, title, designation, departments!department_id(name)")
     .eq("id", staffId).single();
   if (!staff) redirect("/users/staff");
 

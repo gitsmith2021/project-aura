@@ -35,7 +35,7 @@ export async function getSalaryStructures(
 
     const { data, error } = await supabase
       .from("salary_structures")
-      .select("*, staff(full_name, title, designation, department_id, departments(name))")
+      .select("*, staff(full_name, title, designation, department_id, departments!department_id(name))")
       .eq("institution_id", institutionId)
       .eq("is_active", true)
       .order("staff(full_name)", { ascending: true });
@@ -70,7 +70,7 @@ export async function getStaffWithoutSalaryStructure(
 
     let query = supabase
       .from("staff")
-      .select("id, full_name, title, designation, department_id, departments(name)")
+      .select("id, full_name, title, designation, department_id, departments!department_id(name)")
       .eq("institution_id", institutionId)
       .eq("is_active", true)
       .order("full_name", { ascending: true });
@@ -143,7 +143,7 @@ export async function createSalaryStructure(
         other_deductions: payload.other_deductions,
         effective_from:   payload.effective_from,
       })
-      .select("*, staff(full_name, title, designation, department_id, departments(name))")
+      .select("*, staff(full_name, title, designation, department_id, departments!department_id(name))")
       .single();
 
     if (error) return { success: false, error: error.message };
@@ -182,7 +182,7 @@ export async function updateSalaryStructure(
       .from("salary_structures")
       .update(update)
       .eq("id", id)
-      .select("*, staff(full_name, title, designation, department_id, departments(name))")
+      .select("*, staff(full_name, title, designation, department_id, departments!department_id(name))")
       .single();
 
     if (error) return { success: false, error: error.message };

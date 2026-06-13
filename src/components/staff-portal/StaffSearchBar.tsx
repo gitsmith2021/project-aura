@@ -24,7 +24,7 @@ export function StaffSearchBar() {
     setLoaded(true);
     createClient()
       .from("staff")
-      .select("id, full_name, title, departments(name)")
+      .select("id, full_name, title, departments!department_id(name)")
       .eq("is_active", true)
       .order("full_name")
       .then(({ data }) => { if (data) setAll(data as unknown as StaffRow[]); });

@@ -42,7 +42,7 @@ export const getStaffProfile = cache(
 
       const { data, error } = await supabase
         .from("staff")
-        .select("id, full_name, title, designation, department_id, institution_id, employment_type, email, departments(name), institutions(name)")
+        .select("id, full_name, title, designation, department_id, institution_id, employment_type, email, departments!department_id(name), institutions(name)")
         .eq("email", user.email)
         .eq("is_active", true)
         .maybeSingle();

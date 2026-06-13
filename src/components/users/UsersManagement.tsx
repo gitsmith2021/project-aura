@@ -118,10 +118,13 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
     setLoading(true);
     const supabase = createClient();
     const table = role === "STAFF" ? "staff" : "students";
+    // departments embed must be disambiguated: departments.hod_id → staff is a
+    // second relationship, so PostgREST needs the FK column hint (department_id).
     const { data, error } = await supabase
       .from(table)
-      .select("*, departments(name, funding_type), institutions(name)")
+      .select("*, departments!department_id(name, funding_type), institutions(name)")
       .order("full_name", { ascending: true });
+    if (error) console.error(`[UsersManagement] ${table} query failed:`, error.message);
     if (!error && data) setPeople(data.map(p => ({ ...p, role })) as UsersManagementPerson[]);
     setLoading(false);
   };
