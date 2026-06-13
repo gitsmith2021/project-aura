@@ -108,11 +108,11 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 
 ## 📋 Overall Progress Tracker
 
-> **Last updated:** 2026-06-12  
-> **38 of 87 modules complete — 44% of full platform built**
+> **Last updated:** 2026-06-13  
+> **39 of 87 modules complete — 45% of full platform built**
 
 ```
-Overall  ██████████████░░░░░░░░░░░░░░░░░░░  44%  (38/87)
+Overall  ███████████████░░░░░░░░░░░░░░░░░  45%  (39/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
@@ -121,7 +121,7 @@ Phase 4    ░░░░░░░░░░░░░░░░░░░░░░░
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
 Phase 7    ████████████████░░░░░░░░░░░░░░░░  50%  (4/8  — 7A ✅ · 7B ✅ · 7C ✅ · 7F-sub SSR Builder ✅)
-Phase 8    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/6  — Mobile Apps & CCTV)
+Phase 8    █████░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%  (1/6  — 8A ✅ · 8B/8C screens built · NFC/push/CCTV/Parent pending)
 Arch       ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%  (1/8  — Audit Log ✅ · RLS, Testing, Indexes, CI/CD, Billing pending)
 ```
 
@@ -220,9 +220,9 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 | 🔲 Arch A6 | Multi-currency & Multi-timezone Support | Pending | — |
 | 🔲 Arch A7 | SaaS Billing — Minimal Viable (Trial + Expiry) | Pending | — |
 | ✅ Arch A8 | Platform-Wide Audit Log — `audit_logs` table + `logAudit()` helper | Complete | `b3c2ed0` |
-| 🟡 Phase 8A | React Native Setup — Expo app + role-adaptive shell + auth + portal screens (NFC deferred to Phase 4F + EAS) | Foundation | `301be79` |
-| 🔲 Phase 8B | Staff Mobile App + NFC | Pending | — |
-| 🔲 Phase 8C | Student Mobile App | Pending | — |
+| ✅ Phase 8A | React Native Setup — Expo SDK 54 + role-adaptive bottom-tab shell (all 6 roles) + Supabase auth + portal screens | Complete | `301be79` · tabs `fd762bd` · SDK54 `841bd2c` |
+| 🟡 Phase 8B | Staff Mobile — Home, Schedule, Leave (apply), Payslip, Attendance view + admin/HOD Approvals; NFC marking deferred (Phase 4F + EAS) | Screens built | `64246fd` |
+| 🟡 Phase 8C | Student Mobile — Home, Timetable, Attendance, Fees; in-app Razorpay pay + notification inbox pending | Screens built | `64246fd` |
 | 🔲 Phase 8D | Push Notifications (Staff + Student + Parent) | Pending | — |
 | 🔲 Phase 8E | CCTV Integration | Pending | — |
 | 🔲 Phase 8F | Parent Mobile App | Pending | — |
@@ -302,3 +302,5 @@ SUPABASE_DB_URL=
 *Last updated: 2026-06-10 — ERP Standards gap audit completed. Added Phase 2.5 (Razorpay webhook security, DPDP 2023 privacy, backup & scheduler resilience). Added Global ERP Standards register + Architecture & Quality register (8 items). Added 5A-sub (Admissions CRM), 5C-sub (Statutory Payroll — TDS/PF/ESI/Form 16), 4E-sub (Vendor & Purchase Orders), 7F-sub (NAAC SSR Builder + AISHE + NIRF). Closed all ERP gaps: Step 5L (Department Budget Management — NAAC 6.4), Phase 6G expanded to full LMS (SCORM + assignments + gradebook), Phase 7D expanded with ISO 27001 security audit checklist, Phase 7F expanded with AISHE field-level schema + IQAC Meeting & Action Tracker (NAAC 6.1). Added Arch A8 — Platform-Wide Audit Log (`audit_logs` table, `logAudit()` helper, append-only, NAAC/UGC/ISO 27001 compliant — resolves audit trail gap). Extended Dev Rules 10 → 17. Total: **87 tracked modules** across Foundation Migrations + 9 phases + Architecture track. Every NAAC criterion mapped. Next: Phase 2.5A — Razorpay Webhook Security Fix.*
 
 *This roadmap was split into [`roadmap/`](roadmap/) on 2026-06-12 for readability — each phase now lives in its own file with a "Depends on / Feeds into" note. See the Roadmap Index above.*
+
+*Update 2026-06-13 — **Mobile:** Phase 8A complete (Expo SDK 54, role-adaptive bottom tabs for all 6 roles, Supabase auth, portal screens); 8B/8C screens built (staff Leave/Payslip/Schedule/Attendance view + admin & HOD leave Approvals; student Dashboard/Timetable/Attendance/Fees) — NFC marking, push, in-app pay, CCTV and the Parent app remain deferred. **Web hardening (this session):** codebase audit + schema/code drift repairs (`57919e9`), PRINCIPAL role end-to-end + staff CIA marks entry (`b212733`), staff↔departments PostgREST embed disambiguation fix — repaired the empty admin Staff page and the staff-portal redirect loop (`a1af19a`), sidebar overhaul + collapse persistence (`a1af19a`), staff leave RLS fix (`1f21402`), web sidebar role-nav fix (`4ace308`). **Next new module:** Phase 3A — Notification Infrastructure.*

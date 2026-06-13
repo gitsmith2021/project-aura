@@ -89,8 +89,9 @@ Fable 5 is included in Pro/Max/Team plans until June 22 — but it counts
 [x] 8   📚  CO/PO outcome mapping + attainment reports (OBE)
 [x] 9   🏛️  NAAC SSR Builder scaffold (roadmap 7F-sub: registry + readiness)
 [x] 10  🏛️  NAAC SSR exports (Excel workbook, AISHE return, NIRF extract, print report)
-[~] 11  📱  Phase 8A — Aura Mobile foundation (Expo + role-adaptive shell + auth + portal screens; NFC/push deferred) — built with Opus
-[ ] —   ⏳  Remaining: NFC (Phase 4F), push (Phase 3), CCTV/online-pay, Parent app (Phase 6A)
+[x] 11  📱  Phase 8A — Aura Mobile foundation (Expo SDK 54 + role-adaptive bottom tabs, all 6 roles + auth + portal screens) — Opus
+[~] 12  📱  Phase 8B/8C screens — staff Leave/Payslip/Schedule, admin+HOD Approvals, student Dashboard/Fees/Attendance — Opus
+[ ] —   ⏳  Remaining: NFC (Phase 4F + EAS), push (Phase 3), in-app pay, CCTV, Parent app (Phase 6A)
 ─────────────────────────────────────────────────────
 After the free window → Switch to Opus 4.8 / Sonnet 4.6 for Tier 2 & 3
 ```
@@ -190,7 +191,7 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 | Super Admin Dashboard | Fable 5 | ✅ Complete (7A+7B `24f64f1` · 7C drill-down `d21e9bd`) | `d21e9bd` |
 | CIA Assessment Engine | Fable 5 | ✅ Complete — engine `aa1a694` + CO/PO mapping & attainment `2b65093` (June 12) | `2b65093` |
 | NAAC SSR Builder | Fable 5 | ✅ Complete — scaffold `e254e47` + export hub (Excel/AISHE/NIRF/PDF) `3944ed7` | `3944ed7` |
-| React Native + NFC Setup | Opus 4.8 | 🟡 Foundation — Expo app + role-adaptive shell + auth + portal screens (NFC/push deferred) | `301be79` |
+| React Native Mobile (8A + 8B/8C screens) | Opus 4.8 | ✅ 8A complete · 8B/8C screens built — Expo SDK 54, role-adaptive tabs (6 roles), staff Leave/Payslip/Schedule, admin/HOD Approvals, student Dashboard/Fees/Attendance (NFC/push/CCTV/Parent deferred) | `301be79` · `fd762bd` · `64246fd` |
 | Notifications Infrastructure | Opus/Sonnet | 🔲 Pending | — |
 | Notification Triggers | Opus/Sonnet | 🔲 Pending | — |
 | Resend Email Integration | Opus/Sonnet | 🔲 Pending | — |
@@ -204,5 +205,5 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 
 ---
 
-*Fable 5 free window active until June 22, 2026 — running well ahead of schedule (9 of 11 modules done).*
+*Fable 5 free window active until June 22, 2026 — running well ahead of schedule. All 10 Tier‑1 web/data modules complete; mobile (module 11) built on Opus — Phase 8A done + 8B/8C screens built; NFC/push/CCTV/Parent remain.*
 *Reference: AURA_ROADMAP.md for full technical specifications per module*

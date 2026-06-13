@@ -9,17 +9,17 @@
 
 > **Goal:** A native mobile app for staff and students. Primary use cases: NFC-based attendance marking, live CCTV feed access, push notifications, and a mobile-optimized portal experience.
 
-### Step 8A — React Native Project Setup  🟡 Foundation (commit `301be79`)
+### Step 8A — React Native Project Setup  ✅ Complete (commit `301be79` · role tabs `fd762bd` · SDK 54 `841bd2c` · screens `64246fd`)
 
 > **Decision:** ONE unified, role-adaptive app (not separate per-role apps) serving
 > all six roles — login detects the `institution_members` role and renders the
-> matching experience, mirroring the web. Built with **Expo SDK 52 + Expo Router**.
+> matching experience, mirroring the web. Built with **Expo SDK 54 + Expo Router**.
 > NFC/push/CCTV/online-pay deferred (need Phase 4F / Phase 3 / native EAS builds).
 > Scaffolded without a device — first on-device `expo start` is the real test.
 > See `aura-mobile/README.md`.
 
 #### What to build:
-- [x] Initialize Expo project (manual scaffold equivalent to `create-expo-app`, SDK 52 + Expo Router)
+- [x] Initialize Expo project (manual scaffold equivalent to `create-expo-app`, SDK 54 + Expo Router)
 - [x] Folder: `/aura-mobile` at monorepo root (alongside `/aura-scheduler-engine`)
 - [x] Install dependencies (declared in `package.json`):
   * [x] `@supabase/supabase-js`
@@ -34,33 +34,38 @@
 
 ---
 
-### Step 8B — Staff Mobile App
+### Step 8B — Staff Mobile App  🟡 Screens built (commit `64246fd`) — NFC deferred
+
+> Built under Expo Router as `aura-mobile/app/(app)/*` (not the literal paths
+> below). Staff self-service is functional; NFC marking is deferred to Phase 4F
+> + an EAS dev client.
 
 #### Screens to build:
-- [ ] `screens/auth/LoginScreen.tsx` — Email + password login
-- [ ] `screens/home/StaffHomeScreen.tsx` — Dashboard with today's classes
-- [ ] `screens/schedule/ScheduleScreen.tsx` — Weekly timetable
-- [ ] `screens/attendance/NFCAttendanceScreen.tsx`:
+- [x] Login (`app/login.tsx`) — Email + password login
+- [x] Staff Home (`app/(app)/home.tsx` → `StaffHome`) — today's classes + leave summary
+- [x] Schedule (`app/(app)/schedule.tsx`) — weekly timetable
+- [ ] `NFCAttendanceScreen` — NFC scan to mark present *(deferred — Phase 4F + EAS)*:
   * NFC scan mode — tap student card to mark present
   * Shows active class info (subject, time, room)
   * Live counter: marked / total students
   * Manual fallback: searchable student list
   * Calls `/api/attendance/nfc` webhook
-- [ ] `screens/attendance/ManualAttendanceScreen.tsx` — Checklist of students
-- [ ] `screens/leave/LeaveScreen.tsx` — Apply and track leave
-- [ ] `screens/salary/SalaryScreen.tsx` — View payslip
+- [x] Attendance view (`app/(app)/attendance.tsx`) — read-only attendance summary *(manual marking checklist still pending)*
+- [x] Leave (`app/(app)/leave.tsx`) — apply and track leave
+- [x] Payslip (`app/(app)/payslip.tsx`) — view salary structure + disbursements
+- [x] **Approvals (`app/(app)/approvals.tsx`)** — admin/HOD review (approve/reject) leave requests *(added beyond original spec)*
 
 ---
 
-### Step 8C — Student Mobile App
+### Step 8C — Student Mobile App  🟡 Screens built (commit `64246fd`) — in-app pay + inbox pending
 
 #### Screens to build:
-- [ ] `screens/home/StudentHomeScreen.tsx` — Dashboard with attendance summary
-- [ ] `screens/timetable/TimetableScreen.tsx` — Department timetable
-- [ ] `screens/attendance/AttendanceScreen.tsx` — Per-subject attendance rings
-- [ ] `screens/fees/FeesScreen.tsx` — Dues + payment history
-- [ ] `screens/fees/PayScreen.tsx` — Razorpay payment
-- [ ] `screens/notifications/NotificationsScreen.tsx` — Push notification inbox
+- [x] Student Home (`app/(app)/home.tsx` → `StudentHome`) — attendance % + fees-due summary
+- [x] Timetable (`app/(app)/schedule.tsx`) — department timetable
+- [x] Attendance (`app/(app)/attendance.tsx`) — per-subject attendance
+- [x] Fees (`app/(app)/fees.tsx`) — dues + payment history
+- [ ] `PayScreen` — in-app Razorpay payment *(pending — web Pay page already exists)*
+- [ ] `NotificationsScreen` — push notification inbox *(pending — needs Phase 3 + 8D)*
 
 ---
 
