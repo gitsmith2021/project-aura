@@ -200,18 +200,33 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const [userAuth, setUserAuth] = useState<{ role: string; tenant_id: string; department_id: string } | null>(null);
 
   useEffect(() => {
-    const cookiesList = document.cookie.split("; ");
-    const roleCookie = cookiesList.find(row => row.startsWith("aura-role="));
-    const currentRole = roleCookie ? roleCookie.split("=")[1] : null;
-    setRole(currentRole);
-
-    if (currentRole === "hod") {
-      const supabase = createClient();
-      supabase.rpc("get_user_authorizations").then(({ data }) => {
-        if (data && data.length > 0) setUserAuth(data[0]);
-      });
-    }
-  }, [pathname]);
+    // The access-tier cookie (aura-role) is httpOnly, so it is NOT readable from
+    // document.cookie — reading it here always yielded null, which collapsed
+    // every non-admin into the admin sidebar. Resolve the real role from the
+    // authoritative RPC instead; fall back to the readable label cookie only if
+    // the user has no institution_members row.
+    let active = true;
+    const supabase = createClient();
+    supabase.rpc("get_user_authorizations").then(({ data }) => {
+      if (!active) return;
+      const row = data && data.length > 0 ? data[0] : null;
+      if (row?.role) {
+        const r = String(row.role);
+        const tier =
+          r === "STAFF" ? "staff" :
+          r === "STUDENT" ? "student" :
+          (r === "HOD" || r === "DEPARTMENT_HEAD") ? "hod" : "admin";
+        setRole(tier);
+        if (tier === "hod") setUserAuth(row);
+        return;
+      }
+      // Fallback: non-httpOnly display label set at login (Staff/Student/HOD/Admin/…)
+      const label = document.cookie.split("; ").find(c => c.startsWith("aura-role-label="));
+      const v = label ? decodeURIComponent(label.split("=")[1] ?? "") : "";
+      setRole(v === "Staff" ? "staff" : v === "Student" ? "student" : v === "HOD" ? "hod" : v ? "admin" : null);
+    });
+    return () => { active = false; };
+  }, []);
 
   const isStaffPortal = pathname.startsWith("/staff-portal") && !pathname.startsWith("/staff-portal/view") && role === "staff";
 
