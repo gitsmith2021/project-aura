@@ -88,7 +88,7 @@ Fable 5 is included in Pro/Max/Team plans until June 22 — but it counts
 [x] 7   📚  CIA Assessment Engine — weighted results + publish flow
 [x] 8   📚  CO/PO outcome mapping + attainment reports (OBE)
 [x] 9   🏛️  NAAC SSR Builder scaffold (roadmap 7F-sub: registry + readiness)
-[ ] 10  🏛️  NAAC SSR exports (Excel workbook, AISHE return, NIRF extract, print report)
+[x] 10  🏛️  NAAC SSR exports (Excel workbook, AISHE return, NIRF extract, print report)
 [ ] 11  📱  Phase 8A — React Native Setup + NFC scaffold
 [ ] —   ⏳  Remaining window → Tier 1 refinements / Tier 2 work
 ─────────────────────────────────────────────────────
@@ -189,7 +189,7 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 | Platform Audit Log (A8) | Fable 5 | ✅ Complete (June 12) | `b3c2ed0` |
 | Super Admin Dashboard | Fable 5 | ✅ Complete (7A+7B `24f64f1` · 7C drill-down `d21e9bd`) | `d21e9bd` |
 | CIA Assessment Engine | Fable 5 | ✅ Complete — engine `aa1a694` + CO/PO mapping & attainment `2b65093` (June 12) | `2b65093` |
-| NAAC SSR Builder | Fable 5 | ✅ Scaffold (June 12) — registry, readiness dashboard, CSV; exports = Day 10 | `e254e47` |
+| NAAC SSR Builder | Fable 5 | ✅ Complete — scaffold `e254e47` + export hub (Excel/AISHE/NIRF/PDF) `3944ed7` | `3944ed7` |
 | React Native + NFC Setup | Fable 5 | 🔲 Pending | — |
 | Notifications Infrastructure | Opus/Sonnet | 🔲 Pending | — |
 | Notification Triggers | Opus/Sonnet | 🔲 Pending | — |

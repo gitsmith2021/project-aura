@@ -109,10 +109,10 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-12  
-> **37 of 87 modules complete — 43% of full platform built**
+> **38 of 87 modules complete — 44% of full platform built**
 
 ```
-Overall  ██████████████░░░░░░░░░░░░░░░░░░░  43%  (37/87)
+Overall  ██████████████░░░░░░░░░░░░░░░░░░░  44%  (38/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
@@ -120,7 +120,7 @@ Phase 3    ░░░░░░░░░░░░░░░░░░░░░░░
 Phase 4    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/12 — Campus Infrastructure + Vendor POs)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
-Phase 7    ████████████░░░░░░░░░░░░░░░░░░░░  38%  (3/8  — 7A Auth ✅ · 7B Overview ✅ · 7C Drill Down ✅)
+Phase 7    ████████████████░░░░░░░░░░░░░░░░  50%  (4/8  — 7A ✅ · 7B ✅ · 7C ✅ · 7F-sub SSR Builder ✅)
 Phase 8    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/6  — Mobile Apps & CCTV)
 Arch       ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%  (1/8  — Audit Log ✅ · RLS, Testing, Indexes, CI/CD, Billing pending)
 ```
@@ -210,7 +210,7 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 | 🔲 Phase 7D | Platform Health & Audit | Pending | — |
 | 🔲 Phase 7E | SaaS Subscription & Billing Management | Pending | — |
 | 🔲 Phase 7F | IQAC & Govt Compliance Reports (NAAC/NIRF/AISHE) | Pending | — |
-| 🟡 Phase 7F-sub | NAAC SSR Builder — registry + readiness dashboard ✅ (`e254e47`) · Excel/AISHE/NIRF exports pending | In Progress | `e254e47` |
+| ✅ Phase 7F-sub | NAAC SSR Builder — registry, readiness dashboard, Excel workbook + AISHE return + NIRF extract + print-PDF report | Complete | `3944ed7` |
 | 🔲 Phase 7F-sub2 | IQAC Meeting & Action Tracker (NAAC 6.1) | Pending | — |
 | 🔲 Arch A1 | Fine-grained RLS Policies (HOD/STAFF/ADMIN) | Pending | — |
 | 🔲 Arch A2 | Testing Strategy (Vitest + Playwright) | Pending | — |
