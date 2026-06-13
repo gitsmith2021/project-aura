@@ -3,11 +3,12 @@ import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth, type Identity } from "@/context/AuthContext";
 import { roleLabel } from "@/lib/roles";
-import { Card, StatCard, Loading, ErrorNote } from "@/components/ui";
+import { Card, StatCard, SectionTitle, Loading, ErrorNote } from "@/components/ui";
 import { colors, radius, spacing, inr } from "@/lib/theme";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const todayName = () => DAY_NAMES[new Date().getDay()];
+const intFmt = new Intl.NumberFormat("en-IN");
 
 function Greeting({ identity }: { identity: Identity }) {
   return (
@@ -125,12 +126,15 @@ export function AdminHome({ identity }: { identity: Identity }) {
   return <OversightHome identity={identity} scope="institution" />;
 }
 
+type DeptRow = { id: string; name: string; students: number; staff: number };
+
 function OversightHome({ identity, scope }: { identity: Identity; scope: "institution" | "department" }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [students, setStudents] = useState<number | null>(null);
   const [staff, setStaff] = useState<number | null>(null);
   const [instName, setInstName] = useState<string | null>(null);
+  const [depts, setDepts] = useState<DeptRow[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -140,18 +144,31 @@ function OversightHome({ identity, scope }: { identity: Identity; scope: "instit
           .eq("institution_id", identity.institutionId);
         const staffQ = supabase.from("staff").select("id", { count: "exact", head: true })
           .eq("institution_id", identity.institutionId);
+        const deptQ = supabase.from("departments")
+          .select("id, name, students:students!department_id(count), staff:staff!department_id(count)")
+          .eq("institution_id", identity.institutionId)
+          .order("name");
         if (scope === "department" && identity.departmentId) {
           studentQ.eq("department_id", identity.departmentId);
           staffQ.eq("department_id", identity.departmentId);
+          deptQ.eq("id", identity.departmentId);
         }
-        const [s, st, inst] = await Promise.all([
+        const [s, st, inst, d] = await Promise.all([
           studentQ,
           staffQ,
           supabase.from("institutions").select("name").eq("id", identity.institutionId).maybeSingle(),
+          deptQ,
         ]);
         setStudents(s.count ?? 0);
         setStaff(st.count ?? 0);
         setInstName(inst.data?.name ?? null);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setDepts(((d.data ?? []) as any[]).map((row) => ({
+          id: row.id,
+          name: row.name,
+          students: row.students?.[0]?.count ?? 0,
+          staff: row.staff?.[0]?.count ?? 0,
+        })).sort((a, b) => b.students - a.students));
       } catch (e) {
         setError(e instanceof Error ? e.message : "Could not load overview.");
       } finally {
@@ -172,7 +189,22 @@ function OversightHome({ identity, scope }: { identity: Identity; scope: "instit
         <View style={{ width: spacing.md }} />
         <StatCard label={scope === "department" ? "Dept Staff" : "Staff"} value={staff == null ? "—" : String(staff)} accent={colors.amber} />
       </View>
-      <Card>
+      {depts.length > 0 ? (
+        <>
+          <SectionTitle>{scope === "department" ? "Department" : "Departments"}</SectionTitle>
+          {depts.map((d) => (
+            <View key={d.id} style={styles.deptRow}>
+              <Text style={styles.deptName} numberOfLines={1}>{d.name}</Text>
+              <View style={styles.deptCounts}>
+                <Text style={styles.deptCount}>{intFmt.format(d.students)}<Text style={styles.deptCountLabel}> stu</Text></Text>
+                <Text style={styles.deptCount}>{intFmt.format(d.staff)}<Text style={styles.deptCountLabel}> staff</Text></Text>
+              </View>
+            </View>
+          ))}
+        </>
+      ) : null}
+
+      <Card style={{ marginTop: spacing.md }}>
         <Text style={styles.note}>
           {scope === "institution"
             ? "Full administration — analytics, finance, NAAC/SSR exports and configuration — lives on the Aura web dashboard. This mobile view is for on-the-go oversight."
@@ -191,5 +223,14 @@ const styles = StyleSheet.create({
   roleBadgeText: { color: colors.violetDark, fontSize: 11, fontWeight: "700" },
   instName: { fontSize: 13, color: colors.textMuted, marginTop: -spacing.md, marginBottom: spacing.md },
   statRow: { flexDirection: "row", marginBottom: spacing.sm },
+  deptRow: {
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border,
+    borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 10, marginBottom: spacing.xs,
+  },
+  deptName: { fontSize: 13, fontWeight: "600", color: colors.text, flex: 1, marginRight: spacing.sm },
+  deptCounts: { flexDirection: "row", gap: spacing.md },
+  deptCount: { fontSize: 13, fontWeight: "700", color: colors.text, fontVariant: ["tabular-nums"] },
+  deptCountLabel: { fontSize: 11, fontWeight: "400", color: colors.textFaint },
   note: { fontSize: 13, color: colors.textMuted, lineHeight: 19 },
 });

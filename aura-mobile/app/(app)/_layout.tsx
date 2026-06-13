@@ -29,10 +29,12 @@ export default function AppLayout() {
   const tier = identity?.tier ?? "student";
   const isStudent = tier === "student";
   const isStaff = tier === "staff";
+  const isAdminOrHod = tier === "admin" || tier === "hod";
 
   // `href: null` removes a tab from the bar for roles that shouldn't see it.
   const studentOnly = isStudent ? undefined : null;
   const staffOnly = isStaff ? undefined : null;
+  const adminOnly = isAdminOrHod ? undefined : null;
 
   return (
     <Tabs
@@ -76,6 +78,30 @@ export default function AppLayout() {
           title: "Schedule",
           href: staffOnly,
           tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="leave"
+        options={{
+          title: "Leave",
+          href: staffOnly,
+          tabBarIcon: ({ color, size }) => <Ionicons name="exit-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="payslip"
+        options={{
+          title: "Payslip",
+          href: staffOnly,
+          tabBarIcon: ({ color, size }) => <Ionicons name="cash-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="approvals"
+        options={{
+          title: "Approvals",
+          href: adminOnly,
+          tabBarIcon: ({ color, size }) => <Ionicons name="checkbox-outline" color={color} size={size} />,
         }}
       />
       <Tabs.Screen
