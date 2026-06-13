@@ -1,11 +1,28 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, ShieldCheck, Loader2, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { updatePersonProfile } from "@/actions/user";
+import {
+  updatePersonProfile, getStaffMembershipRole, setStaffMembershipRole,
+  type GovernanceRole,
+} from "@/actions/user";
 import { fundingTypeShortLabel } from "@/lib/deptFunding";
 import { studentProgramLabel, yearOptionsForProgram, type StudentProgram } from "@/lib/studentProgram";
+
+// Roles assignable from this screen. HOD is department-driven; Super Admin is platform-level.
+const GOVERNANCE_OPTIONS: { value: GovernanceRole; label: string; hint: string }[] = [
+  { value: "STAFF",      label: "Staff",     hint: "Teaching / self-service portal only" },
+  { value: "PRINCIPAL",  label: "Principal", hint: "Institution-wide leadership access" },
+  { value: "INST_ADMIN", label: "Admin",     hint: "Full institution administration" },
+];
+
+function viewerCanManageRoles(): boolean {
+  if (typeof document === "undefined") return false;
+  const c = document.cookie.split("; ").find((x) => x.startsWith("aura-role-label="));
+  const label = c ? decodeURIComponent(c.split("=")[1] ?? "") : "";
+  return label === "Admin" || label === "Principal" || label === "Super Admin";
+}
 
 export type PersonEditPayload = {
   id: string;
@@ -37,6 +54,16 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
   const [departments, setDepartments] = useState<{ id: string; name: string; funding_type?: string | null }[]>([]);
   const [tenantName, setTenantName] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Governance role (staff only)
+  const [canManageRoles, setCanManageRoles] = useState(false);
+  const [govRole, setGovRole] = useState<GovernanceRole | null>(null);
+  const [govCurrent, setGovCurrent] = useState<string | null>(null);
+  const [govLocked, setGovLocked] = useState<string | null>(null); // e.g. "HOD" — managed elsewhere
+  const [govNoLogin, setGovNoLogin] = useState(false);
+  const [govSaving, setGovSaving] = useState(false);
+  const [govSaved, setGovSaved] = useState(false);
+  const [govError, setGovError] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -73,10 +100,43 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
         if (data?.name) setTenantName(data.name);
       });
 
+    // Governance role: only for staff, only for admin/principal viewers
+    setGovSaved(false);
+    setGovError(null);
+    setGovLocked(null);
+    setGovNoLogin(false);
+    const manage = person.role === "STAFF" && viewerCanManageRoles();
+    setCanManageRoles(manage);
+    if (manage) {
+      getStaffMembershipRole(person.id).then((res) => {
+        if (!res.success) { setGovError(res.error); return; }
+        if (!res.hasLogin) { setGovNoLogin(true); return; }
+        if (res.role === "HOD" || res.role === "DEPARTMENT_HEAD") { setGovLocked("HOD"); return; }
+        if (res.role === "SUPER_ADMIN") { setGovLocked("Super Admin"); return; }
+        setGovCurrent(res.role);
+        setGovRole((res.role as GovernanceRole) ?? "STAFF");
+      });
+    }
+
     return () => {
       document.body.style.overflow = "unset";
     };
   }, [isOpen, person]);
+
+  const handleSaveRole = async () => {
+    if (!person || !govRole) return;
+    setGovSaving(true);
+    setGovError(null);
+    const res = await setStaffMembershipRole({
+      staffId: person.id,
+      institutionId: person.institution_id,
+      role: govRole,
+    });
+    setGovSaving(false);
+    if (!res.success) { setGovError(res.error); return; }
+    setGovCurrent(govRole);
+    setGovSaved(true);
+  };
 
   if (!mounted) return null;
 
@@ -146,6 +206,50 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
                 <span className="font-semibold text-slate-700">Institution:</span> {tenantName || "—"}
               </p>
             </div>
+
+            {canManageRoles && (
+              <div className="rounded-lg border border-violet-200 bg-violet-50/50 px-3 py-2.5 space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck size={13} className="text-violet-600" />
+                  <span className="text-xs font-semibold text-slate-700">Institution Role</span>
+                </div>
+                {govNoLogin ? (
+                  <p className="text-[11px] text-amber-600">
+                    No login account yet — enable portal access to assign a role.
+                  </p>
+                ) : govLocked ? (
+                  <p className="text-[11px] text-slate-500">
+                    Current role: <strong>{govLocked}</strong>.{" "}
+                    {govLocked === "HOD" ? "Manage from the Departments page." : "Managed at platform level."}
+                  </p>
+                ) : (
+                  <>
+                    <select
+                      value={govRole ?? "STAFF"}
+                      onChange={(e) => { setGovRole(e.target.value as GovernanceRole); setGovSaved(false); }}
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-xs appearance-none"
+                    >
+                      {GOVERNANCE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                    <p className="text-[10px] text-slate-400">
+                      {GOVERNANCE_OPTIONS.find((o) => o.value === govRole)?.hint}
+                    </p>
+                    {govError && <p className="text-[10px] text-rose-500">{govError}</p>}
+                    <button
+                      type="button"
+                      onClick={handleSaveRole}
+                      disabled={govSaving || govRole === govCurrent}
+                      className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-md bg-violet-600 hover:bg-violet-700 disabled:opacity-40 text-white transition-colors"
+                    >
+                      {govSaving ? <Loader2 size={11} className="animate-spin" /> : govSaved ? <Check size={11} /> : <ShieldCheck size={11} />}
+                      {govSaved && govRole === govCurrent ? "Role updated" : "Update role"}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="space-y-1">
               <label className="block text-xs font-medium text-slate-700">Full Name</label>

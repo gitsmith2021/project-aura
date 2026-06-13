@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { roleLabel } from "@/lib/roleLabel";
 
 // Server-to-server endpoints with no cookie session. Webhooks authenticate
 // their own requests (Razorpay: HMAC signature, NFC: bearer secret); the
@@ -99,8 +100,13 @@ export async function updateSession(request: NextRequest) {
       .eq("profile_id", user.id)
       .maybeSingle();
 
+    let memberRole: string | undefined = memberRow?.role;
+
     if (memberRow) {
-      if (memberRow.role === "SUPER_ADMIN" || memberRow.role === "INST_ADMIN") {
+      // PRINCIPAL is institution-wide leadership → same "admin" access tier as
+      // INST_ADMIN (the DB normalizes it too); its distinct identity is carried
+      // by the aura-role-label cookie set below.
+      if (memberRow.role === "SUPER_ADMIN" || memberRow.role === "INST_ADMIN" || memberRow.role === "PRINCIPAL") {
         role = "admin";
       } else if (memberRow.role === "HOD" || memberRow.role === "DEPARTMENT_HEAD") {
         role = "hod";
@@ -121,6 +127,7 @@ export async function updateSession(request: NextRequest) {
 
       if (staffRow) {
         role = "staff";
+        memberRole = memberRole ?? "STAFF";
       } else {
         const { data: studentRow } = await supabase
           .from("students")
@@ -128,12 +135,23 @@ export async function updateSession(request: NextRequest) {
           .eq("email", user.email ?? "")
           .maybeSingle();
         role = studentRow ? "student" : "admin";
+        memberRole = memberRole ?? (studentRow ? "STUDENT" : "INST_ADMIN");
       }
     }
 
     supabaseResponse.cookies.set("aura-role", role, {
       path:     "/",
       httpOnly: true,
+      maxAge:   60 * 60 * 24 * 7,
+      sameSite: "lax",
+      secure:   process.env.NODE_ENV === "production",
+    });
+
+    // Display label (JS-readable) — lets the UI badge show the real role
+    // (e.g. "Principal") even though the access tier collapses to "admin".
+    supabaseResponse.cookies.set("aura-role-label", roleLabel(memberRole), {
+      path:     "/",
+      httpOnly: false,
       maxAge:   60 * 60 * 24 * 7,
       sameSite: "lax",
       secure:   process.env.NODE_ENV === "production",

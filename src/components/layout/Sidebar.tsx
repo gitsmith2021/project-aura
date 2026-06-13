@@ -37,6 +37,7 @@ const STAFF_NAV = [
   { key: "schedule",   href: "/staff-portal/schedule",   label: "My Schedule", Icon: Calendar },
   { key: "calendar",   href: "/staff-portal/calendar",   label: "Calendar",    Icon: CalendarDays },
   { key: "attendance", href: "/staff-portal/attendance", label: "Attendance",  Icon: ClipboardCheck },
+  { key: "cia",        href: "/staff-portal/cia",        label: "CIA Marks",   Icon: ClipboardList },
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
   { key: "salary",     href: "/staff-portal/salary",     label: "Salary",      Icon: Wallet },
   { key: "privacy",    href: "/staff-portal/privacy",    label: "Privacy",     Icon: ShieldCheck },

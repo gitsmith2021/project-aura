@@ -284,6 +284,52 @@ export async function getCIAStudentSummary(
   }
 }
 
+// For staff portal — CIA components for subjects the signed-in staff teaches.
+// Pairs with the "cia_marks: staff manage own teaching subjects" RLS policy so
+// subject teachers enter their own marks instead of handing them to the HOD.
+export async function getMyTeachingCIAComponents(): Promise<
+  | { success: true; data: CIAComponent[] }
+  | { success: false; error: string }
+> {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) return { success: false, error: "Unauthorized." };
+
+    const { data: staff, error: staffErr } = await supabase
+      .from("staff")
+      .select("id, institution_id")
+      .eq("email", user.email)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (staffErr) return { success: false, error: staffErr.message };
+    if (!staff) return { success: false, error: "No staff profile found for this account." };
+
+    const { data: assigns, error: aErr } = await supabase
+      .from("teaching_assignments")
+      .select("subject_id")
+      .eq("staff_id", staff.id);
+    if (aErr) return { success: false, error: aErr.message };
+
+    const subjectIds = [...new Set((assigns ?? []).map((a) => a.subject_id).filter((v): v is string => !!v))];
+    if (subjectIds.length === 0) return { success: true, data: [] };
+
+    const { data, error } = await supabase
+      .from("cia_components")
+      .select("*, departments(name), subjects(name, code), academic_years(label)")
+      .eq("institution_id", staff.institution_id)
+      .in("subject_id", subjectIds)
+      .order("semester")
+      .order("created_at");
+    if (error) return { success: false, error: error.message };
+    return { success: true, data: (data ?? []) as CIAComponent[] };
+  } catch (e) {
+    return { success: false, error: String(e) };
+  }
+}
+
 // For student portal — personal CIA marks
 export async function getStudentCIAMarks(
   studentId: string,

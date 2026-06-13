@@ -167,3 +167,46 @@ Entirely Phase 6A (web) / 8F (mobile) — nothing exists yet, by plan.
 - Highest-value next moves, in order: **Phase 3 notifications** (every role's #1 UX
   gap), **staff CIA marks entry** (real workflow blocker), **A2 test bootstrap**
   (two pure engines are sitting test-ready).
+
+---
+
+## 7. Follow-up fixes (resolved this session)
+
+Two of the three role-related findings from §4 were actioned (the third —
+notifications — is owned by Phase 3 and stays deferred by design).
+
+### ✅ Staff can now enter CIA marks (was: §4 Staff workflow gap)
+Subject teachers no longer hand marks to the HOD.
+- **RLS** `20260613030000` — new permissive policy `cia_marks: staff manage own
+  teaching subjects` lets a STAFF member INSERT/UPDATE/SELECT marks **only** for
+  components of subjects they're assigned to teach (`teaching_assignments` →
+  `cia_components.subject_id`, gated on `staff.profile_id = auth.uid()`).
+- **RLS** `20260613040000` — companion `students: staff read own teaching
+  departments` policy, without which the marks roster rendered empty (staff
+  previously had no `students` SELECT access).
+- **UI** — new `/staff-portal/cia` page (action `getMyTeachingCIAComponents`)
+  lists the staff member's components grouped by subject and reuses the existing
+  `CIAMarksGrid`; "CIA Marks" added to the staff sidebar. `bulkSaveCIAMarks`
+  needed no change — it runs on the cookie client, so the new RLS is what
+  unblocks it. Admin/HOD entry under `/institutions/[id]/cia` is unchanged.
+
+### ✅ PRINCIPAL is now a first-class role (was: §4 — "does not exist")
+The role set is now: Super Admin · Admin · **Principal** · HOD · Staff · Student.
+- **DB** `20260613030000` — `PRINCIPAL` added to the `institution_members.role`
+  CHECK; `get_user_authorizations()` **normalizes PRINCIPAL → INST_ADMIN**, so
+  every existing INST_ADMIN RLS grant applies to a Principal with zero policy
+  edits and no `user_role` enum change. Decision: PRINCIPAL is institution-wide
+  and **admin-equivalent in access** today; a read-only "oversight" variant is
+  left to Arch A1 (fine-grained RLS) if a customer wants it.
+- **Auth** — middleware + login map PRINCIPAL to the `admin` access tier; a new
+  JS-readable `aura-role-label` cookie carries the *real* role so the Topbar
+  badge shows "Principal" (vs "Admin"), via `src/lib/roleLabel.ts`. `/admin`
+  (platform operator) still requires SUPER_ADMIN — a Principal does not get it.
+- **Assignment** — admins/principals set a staff member's role
+  (Staff / Principal / Admin) from the Edit Person drawer
+  (`getStaffMembershipRole` / `setStaffMembershipRole`, audited per Dev Rule 13).
+  HOD stays department-driven and is shown read-only here; Super Admin is not
+  assignable from an institution screen.
+
+All changes: `tsc` + `npm run build` clean; four migrations applied to the
+remote DB and verified.

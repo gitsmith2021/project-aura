@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect }       from "next/navigation";
 import { cookies }        from "next/headers";
 import { createClient }   from "@/utils/supabase/server";
+import { roleLabel }      from "@/lib/roleLabel";
 
 export async function login(formData: FormData) {
   const cookieStore = await cookies();
@@ -26,9 +27,12 @@ export async function login(formData: FormData) {
     .maybeSingle();
 
   let role: "staff" | "admin" | "student" | "hod" | null = null;
+  let memberRole: string | undefined = memberRow?.role;
 
   if (memberRow) {
-    if (memberRow.role === "SUPER_ADMIN" || memberRow.role === "INST_ADMIN") {
+    // PRINCIPAL shares the "admin" access tier (institution-wide); its distinct
+    // identity is carried by the aura-role-label cookie set below.
+    if (memberRow.role === "SUPER_ADMIN" || memberRow.role === "INST_ADMIN" || memberRow.role === "PRINCIPAL") {
       role = "admin";
     } else if (memberRow.role === "HOD" || memberRow.role === "DEPARTMENT_HEAD") {
       role = "hod";
@@ -47,7 +51,7 @@ export async function login(formData: FormData) {
       .eq("email", email)
       .eq("is_active", true)
       .maybeSingle();
-    if (staffRow) role = "staff";
+    if (staffRow) { role = "staff"; memberRole = memberRole ?? "STAFF"; }
   }
 
   if (!role) {
@@ -56,7 +60,7 @@ export async function login(formData: FormData) {
       .select("id")
       .eq("email", email)
       .maybeSingle();
-    if (studentRow) role = "student";
+    if (studentRow) { role = "student"; memberRole = memberRole ?? "STUDENT"; }
   }
 
   // Deny access if no recognised role — prevents unknown users becoming admins
@@ -70,6 +74,16 @@ export async function login(formData: FormData) {
     path:     "/",
     httpOnly: true,
     maxAge:   60 * 60 * 24 * 7,  // 7 days
+    sameSite: "lax",
+    secure:   process.env.NODE_ENV === "production",
+  });
+
+  // JS-readable display label so the UI badge shows the real role
+  // (e.g. "Principal") even though access tier collapses to "admin".
+  cookieStore.set("aura-role-label", roleLabel(memberRole), {
+    path:     "/",
+    httpOnly: false,
+    maxAge:   60 * 60 * 24 * 7,
     sameSite: "lax",
     secure:   process.env.NODE_ENV === "production",
   });
@@ -119,8 +133,9 @@ export async function logout() {
 
   await supabase.auth.signOut();
 
-  // Clear the role cookie so it doesn't persist after sign-out
+  // Clear the role cookies so they don't persist after sign-out
   cookieStore.delete("aura-role");
+  cookieStore.delete("aura-role-label");
 
   redirect("/login");
 }
