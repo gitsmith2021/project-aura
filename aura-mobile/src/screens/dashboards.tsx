@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
-import { useRouter } from "expo-router";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth, type Identity } from "@/context/AuthContext";
 import { roleLabel } from "@/lib/roles";
-import { Card, StatCard, SectionTitle, Loading, ErrorNote } from "@/components/ui";
+import { Card, StatCard, Loading, ErrorNote } from "@/components/ui";
 import { colors, radius, spacing, inr } from "@/lib/theme";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -21,24 +20,8 @@ function Greeting({ identity }: { identity: Identity }) {
   );
 }
 
-function NavCard({ title, subtitle, onPress, accent = colors.violet }: {
-  title: string; subtitle: string; onPress: () => void; accent?: string;
-}) {
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.navCard, pressed && { opacity: 0.7 }]}>
-      <View style={[styles.navDot, { backgroundColor: accent }]} />
-      <View style={{ flex: 1 }}>
-        <Text style={styles.navTitle}>{title}</Text>
-        <Text style={styles.navSub}>{subtitle}</Text>
-      </View>
-      <Text style={styles.navChevron}>›</Text>
-    </Pressable>
-  );
-}
-
 // ── Student ───────────────────────────────────────────────────────────────────
 export function StudentHome({ identity }: { identity: Identity }) {
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [attendancePct, setAttendancePct] = useState<number | null>(null);
@@ -78,16 +61,15 @@ export function StudentHome({ identity }: { identity: Identity }) {
         <View style={{ width: spacing.md }} />
         <StatCard label="Fees Due" value={feesDue > 0 ? inr.format(feesDue) : "₹0"} accent={feesDue > 0 ? colors.rose : colors.emerald} />
       </View>
-      <SectionTitle>Quick Access</SectionTitle>
-      <NavCard title="Attendance" subtitle="Subject-wise record" accent={colors.emerald} onPress={() => router.push("/(app)/attendance")} />
-      <NavCard title="Fees" subtitle="Dues & payment history" accent={colors.rose} onPress={() => router.push("/(app)/fees")} />
+      <Card>
+        <Text style={styles.note}>Open the Attendance and Fees tabs below for the full breakdown.</Text>
+      </Card>
     </ScrollView>
   );
 }
 
 // ── Staff ───────────────────────────────────────────────────────────────────
 export function StaffHome({ identity }: { identity: Identity }) {
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [todayClasses, setTodayClasses] = useState(0);
@@ -123,11 +105,10 @@ export function StaffHome({ identity }: { identity: Identity }) {
         <View style={{ width: spacing.md }} />
         <StatCard label="Leave Pending" value={String(pendingLeave)} accent={colors.amber} />
       </View>
-      <SectionTitle>Quick Access</SectionTitle>
-      <NavCard title="My Schedule" subtitle="Today's classes" onPress={() => router.push("/(app)/schedule")} />
       <Card>
         <Text style={styles.note}>
-          CIA marks entry, leave applications and payslips are on the web staff portal — coming to mobile in a later build.
+          Open the Schedule tab for your weekly classes. CIA marks entry, leave applications and payslips are on the web
+          staff portal — coming to mobile in a later build.
         </Text>
       </Card>
     </ScrollView>
@@ -210,14 +191,5 @@ const styles = StyleSheet.create({
   roleBadgeText: { color: colors.violetDark, fontSize: 11, fontWeight: "700" },
   instName: { fontSize: 13, color: colors.textMuted, marginTop: -spacing.md, marginBottom: spacing.md },
   statRow: { flexDirection: "row", marginBottom: spacing.sm },
-  navCard: {
-    flexDirection: "row", alignItems: "center", backgroundColor: colors.card,
-    borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border,
-    padding: spacing.lg, marginBottom: spacing.md, gap: spacing.md,
-  },
-  navDot: { width: 10, height: 10, borderRadius: 5 },
-  navTitle: { fontSize: 15, fontWeight: "700", color: colors.text },
-  navSub: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  navChevron: { fontSize: 22, color: colors.textFaint },
   note: { fontSize: 13, color: colors.textMuted, lineHeight: 19 },
 });

@@ -1,13 +1,16 @@
-import { Stack, Redirect, useRouter } from "expo-router";
-import { Pressable, Text, ActivityIndicator, View, StyleSheet } from "react-native";
+import { Tabs, Redirect } from "expo-router";
+import { ActivityIndicator, View, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
 import { colors } from "@/lib/theme";
 
-// Authed group: anything under (app) requires a session. Unauthenticated users
-// are bounced to /login. A shared sign-out lives in the header.
+// Authed group as role-adaptive bottom tabs. Every role gets Home + Account;
+// role-specific tabs sit between. Expo Router builds tabs from the files below,
+// so we declare every tab once and hide the ones a role shouldn't see with
+// `href: null` (the canonical conditional-tab pattern) — keeping it file-based
+// and avoiding per-role <Tabs> branches.
 export default function AppLayout() {
-  const { session, loading, signOut } = useAuth();
-  const router = useRouter();
+  const { session, identity, loading } = useAuth();
 
   if (loading) {
     return (
@@ -19,33 +22,69 @@ export default function AppLayout() {
 
   if (!session) return <Redirect href="/login" />;
 
-  const onSignOut = async () => {
-    await signOut();
-    router.replace("/login");
-  };
+  const tier = identity?.tier ?? "student";
+  const isStudent = tier === "student";
+  const isStaff = tier === "staff";
+
+  // `href: null` removes a tab from the bar for roles that shouldn't see it.
+  const studentOnly = isStudent ? undefined : null;
+  const staffOnly = isStaff ? undefined : null;
 
   return (
-    <Stack
+    <Tabs
       screenOptions={{
         headerStyle: { backgroundColor: colors.violet },
         headerTintColor: colors.white,
         headerTitleStyle: { fontWeight: "800" },
-        headerRight: () => (
-          <Pressable onPress={onSignOut} hitSlop={10}>
-            <Text style={styles.signOut}>Sign out</Text>
-          </Pressable>
-        ),
+        tabBarActiveTintColor: colors.violet,
+        tabBarInactiveTintColor: colors.textFaint,
+        tabBarStyle: { borderTopColor: colors.border },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
       }}
     >
-      <Stack.Screen name="home" options={{ title: "Aura" }} />
-      <Stack.Screen name="attendance" options={{ title: "Attendance" }} />
-      <Stack.Screen name="fees" options={{ title: "Fees" }} />
-      <Stack.Screen name="schedule" options={{ title: "My Schedule" }} />
-    </Stack>
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: "Home",
+          headerTitle: "Aura",
+          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="attendance"
+        options={{
+          title: "Attendance",
+          href: studentOnly,
+          tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-done-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="fees"
+        options={{
+          title: "Fees",
+          href: studentOnly,
+          tabBarIcon: ({ color, size }) => <Ionicons name="wallet-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="schedule"
+        options={{
+          title: "Schedule",
+          href: staffOnly,
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="account"
+        options={{
+          title: "Account",
+          tabBarIcon: ({ color, size }) => <Ionicons name="person-circle-outline" color={color} size={size} />,
+        }}
+      />
+    </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
-  signOut: { color: colors.white, fontWeight: "600", fontSize: 13 },
 });
