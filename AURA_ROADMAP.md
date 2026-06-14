@@ -94,7 +94,7 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 2 | [roadmap/02-foundation-migrations.md](roadmap/02-foundation-migrations.md) | Foundation Migrations (2-Pre-A – 2-Pre-D) | ✅ Complete |
 | 3 | [roadmap/03-phase2-academic-operations.md](roadmap/03-phase2-academic-operations.md) | Phase 2 — Academic Operations (2A–2I) | ✅ Complete |
 | 4 | [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md) | Phase 2.5 — Critical Security & Compliance Fixes | ✅ Complete (3 manual dashboard steps pending) |
-| 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🔲 Pending |
+| 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🟡 In progress (3A ✅) |
 | 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🔲 Pending |
 | 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | 🔲 Pending |
 | 8 | [roadmap/08-phase6-portals-tools.md](roadmap/08-phase6-portals-tools.md) | Phase 6 — Parent Portals & Extended Digital Tools (6A–6H) | 🔲 Pending |
@@ -109,14 +109,14 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-13  
-> **39 of 87 modules complete — 45% of full platform built**
+> **40 of 87 modules complete — 46% of full platform built**
 
 ```
-Overall  ███████████████░░░░░░░░░░░░░░░░░  45%  (39/87)
+Overall  ███████████████░░░░░░░░░░░░░░░░░  46%  (40/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
-Phase 3    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/4  — Notifications)
+Phase 3    ████████░░░░░░░░░░░░░░░░░░░░░░░░  25%  (1/4  — 3A ✅ in-app infra · triggers/channels/notices pending)
 Phase 4    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/12 — Campus Infrastructure + Vendor POs)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
@@ -125,7 +125,7 @@ Phase 8    █████░░░░░░░░░░░░░░░░░░
 Arch       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░  19%  (1/8 + A2 🟡 — Audit Log ✅ · Test infra (Vitest+Playwright) foundation · RLS, Indexes, CI/CD, Billing pending)
 ```
 
-> **Next up:** Phase 3A — Notification Infrastructure (see [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md)). Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
+> **Next up:** Phase 3B — Notification Triggers (wire leave/fee/attendance/salary/schedule events into the 3A engine; see [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md)). Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
 
 ---
 
@@ -166,8 +166,8 @@ Arch       ██████░░░░░░░░░░░░░░░░░
 | ✅ Phase 2.5A | Razorpay Webhook Signature Verification 🔒 | Complete | `924abe9` |
 | ✅ Phase 2.5B | DPDP 2023 Compliance — Consent & Erasure Framework 🔐 | Complete | `d75993d` |
 | ✅ Phase 2.5C | Backup Strategy + Scheduler Resilience ☁️ | Complete | `8509ae6` |
-| 🔲 Phase 3A | Notification Infrastructure | **Next** | — |
-| 🔲 Phase 3B | Notification Triggers | Pending | — |
+| ✅ Phase 3A | Notification Infrastructure — `notifications` table + RLS + realtime, actions, `useNotifications` hook, bell + drawer in Topbar (all portals), pure-logic unit tests | Complete | `20260614000000` |
+| 🔲 Phase 3B | Notification Triggers | **Next** | — |
 | 🔲 Phase 3C | Email + SMS + WhatsApp Notifications | Pending | — |
 | 🔲 Phase 3D | Digital Notice Board & Announcements | Pending | — |
 | 🔲 Phase 4A | Library Management System | Pending | — |

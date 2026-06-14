@@ -84,6 +84,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     years: 3,
     basis: "Proof of DPDP compliance — demonstrating consent existed is itself a legal obligation",
   },
+  {
+    key: "notifications",
+    category: "In-app notifications & alerts",
+    tables: ["notifications"],
+    period: "1 year after creation",
+    years: 1,
+    basis: "Transient operational alerts (fee/leave/attendance/results) — not a system of record; the underlying records are retained under their own policy",
+  },
 ];
 
 /** Consent types captured by the platform (mirrors the DB CHECK constraint). */

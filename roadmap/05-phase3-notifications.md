@@ -11,7 +11,15 @@
 > the cracks. Staff get notified about leave approvals. Students get fee reminders.
 > Admins get attendance alerts.
 
-### Step 3A — Notification Infrastructure
+### Step 3A — Notification Infrastructure  ✅ Complete (migration `20260614000000_phase3a_notifications`)
+
+> Built on Opus. In-app inbox: `notifications` table (RLS: recipient reads +
+> marks-read own; rows written server-side via the service-role admin client so
+> no user can forge/erase), added to the `supabase_realtime` publication for
+> live updates. Bell + right-side drawer wired into the shared `Topbar`, so it
+> appears across admin, staff and student portals. Pure logic (`src/lib/notifications.ts`)
+> is unit-tested (8 tests). Retention registered (1 year) per Dev Rule 15.
+> Security advisors: clean for `notifications`.
 
 #### Database (run migration):
 ```sql
@@ -34,11 +42,12 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ```
 
 #### What to build:
-- [ ] Migration SQL file in `supabase/migrations/`
-- [ ] `src/actions/notifications.ts` — createNotification, getNotifications, markAsRead, markAllRead
-- [ ] `src/components/layout/NotificationBell.tsx` — Bell icon with unread badge in nav
-- [ ] `src/components/layout/NotificationPanel.tsx` — Slide-out panel listing notifications
-- [ ] `src/hooks/useNotifications.ts` — Supabase realtime subscription for live updates
+- [x] Migration SQL file in `supabase/migrations/` — `20260614000000_phase3a_notifications.sql`
+- [x] `src/actions/notifications.ts` — `createNotification` (+ `createNotificationsBulk` fan-out), `getNotifications`, `markAsRead`, `markAllRead`
+- [x] `src/components/notifications/NotificationBell.tsx` — bell + unread badge (caps at 9+) in the Topbar
+- [x] `src/components/notifications/NotificationPanel.tsx` — right-side drawer, Today/Yesterday/Earlier grouping, per-type icon/tone, click-to-navigate via `data.href`, mark-all-read
+- [x] `src/hooks/useNotifications.ts` — Supabase realtime subscription (INSERT/UPDATE/DELETE scoped to the recipient) with optimistic mark-read
+- [x] `src/lib/notifications.ts` — pure domain/presentation helpers (unread count, badge, day-bucketing, relative time, per-type meta) + `tests/unit/notifications.test.ts`
 
 ---
 

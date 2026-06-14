@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, Bell, ChevronDown, User, Settings, LogOut, Sun, Moon } from "lucide-react";
+import { Menu, ChevronDown, User, Settings, LogOut, Sun, Moon } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useTheme } from "@/context/ThemeContext";
 import { ScrollableTabBar } from "./ScrollableTabBar";
 import { useInstitution } from "@/context/InstitutionContext";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 
 
@@ -115,9 +116,7 @@ export function Topbar({
           {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
-        <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
-          <Bell size={16} />
-        </button>
+        <NotificationBell />
 
         <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
 
