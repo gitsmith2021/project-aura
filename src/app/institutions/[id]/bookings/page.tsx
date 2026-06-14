@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Building2, CalendarClock, ClipboardList } from "lucide-react";
+import { Building2, ClipboardList } from "lucide-react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { createClient } from "@/utils/supabase/server";
 import { getVenues, getBookings } from "@/actions/venueBookings";
-import { BookingCalendar } from "@/components/bookings/BookingCalendar";
+import { WeekCalendar } from "@/components/bookings/WeekCalendar";
 
 type PageProps = { params: Promise<{ id: string }> };
 
@@ -19,10 +19,7 @@ export default async function BookingsPage({ params }: PageProps) {
   const venues = venuesRes.success ? venuesRes.data : [];
   const bookings = bookingsRes.success ? bookingsRes.data : [];
 
-  const now = Date.now();
-  const upcoming = bookings.filter(
-    (b) => new Date(b.end_datetime).getTime() >= now && (b.status === "approved" || b.status === "pending")
-  );
+  const active = bookings.filter((b) => b.status === "approved" || b.status === "pending");
   const pendingCount = bookings.filter((b) => b.status === "pending").length;
 
   return (
@@ -43,13 +40,7 @@ export default async function BookingsPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mb-3 text-slate-500 dark:text-slate-400">
-          <CalendarClock size={16} className="text-violet-500" />
-          <h2 className="text-xs font-semibold uppercase tracking-wide">Upcoming</h2>
-        </div>
-        <div className="max-w-3xl">
-          <BookingCalendar bookings={upcoming} />
-        </div>
+        <WeekCalendar bookings={active} />
       </div>
     </DashboardLayout>
   );
