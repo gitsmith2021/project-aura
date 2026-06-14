@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -353,6 +353,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const noticesHref        = slug ? `/institutions/${slug}/notices`          : "/institutions";
   const libraryHref        = slug ? `/institutions/${slug}/library`          : "/institutions";
   const bookingsHref       = slug ? `/institutions/${slug}/bookings`         : "/institutions";
+  const hostelsHref        = slug ? `/institutions/${slug}/hostels`          : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -539,6 +540,13 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               icon={<Building2 size={18} />}
               label="Bookings"
               active={pathname.includes("/bookings")}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarLink
+              href={hostelsHref}
+              icon={<BedDouble size={18} />}
+              label="Hostels"
+              active={pathname.includes("/hostels")}
               isCollapsed={isCollapsed}
             />
 

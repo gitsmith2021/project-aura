@@ -230,22 +230,29 @@ CREATE TABLE hostel_maintenance_requests (
 );
 ```
 
+> **Status:** 🟡 **Pass 1 complete** (migration `20260614040000_phase4c_hostels_core`):
+> hostels + rooms + allocations with a floor-wise occupancy grid, conflict-safe
+> allocation (one active room per student, partial unique index), and a student
+> "my hostel" view. **Pass 2 (pending):** mess menu + billing, maintenance
+> requests, hostel announcements, and fee-ledger linkage. Occupancy logic pure +
+> unit-tested (5 tests).
+
 #### What to build:
-- [ ] `supabase/migrations/..._hostels.sql`
-- [ ] `src/app/institutions/[id]/hostels/page.tsx` — Hostel overview: list of hostels, occupancy stats
-- [ ] `src/app/institutions/[id]/hostels/[hostelId]/page.tsx` — Floor plan view, room occupancy grid
-- [ ] `src/app/institutions/[id]/hostels/[hostelId]/allocations/page.tsx` — Allocate/transfer/vacate students
-- [ ] `src/app/institutions/[id]/hostels/[hostelId]/announcements/page.tsx` — Hostel-specific announcements
-- [ ] `src/app/institutions/[id]/hostels/cafeteria/page.tsx` — Cafeteria weekly menu board editor (day × meal grid)
-- [ ] `src/app/institutions/[id]/hostels/cafeteria/billing/page.tsx` — Monthly mess billing: generate bills per student, mark paid
-- [ ] `src/actions/mess.ts` — getMessMenu, updateMessMenu, generateMessBills, markMessPaid
-- [ ] `src/actions/hostels.ts` — getHostels, getRooms, allocateStudent, vacateStudent, getOccupancyStats
-- [ ] `src/actions/hostelMaintenance.ts` — raiseMaintenanceRequest, updateRequestStatus, getOpenRequests, resolveRequest
-- [ ] `src/components/hostels/RoomGrid.tsx` — Visual floor-wise room grid with colour: empty/partial/full
-- [ ] `src/components/hostels/AllocationDrawer.tsx` — Search student → assign to room
-- [ ] `src/app/institutions/[id]/hostels/[hostelId]/maintenance/page.tsx` — Warden dashboard: open requests by priority, assign maintenance staff, mark resolved with notes
-- [ ] Student portal: `src/app/student-portal/hostel/page.tsx` — Room number, hostel name, roommates, announcements, cafeteria menu, mess bill status, raise maintenance request
-- [ ] Hostel fee auto-linked to existing `fee_structures` (hostel fee type already exists)
+- [x] `supabase/migrations/20260614040000_phase4c_hostels_core.sql` — hostels, hostel_rooms, hostel_allocations + RLS
+- [x] `src/app/institutions/[id]/hostels/page.tsx` — overview: hostel cards with occupancy stats
+- [x] `src/app/institutions/[id]/hostels/[hostelId]/page.tsx` — floor-wise room grid + add room + allocate
+- [x] Allocate/transfer/vacate — built into the hostel detail via `AllocationDrawer` (no separate /allocations route)
+- [ ] `src/app/institutions/[id]/hostels/[hostelId]/announcements/page.tsx` — *(pass 2)*
+- [ ] `src/app/institutions/[id]/hostels/cafeteria/page.tsx` — menu board editor *(pass 2)*
+- [ ] `src/app/institutions/[id]/hostels/cafeteria/billing/page.tsx` — mess billing *(pass 2)*
+- [ ] `src/actions/mess.ts` *(pass 2)*
+- [x] `src/actions/hostels.ts` — getHostels, getHostel, addHostel, getRooms, addRoom, allocateStudent, vacateAllocation, getRoomRosters, searchAllocatableStudents, getMyHostel
+- [ ] `src/actions/hostelMaintenance.ts` *(pass 2)*
+- [x] `src/components/hostels/RoomGrid.tsx` — floor-wise grid colour-coded empty/partial/full
+- [x] `src/components/hostels/AllocationDrawer.tsx` — search student → assign; vacate occupants
+- [ ] `src/app/institutions/[id]/hostels/[hostelId]/maintenance/page.tsx` — warden dashboard *(pass 2)*
+- [x] Student portal: `src/app/student-portal/hostel/page.tsx` — room, hostel, roommates (announcements/menu/bill/maintenance in pass 2)
+- [ ] Hostel fee auto-linked to `fee_structures` *(pass 2)*
 
 #### Key features:
 - Floor-wise room grid with colour-coded occupancy
