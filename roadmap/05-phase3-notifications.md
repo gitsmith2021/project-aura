@@ -51,19 +51,25 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 ---
 
-### Step 3B — Notification Triggers
+### Step 3B — Notification Triggers  ✅ Event triggers complete (2 time-based pending a scheduler)
 
-Wire notifications into existing modules:
+> All 5 **event-driven** triggers wired into the existing actions, each
+> fire-and-forget (never breaks the primary mutation) with recipients resolved
+> via the service-role admin client. Pure message builders live in
+> `src/lib/notifications.ts` and are unit-tested. The 2 **time-based** triggers
+> (fee-due-in-7-days, low-attendance) need a scheduler (pg_cron / Vercel cron /
+> the Python service) that doesn't exist yet — deferred to that infra rather
+> than shipped un-runnable.
 
 #### What to build:
-- [ ] Fee due reminder — trigger when fee_payment is 7 days overdue → notify student
-- [ ] Payment received — trigger on fee_payment status=completed → notify student
-- [ ] Leave request — trigger on new leave application → notify institution admin
-- [ ] Leave approved/rejected — trigger on leave status update → notify staff
-- [ ] Low attendance alert — trigger when student attendance < 75% → notify student
-- [ ] Salary disbursed — trigger on disbursement status=processed → notify staff
-- [ ] Schedule published — trigger on draft published → notify all dept staff & students
-- [ ] `src/actions/notificationTriggers.ts` — all trigger functions
+- [ ] Fee due reminder — fee_payment 7 days overdue → student *(deferred: time-based, needs a scheduler)*
+- [x] Payment received — on `payment_status=completed` → student. Wired into `recordManualPayment` (manual) **and** the Razorpay `payment.captured` webhook (online)
+- [x] Leave request — on new leave application → institution admins (INST_ADMIN, PRINCIPAL). Wired into `applyForLeave`
+- [x] Leave approved/rejected — on leave status update → staff. Wired into `reviewLeaveRequest`
+- [ ] Low attendance alert — student attendance < 75% → student *(deferred: time-based, needs a scheduler)*
+- [x] Salary disbursed — on disbursement `status=processed` → staff. Wired into `processDisbursement` (single) + `bulkProcessDisbursements` (fan-out)
+- [x] Schedule published — on draft published → all dept staff + students. Wired into `publishDraftSchedule`
+- [x] `src/actions/notificationTriggers.ts` — all trigger functions (+ `buildFeeDueMessage` / `buildLowAttendanceMessage` builders ready for when the sweeps are scheduled)
 
 ---
 

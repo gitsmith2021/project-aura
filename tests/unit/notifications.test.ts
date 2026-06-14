@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
   unreadCount, badgeText, bucketFor, groupByBucket, relativeTime, metaFor,
+  buildLeaveRequestedMessage, buildLeaveReviewedMessage, buildPaymentReceivedMessage,
+  buildSalaryDisbursedMessage, buildSchedulePublishedMessage, buildFeeDueMessage,
+  buildLowAttendanceMessage,
   type NotificationItem,
 } from "@/lib/notifications";
 
@@ -76,5 +79,57 @@ describe("metaFor", () => {
     expect(metaFor("fee_paid").tone).toBe("emerald");
     expect(metaFor("attendance_low").tone).toBe("rose");
     expect(metaFor("totally_unknown_type")).toEqual(metaFor("system"));
+  });
+});
+
+describe("message builders (Phase 3B)", () => {
+  it("builds a leave-requested message for admins", () => {
+    const m = buildLeaveRequestedMessage("A. Arunkumar", "casual", "2026-06-20", "2026-06-21");
+    expect(m.type).toBe("leave_request");
+    expect(m.body).toContain("A. Arunkumar");
+    expect(m.body).toContain("casual");
+    expect(m.body).toContain("2026-06-20 → 2026-06-21");
+  });
+
+  it("collapses a single-day leave range", () => {
+    const m = buildLeaveRequestedMessage("X", "sick", "2026-06-20", "2026-06-20");
+    expect(m.body).toContain("(2026-06-20)");
+    expect(m.body).not.toContain("→");
+  });
+
+  it("builds approved/rejected leave-status messages", () => {
+    expect(buildLeaveReviewedMessage("approved", "casual", "2026-06-20", "2026-06-20").title).toBe("Leave approved");
+    const rej = buildLeaveReviewedMessage("rejected", "casual", "2026-06-20", "2026-06-21");
+    expect(rej.type).toBe("leave_status");
+    expect(rej.body).toContain("rejected");
+  });
+
+  it("formats currency as INR in payment/salary/fee messages", () => {
+    const pay = buildPaymentReceivedMessage(12500, "RCPT-1");
+    expect(pay.type).toBe("fee_paid");
+    expect(pay.body).toContain("₹12,500");
+    expect(pay.body).toContain("RCPT-1");
+
+    expect(buildPaymentReceivedMessage(500).body).not.toContain("receipt");
+
+    const sal = buildSalaryDisbursedMessage("2026-06", 48000);
+    expect(sal.type).toBe("salary_disbursed");
+    expect(sal.body).toContain("2026-06");
+    expect(sal.body).toContain("₹48,000");
+    expect(buildSalaryDisbursedMessage().body).not.toMatch(/for|₹/);
+
+    const due = buildFeeDueMessage(7500, "2026-07-01");
+    expect(due.type).toBe("fee_due");
+    expect(due.body).toContain("₹7,500");
+    expect(due.body).toContain("2026-07-01");
+  });
+
+  it("builds schedule + low-attendance messages", () => {
+    expect(buildSchedulePublishedMessage("Physics").body).toContain("Physics");
+    expect(buildSchedulePublishedMessage().type).toBe("schedule_published");
+    const att = buildLowAttendanceMessage(68);
+    expect(att.type).toBe("attendance_low");
+    expect(att.body).toContain("68%");
+    expect(att.body).toContain("75%");
   });
 });

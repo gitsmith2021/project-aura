@@ -109,14 +109,14 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-13  
-> **40 of 87 modules complete — 46% of full platform built**
+> **41 of 87 modules complete — 47% of full platform built**
 
 ```
-Overall  ███████████████░░░░░░░░░░░░░░░░░  46%  (40/87)
+Overall  ███████████████░░░░░░░░░░░░░░░░░  47%  (41/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
-Phase 3    ████████░░░░░░░░░░░░░░░░░░░░░░░░  25%  (1/4  — 3A ✅ in-app infra · triggers/channels/notices pending)
+Phase 3    ████████████████░░░░░░░░░░░░░░░░  50%  (2/4  — 3A ✅ · 3B ✅ event triggers · channels(3C)/notices(3D) pending)
 Phase 4    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/12 — Campus Infrastructure + Vendor POs)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
@@ -125,7 +125,7 @@ Phase 8    █████░░░░░░░░░░░░░░░░░░
 Arch       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░  19%  (1/8 + A2 🟡 — Audit Log ✅ · Test infra (Vitest+Playwright) foundation · RLS, Indexes, CI/CD, Billing pending)
 ```
 
-> **Next up:** Phase 3B — Notification Triggers (wire leave/fee/attendance/salary/schedule events into the 3A engine; see [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md)). Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
+> **Next up:** Phase 3D — Digital Notice Board (in-app; see [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md)). Phase 3C (email/SMS/WhatsApp) is deferred per the build decision — external channels are stubbed until accounts/keys exist. Deferred time-based triggers (fee-due, low-attendance) await a scheduler. Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
 
 ---
 
@@ -167,9 +167,9 @@ Arch       ██████░░░░░░░░░░░░░░░░░
 | ✅ Phase 2.5B | DPDP 2023 Compliance — Consent & Erasure Framework 🔐 | Complete | `d75993d` |
 | ✅ Phase 2.5C | Backup Strategy + Scheduler Resilience ☁️ | Complete | `8509ae6` |
 | ✅ Phase 3A | Notification Infrastructure — `notifications` table + RLS + realtime, actions, `useNotifications` hook, bell + drawer in Topbar (all portals), pure-logic unit tests | Complete | `20260614000000` |
-| 🔲 Phase 3B | Notification Triggers | **Next** | — |
-| 🔲 Phase 3C | Email + SMS + WhatsApp Notifications | Pending | — |
-| 🔲 Phase 3D | Digital Notice Board & Announcements | Pending | — |
+| ✅ Phase 3B | Notification Triggers — 5 event triggers wired (leave req/review, payment manual+webhook, salary single+bulk, schedule publish) via `notificationTriggers.ts`; fee-due + low-attendance sweeps deferred (need a scheduler) | Complete | `12738e5`+ |
+| 🔲 Phase 3C | Email + SMS + WhatsApp Notifications (external channels — wrappers stubbed; deferred per build decision until accounts/keys exist) | Deferred | — |
+| 🔲 Phase 3D | Digital Notice Board & Announcements | **Next** (in-app) | — |
 | 🔲 Phase 4A | Library Management System | Pending | — |
 | 🔲 Phase 4B | Auditorium & Space Booking | Pending | — |
 | 🔲 Phase 4C | Hostel Management + Mess Billing | Pending | — |

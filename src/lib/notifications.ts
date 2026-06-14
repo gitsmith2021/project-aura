@@ -98,3 +98,79 @@ export function relativeTime(createdAt: string, now: Date = new Date()): string 
   if (day < 7) return `${day}d`;
   return new Date(createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 }
+
+// ── Message builders (Phase 3B) ───────────────────────────────────────────────
+// Pure: the trigger actions resolve recipients then attach one of these. Keeping
+// the copy here makes wording consistent and unit-testable. Currency is INR /
+// en-IN per Dev Rule 8.
+
+export type BuiltNotification = { type: NotificationType; title: string; body: string };
+
+const inr = (n: number) =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
+
+const dateRange = (from: string, to: string) => (from === to ? from : `${from} → ${to}`);
+
+export function buildLeaveRequestedMessage(
+  staffName: string, leaveType: string, fromDate: string, toDate: string
+): BuiltNotification {
+  return {
+    type: "leave_request",
+    title: "New leave request",
+    body: `${staffName} applied for ${leaveType} leave (${dateRange(fromDate, toDate)}) — awaiting review.`,
+  };
+}
+
+export function buildLeaveReviewedMessage(
+  status: "approved" | "rejected", leaveType: string, fromDate: string, toDate: string
+): BuiltNotification {
+  return {
+    type: "leave_status",
+    title: `Leave ${status}`,
+    body: `Your ${leaveType} leave (${dateRange(fromDate, toDate)}) was ${status}.`,
+  };
+}
+
+export function buildPaymentReceivedMessage(
+  amount: number, receiptNumber?: string | null
+): BuiltNotification {
+  return {
+    type: "fee_paid",
+    title: "Payment received",
+    body: `Your fee payment of ${inr(amount)} has been received${receiptNumber ? ` (receipt ${receiptNumber})` : ""}.`,
+  };
+}
+
+export function buildSalaryDisbursedMessage(
+  month?: string | null, amount?: number | null
+): BuiltNotification {
+  return {
+    type: "salary_disbursed",
+    title: "Salary disbursed",
+    body: `Your salary${month ? ` for ${month}` : ""}${amount ? ` (${inr(amount)})` : ""} has been disbursed.`,
+  };
+}
+
+export function buildSchedulePublishedMessage(departmentName?: string | null): BuiltNotification {
+  return {
+    type: "schedule_published",
+    title: "Timetable published",
+    body: `A new timetable${departmentName ? ` for ${departmentName}` : ""} has been published — check your weekly schedule.`,
+  };
+}
+
+export function buildFeeDueMessage(amount: number, dueDate?: string | null): BuiltNotification {
+  return {
+    type: "fee_due",
+    title: "Fee payment due",
+    body: `You have an outstanding fee of ${inr(amount)}${dueDate ? `, due ${dueDate}` : ""}. Please pay to avoid late charges.`,
+  };
+}
+
+export function buildLowAttendanceMessage(pct: number, threshold = 75): BuiltNotification {
+  return {
+    type: "attendance_low",
+    title: "Low attendance alert",
+    body: `Your attendance is ${pct}%, below the ${threshold}% requirement. Please attend classes regularly.`,
+  };
+}

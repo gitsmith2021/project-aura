@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { logAudit } from "@/lib/auditLog";
+import { notifyPaymentReceived } from "@/actions/notificationTriggers";
 import type { FeePayment, PaymentMode, PaymentStatus, PaymentSummary } from "@/types/finance";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -161,6 +162,16 @@ export async function recordManualPayment(
       },
       notes: "Manual payment recorded",
     });
+
+    // Notify the student when the payment is actually settled (fire-and-forget)
+    if (payload.payment_status === "completed") {
+      await notifyPaymentReceived({
+        institutionId: payload.institution_id,
+        studentId:     payload.student_id,
+        amount:        payload.amount_paid,
+        receiptNumber,
+      });
+    }
 
     revalidatePayments(payload.institution_id);
     return { success: true, data: data as unknown as FeePayment };

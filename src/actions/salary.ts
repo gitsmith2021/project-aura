@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { logAudit, logAuditBatch } from "@/lib/auditLog";
+import { notifySalaryDisbursed, notifySalaryDisbursedBulk } from "@/actions/notificationTriggers";
 import type {
   SalaryStructure, SalaryDisbursement, SalarySummary,
   StaffWithoutSalary, DisbursementMode, DisbursementStatus,
@@ -352,6 +353,16 @@ export async function processDisbursement(
       notes: "Salary disbursement processed",
     });
 
+    // Notify the staff member (fire-and-forget)
+    if (before?.staff_id) {
+      await notifySalaryDisbursed({
+        institutionId,
+        staffId: before.staff_id as string,
+        month:   (before.month as string) ?? null,
+        amount:  before.amount_disbursed != null ? Number(before.amount_disbursed) : null,
+      });
+    }
+
     revalidateSalary(institutionId);
     return { success: true };
   } catch (err: unknown) {
@@ -418,6 +429,12 @@ export async function bulkProcessDisbursements(
         }))
       );
     }
+
+    // Notify each staff member whose disbursement was in this run (fire-and-forget)
+    await notifySalaryDisbursedBulk({
+      institutionId,
+      staffIds: (beforeRows ?? []).map((r) => r.staff_id as string).filter(Boolean),
+    });
 
     revalidateSalary(institutionId);
     return { success: true, data: { processed, failed } };
