@@ -107,15 +107,22 @@ CREATE TABLE venue_bookings (
 );
 ```
 
+> **Status:** ✅ **Complete** (migration `20260614030000_phase4b_venue_bookings`).
+> Conflict detection (half-open overlap, checked on create **and** re-checked on
+> approval), approval workflow with admin notes, colour-coded upcoming agenda.
+> RLS: members read venues; booker reads/creates/cancels own bookings; admins
+> manage. Overlap/conflict logic is pure + unit-tested (10 tests).
+
 #### What to build:
-- [ ] `supabase/migrations/..._venues.sql`
-- [ ] `src/app/institutions/[id]/bookings/page.tsx` — Admin: venue list + booking calendar (week/month view)
-- [ ] `src/app/institutions/[id]/bookings/venues/page.tsx` — Manage venue registry (add/edit/deactivate)
-- [ ] `src/app/institutions/[id]/bookings/requests/page.tsx` — Approve/reject pending bookings
-- [ ] `src/actions/venueBookings.ts` — getVenues, createBooking, approveBooking, rejectBooking, getBookingCalendar
-- [ ] `src/components/bookings/BookingCalendar.tsx` — Recharts/custom calendar showing booked slots per venue
-- [ ] `src/components/bookings/BookingRequestDrawer.tsx` — Staff submit booking request
-- [ ] Staff portal: `src/app/staff-portal/bookings/page.tsx` — Submit request + view status of own bookings
+- [x] `supabase/migrations/20260614030000_phase4b_venue_bookings.sql` — venues + venue_bookings + RLS + indexes
+- [x] `src/app/institutions/[id]/bookings/page.tsx` — admin overview: upcoming agenda (colour-coded per venue) + venue/request quick links
+- [x] `src/app/institutions/[id]/bookings/venues/page.tsx` — venue registry (`VenuesManager`: add, activate/deactivate)
+- [x] `src/app/institutions/[id]/bookings/requests/page.tsx` — approve/reject pending bookings (`RequestsTable`, with notes)
+- [x] `src/actions/venueBookings.ts` — getVenues, addVenue, setVenueActive, createBooking, approveBooking, rejectBooking, cancelBooking, getBookings, getMyBookings
+- [x] `src/components/bookings/BookingCalendar.tsx` — upcoming agenda grouped by day, colour-coded per venue
+- [x] Staff submit drawer — built into `StaffBookings.tsx` (venue + datetime range + attendees)
+- [x] Staff portal: `src/app/staff-portal/bookings/page.tsx` — submit request + view/cancel own bookings
+- [~] Bookings auto-appear on the academic calendar as events — deferred (calendar-sync follow-up)
 
 #### Key features:
 - Conflict detection: cannot double-book a venue for the same time slot
