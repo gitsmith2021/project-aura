@@ -116,7 +116,7 @@ Overall  ███████████████░░░░░░░░�
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
-Phase 3    ████████████████░░░░░░░░░░░░░░░░  50%  (2/4  — 3A ✅ · 3B ✅ event triggers · channels(3C)/notices(3D) pending)
+Phase 3    ███████████████████░░░░░░░░░░░░░  62%  (3A ✅ · 3B ✅ · 3C 🟡 email live, SMS/WhatsApp stubbed · 3D notices pending)
 Phase 4    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/12 — Campus Infrastructure + Vendor POs)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
@@ -168,7 +168,7 @@ Arch       ██████░░░░░░░░░░░░░░░░░
 | ✅ Phase 2.5C | Backup Strategy + Scheduler Resilience ☁️ | Complete | `8509ae6` |
 | ✅ Phase 3A | Notification Infrastructure — `notifications` table + RLS + realtime, actions, `useNotifications` hook, bell + drawer in Topbar (all portals), pure-logic unit tests | Complete | `20260614000000` |
 | ✅ Phase 3B | Notification Triggers — 5 event triggers wired (leave req/review, payment manual+webhook, salary single+bulk, schedule publish) via `notificationTriggers.ts`; fee-due + low-attendance sweeps deferred (need a scheduler) | Complete | `12738e5`+ |
-| 🔲 Phase 3C | Email + SMS + WhatsApp Notifications (external channels — wrappers stubbed; deferred per build decision until accounts/keys exist) | Deferred | — |
+| 🟡 Phase 3C | Email live (Resend) — `sendEmail` + templates (payment receipt, leave status, salary) wired into triggers; SMS + WhatsApp stubbed (deferred: paid + DLT/Meta verification) | Email done | `6f17d82`+ |
 | 🔲 Phase 3D | Digital Notice Board & Announcements | **Next** (in-app) | — |
 | 🔲 Phase 4A | Library Management System | Pending | — |
 | 🔲 Phase 4B | Auditorium & Space Booking | Pending | — |
@@ -269,8 +269,10 @@ NEXT_PUBLIC_RAZORPAY_KEY_ID=
 # Scheduler
 SCHEDULER_API_URL=http://127.0.0.1:8000
 
-# Notifications
+# Notifications — Email (Phase 3C, Resend)
 RESEND_API_KEY=
+# Sender identity; defaults to Resend's onboarding sender until a domain is verified
+EMAIL_FROM="AURA <onboarding@resend.dev>"
 
 # SMS Gateway (MSG91 / Fast2SMS)
 SMS_API_KEY=

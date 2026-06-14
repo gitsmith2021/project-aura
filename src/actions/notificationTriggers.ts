@@ -6,6 +6,8 @@ import {
   buildLeaveRequestedMessage, buildLeaveReviewedMessage, buildPaymentReceivedMessage,
   buildSalaryDisbursedMessage, buildSchedulePublishedMessage,
 } from "@/lib/notifications";
+import { sendEmail } from "@/lib/email";
+import { paymentReceiptEmail, leaveStatusEmail, salaryDisbursedEmail } from "@/lib/emailTemplates";
 
 // Phase 3B — notification triggers. Each is fire-and-forget: a failure here must
 // never break the primary action that called it (same contract as logAudit), so
@@ -41,13 +43,22 @@ export async function notifyLeaveReviewed(p: {
 }): Promise<void> {
   try {
     const admin = createAdminClient();
-    const { data: staff } = await admin.from("staff").select("profile_id").eq("id", p.staffId).maybeSingle();
-    if (!staff?.profile_id) return;
+    const { data: staff } = await admin.from("staff").select("profile_id, email, full_name").eq("id", p.staffId).maybeSingle();
+    if (!staff) return;
     const msg = buildLeaveReviewedMessage(p.status, p.leaveType, p.fromDate, p.toDate);
-    await createNotification({
-      institutionId: p.institutionId, recipientId: staff.profile_id as string,
-      ...msg, data: { href: "/staff-portal/leave" },
-    });
+    if (staff.profile_id) {
+      await createNotification({
+        institutionId: p.institutionId, recipientId: staff.profile_id as string,
+        ...msg, data: { href: "/staff-portal/leave" },
+      });
+    }
+    if (staff.email) {
+      const mail = leaveStatusEmail({
+        name: (staff.full_name as string) ?? "there",
+        status: p.status, leaveType: p.leaveType, fromDate: p.fromDate, toDate: p.toDate,
+      });
+      await sendEmail({ to: staff.email as string, ...mail });
+    }
   } catch (err) {
     console.error("[notify] leaveReviewed failed:", err);
   }
@@ -59,13 +70,27 @@ export async function notifyPaymentReceived(p: {
 }): Promise<void> {
   try {
     const admin = createAdminClient();
-    const { data: student } = await admin.from("students").select("profile_id").eq("id", p.studentId).maybeSingle();
-    if (!student?.profile_id) return;
+    const { data: student } = await admin
+      .from("students")
+      .select("profile_id, email, full_name, institutions!institution_id(name)")
+      .eq("id", p.studentId)
+      .maybeSingle();
+    if (!student) return;
     const msg = buildPaymentReceivedMessage(p.amount, p.receiptNumber);
-    await createNotification({
-      institutionId: p.institutionId, recipientId: student.profile_id as string,
-      ...msg, data: { href: "/student-portal/fees" },
-    });
+    if (student.profile_id) {
+      await createNotification({
+        institutionId: p.institutionId, recipientId: student.profile_id as string,
+        ...msg, data: { href: "/student-portal/fees" },
+      });
+    }
+    if (student.email) {
+      const instName = (student.institutions as { name?: string } | null)?.name ?? null;
+      const mail = paymentReceiptEmail({
+        name: (student.full_name as string) ?? "there",
+        amount: p.amount, receiptNumber: p.receiptNumber, institutionName: instName,
+      });
+      await sendEmail({ to: student.email as string, ...mail });
+    }
   } catch (err) {
     console.error("[notify] paymentReceived failed:", err);
   }
@@ -77,13 +102,21 @@ export async function notifySalaryDisbursed(p: {
 }): Promise<void> {
   try {
     const admin = createAdminClient();
-    const { data: staff } = await admin.from("staff").select("profile_id").eq("id", p.staffId).maybeSingle();
-    if (!staff?.profile_id) return;
+    const { data: staff } = await admin.from("staff").select("profile_id, email, full_name").eq("id", p.staffId).maybeSingle();
+    if (!staff) return;
     const msg = buildSalaryDisbursedMessage(p.month, p.amount);
-    await createNotification({
-      institutionId: p.institutionId, recipientId: staff.profile_id as string,
-      ...msg, data: { href: "/staff-portal/salary" },
-    });
+    if (staff.profile_id) {
+      await createNotification({
+        institutionId: p.institutionId, recipientId: staff.profile_id as string,
+        ...msg, data: { href: "/staff-portal/salary" },
+      });
+    }
+    if (staff.email) {
+      const mail = salaryDisbursedEmail({
+        name: (staff.full_name as string) ?? "there", month: p.month, amount: p.amount,
+      });
+      await sendEmail({ to: staff.email as string, ...mail });
+    }
   } catch (err) {
     console.error("[notify] salaryDisbursed failed:", err);
   }

@@ -75,15 +75,22 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 ### Step 3C — Email, SMS & WhatsApp Notifications
 
-#### Email — Resend Integration
-- [ ] Integrate Resend (resend.com) for transactional emails
-- [ ] Email template: Fee Due Reminder
-- [ ] Email template: Payment Receipt
-- [ ] Email template: Leave Approved/Rejected
-- [ ] Email template: Salary Slip
-- [ ] Email template: Exam Schedule Released
-- [ ] `src/lib/email.ts` — sendEmail() wrapper around Resend API
-- [ ] Add `RESEND_API_KEY` to .env.local
+> **Status:** ✉️ **Email live (Resend); SMS + WhatsApp stubbed** (deferred per
+> build decision — both need paid accounts + India DLT / Meta business
+> verification). `sendEmail` is safe-by-default: a no-op that logs when
+> `RESEND_API_KEY` is absent, so nothing breaks before the key is added. Email
+> is wired as a second channel inside the 3B triggers (payment receipt, leave
+> status, salary disbursed) alongside the in-app notification.
+
+#### Email — Resend Integration  ✅
+- [x] Integrate Resend (resend.com) for transactional emails — `src/lib/email.ts`
+- [ ] Email template: Fee Due Reminder *(deferred with the fee-due sweep — needs scheduler)*
+- [x] Email template: Payment Receipt — `paymentReceiptEmail`
+- [x] Email template: Leave Approved/Rejected — `leaveStatusEmail`
+- [x] Email template: Salary Slip — `salaryDisbursedEmail`
+- [ ] Email template: Exam Schedule Released *(deferred — no exam-publish trigger yet)*
+- [x] `src/lib/email.ts` — `sendEmail()` wrapper around Resend (guarded; `EMAIL_FROM` configurable); templates in `src/lib/emailTemplates.ts` (pure, unit-tested)
+- [ ] Add `RESEND_API_KEY` to `.env.local` *(user action — free Resend account; verify a domain for production)*
 
 #### SMS — MSG91 / Fast2SMS Integration
 > Indian institutions rely heavily on SMS for parents and non-tech-savvy staff who may not regularly check email.
@@ -92,8 +99,8 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 - [ ] SMS trigger: Exam schedule notification
 - [ ] SMS trigger: Attendance alert (< 75%)
 - [ ] SMS trigger: OTP for parent portal registration
-- [ ] `src/lib/sms.ts` — sendSMS() wrapper
-- [ ] Add `SMS_API_KEY` and `SMS_SENDER_ID` to .env.local
+- [x] `src/lib/sms.ts` — `sendSMS()` **stub** (logs; real MSG91/Fast2SMS + DLT registration deferred)
+- [ ] Add `SMS_API_KEY` and `SMS_SENDER_ID` to .env.local *(deferred — paid + DLT)*
 
 #### WhatsApp — Meta Cloud API
 > WhatsApp Business API enables rich notifications with PDF attachments (payslips, fee receipts) — the preferred communication channel for Indian parents.
@@ -102,8 +109,8 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 - [ ] WhatsApp template: Salary slip with PDF attachment
 - [ ] WhatsApp template: Leave status update (approved/rejected)
 - [ ] WhatsApp template: Exam hall ticket download link
-- [ ] `src/lib/whatsapp.ts` — sendWhatsApp() wrapper
-- [ ] Add `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` to .env.local
+- [x] `src/lib/whatsapp.ts` — `sendWhatsApp()` **stub** (logs; real Meta Cloud API + template approval deferred)
+- [ ] Add `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` to .env.local *(deferred — Meta business verification)*
 
 ---
 
