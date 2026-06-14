@@ -37,6 +37,7 @@ const STAFF_NAV = [
   { key: "schedule",   href: "/staff-portal/schedule",   label: "My Schedule", Icon: Calendar },
   { key: "calendar",   href: "/staff-portal/calendar",   label: "Calendar",    Icon: CalendarDays },
   { key: "notices",    href: "/staff-portal/notices",    label: "Notices",     Icon: Megaphone },
+  { key: "library",    href: "/staff-portal/library",    label: "My Library",  Icon: Library },
   { key: "attendance", href: "/staff-portal/attendance", label: "Attendance",  Icon: ClipboardCheck },
   { key: "cia",        href: "/staff-portal/cia",        label: "CIA Marks",   Icon: ClipboardList },
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
@@ -349,6 +350,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const auditLogHref       = slug ? `/institutions/${slug}/audit-log`        : "/institutions";
   const iqacSsrHref        = slug ? `/institutions/${slug}/iqac/ssr`         : "/institutions";
   const noticesHref        = slug ? `/institutions/${slug}/notices`          : "/institutions";
+  const libraryHref        = slug ? `/institutions/${slug}/library`          : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -521,6 +523,15 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                 />
               ))}
             </NavGroup>
+
+            {/* Library (campus) */}
+            <SidebarLink
+              href={libraryHref}
+              icon={<Library size={18} />}
+              label="Library"
+              active={pathname.includes("/library")}
+              isCollapsed={isCollapsed}
+            />
 
             {/* Finance (admin only) */}
             {role !== "hod" && (

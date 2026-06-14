@@ -47,16 +47,24 @@ CREATE TABLE library_lendings (
 );
 ```
 
+> **Status:** ✅ **Complete** (migration `20260614020000_phase4a_library`). RLS:
+> all members read the catalog; a borrower reads their own lendings; admins
+> manage books + lendings. Fine math (₹2/day default), overdue detection, and
+> availability helpers are pure + unit-tested (9 tests). Copy counts adjust on
+> issue/return. Borrowers are staff/students with a login (borrower_id →
+> auth.users, per the schema).
+
 #### What to build:
-- [ ] `supabase/migrations/..._library.sql`
-- [ ] `src/app/institutions/[id]/library/page.tsx` — Book catalog with search/filter by category, dept, availability
-- [ ] `src/app/institutions/[id]/library/lend/page.tsx` — Issue/return books, scan by ISBN or search
-- [ ] `src/app/institutions/[id]/library/overdue/page.tsx` — Overdue tracker with fine calculation
-- [ ] `src/actions/library.ts` — getBooks, issueBook, returnBook, getOverdueList, calculateFine
-- [ ] `src/components/library/BookCard.tsx` — Book listing card with availability badge
-- [ ] `src/components/library/LendingDrawer.tsx` — Issue/return slide-out panel
-- [ ] Student portal: `src/app/student-portal/library/page.tsx` — My borrowed books, due dates, fines
-- [ ] Staff portal: `src/app/staff-portal/library/page.tsx` — Staff borrowed books
+- [x] `supabase/migrations/20260614020000_phase4a_library.sql` — `library_books` + `library_lendings` + RLS + indexes
+- [x] `src/app/institutions/[id]/library/page.tsx` — catalog (`LibraryManager`): search, category + availability filter, Add Book drawer, Issue
+- [x] `src/app/institutions/[id]/library/lend/page.tsx` — issued books + record returns (`LendingsTable`)
+- [x] `src/app/institutions/[id]/library/overdue/page.tsx` — overdue tracker with live fine calculation
+- [x] `src/actions/library.ts` — getBooks, addBook, searchBorrowers, issueBook, returnBook, getLendings, getMyLendings (fine math in `src/lib/library.ts`)
+- [x] `src/components/library/BookCard.tsx` — book card with availability badge
+- [x] `src/components/library/LendingDrawer.tsx` — issue slide-out (borrower search + due date); `LendingsTable` handles returns
+- [x] Student portal: `src/app/student-portal/library/page.tsx` — my borrowed books, due dates, fines (`MyLibraryList`)
+- [x] Staff portal: `src/app/staff-portal/library/page.tsx` — staff borrowed books
+- [~] Fine → fee-ledger integration: fine is computed + stored on the lending; auto-posting overdue fines into `fee_payments` deferred (light follow-up)
 
 #### Key features:
 - Fine auto-calculation (configurable rate per day overdue)

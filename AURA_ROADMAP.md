@@ -95,7 +95,7 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 3 | [roadmap/03-phase2-academic-operations.md](roadmap/03-phase2-academic-operations.md) | Phase 2 — Academic Operations (2A–2I) | ✅ Complete |
 | 4 | [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md) | Phase 2.5 — Critical Security & Compliance Fixes | ✅ Complete (3 manual dashboard steps pending) |
 | 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🟢 Core complete (3A/3B/3D ✅, 3C email; SMS/WhatsApp + time-based deferred) |
-| 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🔲 Pending |
+| 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🟡 In progress (4A ✅) |
 | 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | 🔲 Pending |
 | 8 | [roadmap/08-phase6-portals-tools.md](roadmap/08-phase6-portals-tools.md) | Phase 6 — Parent Portals & Extended Digital Tools (6A–6H) | 🔲 Pending |
 | 9 | [roadmap/09-phase7-super-admin.md](roadmap/09-phase7-super-admin.md) | Phase 7 — Super Admin Panel / SaaS Multi-Tenancy (7A–7F-sub2) | 🔲 Pending |
@@ -109,15 +109,15 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-13  
-> **42 of 87 modules complete — 48% of full platform built**
+> **43 of 87 modules complete — 49% of full platform built**
 
 ```
-Overall  ███████████████░░░░░░░░░░░░░░░░░  48%  (42/87)
+Overall  ████████████████░░░░░░░░░░░░░░░░  49%  (43/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
 Phase 3    ███████████████████████████░░░░  88%  (3A ✅ · 3B ✅ · 3C 🟡 email live · 3D ✅ notices · SMS/WhatsApp + time-based deferred)
-Phase 4    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/12 — Campus Infrastructure + Vendor POs)
+Phase 4    ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  8%   (1/12 — 4A Library ✅ · spaces/hostel/labs/assets/etc. pending)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
 Phase 7    ████████████████░░░░░░░░░░░░░░░░  50%  (4/8  — 7A ✅ · 7B ✅ · 7C ✅ · 7F-sub SSR Builder ✅)
@@ -125,7 +125,7 @@ Phase 8    █████░░░░░░░░░░░░░░░░░░
 Arch       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░  19%  (1/8 + A2 🟡 — Audit Log ✅ · Test infra (Vitest+Playwright) foundation · RLS, Indexes, CI/CD, Billing pending)
 ```
 
-> **Next up:** Phase 4A — Library Management (see [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md)). **Phase 3 deferred items** (revisit when infra exists): 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed; time-based triggers (fee-due, low-attendance) await a scheduler. Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
+> **Next up:** Phase 4B — Auditorium & Space Booking (see [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md)). **Phase 3 deferred items** (revisit when infra exists): 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed; time-based triggers (fee-due, low-attendance) await a scheduler. Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
 
 ---
 
@@ -170,7 +170,7 @@ Arch       ██████░░░░░░░░░░░░░░░░░
 | ✅ Phase 3B | Notification Triggers — 5 event triggers wired (leave req/review, payment manual+webhook, salary single+bulk, schedule publish) via `notificationTriggers.ts`; fee-due + low-attendance sweeps deferred (need a scheduler) | Complete | `12738e5`+ |
 | 🟡 Phase 3C | Email live (Resend) — `sendEmail` + templates (payment receipt, leave status, salary) wired into triggers; SMS + WhatsApp stubbed (deferred: paid + DLT/Meta verification) | Email done | `6f17d82`+ |
 | ✅ Phase 3D | Digital Notice Board — `notices` table + RLS, admin manager (create/pin/delete, audience + dept targeting, expiry), staff & student portal boards, emergency/exam → in-app notification | Complete | `20260614010000` |
-| 🔲 Phase 4A | Library Management System | Pending | — |
+| ✅ Phase 4A | Library Management — catalog (search/filter), issue/return with copy accounting, overdue tracker + ₹2/day fines, staff & student "my library"; RLS + unit-tested fine math | Complete | `20260614020000` |
 | 🔲 Phase 4B | Auditorium & Space Booking | Pending | — |
 | 🔲 Phase 4C | Hostel Management + Mess Billing | Pending | — |
 | 🔲 Phase 4D | Laboratory Management | Pending | — |
