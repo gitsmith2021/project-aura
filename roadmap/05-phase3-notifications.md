@@ -141,15 +141,21 @@ CREATE TABLE notices (
 );
 ```
 
+> **Status:** ✅ **Complete** (migration `20260614010000_phase3d_notices`). RLS:
+> all institution members read; only admins (INST_ADMIN/PRINCIPAL/SUPER_ADMIN)
+> manage. Pure helpers in `src/lib/notices.ts` (type meta, expiry, pinned-sort,
+> audience targeting) are unit-tested. Notice bell now appears in the student
+> portal shell too (was admin/staff only). Retention registered.
+
 #### What to build:
-- [ ] `supabase/migrations/..._notices.sql`
-- [ ] `src/app/institutions/[id]/notices/page.tsx` — Admin: create notices, pin/unpin, manage target audience
-- [ ] `src/actions/notices.ts` — createNotice, updateNotice, deleteNotice, getActiveNotices
-- [ ] `src/components/notices/NoticeBoard.tsx` — Notice board widget embeddable in any portal dashboard
-- [ ] `src/components/notices/NoticeBadge.tsx` — Type badge (Emergency — red, Academic — violet, Event — amber)
-- [ ] Student portal: `src/app/student-portal/notices/page.tsx` — Active notices filtered for students
-- [ ] Staff portal: `src/app/staff-portal/notices/page.tsx` — Active notices filtered for staff
-- [ ] Integration: creating an Emergency or Exam notice optionally triggers a push notification (Phase 3B)
+- [x] `supabase/migrations/20260614010000_phase3d_notices.sql` — table + indexes + RLS
+- [x] `src/app/institutions/[id]/notices/page.tsx` — admin manager (`NoticesManager`): create (right-side drawer), pin/unpin, delete, audience + department targeting, expiry
+- [x] `src/actions/notices.ts` — `createNotice`, `updateNotice`, `deleteNotice`, `getNotices` (admin), `getActiveNotices` (audience + dept + non-expired filter)
+- [x] `src/components/notices/NoticeBoard.tsx` — read-only board, embeddable in any portal
+- [x] `src/components/notices/NoticeBadge.tsx` — per-type colour badge
+- [x] Student portal: `src/app/student-portal/notices/page.tsx` — active notices for students (+ their dept)
+- [x] Staff portal: `src/app/staff-portal/notices/page.tsx` — active notices for staff (+ their dept)
+- [x] Integration: Emergency/Exam notices fire an in-app notification to the audience via `notifyNoticePosted` (3B). (Email/SMS/WhatsApp fan-out for notices deferred with the rest of 3C external channels)
 
 #### Key features:
 - Audience targeting: all / students only / staff only / specific dept / hostel residents

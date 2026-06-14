@@ -92,6 +92,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     years: 1,
     basis: "Transient operational alerts (fee/leave/attendance/results) — not a system of record; the underlying records are retained under their own policy",
   },
+  {
+    key: "notices",
+    category: "Notice board announcements",
+    tables: ["notices"],
+    period: "Until expiry; then up to 1 year for reference",
+    years: 1,
+    basis: "Institutional announcements (minimal personal data — only the poster's id). Auto-expire via expires_at; retained briefly for reference",
+  },
 ];
 
 /** Consent types captured by the platform (mirrors the DB CHECK constraint). */

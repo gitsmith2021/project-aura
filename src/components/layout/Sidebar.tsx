@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -36,6 +36,7 @@ const STAFF_NAV = [
   { key: "dashboard",  href: "/staff-portal",            label: "Dashboard",   Icon: LayoutDashboard, exact: true },
   { key: "schedule",   href: "/staff-portal/schedule",   label: "My Schedule", Icon: Calendar },
   { key: "calendar",   href: "/staff-portal/calendar",   label: "Calendar",    Icon: CalendarDays },
+  { key: "notices",    href: "/staff-portal/notices",    label: "Notices",     Icon: Megaphone },
   { key: "attendance", href: "/staff-portal/attendance", label: "Attendance",  Icon: ClipboardCheck },
   { key: "cia",        href: "/staff-portal/cia",        label: "CIA Marks",   Icon: ClipboardList },
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
@@ -303,10 +304,12 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
     if (key === "institutions")
       return (pathname === "/institutions" || pathname.startsWith("/institutions/")) &&
         !pathname.includes("/finance") && !pathname.includes("/compliance") &&
-        !pathname.includes("/audit-log") && !pathname.includes("/iqac") && !isAcademicPath(pathname);
+        !pathname.includes("/audit-log") && !pathname.includes("/iqac") &&
+        !pathname.includes("/notices") && !isAcademicPath(pathname);
     if (key === "compliance")     return pathname.includes("/compliance");
     if (key === "audit-log")      return pathname.includes("/audit-log");
     if (key === "iqac")           return pathname.includes("/iqac");
+    if (key === "notices")        return pathname.includes("/notices");
     if (key === "lesson-plans")   return pathname.includes("/lesson-plans");
     if (key === "guest-lectures") return pathname.includes("/guest-lectures");
     if (key === "internships")    return pathname.includes("/internships");
@@ -345,6 +348,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const complianceHref     = slug ? `/institutions/${slug}/compliance`       : "/institutions";
   const auditLogHref       = slug ? `/institutions/${slug}/audit-log`        : "/institutions";
   const iqacSsrHref        = slug ? `/institutions/${slug}/iqac/ssr`         : "/institutions";
+  const noticesHref        = slug ? `/institutions/${slug}/notices`          : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -478,6 +482,8 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                   active={isItemActive("audit-log", auditLogHref)} />
                 <SubLink href={iqacSsrHref} icon={<Landmark size={14} />} label="IQAC / NAAC SSR"
                   active={isItemActive("iqac", iqacSsrHref)} />
+                <SubLink href={noticesHref} icon={<Megaphone size={14} />} label="Notices"
+                  active={isItemActive("notices", noticesHref)} />
               </NavGroup>
             )}
 

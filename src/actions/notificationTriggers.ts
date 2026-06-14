@@ -140,6 +140,44 @@ export async function notifySalaryDisbursedBulk(p: {
   }
 }
 
+/** Urgent notice (emergency/exam) → ping the target audience's bell. */
+export async function notifyNoticePosted(p: {
+  institutionId: string; departmentId?: string | null;
+  audience: string; noticeType: string; title: string;
+}): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    const wantStaff = p.audience === "all" || p.audience === "staff";
+    const wantStudents = p.audience === "all" || p.audience === "students" || p.audience === "hostel";
+
+    const recipientIds: string[] = [];
+    if (wantStaff) {
+      let q = admin.from("staff").select("profile_id")
+        .eq("institution_id", p.institutionId).eq("is_active", true);
+      if (p.departmentId) q = q.eq("department_id", p.departmentId);
+      const { data } = await q;
+      recipientIds.push(...(data ?? []).map((r) => r.profile_id as string).filter(Boolean));
+    }
+    if (wantStudents) {
+      let q = admin.from("students").select("profile_id").eq("institution_id", p.institutionId);
+      if (p.departmentId) q = q.eq("department_id", p.departmentId);
+      const { data } = await q;
+      recipientIds.push(...(data ?? []).map((r) => r.profile_id as string).filter(Boolean));
+    }
+    const recipients = Array.from(new Set(recipientIds));
+    if (recipients.length === 0) return;
+
+    const isEmergency = p.noticeType === "emergency";
+    await createNotificationsBulk(p.institutionId, recipients, {
+      type: "notice",
+      title: isEmergency ? `🚨 ${p.title}` : p.title,
+      body: isEmergency ? "Emergency notice — please read it on the notice board." : "A new notice has been posted.",
+    });
+  } catch (err) {
+    console.error("[notify] noticePosted failed:", err);
+  }
+}
+
 /** Timetable published → notify all staff + students in the department. */
 export async function notifySchedulePublished(p: {
   institutionId: string; departmentId: string;
