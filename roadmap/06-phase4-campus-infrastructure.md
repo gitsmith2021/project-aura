@@ -230,29 +230,30 @@ CREATE TABLE hostel_maintenance_requests (
 );
 ```
 
-> **Status:** 🟡 **Pass 1 complete** (migration `20260614040000_phase4c_hostels_core`):
-> hostels + rooms + allocations with a floor-wise occupancy grid, conflict-safe
-> allocation (one active room per student, partial unique index), and a student
-> "my hostel" view. **Pass 2 (pending):** mess menu + billing, maintenance
-> requests, hostel announcements, and fee-ledger linkage. Occupancy logic pure +
-> unit-tested (5 tests).
+> **Status:** ✅ **Complete** — pass 1 (`20260614040000`): hostels/rooms/allocations
+> + floor occupancy grid + student "my hostel"; pass 2 (`20260614050000`): mess
+> menu editor + monthly billing, maintenance requests (student raise → warden
+> board), hostel announcements. One-active-room constraint via partial unique
+> index. Pure logic unit-tested (occupancy 5 + mess/maintenance 5). **Deferred:**
+> auto-linking hostel/mess fees into the central fee ledger (mess billing is a
+> self-contained ledger for now).
 
 #### What to build:
 - [x] `supabase/migrations/20260614040000_phase4c_hostels_core.sql` — hostels, hostel_rooms, hostel_allocations + RLS
 - [x] `src/app/institutions/[id]/hostels/page.tsx` — overview: hostel cards with occupancy stats
 - [x] `src/app/institutions/[id]/hostels/[hostelId]/page.tsx` — floor-wise room grid + add room + allocate
 - [x] Allocate/transfer/vacate — built into the hostel detail via `AllocationDrawer` (no separate /allocations route)
-- [ ] `src/app/institutions/[id]/hostels/[hostelId]/announcements/page.tsx` — *(pass 2)*
-- [ ] `src/app/institutions/[id]/hostels/cafeteria/page.tsx` — menu board editor *(pass 2)*
-- [ ] `src/app/institutions/[id]/hostels/cafeteria/billing/page.tsx` — mess billing *(pass 2)*
-- [ ] `src/actions/mess.ts` *(pass 2)*
+- [x] `src/app/institutions/[id]/hostels/[hostelId]/announcements/page.tsx` — `AnnouncementsManager`
+- [x] `src/app/institutions/[id]/hostels/cafeteria/page.tsx` — menu board editor (`MessMenuEditor`, day × meal)
+- [x] `src/app/institutions/[id]/hostels/cafeteria/billing/page.tsx` — mess billing (`MessBilling`, generate + mark paid)
+- [x] `src/actions/mess.ts` — getMessMenu, updateMessMenu, getMessBills, generateMessBills, markMessPaid, getMyMessBills
 - [x] `src/actions/hostels.ts` — getHostels, getHostel, addHostel, getRooms, addRoom, allocateStudent, vacateAllocation, getRoomRosters, searchAllocatableStudents, getMyHostel
-- [ ] `src/actions/hostelMaintenance.ts` *(pass 2)*
+- [x] `src/actions/hostelMaintenance.ts` — raise, getMaintenanceRequests, updateMaintenanceRequest, getMyMaintenanceRequests (+ `hostelAnnouncements.ts`)
 - [x] `src/components/hostels/RoomGrid.tsx` — floor-wise grid colour-coded empty/partial/full
 - [x] `src/components/hostels/AllocationDrawer.tsx` — search student → assign; vacate occupants
-- [ ] `src/app/institutions/[id]/hostels/[hostelId]/maintenance/page.tsx` — warden dashboard *(pass 2)*
-- [x] Student portal: `src/app/student-portal/hostel/page.tsx` — room, hostel, roommates (announcements/menu/bill/maintenance in pass 2)
-- [ ] Hostel fee auto-linked to `fee_structures` *(pass 2)*
+- [x] `src/app/institutions/[id]/hostels/[hostelId]/maintenance/page.tsx` — warden board (priority sort, assign, resolve)
+- [x] Student portal: `src/app/student-portal/hostel/page.tsx` — room, roommates, mess menu, mess bills, announcements, raise maintenance
+- [ ] Hostel/mess fee auto-linked to `fee_structures` — *deferred (self-contained mess ledger for now)*
 
 #### Key features:
 - Floor-wise room grid with colour-coded occupancy

@@ -71,9 +71,13 @@ export function HostelDetail({
             {HOSTEL_TYPE_LABEL[hostel.hostel_type]} hostel · {stats.rooms} rooms · {stats.occupied}/{stats.capacity} beds ({stats.pct}% full)
           </p>
         </div>
-        <button type="button" onClick={() => setAddOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white text-xs font-semibold rounded-md hover:bg-purple-700 border border-purple-700">
-          <Plus size={14} strokeWidth={2.5} /> Add Room
-        </button>
+        <div className="flex items-center gap-2">
+          <Link href={`/institutions/${institutionId}/hostels/${hostel.id}/maintenance`} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Maintenance</Link>
+          <Link href={`/institutions/${institutionId}/hostels/${hostel.id}/announcements`} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800">Announcements</Link>
+          <button type="button" onClick={() => setAddOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white text-xs font-semibold rounded-md hover:bg-purple-700 border border-purple-700">
+            <Plus size={14} strokeWidth={2.5} /> Add Room
+          </button>
+        </div>
       </div>
 
       {error && <p className="mb-3 text-xs text-red-600 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 rounded-lg px-3 py-2">{error}</p>}

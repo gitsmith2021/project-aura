@@ -185,6 +185,8 @@ export async function vacateAllocation(input: {
 
 // ── Student "my hostel" ───────────────────────────────────────────────────────
 export type MyHostel = {
+  hostelId: string;
+  roomId: string;
   hostel: { name: string; hostel_type: string; address: string | null };
   room: { room_number: string; floor: number; room_type: string };
   roommates: { name: string; roll_no: string | null }[];
@@ -201,7 +203,7 @@ export async function getMyHostel(): Promise<Result<MyHostel>> {
 
     const { data: alloc } = await supabase
       .from("hostel_allocations")
-      .select("room_id, hostels(name, hostel_type, address), hostel_rooms(room_number, floor, room_type)")
+      .select("hostel_id, room_id, hostels(name, hostel_type, address), hostel_rooms(room_number, floor, room_type)")
       .eq("student_id", student.id as string).eq("status", "active").maybeSingle();
     if (!alloc) return { success: true, data: null };
 
@@ -215,6 +217,8 @@ export async function getMyHostel(): Promise<Result<MyHostel>> {
     return {
       success: true,
       data: {
+        hostelId: alloc.hostel_id as string,
+        roomId: alloc.room_id as string,
         hostel, room,
         roommates: (mates ?? []).map((m) => {
           const s = m.students as unknown as { full_name: string; roll_no: string | null } | null;
