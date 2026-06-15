@@ -126,7 +126,7 @@ Phase 8    █████░░░░░░░░░░░░░░░░░░
 Arch       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░  19%  (1/8 + A2 🟡 — Audit Log ✅ · Test infra (Vitest+Playwright) foundation · RLS, Indexes, CI/CD, Billing pending)
 ```
 
-> **Next up:** Phase 4H — Student Clubs & Organizations (NSS/NCC/Cultural) (see [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md)). **Scheduler now live:** pg_cron runs `private.sweep_overdue_outpasses` (30 min) + `private.sweep_low_attendance` (daily) — migration `20260615050000`. **Phase 3 deferred items still open:** only 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed (paid + DLT/Meta verification). Fee-due, low-attendance & outpass-overdue sweeps are all **live** via pg_cron. Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
+> **Next up:** Phase 4H — Student Clubs & Organizations (NSS/NCC/Cultural) (see [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md)). **Scheduler now live:** pg_cron runs `private.sweep_overdue_outpasses` (30 min) + `private.sweep_low_attendance` (daily) — migration `20260615050000`. **Phase 3 deferred items still open:** only 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed (paid + DLT/Meta verification). Fee-due, low-attendance & outpass-overdue sweeps are all **live** via pg_cron. Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [DISASTER_RECOVERY.md](../DISASTER_RECOVERY.md))
 
 ---
 
