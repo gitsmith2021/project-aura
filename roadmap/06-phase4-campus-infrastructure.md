@@ -320,15 +320,29 @@ CREATE TABLE laboratory_attendance (
 );
 ```
 
+> **Status:** ✅ **Complete** (migration `20260615000000_phase4d_laboratories`).
+> Five tables (laboratories, batches, experiments, sessions, attendance) with RLS:
+> all members read; admins **and the assigned lab assistant** manage their lab's
+> batches/experiments/sessions/attendance; a student reads their own attendance.
+> Admin flow: labs registry (type + department filters) → lab detail (experiment
+> syllabus via `ExperimentCard` + batches) → sessions page (log session → mark
+> attendance + record marks in one grid). Staff portal reuses the same
+> `SessionLogger` for labs they are assigned to; students see their sessions,
+> attendance % and lab marks. Pure helpers (attendance rate, average marks, marks
+> normalisation, requirement parsing) are unit-tested (14 tests). **Deferred:**
+> explicit batch→student rosters (the attendance grid currently lists the lab's
+> department students); linking lab marks into the CIA `lab_record` component.
+
 #### What to build:
-- [ ] `supabase/migrations/..._laboratories.sql`
-- [ ] `src/app/institutions/[id]/laboratories/page.tsx` — Labs landing page: list of labs, department filters, and active batches
-- [ ] `src/app/institutions/[id]/laboratories/[labId]/page.tsx` — Lab detail: experiment syllabus, schedule, and assistant details
-- [ ] `src/app/institutions/[id]/laboratories/[labId]/sessions/page.tsx` — Log a new session, record student attendance, and assign lab session marks
-- [ ] `src/actions/laboratories.ts` — getLaboratories, getLabExperiments, logLabSession, submitLabAttendance
-- [ ] `src/components/laboratories/ExperimentCard.tsx` — Card showing experiment steps and inventory/chemical requirements
-- [ ] Student portal: `src/app/student-portal/laboratories/page.tsx` — View assigned lab batches, experiment logs, attendance, and internal session grades
-- [ ] Staff portal: `src/app/staff-portal/laboratories/page.tsx` — Log lab sessions, mark attendance, and record grades
+- [x] `supabase/migrations/20260615000000_phase4d_laboratories.sql` — 5 tables + RLS (admin + assistant manage, student read own) + indexes
+- [x] `src/app/institutions/[id]/laboratories/page.tsx` — Labs landing (`LaboratoriesManager`): search, lab-type + department filters, Add Laboratory drawer
+- [x] `src/app/institutions/[id]/laboratories/[labId]/page.tsx` — Lab detail (`LabDetail`): experiment syllabus, batches, assistant + add experiment/batch drawers
+- [x] `src/app/institutions/[id]/laboratories/[labId]/sessions/page.tsx` — Log session + attendance/marks grid (`SessionLogger`)
+- [x] `src/actions/laboratories.ts` — getLaboratories, getLaboratory, addLaboratory, getLabBatches, addLabBatch, getLabExperiments, addLabExperiment, getLabSessions, logLabSession, getLabRoster, getSessionAttendance, submitLabAttendance, getMyAssignedLabs, getMyLabSessions, getLabAssistants (pure helpers in `src/lib/laboratories.ts`)
+- [x] `src/components/laboratories/ExperimentCard.tsx` — experiment card with requirements/chemicals checklist chips
+- [x] Student portal: `src/app/student-portal/laboratories/page.tsx` — sessions grouped by lab, attendance % + lab marks (`MyLabsList`)
+- [x] Staff portal: `src/app/staff-portal/laboratories/page.tsx` — assigned labs → log sessions, mark attendance + grades (`StaffLabConsole` reusing `SessionLogger`)
+- [~] Batch→student rosters + CIA `lab_record` link — *deferred (roster derived from the lab's department for now)*
 
 #### Key features:
 - Lab assistant assignment and custom lab batch roster scheduling
@@ -846,7 +860,7 @@ CREATE TABLE event_participants (
 - [ ] Library: book catalog, lending, overdue fine calculation all working
 - [ ] Auditorium: venue booking with conflict detection and approval flow
 - [ ] Hostel: room allocation, occupancy grid, mess billing, maintenance requests, student portal hostel view
-- [ ] Laboratories: labs registry, student batches, experiment sessions, and portal views
+- [x] Laboratories: labs registry, student batches, experiment sessions, and portal views
 - [ ] Assets: stock registry, low stock alerts, allocations to labs, and maintenance logs
 - [ ] Smart cards: NFC card registry with issuance and deactivation working
 - [ ] Gate pass: visitor log and student outpass working with warden approval

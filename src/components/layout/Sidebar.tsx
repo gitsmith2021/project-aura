@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -39,6 +39,7 @@ const STAFF_NAV = [
   { key: "notices",    href: "/staff-portal/notices",    label: "Notices",     Icon: Megaphone },
   { key: "library",    href: "/staff-portal/library",    label: "My Library",  Icon: Library },
   { key: "bookings",   href: "/staff-portal/bookings",   label: "Bookings",    Icon: Building2 },
+  { key: "laboratories", href: "/staff-portal/laboratories", label: "Laboratories", Icon: FlaskConical },
   { key: "attendance", href: "/staff-portal/attendance", label: "Attendance",  Icon: ClipboardCheck },
   { key: "cia",        href: "/staff-portal/cia",        label: "CIA Marks",   Icon: ClipboardList },
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
@@ -354,6 +355,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const libraryHref        = slug ? `/institutions/${slug}/library`          : "/institutions";
   const bookingsHref       = slug ? `/institutions/${slug}/bookings`         : "/institutions";
   const hostelsHref        = slug ? `/institutions/${slug}/hostels`          : "/institutions";
+  const laboratoriesHref   = slug ? `/institutions/${slug}/laboratories`     : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -547,6 +549,13 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               icon={<BedDouble size={18} />}
               label="Hostels"
               active={pathname.includes("/hostels")}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarLink
+              href={laboratoriesHref}
+              icon={<FlaskConical size={18} />}
+              label="Laboratories"
+              active={pathname.includes("/laboratories")}
               isCollapsed={isCollapsed}
             />
 
