@@ -94,7 +94,7 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 2 | [roadmap/02-foundation-migrations.md](roadmap/02-foundation-migrations.md) | Foundation Migrations (2-Pre-A – 2-Pre-D) | ✅ Complete |
 | 3 | [roadmap/03-phase2-academic-operations.md](roadmap/03-phase2-academic-operations.md) | Phase 2 — Academic Operations (2A–2I) | ✅ Complete |
 | 4 | [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md) | Phase 2.5 — Critical Security & Compliance Fixes | ✅ Complete (3 manual dashboard steps pending) |
-| 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🟢 Core complete (3A/3B/3D ✅, 3C email; SMS/WhatsApp + time-based deferred) |
+| 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🟢 Core complete (3A/3B/3D ✅, 3C email; pg_cron sweeps live — low-attendance + outpass-overdue; SMS/WhatsApp + fee-due deferred) |
 | 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🟡 In progress (4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅) |
 | 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | 🔲 Pending |
 | 8 | [roadmap/08-phase6-portals-tools.md](roadmap/08-phase6-portals-tools.md) | Phase 6 — Parent Portals & Extended Digital Tools (6A–6H) | 🔲 Pending |
@@ -117,7 +117,7 @@ Overall  ██████████████████░░░░░�
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
-Phase 3    ███████████████████████████░░░░  88%  (3A ✅ · 3B ✅ · 3C 🟡 email live · 3D ✅ notices · SMS/WhatsApp + time-based deferred)
+Phase 3    ████████████████████████████░░  92%  (3A ✅ · 3B ✅ · 3C 🟡 email live · 3D ✅ notices · low-attendance + outpass-overdue sweeps live via pg_cron · SMS/WhatsApp + fee-due deferred)
 Phase 4    █████████████████░░░░░░░░░░░░░░  67%  (8/12 — 4A Library ✅ · 4B Bookings ✅ · 4C Hostels ✅ · 4D Laboratories ✅ · 4E Assets ✅ · 4E-sub Vendors/PO ✅ · 4F ID Cards ✅ · 4G Gate ✅ · clubs/infirmary/sports/events pending)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
@@ -126,7 +126,7 @@ Phase 8    █████░░░░░░░░░░░░░░░░░░
 Arch       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░  19%  (1/8 + A2 🟡 — Audit Log ✅ · Test infra (Vitest+Playwright) foundation · RLS, Indexes, CI/CD, Billing pending)
 ```
 
-> **Next up:** Phase 4H — Student Clubs & Organizations (NSS/NCC/Cultural) (see [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md)). **Phase 3 deferred items** (revisit when infra exists): 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed; time-based triggers (fee-due, low-attendance) await a scheduler. Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
+> **Next up:** Phase 4H — Student Clubs & Organizations (NSS/NCC/Cultural) (see [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md)). **Scheduler now live:** pg_cron runs `private.sweep_overdue_outpasses` (30 min) + `private.sweep_low_attendance` (daily) — migration `20260615050000`. **Phase 3 deferred items still open:** 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed; fee-due sweep needs a fee due-date model (see DEFERRED_REGISTER 3-3). Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
 
 ---
 

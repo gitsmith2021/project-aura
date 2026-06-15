@@ -11,6 +11,7 @@ export type NotificationType =
   | "fee_due"
   | "fee_paid"
   | "attendance_low"
+  | "outpass_overdue"
   | "salary_disbursed"
   | "schedule_published"
   | "notice"
@@ -37,6 +38,7 @@ export const NOTIFICATION_META: Record<
   fee_due:            { label: "Fee due",            tone: "rose" },
   fee_paid:           { label: "Payment received",   tone: "emerald" },
   attendance_low:     { label: "Attendance alert",   tone: "rose" },
+  outpass_overdue:    { label: "Outpass overdue",    tone: "rose" },
   salary_disbursed:   { label: "Salary disbursed",   tone: "emerald" },
   schedule_published: { label: "Timetable",          tone: "blue" },
   notice:             { label: "Notice",             tone: "violet" },
@@ -173,4 +175,37 @@ export function buildLowAttendanceMessage(pct: number, threshold = 75): BuiltNot
     title: "Low attendance alert",
     body: `Your attendance is ${pct}%, below the ${threshold}% requirement. Please attend classes regularly.`,
   };
+}
+
+// ── Scheduler sweep copy (mirrors the pg_cron functions in
+//    supabase/migrations/..._scheduler_sweeps.sql) ─────────────────────────────
+
+/** Warden alert when a student's outpass passes its expected return time. */
+export function buildOutpassOverdueWardenMessage(studentName: string, destination: string): BuiltNotification {
+  return {
+    type: "outpass_overdue",
+    title: "Outpass overdue",
+    body: `${studentName} has not returned by the expected time (destination: ${destination}).`,
+  };
+}
+
+/** Reminder sent to the overdue student. */
+export function buildOutpassOverdueStudentMessage(): BuiltNotification {
+  return {
+    type: "outpass_overdue",
+    title: "You are overdue",
+    body: "Your outpass return time has passed. Please return to campus or contact your warden.",
+  };
+}
+
+/** Whole-number attendance percentage (present / total), 0 when no sessions.
+ *  Mirrors the round(100 * present/total) the low-attendance sweep computes. */
+export function attendancePercent(present: number, total: number): number {
+  if (total <= 0) return 0;
+  return Math.round((100 * present) / total);
+}
+
+/** A student is flagged once they have at least `minSessions` and fall below `threshold`%. */
+export function isLowAttendance(present: number, total: number, threshold = 75, minSessions = 5): boolean {
+  return total >= minSessions && attendancePercent(present, total) < threshold;
 }

@@ -62,11 +62,11 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 > than shipped un-runnable.
 
 #### What to build:
-- [ ] Fee due reminder — fee_payment 7 days overdue → student *(deferred: time-based, needs a scheduler)*
+- [ ] Fee due reminder — fee_payment 7 days overdue → student *(deferred: scheduler exists (pg_cron), but needs a fee due-date model — see DEFERRED_REGISTER 3-3)*
 - [x] Payment received — on `payment_status=completed` → student. Wired into `recordManualPayment` (manual) **and** the Razorpay `payment.captured` webhook (online)
 - [x] Leave request — on new leave application → institution admins (INST_ADMIN, PRINCIPAL). Wired into `applyForLeave`
 - [x] Leave approved/rejected — on leave status update → staff. Wired into `reviewLeaveRequest`
-- [ ] Low attendance alert — student attendance < 75% → student *(deferred: time-based, needs a scheduler)*
+- [x] Low attendance alert — student attendance < 75% → student. **Live** via pg_cron `private.sweep_low_attendance` (daily 07:17; ≥5 sessions, max once/7 days) — migration `20260615050000_scheduler_sweeps`
 - [x] Salary disbursed — on disbursement `status=processed` → staff. Wired into `processDisbursement` (single) + `bulkProcessDisbursements` (fan-out)
 - [x] Schedule published — on draft published → all dept staff + students. Wired into `publishDraftSchedule`
 - [x] `src/actions/notificationTriggers.ts` — all trigger functions (+ `buildFeeDueMessage` / `buildLowAttendanceMessage` builders ready for when the sweeps are scheduled)

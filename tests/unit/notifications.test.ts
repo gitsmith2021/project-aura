@@ -3,7 +3,8 @@ import {
   unreadCount, badgeText, bucketFor, groupByBucket, relativeTime, metaFor,
   buildLeaveRequestedMessage, buildLeaveReviewedMessage, buildPaymentReceivedMessage,
   buildSalaryDisbursedMessage, buildSchedulePublishedMessage, buildFeeDueMessage,
-  buildLowAttendanceMessage,
+  buildLowAttendanceMessage, buildOutpassOverdueWardenMessage, buildOutpassOverdueStudentMessage,
+  attendancePercent, isLowAttendance,
   type NotificationItem,
 } from "@/lib/notifications";
 
@@ -12,6 +13,32 @@ import {
 const NOW = new Date(2026, 5, 14, 12, 0, 0); // 14 Jun 2026, 12:00 local
 const local = (y: number, m: number, d: number, h = 0) => new Date(y, m, d, h).toISOString();
 const ago = (ms: number) => new Date(NOW.getTime() - ms).toISOString();
+
+describe("scheduler sweep copy + attendance helpers", () => {
+  it("renders the outpass_overdue type as a rose-toned alert", () => {
+    expect(metaFor("outpass_overdue").label).toBe("Outpass overdue");
+    expect(metaFor("outpass_overdue").tone).toBe("rose");
+  });
+  it("builds warden + student overdue messages", () => {
+    expect(buildOutpassOverdueWardenMessage("Asha R", "Trichy town")).toEqual({
+      type: "outpass_overdue",
+      title: "Outpass overdue",
+      body: "Asha R has not returned by the expected time (destination: Trichy town).",
+    });
+    expect(buildOutpassOverdueStudentMessage().type).toBe("outpass_overdue");
+  });
+  it("computes a whole-number attendance percentage", () => {
+    expect(attendancePercent(0, 0)).toBe(0);
+    expect(attendancePercent(3, 4)).toBe(75);
+    expect(attendancePercent(2, 3)).toBe(67);
+  });
+  it("flags low attendance only past the minimum session count", () => {
+    expect(isLowAttendance(2, 3)).toBe(false);           // below min sessions (3 < 5)
+    expect(isLowAttendance(3, 10)).toBe(true);           // 30% < 75%
+    expect(isLowAttendance(8, 10)).toBe(false);          // 80% ≥ 75%
+    expect(isLowAttendance(7, 10, 75)).toBe(true);       // 70% < 75%
+  });
+});
 
 function item(over: Partial<NotificationItem> & { id: string; created_at: string }): NotificationItem {
   return { type: "system", title: "T", body: "B", data: null, is_read: false, ...over };
