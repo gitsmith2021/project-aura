@@ -925,7 +925,7 @@ CREATE TABLE event_participants (
 - [x] Sidebar: Star icon + "Events" link after Sports
 - [x] NAAC Criterion 5.3 export: event-type breakdown CSV with participant counts
 
-> **Status:** ✅ **Complete** (migration `20260615110000_phase4k_campus_events`, commit `TBD`). 2 tables with RLS (incl. student self-register policy). 48 pure-function unit tests. Total suite: 240 tests passing.
+> **Status:** ✅ **Complete** (migration `20260615110000_phase4k_campus_events`, commit `dca2243`). 2 tables with RLS (incl. student self-register policy). 48 pure-function unit tests. Total suite: 240 tests passing.
 
 #### Key features:
 - Committee assignment: designate organizing staff and their roles (Coordinator, Stage Manager, MC, etc.)
@@ -947,7 +947,7 @@ CREATE TABLE event_participants (
 - [x] Clubs: NSS/NCC and all clubs registered with activity logs and NAAC export (commit c1a528c)
 - [x] Infirmary: visit log and student medical profiles working (commit `4ae4070`, 24 unit tests)
 - [x] Sports: teams, facilities, and achievements logged with NIRF export (commit `dc8d836`, 28 unit tests)
-- [x] Campus Events: event registry with committee assignment, participant rosters, budget tracking, and NAAC export (commit `TBD`, 48 unit tests)
+- [x] Campus Events: event registry with committee assignment, participant rosters, budget tracking, and NAAC export (commit `dca2243`, 48 unit tests)
 - [x] All campus infrastructure modules integrated with student and staff portals
 - [ ] `git commit -m "feat: Phase 4 — Campus Infrastructure & Laboratories complete"`
 - [ ] `git push origin main`
