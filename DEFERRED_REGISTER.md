@@ -13,7 +13,7 @@
 > - Review this register at the start of each new phase — some items are cheapest
 >   to clear in batches (see **Batchable clusters** below).
 >
-> **Last updated:** 2026-06-15 (after Phase 4E — Asset & Inventory Management)
+> **Last updated:** 2026-06-15 (after Phase 4E-sub — Vendor & Purchase Order Management)
 
 ---
 
@@ -69,7 +69,9 @@ Legend — **Status:** 🔲 open · 🟡 partial · ✅ done. **Priority:** 🔴
 | 4D-1 | Explicit batch→student rosters (grid currently uses dept students) | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4D | New `laboratory_batch_students` join + UI | Phase 4D follow-up | 🟢 | 🔲 |
 | 4D-2 | Lab session marks → CIA `lab_record` component | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4D | CIA internal-marks link | CIA-link pass | 🟡 | 🔲 |
 | 4E-1 | Low-stock asset → notification alert | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4E | Depends on Phase 3 notifications + a sweep | Phase 3 + infra | 🟢 | 🔲 |
-| 4E-2 | PO-received goods → auto-populate `assets` registry | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4E-sub | Vendor & PO module not built | Phase 4E-sub | 🟡 | 🔲 |
+| 4Es-1 | Approved PO → `budget_line_items.actual_amt` (budget actuals) | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4E-sub | Step 5L department-budget table not built | Phase 5L | 🟡 | 🔲 |
+| 4Es-2 | HOD self-service PO raising from a portal | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4E-sub | Admin-managed for now; needs portal RLS for own drafts | Phase 6 portals | 🟢 | 🔲 |
+| 4Es-3 | `purchase-invoices` Storage bucket creation | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4E-sub | Manual dashboard step (like `receipts`) before invoice upload works | Anytime (manual) | 🟡 | 🔲 |
 
 ### Phase 7 — Super Admin / SaaS
 | # | Deferred item | Source | Blocker / reason | Pickup phase | Priority | Status |
@@ -97,7 +99,7 @@ Legend — **Status:** 🔲 open · 🟡 partial · ✅ done. **Priority:** 🔴
 
 | # | Item | Commit | Cleared on |
 |---|------|--------|-----------|
-| — | _(none yet)_ | — | — |
+| 4E-2 | PO-received goods → auto-populate `assets` registry (opt-in on receive, "Procurement (PO)" category) | `20260615020000` | 2026-06-15 (Phase 4E-sub) |
 
 ---
 

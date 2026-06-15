@@ -497,18 +497,30 @@ CREATE POLICY "purchase_orders: institution members can manage"
   ));
 ```
 
+> **Status:** ✅ **Complete** (migration `20260615020000_phase4e_sub_vendors_po`).
+> Vendor registry (category, GST, contact, active PO count) + PO lifecycle
+> draft → submitted → approved → received → paid (+ cancel until received), with
+> a status timeline, GST-ready line-item editor (auto-total), auto-generated
+> `PO-YYYY-NNNN` numbers per institution, dashboard counters, and GST invoice
+> upload to the `purchase-invoices` Storage bucket. **Asset receipt integration
+> is live:** marking a PO received can auto-populate the Phase 4E `assets`
+> registry (under an auto-ensured "Procurement (PO)" category) — clears deferred
+> item 4E-2. Pure helpers (totals, PO-number, status flow, stats) unit-tested
+> (12 tests). RLS: members read; admins manage. **Deferred:** budget actuals →
+> `budget_line_items` (Step 5L, table not built yet); HOD self-service raising
+> from a portal (admin-managed for now).
+
 #### What to build:
-- [ ] `supabase/migrations/..._vendors_purchase_orders.sql`
-- [ ] Supabase Storage bucket: `purchase-invoices` (authenticated read, staff write by institution)
-- [ ] `src/app/institutions/[id]/vendors/page.tsx` — Vendor registry: list, add, edit, deactivate; filter by category
-- [ ] `src/app/institutions/[id]/vendors/purchase-orders/page.tsx` — PO list: filter by status, department, vendor, date range
-- [ ] `src/app/institutions/[id]/vendors/purchase-orders/[poId]/page.tsx` — PO detail: line items, status timeline, invoice upload, approve/reject actions
-- [ ] `src/actions/vendors.ts` — getVendors, addVendor, updateVendor
-- [ ] `src/actions/purchaseOrders.ts` — createPO, submitPO, approvePO, markReceived, markPaid, getPOStats
-- [ ] `src/components/vendors/VendorCard.tsx` — Card: vendor name, category badge, GST number, active PO count
-- [ ] `src/components/vendors/PurchaseOrderForm.tsx` — Line-item editor: vendor selector, item rows (name, qty, unit price), auto-total
-- [ ] Budget integration: approved PO amount auto-updates `budget_line_items.actual_amt` for the relevant department and category (Step 5L)
-- [ ] Asset receipt: when PO status → `received`, non-consumable items auto-populate the `assets` table (Step 4E)
+- [x] `supabase/migrations/20260615020000_phase4e_sub_vendors_po.sql` — vendors + purchase_orders + RLS + indexes
+- [~] Supabase Storage bucket: `purchase-invoices` — uploaded to client-side; **bucket created manually** (dashboard, like `receipts`) per migration note
+- [x] `src/app/institutions/[id]/vendors/page.tsx` — vendor registry (`VendorsManager`): list, add, edit, deactivate; category filter + search
+- [x] `src/app/institutions/[id]/vendors/purchase-orders/page.tsx` — PO list (`PurchaseOrdersList`): status filter + stats + new-PO drawer
+- [x] `src/app/institutions/[id]/vendors/purchase-orders/[poId]/page.tsx` — PO detail (`PurchaseOrderDetail`): line items, status timeline, invoice upload, lifecycle actions
+- [x] `src/actions/vendors.ts` — getVendors, addVendor, updateVendor
+- [x] `src/actions/purchaseOrders.ts` — getPurchaseOrders, getPurchaseOrder, createPO, submitPO, approvePO, cancelPO, markReceived, markPaid, updateInvoiceUrl, getPOStats, getPOFormData
+- [x] `src/components/vendors/VendorCard.tsx` — vendor card with category badge, GST, PO count (+ `PurchaseOrderForm` line-item editor)
+- [x] Asset receipt: PO → `received` auto-populates the `assets` table (Step 4E) — opt-in checkbox on receive
+- [~] Budget integration: approved PO → `budget_line_items.actual_amt` (Step 5L) — *deferred (5L table not built)*
 
 #### Key features:
 - PO approval workflow: department HOD raises PO → admin approves → vendor supplies → goods received → payment recorded
