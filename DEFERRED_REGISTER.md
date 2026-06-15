@@ -13,7 +13,7 @@
 > - Review this register at the start of each new phase — some items are cheapest
 >   to clear in batches (see **Batchable clusters** below).
 >
-> **Last updated:** 2026-06-15 (after Phase 4D — Laboratory Management)
+> **Last updated:** 2026-06-15 (after Phase 4E — Asset & Inventory Management)
 
 ---
 
@@ -68,6 +68,8 @@ Legend — **Status:** 🔲 open · 🟡 partial · ✅ done. **Priority:** 🔴
 | 4C-1 | Hostel/mess fees → auto-link to `fee_structures` | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4C | Central fee-ledger seam | Fee-ledger pass | 🟡 | 🔲 |
 | 4D-1 | Explicit batch→student rosters (grid currently uses dept students) | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4D | New `laboratory_batch_students` join + UI | Phase 4D follow-up | 🟢 | 🔲 |
 | 4D-2 | Lab session marks → CIA `lab_record` component | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4D | CIA internal-marks link | CIA-link pass | 🟡 | 🔲 |
+| 4E-1 | Low-stock asset → notification alert | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4E | Depends on Phase 3 notifications + a sweep | Phase 3 + infra | 🟢 | 🔲 |
+| 4E-2 | PO-received goods → auto-populate `assets` registry | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4E-sub | Vendor & PO module not built | Phase 4E-sub | 🟡 | 🔲 |
 
 ### Phase 7 — Super Admin / SaaS
 | # | Deferred item | Source | Blocker / reason | Pickup phase | Priority | Status |

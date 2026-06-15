@@ -95,7 +95,7 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 3 | [roadmap/03-phase2-academic-operations.md](roadmap/03-phase2-academic-operations.md) | Phase 2 — Academic Operations (2A–2I) | ✅ Complete |
 | 4 | [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md) | Phase 2.5 — Critical Security & Compliance Fixes | ✅ Complete (3 manual dashboard steps pending) |
 | 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🟢 Core complete (3A/3B/3D ✅, 3C email; SMS/WhatsApp + time-based deferred) |
-| 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🟡 In progress (4A ✅ · 4B ✅ · 4C ✅ · 4D ✅) |
+| 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🟡 In progress (4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅) |
 | 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | 🔲 Pending |
 | 8 | [roadmap/08-phase6-portals-tools.md](roadmap/08-phase6-portals-tools.md) | Phase 6 — Parent Portals & Extended Digital Tools (6A–6H) | 🔲 Pending |
 | 9 | [roadmap/09-phase7-super-admin.md](roadmap/09-phase7-super-admin.md) | Phase 7 — Super Admin Panel / SaaS Multi-Tenancy (7A–7F-sub2) | 🔲 Pending |
@@ -110,15 +110,15 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-15  
-> **46 of 87 modules complete — 53% of full platform built**
+> **47 of 87 modules complete — 54% of full platform built**
 
 ```
-Overall  █████████████████░░░░░░░░░░░░░░░  53%  (46/87)
+Overall  █████████████████░░░░░░░░░░░░░░░  54%  (47/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
 Phase 3    ███████████████████████████░░░░  88%  (3A ✅ · 3B ✅ · 3C 🟡 email live · 3D ✅ notices · SMS/WhatsApp + time-based deferred)
-Phase 4    ██████████░░░░░░░░░░░░░░░░░░░░░  33%  (4/12 — 4A Library ✅ · 4B Bookings ✅ · 4C Hostels ✅ · 4D Laboratories ✅ · assets/cards/gate/etc. pending)
+Phase 4    ████████████░░░░░░░░░░░░░░░░░░░  42%  (5/12 — 4A Library ✅ · 4B Bookings ✅ · 4C Hostels ✅ · 4D Laboratories ✅ · 4E Assets ✅ · cards/gate/clubs/etc. pending)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
 Phase 7    ████████████████░░░░░░░░░░░░░░░░  50%  (4/8  — 7A ✅ · 7B ✅ · 7C ✅ · 7F-sub SSR Builder ✅)
@@ -126,7 +126,7 @@ Phase 8    █████░░░░░░░░░░░░░░░░░░
 Arch       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░  19%  (1/8 + A2 🟡 — Audit Log ✅ · Test infra (Vitest+Playwright) foundation · RLS, Indexes, CI/CD, Billing pending)
 ```
 
-> **Next up:** Phase 4E — Asset & Inventory Management (see [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md)). **Phase 3 deferred items** (revisit when infra exists): 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed; time-based triggers (fee-due, low-attendance) await a scheduler. Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
+> **Next up:** Phase 4E-sub — Vendor & Purchase Order Management (see [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md)). **Phase 3 deferred items** (revisit when infra exists): 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed; time-based triggers (fee-due, low-attendance) await a scheduler. Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
 
 ---
 
@@ -175,7 +175,7 @@ Arch       ██████░░░░░░░░░░░░░░░░░
 | ✅ Phase 4B | Auditorium & Space Booking — venue registry, staff booking requests with conflict detection, admin approval workflow + notes, colour-coded upcoming agenda | Complete | `20260614030000` |
 | ✅ Phase 4C | Hostel Management + Mess Billing — hostels/rooms/allocations + occupancy grid, mess menu editor + monthly billing, maintenance (raise → warden board), hostel announcements, student "my hostel" view | Complete | `20260614040000` · `20260614050000` |
 | ✅ Phase 4D | Laboratory Management — labs registry (type/dept filters), experiment syllabus + batches, session logging with attendance + lab marks grid; admin + assigned-assistant (staff portal) manage, student "my labs" view; RLS + 14 unit tests | Complete | `20260615000000` |
-| 🔲 Phase 4E | Asset & Inventory Management | Pending | — |
+| ✅ Phase 4E | Asset & Inventory Management — categories (consumable/fixed), stock registry with reorder low-stock alerts, allocations to dept/lab/staff (stock auto-decrement + return), maintenance logs with running cost; admin-only, RLS + 11 unit tests | Complete | `20260615010000` |
 | 🔲 Phase 4E-sub | Vendor & Purchase Order Management | Pending | — |
 | 🔲 Phase 4F | Smart ID Card & NFC Card Registry | Pending | — |
 | 🔲 Phase 4G | Gate Pass & Visitor Management | Pending | — |

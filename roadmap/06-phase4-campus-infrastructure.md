@@ -409,14 +409,28 @@ CREATE TABLE asset_maintenance_logs (
 );
 ```
 
+> **Status:** ✅ **Complete** (migration `20260615010000_phase4e_assets`). Four
+> tables (asset_categories, assets, asset_allocations, asset_maintenance_logs)
+> with RLS: members read; admins manage; allocations/maintenance scoped via the
+> parent asset's institution. Consumable vs fixed categories; stock tracked in any
+> unit (pcs/ml/g). Allocating decrements `current_stock` and auto-flips status to
+> `low_stock` at/below the reorder level (consumables → `consumed`, fixed →
+> returnable `allocated`); returning restores stock. Allocations target
+> departments, **laboratories (4D)** or staff. Maintenance logs keep a running
+> repair cost and can flip an asset to `maintenance`. Pure helpers (low-stock,
+> effective status, cost rollup, allocation validation) are unit-tested (11 tests).
+> Admin-only (no portal views). **Deferred:** PO-receipt auto-population (4E-sub)
+> and low-stock → notification (Phase 3) integrations.
+
 #### What to build:
-- [ ] `supabase/migrations/..._assets.sql`
-- [ ] `src/app/institutions/[id]/assets/page.tsx` — Assets Inventory Dashboard: categorized asset list, stock levels, and replenishment status
-- [ ] `src/app/institutions/[id]/assets/allocations/page.tsx` — Track allocations (e.g. allocating microscopes/chemicals to the Physics/Chemistry Lab)
-- [ ] `src/app/institutions/[id]/assets/maintenance/page.tsx` — Manage equipment maintenance schedules and track repair costs
-- [ ] `src/actions/assets.ts` — getAssets, addAsset, allocateAsset, recordMaintenance, getLowStockItems
-- [ ] `src/components/assets/AssetStockAlert.tsx` — Alert banner highlighting assets below reorder levels
-- [ ] `src/components/assets/AllocationModal.tsx` — Form allocating asset quantities to a department, lab, or staff member
+- [x] `supabase/migrations/20260615010000_phase4e_assets.sql` — 4 tables + RLS (members read, admins manage) + indexes
+- [x] `src/app/institutions/[id]/assets/page.tsx` — Inventory dashboard (`AssetsManager`): category/status filters, search, add category + asset, low-stock banner, per-asset allocate
+- [x] `src/app/institutions/[id]/assets/allocations/page.tsx` — allocations register with return action (`AllocationsTable`)
+- [x] `src/app/institutions/[id]/assets/maintenance/page.tsx` — maintenance logs + running cost + record drawer (`MaintenanceBoard`)
+- [x] `src/actions/assets.ts` — getCategories, addCategory, getAssets, addAsset, getLowStockItems, getAllocations, allocateAsset, returnAllocation, getMaintenanceLogs, recordMaintenance, getAllocationTargets (pure helpers in `src/lib/assets.ts`)
+- [x] `src/components/assets/AssetStockAlert.tsx` — banner highlighting assets at/below reorder level
+- [x] `src/components/assets/AllocationModal.tsx` — allocate qty to a department, lab, or staff member
+- [~] Low-stock → notification (Phase 3) and PO-receipt auto-population (4E-sub) — *deferred to those modules*
 
 #### Key features:
 - Consumable inventory tracking (e.g., tracking chemical quantities in ml/grams)
@@ -861,7 +875,7 @@ CREATE TABLE event_participants (
 - [ ] Auditorium: venue booking with conflict detection and approval flow
 - [ ] Hostel: room allocation, occupancy grid, mess billing, maintenance requests, student portal hostel view
 - [x] Laboratories: labs registry, student batches, experiment sessions, and portal views
-- [ ] Assets: stock registry, low stock alerts, allocations to labs, and maintenance logs
+- [x] Assets: stock registry, low stock alerts, allocations to labs, and maintenance logs
 - [ ] Smart cards: NFC card registry with issuance and deactivation working
 - [ ] Gate pass: visitor log and student outpass working with warden approval
 - [ ] Clubs: NSS/NCC and all clubs registered with activity logs and NAAC export
