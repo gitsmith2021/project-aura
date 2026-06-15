@@ -705,14 +705,16 @@ CREATE TABLE club_activities (
 );
 ```
 
+> **Status:** ✅ **Complete** (migration `20260615080000_phase4h_clubs`, commit `c1a528c11bc403c0a5702b6d0dcf46b976371cf6`). NSS and NCC clubs tracked separately. Multi-tenant RLS enabled on all tables. Server Actions provide club CRUD, membership, activities, and NAAC Criterion 5.3 exports. Student portal supports viewing memberships and printing certificate frames. Staff portal coordinator view and admin console fully operational. Tests pass (140/140).
+
 #### What to build:
-- [ ] `supabase/migrations/..._clubs.sql`
-- [ ] `src/app/institutions/[id]/clubs/page.tsx` — Clubs directory: list, manage, view activity stats
-- [ ] `src/app/institutions/[id]/clubs/[clubId]/page.tsx` — Club detail: members roster, activities log
-- [ ] `src/actions/clubs.ts` — getClubs, addClub, addMember, logActivity, getNAACReport
-- [ ] `src/components/clubs/ClubCard.tsx` — Card: club type badge, coordinator, member count, recent activity
-- [ ] Student portal: `src/app/student-portal/clubs/page.tsx` — My clubs, upcoming activities, membership badge
-- [ ] NAAC export: student participation in extracurricular activities (Criterion 5.3)
+- [x] `supabase/migrations/20260615080000_phase4h_clubs.sql` — tables, indexes, and RLS policies
+- [x] `src/app/institutions/[id]/clubs/page.tsx` — Clubs directory: list, manage, view activity stats
+- [x] `src/app/institutions/[id]/clubs/[clubId]/page.tsx` — Club detail: members roster, activities log
+- [x] `src/actions/clubs.ts` — getClubs, addClub, addMember, logActivity, getNAACReport
+- [x] `src/components/clubs/ClubCard.tsx` — Card: club type badge, coordinator, member count, recent activity
+- [x] Student portal: `src/app/student-portal/clubs/page.tsx` — My clubs, upcoming activities, membership badge
+- [x] NAAC export: student participation in extracurricular activities (Criterion 5.3)
 
 #### Key features:
 - NSS and NCC flagged separately for government reporting
@@ -907,14 +909,14 @@ CREATE TABLE event_participants (
 ---
 
 ### Phase 4 Completion Checklist
-- [ ] Library: book catalog, lending, overdue fine calculation all working
-- [ ] Auditorium: venue booking with conflict detection and approval flow
-- [ ] Hostel: room allocation, occupancy grid, mess billing, maintenance requests, student portal hostel view
+- [x] Library: book catalog, lending, overdue fine calculation all working
+- [x] Auditorium: venue booking with conflict detection and approval flow
+- [x] Hostel: room allocation, occupancy grid, mess billing, maintenance requests, student portal hostel view
 - [x] Laboratories: labs registry, student batches, experiment sessions, and portal views
 - [x] Assets: stock registry, low stock alerts, allocations to labs, and maintenance logs
 - [x] Smart cards: NFC card registry with issuance and deactivation working
 - [x] Gate pass: visitor log and student outpass working with warden approval
-- [ ] Clubs: NSS/NCC and all clubs registered with activity logs and NAAC export
+- [x] Clubs: NSS/NCC and all clubs registered with activity logs and NAAC export (commit c1a528c)
 - [ ] Infirmary: visit log and student medical profiles working
 - [ ] Sports: teams, facilities, and achievements logged with NIRF export
 - [ ] Campus Events: event registry with committee assignment, participant rosters, and budget tracking

@@ -95,7 +95,7 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 3 | [roadmap/03-phase2-academic-operations.md](roadmap/03-phase2-academic-operations.md) | Phase 2 — Academic Operations (2A–2I) | ✅ Complete |
 | 4 | [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md) | Phase 2.5 — Critical Security & Compliance Fixes | ✅ Complete (3 manual dashboard steps pending) |
 | 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🟢 Core complete (3A/3B/3D ✅, 3C email; pg_cron sweeps live — fee-due + low-attendance + outpass-overdue; only SMS/WhatsApp deferred) |
-| 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🟡 In progress (4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅) |
+| 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🟡 In progress (4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅ · 4H ✅) |
 | 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | 🔲 Pending |
 | 8 | [roadmap/08-phase6-portals-tools.md](roadmap/08-phase6-portals-tools.md) | Phase 6 — Parent Portals & Extended Digital Tools (6A–6H) | 🔲 Pending |
 | 9 | [roadmap/09-phase7-super-admin.md](roadmap/09-phase7-super-admin.md) | Phase 7 — Super Admin Panel / SaaS Multi-Tenancy (7A–7F-sub2) | 🔲 Pending |
@@ -110,15 +110,15 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-15  
-> **50 of 87 modules complete — 57% of full platform built**
+> **51 of 87 modules complete — 59% of full platform built**
 
 ```
-Overall  ██████████████████░░░░░░░░░░░░░░  57%  (50/87)
+Overall  ███████████████████░░░░░░░░░░░░░  59%  (51/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
 Phase 3    █████████████████████████████░  95%  (3A ✅ · 3B ✅ · 3C 🟡 email live · 3D ✅ notices · pg_cron sweeps live: fee-due + low-attendance + outpass-overdue · only SMS/WhatsApp deferred)
-Phase 4    █████████████████░░░░░░░░░░░░░░  67%  (8/12 — 4A Library ✅ · 4B Bookings ✅ · 4C Hostels ✅ · 4D Laboratories ✅ · 4E Assets ✅ · 4E-sub Vendors/PO ✅ · 4F ID Cards ✅ · 4G Gate ✅ · clubs/infirmary/sports/events pending)
+Phase 4    ███████████████████████░░░░░░░░  75%  (9/12 — 4A Library ✅ · 4B Bookings ✅ · 4C Hostels ✅ · 4D Laboratories ✅ · 4E Assets ✅ · 4E-sub Vendors/PO ✅ · 4F ID Cards ✅ · 4G Gate ✅ · 4H Clubs ✅ · infirmary/sports/events pending)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
 Phase 7    ████████████████░░░░░░░░░░░░░░░░  50%  (4/8  — 7A ✅ · 7B ✅ · 7C ✅ · 7F-sub SSR Builder ✅)
@@ -180,7 +180,7 @@ Arch       ██████░░░░░░░░░░░░░░░░░
 | ✅ Phase 4E-sub | Vendor & Purchase Order Management — vendor registry, PO lifecycle (draft→submitted→approved→received→paid) with status timeline, GST line-item editor + auto PO-YYYY-NNNN, invoice upload, receive→asset auto-population (clears 4E-2); RLS + 12 unit tests | Complete | `20260615020000` |
 | ✅ Phase 4F | Smart ID Card & NFC Card Registry — issue/lost/deactivate/replace flow, issued/active/lost stats, unique UID + one-active-card-per-holder; NFC webhook rejects lost/deactivated cards (403); RLS + 8 unit tests | Complete | `20260615030000` |
 | ✅ Phase 4G | Gate Pass & Visitor Management — visitor logbook (check-in/out + ID proof/vehicle), student outpass workflow (apply → warden/admin approve/reject → security mark-returned), live overdue, hostel-warden approval; student + staff portals; RLS + 10 unit tests | Complete | `20260615040000` |
-| 🔲 Phase 4H | Student Clubs & Organizations (NSS/NCC/Cultural) | Pending | — |
+| ✅ Phase 4H | Student Clubs & Organizations (NSS/NCC/Cultural) | Complete | c1a528c |
 | 🔲 Phase 4I | Health & Medical Records (Infirmary) | Pending | — |
 | 🔲 Phase 4J | Sports & Physical Education | Pending | — |
 | 🔲 Phase 4K | Annual Day & Large Campus Event Management | Pending | — |
