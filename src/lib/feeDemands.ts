@@ -22,11 +22,20 @@ export const DEMAND_STATUS_COLORS: Record<DemandLiveStatus, string> = {
   overdue: "bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300",
 };
 
+export type DemandSource = "fee_structure" | "library_fine" | "mess" | "other";
+
+export const DEMAND_SOURCE_LABELS: Record<DemandSource, string> = {
+  fee_structure: "Fee",
+  library_fine: "Library fine",
+  mess: "Mess",
+  other: "Other",
+};
+
 export type FeeDemand = {
   id: string;
   institution_id: string;
   student_id: string;
-  fee_structure_id: string;
+  fee_structure_id: string | null;
   academic_year_id: string | null;
   title: string;
   amount_due: number;
@@ -34,6 +43,8 @@ export type FeeDemand = {
   net_due: number;
   due_date: string;
   status: DemandStoredStatus;
+  source: DemandSource;
+  source_ref: string | null;
   created_at: string;
   // joined / derived
   amount_paid?: number;

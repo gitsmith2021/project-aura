@@ -64,7 +64,7 @@ CREATE TABLE library_lendings (
 - [x] `src/components/library/LendingDrawer.tsx` — issue slide-out (borrower search + due date); `LendingsTable` handles returns
 - [x] Student portal: `src/app/student-portal/library/page.tsx` — my borrowed books, due dates, fines (`MyLibraryList`)
 - [x] Staff portal: `src/app/staff-portal/library/page.tsx` — staff borrowed books
-- [~] Fine → fee-ledger integration: fine is computed + stored on the lending; auto-posting overdue fines into `fee_payments` deferred (light follow-up)
+- [x] Fine → fee-ledger integration: `returnBook` posts a student's overdue fine into the central ledger as an ad-hoc `fee_demand` (source `library_fine`, deduped per lending) — migration `20260615070000`
 
 #### Key features:
 - Fine auto-calculation (configurable rate per day overdue)
@@ -253,7 +253,7 @@ CREATE TABLE hostel_maintenance_requests (
 - [x] `src/components/hostels/AllocationDrawer.tsx` — search student → assign; vacate occupants
 - [x] `src/app/institutions/[id]/hostels/[hostelId]/maintenance/page.tsx` — warden board (priority sort, assign, resolve)
 - [x] Student portal: `src/app/student-portal/hostel/page.tsx` — room, roommates, mess menu, mess bills, announcements, raise maintenance
-- [ ] Hostel/mess fee auto-linked to `fee_structures` — *deferred (self-contained mess ledger for now)*
+- [x] Hostel/mess fee → central ledger: "Post to ledger" on mess billing creates an ad-hoc `fee_demand` (source `mess`, deduped per bill) so mess charges appear in the student's dues + fee-due reminders — migration `20260615070000`
 
 #### Key features:
 - Floor-wise room grid with colour-coded occupancy

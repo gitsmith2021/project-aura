@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X, Receipt, GraduationCap, Ban, BadgeCheck, RotateCcw } from "lucide-react";
-import { generateDemands, setDemandStatus, type GenerationTargets } from "@/actions/feeDemands";
+import { Plus, X, Receipt, GraduationCap, Ban, BadgeCheck, RotateCcw, IndianRupee } from "lucide-react";
+import { generateDemands, setDemandStatus, recordDemandPayment, type GenerationTargets } from "@/actions/feeDemands";
 import {
-  DEMAND_STATUS_COLORS, DEMAND_STATUS_LABELS, demandStatus, demandTally, balance, daysOverdue, inr,
+  DEMAND_STATUS_COLORS, DEMAND_STATUS_LABELS, DEMAND_SOURCE_LABELS, demandStatus, demandTally, balance, daysOverdue, inr,
   type FeeDemand, type DemandLiveStatus,
 } from "@/lib/feeDemands";
+
+const PAY_MODES = ["cash", "upi", "razorpay", "bank_transfer", "cheque", "dd"];
 
 const inputCls =
   "w-full h-9 px-2.5 text-xs border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500";
@@ -22,6 +24,7 @@ export function DemandsManager({ institutionId, initial, targets }: {
   const [demands, setDemands] = useState<FeeDemand[]>(initial);
   const [filter, setFilter] = useState<DemandLiveStatus | "">("");
   const [genOpen, setGenOpen] = useState(false);
+  const [payFor, setPayFor] = useState<FeeDemand | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -105,6 +108,7 @@ export function DemandsManager({ institutionId, initial, targets }: {
                     </td>
                     <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300">
                       {d.title}
+                      {d.source !== "fee_structure" && <span className="ml-1 px-1 py-0.5 rounded text-[9px] font-bold uppercase bg-slate-100 dark:bg-slate-800 text-slate-500">{DEMAND_SOURCE_LABELS[d.source]}</span>}
                       {d.concession_amount > 0 && <span className="ml-1 text-[10px] text-violet-500">−{inr(d.concession_amount)}</span>}
                     </td>
                     <td className="px-3 py-2.5 text-right text-slate-700 dark:text-slate-200">{inr(d.net_due)}</td>
@@ -119,6 +123,9 @@ export function DemandsManager({ institutionId, initial, targets }: {
                         <button type="button" onClick={() => act(d, "pending")} disabled={busy === d.id} title="Reopen" className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40"><RotateCcw size={13} /></button>
                       ) : (
                         <div className="inline-flex items-center gap-1">
+                          {bal > 0 && (
+                            <button type="button" onClick={() => setPayFor(d)} title="Record payment" className="p-1.5 rounded-md text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"><IndianRupee size={13} /></button>
+                          )}
                           <button type="button" onClick={() => act(d, "waived")} disabled={busy === d.id} title="Waive" className="p-1.5 rounded-md text-violet-500 hover:bg-violet-50 dark:hover:bg-violet-950/30 disabled:opacity-40"><BadgeCheck size={13} /></button>
                           <button type="button" onClick={() => act(d, "cancelled")} disabled={busy === d.id} title="Cancel" className="p-1.5 rounded-md text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:opacity-40"><Ban size={13} /></button>
                         </div>
@@ -139,6 +146,66 @@ export function DemandsManager({ institutionId, initial, targets }: {
           onClose={() => setGenOpen(false)}
         />
       )}
+
+      {payFor && (
+        <RecordPaymentModal
+          institutionId={institutionId}
+          demand={payFor}
+          onClose={() => setPayFor(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function RecordPaymentModal({ institutionId, demand, onClose }: {
+  institutionId: string; demand: FeeDemand; onClose: () => void;
+}) {
+  const bal = balance(demand.net_due, demand.amount_paid ?? 0);
+  const [amount, setAmount] = useState(String(bal));
+  const [mode, setMode] = useState("cash");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const submit = async () => {
+    setSaving(true); setError(null);
+    const res = await recordDemandPayment({ institutionId, demandId: demand.id, amount: parseFloat(amount) || 0, mode });
+    setSaving(false);
+    if (!res.success) { setError(res.error); return; }
+    router.refresh();
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose} />
+      <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between px-4 h-14 border-b border-slate-200 dark:border-slate-800">
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">Record payment</h2>
+            <p className="text-[11px] text-slate-400 truncate">{demand.students?.full_name} · {demand.title} · balance {inr(bal)}</p>
+          </div>
+          <button type="button" onClick={onClose} className="p-1.5 rounded-md text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><X size={16} /></button>
+        </div>
+        <div className="p-4 space-y-3">
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Amount (₹)</label>
+            <input type="number" min={1} value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">Mode</label>
+            <select value={mode} onChange={(e) => setMode(e.target.value)} className={inputCls}>
+              {PAY_MODES.map((m) => <option key={m} value={m}>{m.replace("_", " ")}</option>)}
+            </select>
+          </div>
+          {error && <p className="text-xs text-red-600 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/40 rounded-lg px-3 py-2">{error}</p>}
+        </div>
+        <div className="border-t border-slate-200 dark:border-slate-800 p-3 flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md">Cancel</button>
+          <button type="button" onClick={submit} disabled={saving || (parseFloat(amount) || 0) <= 0} className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-semibold rounded-md hover:bg-emerald-700 disabled:opacity-50">{saving ? "Recording…" : "Record payment"}</button>
+        </div>
+      </div>
     </div>
   );
 }

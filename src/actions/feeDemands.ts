@@ -10,29 +10,39 @@ import { demandTally } from "@/lib/feeDemands";
 type Result<T> = { success: true; data: T } | { success: false; error: string };
 
 const DEMAND_COLS =
-  "id, institution_id, student_id, fee_structure_id, academic_year_id, title, amount_due, concession_amount, net_due, due_date, status, created_at, students(full_name, roll_no)";
+  "id, institution_id, student_id, fee_structure_id, academic_year_id, title, amount_due, concession_amount, net_due, due_date, status, source, source_ref, created_at, students(full_name, roll_no)";
 
-/** Map of "studentId|structureId" → total completed amount_paid for an institution. */
-async function paidMap(
+/** Completed-payment rollups for an institution: by student|structure (for
+ *  structure-based demands) and by demand_id (for ad-hoc demands). */
+async function paidRollups(
   supabase: Awaited<ReturnType<typeof createClient>>,
   institutionId: string
-): Promise<Map<string, number>> {
+): Promise<{ byStructure: Map<string, number>; byDemand: Map<string, number> }> {
   const { data } = await supabase
     .from("fee_payments")
-    .select("student_id, fee_structure_id, amount_paid")
+    .select("student_id, fee_structure_id, demand_id, amount_paid")
     .eq("institution_id", institutionId)
     .eq("payment_status", "completed");
-  const m = new Map<string, number>();
+  const byStructure = new Map<string, number>();
+  const byDemand = new Map<string, number>();
   for (const p of data ?? []) {
-    if (!p.fee_structure_id) continue;
-    const k = `${p.student_id}|${p.fee_structure_id}`;
-    m.set(k, (m.get(k) ?? 0) + Number(p.amount_paid));
+    const amt = Number(p.amount_paid);
+    if (p.fee_structure_id) {
+      const k = `${p.student_id}|${p.fee_structure_id}`;
+      byStructure.set(k, (byStructure.get(k) ?? 0) + amt);
+    }
+    if (p.demand_id) byDemand.set(p.demand_id as string, (byDemand.get(p.demand_id as string) ?? 0) + amt);
   }
-  return m;
+  return { byStructure, byDemand };
 }
 
-function attachPaid(rows: FeeDemand[], paid: Map<string, number>): FeeDemand[] {
-  return rows.map((d) => ({ ...d, amount_paid: paid.get(`${d.student_id}|${d.fee_structure_id}`) ?? 0 }));
+/** A structure-based demand draws from byStructure; an ad-hoc demand from byDemand. */
+function paidFor(d: { id: string; student_id: string; fee_structure_id: string | null }, r: { byStructure: Map<string, number>; byDemand: Map<string, number> }): number {
+  return d.fee_structure_id ? (r.byStructure.get(`${d.student_id}|${d.fee_structure_id}`) ?? 0) : (r.byDemand.get(d.id) ?? 0);
+}
+
+function attachPaid(rows: FeeDemand[], r: { byStructure: Map<string, number>; byDemand: Map<string, number> }): FeeDemand[] {
+  return rows.map((d) => ({ ...d, amount_paid: paidFor(d, r) }));
 }
 
 export async function getDemands(
@@ -51,8 +61,8 @@ export async function getDemands(
     }
     const { data, error } = await q.order("due_date", { ascending: true });
     if (error) return { success: false, error: error.message };
-    const paid = await paidMap(supabase, institutionId);
-    let rows = attachPaid((data ?? []) as unknown as FeeDemand[], paid);
+    const rollups = await paidRollups(supabase, institutionId);
+    let rows = attachPaid((data ?? []) as unknown as FeeDemand[], rollups);
     if (filters?.liveStatus) {
       rows = rows.filter((d) => demandStatus(d, d.amount_paid ?? 0) === filters.liveStatus);
     }
@@ -66,12 +76,12 @@ export async function getDemandStats(institutionId: string): Promise<Result<Dema
   try {
     const supabase = createClient(await cookies());
     const { data, error } = await supabase
-      .from("fee_demands").select("net_due, status, due_date, student_id, fee_structure_id").eq("institution_id", institutionId);
+      .from("fee_demands").select("id, net_due, status, due_date, student_id, fee_structure_id").eq("institution_id", institutionId);
     if (error) return { success: false, error: error.message };
-    const paid = await paidMap(supabase, institutionId);
+    const rollups = await paidRollups(supabase, institutionId);
     const rows = (data ?? []).map((d) => ({
       net_due: Number(d.net_due), status: d.status as DemandStoredStatus, due_date: d.due_date as string,
-      amount_paid: paid.get(`${d.student_id}|${d.fee_structure_id}`) ?? 0,
+      amount_paid: paidFor({ id: d.id as string, student_id: d.student_id as string, fee_structure_id: (d.fee_structure_id as string) ?? null }, rollups),
     }));
     return { success: true, data: demandTally(rows) };
   } catch (err) {
@@ -201,6 +211,94 @@ export async function generateDemands(input: {
   }
 }
 
+/**
+ * Create an ad-hoc (non-structure) demand — used to post library fines, mess
+ * bills, etc. into the central ledger. Idempotent on (source, source_ref): a
+ * second post of the same originating record is a no-op.
+ */
+export async function createAdHocDemand(input: {
+  institutionId: string;
+  studentId: string;
+  title: string;
+  amount: number;
+  dueDate: string;
+  source: "library_fine" | "mess" | "other";
+  sourceRef?: string | null;
+}): Promise<Result<{ created: boolean }>> {
+  try {
+    if (input.amount <= 0) return { success: false, error: "Amount must be greater than zero." };
+    const supabase = createClient(await cookies());
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const { data, error } = await supabase
+      .from("fee_demands")
+      .upsert({
+        institution_id: input.institutionId,
+        student_id: input.studentId,
+        fee_structure_id: null,
+        title: input.title,
+        amount_due: input.amount,
+        concession_amount: 0,
+        due_date: input.dueDate,
+        status: "pending",
+        source: input.source,
+        source_ref: input.sourceRef ?? null,
+        created_by: user?.id ?? null,
+      }, { onConflict: "source,source_ref", ignoreDuplicates: true })
+      .select("id");
+    if (error) return { success: false, error: error.message };
+    return { success: true, data: { created: (data?.length ?? 0) > 0 } };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
+  }
+}
+
+/** Record a completed payment against any demand (e.g. an ad-hoc fine paid at the
+ *  office). Inserts a fee_payments row tagged with demand_id so the rollup picks it up. */
+export async function recordDemandPayment(input: {
+  institutionId: string; demandId: string; amount: number; mode: string; notes?: string | null;
+}): Promise<Result<null>> {
+  try {
+    if (input.amount <= 0) return { success: false, error: "Amount must be greater than zero." };
+    const supabase = createClient(await cookies());
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Unauthorized." };
+
+    const { data: demand, error: dErr } = await supabase
+      .from("fee_demands").select("student_id, fee_structure_id").eq("id", input.demandId).maybeSingle();
+    if (dErr) return { success: false, error: dErr.message };
+    if (!demand) return { success: false, error: "Demand not found." };
+
+    const receipt = `RCP-${new Date().getFullYear()}-${Math.floor(Math.random() * 100000).toString().padStart(5, "0")}`;
+    const { error } = await supabase.from("fee_payments").insert({
+      institution_id: input.institutionId,
+      student_id: demand.student_id,
+      fee_structure_id: demand.fee_structure_id,
+      demand_id: input.demandId,
+      amount_paid: input.amount,
+      payment_mode: input.mode,
+      payment_status: "completed",
+      receipt_number: receipt,
+      paid_at: new Date().toISOString(),
+      recorded_by: user.id,
+      notes: input.notes?.trim() || null,
+    });
+    if (error) return { success: false, error: error.message };
+
+    await logAudit({
+      institutionId: input.institutionId, performedBy: user.id, tableName: "fee_payments",
+      recordId: input.demandId, action: "INSERT",
+      afterData: { demand_id: input.demandId, amount_paid: input.amount, payment_mode: input.mode, receipt },
+      notes: "Payment recorded against fee demand",
+    });
+
+    revalidatePath(`/institutions/${input.institutionId}/finance/demands`);
+    return { success: true, data: null };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
+  }
+}
+
 export async function setDemandStatus(
   institutionId: string, demandId: string, status: "waived" | "cancelled" | "pending"
 ): Promise<Result<null>> {
@@ -229,15 +327,20 @@ export async function getMyDemands(): Promise<Result<FeeDemand[]>> {
     if (error) return { success: false, error: error.message };
     const rows = (data ?? []) as unknown as FeeDemand[];
 
-    // paid per structure for this student
+    // paid for this student — by structure and by demand_id
     const { data: pays } = await supabase
-      .from("fee_payments").select("fee_structure_id, amount_paid").eq("student_id", student.id as string).eq("payment_status", "completed");
-    const paid = new Map<string, number>();
+      .from("fee_payments").select("fee_structure_id, demand_id, amount_paid").eq("student_id", student.id as string).eq("payment_status", "completed");
+    const byStructure = new Map<string, number>();
+    const byDemand = new Map<string, number>();
     for (const p of pays ?? []) {
-      if (!p.fee_structure_id) continue;
-      paid.set(p.fee_structure_id as string, (paid.get(p.fee_structure_id as string) ?? 0) + Number(p.amount_paid));
+      const amt = Number(p.amount_paid);
+      if (p.fee_structure_id) byStructure.set(p.fee_structure_id as string, (byStructure.get(p.fee_structure_id as string) ?? 0) + amt);
+      if (p.demand_id) byDemand.set(p.demand_id as string, (byDemand.get(p.demand_id as string) ?? 0) + amt);
     }
-    return { success: true, data: rows.map((d) => ({ ...d, amount_paid: paid.get(d.fee_structure_id) ?? 0 })) };
+    return {
+      success: true,
+      data: rows.map((d) => ({ ...d, amount_paid: d.fee_structure_id ? (byStructure.get(d.fee_structure_id) ?? 0) : (byDemand.get(d.id) ?? 0) })),
+    };
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
   }

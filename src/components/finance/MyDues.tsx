@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Receipt, CreditCard, AlertTriangle } from "lucide-react";
 import {
-  DEMAND_STATUS_LABELS, demandStatus, balance, daysOverdue, demandTally, inr,
+  DEMAND_STATUS_LABELS, DEMAND_SOURCE_LABELS, demandStatus, balance, daysOverdue, demandTally, inr,
   type FeeDemand,
 } from "@/lib/feeDemands";
 
@@ -32,11 +32,15 @@ export function MyDues({ demands }: { demands: FeeDemand[] }) {
           const live = demandStatus(d, paid);
           const bal = balance(d.net_due, paid);
           const od = live === "overdue" ? daysOverdue(d.due_date) : 0;
-          const payable = bal > 0 && d.status !== "waived";
+          // online pay needs a fee structure; ad-hoc fines/mess are settled at the office
+          const payable = bal > 0 && d.status !== "waived" && !!d.fee_structure_id;
           return (
             <div key={d.id} className="px-4 py-3 flex items-center justify-between gap-3 hover:bg-slate-50/40 dark:hover:bg-slate-800/25 transition-colors">
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">{d.title}</p>
+                <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
+                  {d.title}
+                  {d.source !== "fee_structure" && <span className="ml-1 px-1 py-0.5 rounded text-[8px] font-bold uppercase bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400">{DEMAND_SOURCE_LABELS[d.source]}</span>}
+                </p>
                 <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
                   Due {new Date(d.due_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   {od > 0 && <span className="text-rose-500 font-semibold flex items-center gap-0.5"><AlertTriangle size={9} /> {od}d overdue</span>}

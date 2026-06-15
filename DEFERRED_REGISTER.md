@@ -13,7 +13,7 @@
 > - Review this register at the start of each new phase — some items are cheapest
 >   to clear in batches (see **Batchable clusters** below).
 >
-> **Last updated:** 2026-06-15 (after Fee Demand & Collection — fee-due model + sweep live; 3-3 cleared)
+> **Last updated:** 2026-06-15 (after ad-hoc demands — library fines + mess fees post to the fee ledger; 4A-1 & 4C-1 cleared)
 
 ---
 
@@ -24,7 +24,7 @@ is far cheaper than piecemeal:
 
 | Cluster | Items | Unblocked by |
 |---------|-------|--------------|
-| **Central fee-ledger integration** | Library overdue fines · Hostel/mess fees · (future) lab/exam fees | **Fee Demand model now exists** (`fee_demands` + `fee_payments.demand_id`); still needs **ad-hoc (non-structure) demand** support to post fines/mess bills into a student's ledger |
+| **Central fee-ledger integration** | ✅ Library overdue fines (live) · ✅ Hostel/mess fees (live) · ⏳ (future) lab/exam fees | **Done** — ad-hoc `fee_demands` (`source` + `source_ref` dedup) + `createAdHocDemand()`; library returns & mess bills post automatically/on-demand |
 | **Scheduler-driven sweeps** | ✅ Low-attendance alerts (live) · ✅ Outpass-overdue (live) · ⏳ Fee-due reminders (blocked on a fee due-date model) | **pg_cron now enabled** — sweeps are SECURITY DEFINER fns scheduled via `cron.schedule` (`supabase/migrations/..._scheduler_sweeps.sql`) |
 | **External notification channels** | SMS (MSG91/DLT) · WhatsApp (Meta) · Notices fan-out · Fee-due/Exam email templates | Paid SMS + DLT registration · Meta business verification |
 | **Academic-calendar sync** | Venue bookings → calendar · Campus events (4K) → calendar | One `syncToAcademicCalendar()` seam into Step 2A events |
@@ -63,9 +63,9 @@ Legend — **Status:** 🔲 open · 🟡 partial · ✅ done. **Priority:** 🔴
 ### Phase 4 — Campus Infrastructure
 | # | Deferred item | Source | Blocker / reason | Pickup phase | Priority | Status |
 |---|---------------|--------|------------------|--------------|----------|--------|
-| 4A-1 | Overdue library fines → auto-post into `fee_payments` ledger | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4A | Central fee-ledger seam | Fee-ledger pass | 🟡 | 🔲 |
+| 4A-1 | Overdue library fines → fee ledger | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4A | ✅ Done — `returnBook` posts a student's fine as an ad-hoc demand — see Cleared | — | 🟡 | ✅ |
 | 4B-1 | Venue bookings → auto-appear on academic calendar | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4B | Calendar-sync seam | Calendar-sync pass | 🟢 | 🔲 |
-| 4C-1 | Hostel/mess fees → auto-link to `fee_structures` | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4C | Central fee-ledger seam | Fee-ledger pass | 🟡 | 🔲 |
+| 4C-1 | Hostel/mess fees → fee ledger | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4C | ✅ Done — "Post to ledger" on mess billing creates an ad-hoc demand — see Cleared | — | 🟡 | ✅ |
 | 4D-1 | Explicit batch→student rosters (grid currently uses dept students) | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4D | New `laboratory_batch_students` join + UI | Phase 4D follow-up | 🟢 | 🔲 |
 | 4D-2 | Lab session marks → CIA `lab_record` component | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4D | CIA internal-marks link | CIA-link pass | 🟡 | 🔲 |
 | 4E-1 | Low-stock asset → notification alert | [roadmap/06](roadmap/06-phase4-campus-infrastructure.md) §4E | Depends on Phase 3 notifications + a sweep | Phase 3 + infra | 🟢 | 🔲 |
@@ -104,6 +104,8 @@ Legend — **Status:** 🔲 open · 🟡 partial · ✅ done. **Priority:** 🔴
 | 3-4 | Low-attendance alert sweep — pg_cron `private.sweep_low_attendance` (daily 07:17, <75%, ≥5 sessions, max once/7 days) | `20260615050000` | 2026-06-15 (scheduler cluster) |
 | 4G-1 | Outpass-overdue → warden + student alert — pg_cron `private.sweep_overdue_outpasses` (every 30 min, flips status→overdue) | `20260615050000` | 2026-06-15 (scheduler cluster) |
 | 3-3 | Fee-due reminder — Fee Demand & Collection module (`fee_demands` + generation + My Dues) + pg_cron `private.sweep_fee_due` (daily 08:13, 7-day grace) | `20260615060000` | 2026-06-15 (Fee Demand module) |
+| 4A-1 | Library overdue fines → fee ledger — `returnBook` posts a student fine as an ad-hoc `fee_demand` (source `library_fine`, dedup by lending id) | `20260615070000` | 2026-06-15 (ad-hoc demands) |
+| 4C-1 | Hostel/mess fees → fee ledger — `postMessBillToLedger` posts a bill as an ad-hoc `fee_demand` (source `mess`, dedup by bill id) | `20260615070000` | 2026-06-15 (ad-hoc demands) |
 
 ---
 

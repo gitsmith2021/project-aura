@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { createAdHocDemand } from "@/actions/feeDemands";
 import type { DayOfWeek, MealType, MessPlan, MessBill } from "@/lib/messMaintenance";
 
 type Result<T> = { success: true; data: T } | { success: false; error: string };
@@ -105,6 +106,33 @@ export async function markMessPaid(billId: string, institutionId: string): Promi
     if (error) return { success: false, error: error.message };
     revalidatePath(`/institutions/${institutionId}/hostels/cafeteria/billing`);
     return { success: true, data: null };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
+  }
+}
+
+/** Post a mess bill into the central fee ledger as an ad-hoc demand (4C-1).
+ *  Idempotent per bill (source_ref = bill id); due on the 28th of the billed month. */
+export async function postMessBillToLedger(billId: string, institutionId: string): Promise<Result<{ created: boolean }>> {
+  try {
+    const supabase = createClient(await cookies());
+    const { data: bill, error } = await supabase
+      .from("mess_billing").select("student_id, month, amount").eq("id", billId).eq("institution_id", institutionId).maybeSingle();
+    if (error) return { success: false, error: error.message };
+    if (!bill) return { success: false, error: "Mess bill not found." };
+
+    const res = await createAdHocDemand({
+      institutionId,
+      studentId: bill.student_id as string,
+      title: `Mess charges — ${bill.month}`,
+      amount: Number(bill.amount),
+      dueDate: `${bill.month}-28`,
+      source: "mess",
+      sourceRef: billId,
+    });
+    if (!res.success) return res;
+    revalidatePath(`/institutions/${institutionId}/hostels/cafeteria/billing`);
+    return { success: true, data: res.data };
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
   }

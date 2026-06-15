@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getMessBills, generateMessBills, markMessPaid, type MessBillWithStudent } from "@/actions/mess";
+import { getMessBills, generateMessBills, markMessPaid, postMessBillToLedger, type MessBillWithStudent } from "@/actions/mess";
 import { MESS_PLANS, MESS_PLAN_LABEL, messPlanDefaultAmount, currentMonth, monthLabel, type MessPlan } from "@/lib/messMaintenance";
 
 type HostelOpt = { id: string; name: string };
@@ -17,6 +17,7 @@ export function MessBilling({ institutionId, hostels }: { institutionId: string;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [posted, setPosted] = useState<Set<string>>(new Set());
 
   const load = () => {
     if (!hostelId) return;
@@ -40,6 +41,15 @@ export function MessBilling({ institutionId, hostels }: { institutionId: string;
     setBusy(false);
     if (res.success) setBills((prev) => prev.map((b) => (b.id === id ? { ...b, is_paid: true, paid_at: new Date().toISOString() } : b)));
     else setError(res.error);
+  };
+
+  const postLedger = async (id: string) => {
+    setBusy(true); setError(null); setMsg(null);
+    const res = await postMessBillToLedger(id, institutionId);
+    setBusy(false);
+    if (!res.success) { setError(res.error); return; }
+    setPosted((prev) => new Set(prev).add(id));
+    setMsg(res.data.created ? "Posted to the student's fee ledger." : "Already in the fee ledger.");
   };
 
   const collected = bills.filter((b) => b.is_paid).reduce((s, b) => s + Number(b.amount), 0);
@@ -104,8 +114,15 @@ export function MessBilling({ institutionId, hostels }: { institutionId: string;
                   <td className="px-4 py-2.5">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${b.is_paid ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"}`}>{b.is_paid ? "Paid" : "Unpaid"}</span>
                   </td>
-                  <td className="px-4 py-2.5 text-right">
-                    {!b.is_paid && <button type="button" disabled={busy} onClick={() => pay(b.id)} className="px-2.5 py-1 rounded-md text-[11px] font-semibold border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 disabled:opacity-40">Mark paid</button>}
+                  <td className="px-4 py-2.5 text-right whitespace-nowrap">
+                    <div className="inline-flex items-center gap-1.5">
+                      {posted.has(b.id) ? (
+                        <span className="text-[10px] text-slate-400">In ledger</span>
+                      ) : (
+                        <button type="button" disabled={busy} onClick={() => postLedger(b.id)} title="Post this bill to the student's central fee ledger" className="px-2.5 py-1 rounded-md text-[11px] font-semibold border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40">Post to ledger</button>
+                      )}
+                      {!b.is_paid && <button type="button" disabled={busy} onClick={() => pay(b.id)} className="px-2.5 py-1 rounded-md text-[11px] font-semibold border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 disabled:opacity-40">Mark paid</button>}
+                    </div>
                   </td>
                 </tr>
               ))}

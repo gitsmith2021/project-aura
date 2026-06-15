@@ -3,7 +3,8 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
-import { calculateFine, FINE_PER_DAY, type LibraryBook, type LibraryLending } from "@/lib/library";
+import { calculateFine, FINE_PER_DAY, addDays, type LibraryBook, type LibraryLending } from "@/lib/library";
+import { createAdHocDemand } from "@/actions/feeDemands";
 
 type Result<T> = { success: true; data: T } | { success: false; error: string };
 
@@ -147,7 +148,7 @@ export async function returnBook(
   try {
     const supabase = createClient(await cookies());
     const { data: lending, error } = await supabase
-      .from("library_lendings").select("book_id, due_date, returned_date").eq("id", lendingId).maybeSingle();
+      .from("library_lendings").select("book_id, due_date, returned_date, borrower_id, borrower_type").eq("id", lendingId).maybeSingle();
     if (error) return { success: false, error: error.message };
     if (!lending) return { success: false, error: "Lending not found." };
     if (lending.returned_date) return { success: false, error: "Already returned." };
@@ -163,10 +164,27 @@ export async function returnBook(
 
     // Return the copy to the shelf
     const { data: book } = await supabase
-      .from("library_books").select("available_copies, total_copies").eq("id", lending.book_id as string).maybeSingle();
+      .from("library_books").select("available_copies, total_copies, title").eq("id", lending.book_id as string).maybeSingle();
     if (book) {
       const next = Math.min((book.available_copies as number) + 1, book.total_copies as number);
       await supabase.from("library_books").update({ available_copies: next }).eq("id", lending.book_id as string);
+    }
+
+    // Post a student's overdue fine into the central fee ledger (4A-1).
+    if (fine > 0 && lending.borrower_type === "student") {
+      const { data: student } = await supabase
+        .from("students").select("id").eq("profile_id", lending.borrower_id as string).maybeSingle();
+      if (student) {
+        await createAdHocDemand({
+          institutionId,
+          studentId: student.id as string,
+          title: `Library fine — ${(book?.title as string) ?? "book"}`,
+          amount: fine,
+          dueDate: addDays(14),
+          source: "library_fine",
+          sourceRef: lendingId,
+        });
+      }
     }
 
     revalidatePath(`/institutions/${institutionId}/library`);
