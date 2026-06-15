@@ -110,15 +110,15 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-15  
-> **51 of 87 modules complete — 59% of full platform built**
+> **54 of 87 modules complete — 62% of full platform built**
 
 ```
-Overall  ███████████████████░░░░░░░░░░░░░  59%  (51/87)
+Overall  ████████████████████░░░░░░░░░░░░  62%  (54/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
 Phase 3    █████████████████████████████░  95%  (3A ✅ · 3B ✅ · 3C 🟡 email live · 3D ✅ notices · pg_cron sweeps live: fee-due + low-attendance + outpass-overdue · only SMS/WhatsApp deferred)
-Phase 4    ███████████████████████░░░░░░░░  75%  (9/12 — 4A Library ✅ · 4B Bookings ✅ · 4C Hostels ✅ · 4D Laboratories ✅ · 4E Assets ✅ · 4E-sub Vendors/PO ✅ · 4F ID Cards ✅ · 4G Gate ✅ · 4H Clubs ✅ · infirmary/sports/events pending)
+Phase 4    ████████████████████████████████  100% (12/12 — 4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅ · 4H ✅ · 4I ✅ · 4J ✅ · 4K ✅)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
 Phase 7    ████████████████░░░░░░░░░░░░░░░░  50%  (4/8  — 7A ✅ · 7B ✅ · 7C ✅ · 7F-sub SSR Builder ✅)
@@ -126,7 +126,7 @@ Phase 8    █████░░░░░░░░░░░░░░░░░░
 Arch       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░  19%  (1/8 + A2 🟡 — Audit Log ✅ · Test infra (Vitest+Playwright) foundation · RLS, Indexes, CI/CD, Billing pending)
 ```
 
-> **Next up:** Phase 4H — Student Clubs & Organizations (NSS/NCC/Cultural) (see [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md)). **Scheduler now live:** pg_cron runs `private.sweep_overdue_outpasses` (30 min) + `private.sweep_low_attendance` (daily) — migration `20260615050000`. **Phase 3 deferred items still open:** only 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed (paid + DLT/Meta verification). Fee-due, low-attendance & outpass-overdue sweeps are all **live** via pg_cron. Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [DISASTER_RECOVERY.md](../DISASTER_RECOVERY.md))
+> **Next up:** Phase 5A — Student Admissions System (see [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md)). **Phase 4 complete** — all 12 campus infrastructure modules shipped. **Scheduler now live:** pg_cron runs `private.sweep_overdue_outpasses` (30 min) + `private.sweep_low_attendance` (daily) — migration `20260615050000`. **Phase 3 deferred:** only 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed. **Phase 2.5 manual leftovers:** PITR (Supabase Dashboard → Database → Backups → Point in Time, project `nsaheksysxinemtjcako`), GitHub repo secrets (`SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY`), UptimeRobot monitor on `/api/scheduler-health` (see [DISASTER_RECOVERY.md](../DISASTER_RECOVERY.md))
 
 ---
 
