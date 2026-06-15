@@ -852,7 +852,7 @@ CREATE TABLE sports_achievements (
 - [x] Sidebar: Trophy icon + "Sports" link after Infirmary
 - [x] NAAC/NIRF export: level-wise breakdown CSV (International → Inter-Class)
 
-> **Status:** ✅ **Complete** (migration `20260615100000_phase4j_sports`, commit `TBD`). 4 tables with RLS. 28 pure-function unit tests. Total suite: 192 tests passing.
+> **Status:** ✅ **Complete** (migration `20260615100000_phase4j_sports`, commit `dc8d836`). 4 tables with RLS. 28 pure-function unit tests. Total suite: 192 tests passing.
 
 #### Key features:
 - Achievement levels colour-coded: International (gold) → State (silver) → District (bronze)
@@ -937,7 +937,7 @@ CREATE TABLE event_participants (
 - [x] Gate pass: visitor log and student outpass working with warden approval
 - [x] Clubs: NSS/NCC and all clubs registered with activity logs and NAAC export (commit c1a528c)
 - [x] Infirmary: visit log and student medical profiles working (commit `4ae4070`, 24 unit tests)
-- [x] Sports: teams, facilities, and achievements logged with NIRF export (commit `TBD`, 28 unit tests)
+- [x] Sports: teams, facilities, and achievements logged with NIRF export (commit `dc8d836`, 28 unit tests)
 - [ ] Campus Events: event registry with committee assignment, participant rosters, and budget tracking
 - [ ] All campus infrastructure modules integrated with student and staff portals
 - [ ] `git commit -m "feat: Phase 4 — Campus Infrastructure & Laboratories complete"`
