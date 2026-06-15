@@ -55,7 +55,7 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
   {
     key: "medical-records",
     category: "Medical & infirmary records",
-    tables: ["health_records (Phase 4I)"],
+    tables: ["medical_records", "medical_visits"],
     period: "5 years after the last entry",
     years: 5,
     basis: "Standard medical record-keeping practice for minors and adults",

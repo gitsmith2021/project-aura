@@ -91,7 +91,7 @@ Fable 5 is included in Pro/Max/Team plans until June 22 — but it counts
 [x] 10  🏛️  NAAC SSR exports (Excel workbook, AISHE return, NIRF extract, print report)
 [x] 11  📱  Phase 8A — Aura Mobile foundation (Expo SDK 54 + role-adaptive bottom tabs, all 6 roles + auth + portal screens) — Opus
 [~] 12  📱  Phase 8B/8C screens — staff Leave/Payslip/Schedule, admin+HOD Approvals, student Dashboard/Fees/Attendance — Opus
-[x] +   🏛️  Phase 4 Campus Infra (roadmap 4A Library · 4B Bookings · 4C Hostels · 4D Labs · 4E Assets · 4E-sub Vendors/PO · 4F ID Cards · 4G Gate · 4H Clubs) — Opus
+[x] +   🏛️  Phase 4 Campus Infra (roadmap 4A Library · 4B Bookings · 4C Hostels · 4D Labs · 4E Assets · 4E-sub Vendors/PO · 4F ID Cards · 4G Gate · 4H Clubs · 4I Infirmary) — Opus
 [ ] —   ⏳  Remaining: NFC (Phase 4F + EAS), push (Phase 3), in-app pay, CCTV, Parent app (Phase 6A)
 ─────────────────────────────────────────────────────
 After the free window → Switch to Opus 4.8 / Sonnet 4.6 for Tier 2 & 3

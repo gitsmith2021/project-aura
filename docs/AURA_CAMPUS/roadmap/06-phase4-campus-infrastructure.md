@@ -761,13 +761,22 @@ CREATE TABLE medical_visits (
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._infirmary.sql`
-- [ ] `src/app/institutions/[id]/infirmary/page.tsx` — Infirmary dashboard: today's visits, medicine log
-- [ ] `src/app/institutions/[id]/infirmary/visit/page.tsx` — Log new patient visit with diagnosis and medicines
-- [ ] `src/app/institutions/[id]/infirmary/records/page.tsx` — Search student medical profiles
-- [ ] `src/actions/infirmary.ts` — logVisit, getMedicalRecord, getVisitHistory, updateMedicalProfile
-- [ ] Student portal: `src/app/student-portal/health/page.tsx` — Personal medical record, visit history, upcoming follow-ups
-- [ ] Admin: pre-populate medical record from admissions module (blood group, allergies)
+- [x] `supabase/migrations/20260615090000_phase4i_infirmary.sql` — `medical_records` + `medical_visits` + RLS (staff/admin read all; student reads own; staff insert visits; admin upserts records) + 4 indexes
+- [x] `src/app/institutions/[id]/infirmary/page.tsx` — dashboard: today's visits table, pending follow-ups alert list, stat cards (visits/follow-ups/referrals/month-total)
+- [x] `src/app/institutions/[id]/infirmary/records/page.tsx` — medical records manager with search (blood group, allergies, emergency contact, edit drawer)
+- [x] `src/actions/infirmary.ts` — getTodaysVisits, getVisitHistory, getPendingFollowUps, getMedicalRecords, getMedicalRecord, searchPatientsForInfirmary, logVisit, upsertMedicalRecord, getMyMedicalRecord, getMyVisitHistory
+- [x] `src/lib/infirmary.ts` — parseMedicines, isOverdueFollowUp, followUpStatus, computeInfirmaryStats, medicineLabel, followUpBadgeClass (pure, unit-tested)
+- [x] `src/components/infirmary/InfirmaryDashboard.tsx` — stat cards + today's visits table + follow-ups alert section
+- [x] `src/components/infirmary/VisitDrawer.tsx` — log-visit slide-out: patient search (student+staff), symptoms, diagnosis, medicines (dynamic rows), referral, follow-up date, attended-by
+- [x] `src/components/infirmary/MedicalProfileDrawer.tsx` — view/edit student medical profile (blood group, allergies, conditions, emergency contact, insurance)
+- [x] `src/components/infirmary/MedicalRecordsManager.tsx` — searchable records table with blood-group badges + edit drawer
+- [x] `src/components/infirmary/MyHealthView.tsx` — student portal health card (blood group, allergy alert, emergency contact, follow-up banner, visit history timeline)
+- [x] Student portal: `src/app/student-portal/health/page.tsx` — My Health Record + visit history (RLS: patient reads own)
+- [x] `tests/unit/infirmary.test.ts` — 24 tests covering parseMedicines, isOverdueFollowUp, followUpStatus, computeInfirmaryStats, medicineLabel, followUpBadgeClass
+- [x] Sidebar: Stethoscope icon + "Infirmary" link after Clubs & Groups
+- [x] Student portal shell: Health nav item added
+- [x] `src/lib/dataRetention.ts` — medical-records entry updated from placeholder to real table names (`medical_records`, `medical_visits`)
+- [~] Pre-populate from admissions module — deferred (Phase 5A not yet built)
 
 #### Key features:
 - Student medical profile pre-populated at admission (blood group, allergies, emergency contact)
@@ -917,7 +926,7 @@ CREATE TABLE event_participants (
 - [x] Smart cards: NFC card registry with issuance and deactivation working
 - [x] Gate pass: visitor log and student outpass working with warden approval
 - [x] Clubs: NSS/NCC and all clubs registered with activity logs and NAAC export (commit c1a528c)
-- [ ] Infirmary: visit log and student medical profiles working
+- [x] Infirmary: visit log and student medical profiles working (commit `20260615090000`, 24 unit tests)
 - [ ] Sports: teams, facilities, and achievements logged with NIRF export
 - [ ] Campus Events: event registry with committee assignment, participant rosters, and budget tracking
 - [ ] All campus infrastructure modules integrated with student and staff portals

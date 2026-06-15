@@ -181,7 +181,7 @@ Arch       ██████░░░░░░░░░░░░░░░░░
 | ✅ Phase 4F | Smart ID Card & NFC Card Registry — issue/lost/deactivate/replace flow, issued/active/lost stats, unique UID + one-active-card-per-holder; NFC webhook rejects lost/deactivated cards (403); RLS + 8 unit tests | Complete | `20260615030000` |
 | ✅ Phase 4G | Gate Pass & Visitor Management — visitor logbook (check-in/out + ID proof/vehicle), student outpass workflow (apply → warden/admin approve/reject → security mark-returned), live overdue, hostel-warden approval; student + staff portals; RLS + 10 unit tests | Complete | `20260615040000` |
 | ✅ Phase 4H | Student Clubs & Organizations (NSS/NCC/Cultural) | Complete | c1a528c |
-| 🔲 Phase 4I | Health & Medical Records (Infirmary) | Pending | — |
+| ✅ Phase 4I | Health & Medical Records (Infirmary) — `medical_records` (blood group, allergies, emergency contact, insurance) + `medical_visits` (symptoms, diagnosis, medicines dispensed JSONB, referral, follow-up); admin dashboard (today's visits, pending follow-ups, referral stats); log-visit drawer with patient search (student+staff); medical records manager; student portal health page; strict RLS (staff read all, student reads own); 24 unit tests | Complete | `20260615090000` |
 | 🔲 Phase 4J | Sports & Physical Education | Pending | — |
 | 🔲 Phase 4K | Annual Day & Large Campus Event Management | Pending | — |
 | 🔲 Phase 5A | Student Admissions System (public-facing) | Pending | — |
