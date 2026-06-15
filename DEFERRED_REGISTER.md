@@ -13,7 +13,7 @@
 > - Review this register at the start of each new phase — some items are cheapest
 >   to clear in batches (see **Batchable clusters** below).
 >
-> **Last updated:** 2026-06-15 (after the pg_cron scheduler-sweeps cluster — outpass-overdue + low-attendance live)
+> **Last updated:** 2026-06-15 (after Fee Demand & Collection — fee-due model + sweep live; 3-3 cleared)
 
 ---
 
@@ -24,7 +24,7 @@ is far cheaper than piecemeal:
 
 | Cluster | Items | Unblocked by |
 |---------|-------|--------------|
-| **Central fee-ledger integration** | Library overdue fines · Hostel/mess fees · (future) lab/exam fees | One `postToFeeLedger()` seam into `fee_payments` / `fee_structures` |
+| **Central fee-ledger integration** | Library overdue fines · Hostel/mess fees · (future) lab/exam fees | **Fee Demand model now exists** (`fee_demands` + `fee_payments.demand_id`); still needs **ad-hoc (non-structure) demand** support to post fines/mess bills into a student's ledger |
 | **Scheduler-driven sweeps** | ✅ Low-attendance alerts (live) · ✅ Outpass-overdue (live) · ⏳ Fee-due reminders (blocked on a fee due-date model) | **pg_cron now enabled** — sweeps are SECURITY DEFINER fns scheduled via `cron.schedule` (`supabase/migrations/..._scheduler_sweeps.sql`) |
 | **External notification channels** | SMS (MSG91/DLT) · WhatsApp (Meta) · Notices fan-out · Fee-due/Exam email templates | Paid SMS + DLT registration · Meta business verification |
 | **Academic-calendar sync** | Venue bookings → calendar · Campus events (4K) → calendar | One `syncToAcademicCalendar()` seam into Step 2A events |
@@ -54,7 +54,7 @@ Legend — **Status:** 🔲 open · 🟡 partial · ✅ done. **Priority:** 🔴
 |---|---------------|--------|------------------|--------------|----------|--------|
 | 3-1 | SMS channel — real MSG91/Fast2SMS send (`sendSMS` is a stub) | [roadmap/05](roadmap/05-phase3-notifications.md) | Paid gateway + DLT registration | Phase 3C cont. | 🟡 | 🟡 |
 | 3-2 | WhatsApp channel — real Meta Cloud send (`sendWhatsApp` is a stub) | [roadmap/05](roadmap/05-phase3-notifications.md) | Meta business verification + template approval | Phase 3C cont. | 🟡 | 🟡 |
-| 3-3 | Fee-due reminder sweep (X days overdue → student) | [roadmap/05](roadmap/05-phase3-notifications.md) | **Re-scoped:** scheduler now exists (pg_cron), but `fee_structures` has no `due_date` / per-student invoice — needs a fee due-date model first | Fee-ledger pass | 🟡 | 🔲 |
+| 3-3 | Fee-due reminder sweep (X days overdue → student) | [roadmap/05](roadmap/05-phase3-notifications.md) | ✅ Done — Fee Demand model (`fee_demands`) + pg_cron `sweep_fee_due` (daily 08:13, 7-day grace) — see Cleared | — | 🟡 | ✅ |
 | 3-4 | Low-attendance alert sweep (attendance < 75% → student) | [roadmap/05](roadmap/05-phase3-notifications.md) | ✅ Done via pg_cron `sweep_low_attendance` (daily 07:17) — see Cleared | — | 🟡 | ✅ |
 | 3-5 | Email template — Fee Due Reminder | [roadmap/05](roadmap/05-phase3-notifications.md) | Ships with the fee-due sweep (3-3) | Phase 3 + infra | 🟢 | 🔲 |
 | 3-6 | Email template — Exam Schedule Released | [roadmap/05](roadmap/05-phase3-notifications.md) | No exam-publish trigger yet | Phase 2B follow-up | 🟢 | 🔲 |
@@ -103,6 +103,7 @@ Legend — **Status:** 🔲 open · 🟡 partial · ✅ done. **Priority:** 🔴
 | 4E-2 | PO-received goods → auto-populate `assets` registry (opt-in on receive, "Procurement (PO)" category) | `20260615020000` | 2026-06-15 (Phase 4E-sub) |
 | 3-4 | Low-attendance alert sweep — pg_cron `private.sweep_low_attendance` (daily 07:17, <75%, ≥5 sessions, max once/7 days) | `20260615050000` | 2026-06-15 (scheduler cluster) |
 | 4G-1 | Outpass-overdue → warden + student alert — pg_cron `private.sweep_overdue_outpasses` (every 30 min, flips status→overdue) | `20260615050000` | 2026-06-15 (scheduler cluster) |
+| 3-3 | Fee-due reminder — Fee Demand & Collection module (`fee_demands` + generation + My Dues) + pg_cron `private.sweep_fee_due` (daily 08:13, 7-day grace) | `20260615060000` | 2026-06-15 (Fee Demand module) |
 
 ---
 

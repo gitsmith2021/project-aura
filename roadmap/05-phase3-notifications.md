@@ -62,7 +62,7 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 > than shipped un-runnable.
 
 #### What to build:
-- [ ] Fee due reminder — fee_payment 7 days overdue → student *(deferred: scheduler exists (pg_cron), but needs a fee due-date model — see DEFERRED_REGISTER 3-3)*
+- [x] Fee due reminder — outstanding fee 7 days past due → student. **Live** via the Fee Demand model (`fee_demands` with due dates) + pg_cron `private.sweep_fee_due` (daily 08:13) — migration `20260615060000_fee_demands`
 - [x] Payment received — on `payment_status=completed` → student. Wired into `recordManualPayment` (manual) **and** the Razorpay `payment.captured` webhook (online)
 - [x] Leave request — on new leave application → institution admins (INST_ADMIN, PRINCIPAL). Wired into `applyForLeave`
 - [x] Leave approved/rejected — on leave status update → staff. Wired into `reviewLeaveRequest`

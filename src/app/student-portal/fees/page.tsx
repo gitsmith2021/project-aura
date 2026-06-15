@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentProfile, getStudentFeeHistory, getStudentFeeStructures } from "@/actions/studentPortal";
+import { getMyDemands } from "@/actions/feeDemands";
+import { MyDues } from "@/components/finance/MyDues";
 import { CheckCircle2, Clock, XCircle, AlertCircle, CreditCard, ChevronRight, type LucideIcon } from "lucide-react";
 
 const FEE_TYPE_LABEL: Record<string, string> = {
@@ -49,13 +51,15 @@ export default async function FeesPage({ searchParams }: PageProps) {
   if (!profileResult.success) redirect("/login");
   const student = profileResult.data;
 
-  const [historyResult, structuresResult] = await Promise.all([
+  const [historyResult, structuresResult, demandsResult] = await Promise.all([
     getStudentFeeHistory(student.id),
     getStudentFeeStructures(student.institution_id),
+    getMyDemands(),
   ]);
 
   const payments   = historyResult.success   ? historyResult.data   : [];
   const structures = structuresResult.success ? structuresResult.data : [];
+  const demands    = demandsResult.success    ? demandsResult.data    : [];
 
   const totalDue    = structures.reduce((s, f) => s + Number(f.amount), 0);
   const totalPaid   = payments
@@ -98,6 +102,9 @@ export default async function FeesPage({ searchParams }: PageProps) {
           </div>
         ))}
       </div>
+
+      {/* Per-student dues with due dates (Fee Demand model) */}
+      <MyDues demands={demands} />
 
       {/* Fee structures */}
       {structures.length > 0 && (

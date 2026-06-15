@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -16,6 +16,7 @@ import { createClient } from "@/utils/supabase/client";
 const FINANCE_SUB = [
   { key: "overview",    label: "Command Center", Icon: LayoutDashboard, href: () => `/finance` },
   { key: "fees",        label: "Fee Structures",  Icon: Tag,            href: (id: string) => `/institutions/${id}/finance/fees` },
+  { key: "demands",     label: "Fee Demands",     Icon: Receipt,        href: (id: string) => `/institutions/${id}/finance/demands` },
   { key: "payments",    label: "All Payments",    Icon: CreditCard,     href: (id: string) => `/institutions/${id}/finance/fees/payments` },
   { key: "concessions", label: "Concessions",     Icon: BadgePercent,   href: (id: string) => `/institutions/${id}/finance/concessions` },
   { key: "salary",      label: "Salaries",        Icon: Users,          href: (id: string) => `/institutions/${id}/finance/salary` },
@@ -330,6 +331,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const isFinanceSubActive = (key: string) => {
     if (key === "overview")    return pathname === "/finance";
     if (key === "payments")    return pathname.includes("/finance/fees/payments");
+    if (key === "demands")     return pathname.includes("/finance/demands");
     if (key === "fees")        return pathname.includes("/finance/fees") && !pathname.includes("/payments");
     if (key === "concessions") return pathname.includes("/finance/concessions");
     if (key === "salary")      return pathname.includes("/finance/salary");
