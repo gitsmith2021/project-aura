@@ -80,6 +80,7 @@ export function StudentPortalShell({
     { key: "hostel",     href: "/student-portal/hostel",     label: "Hostel",     Icon: BedDouble },
     { key: "laboratories", href: "/student-portal/laboratories", label: "Laboratories", Icon: FlaskConical },
     { key: "outpass",    href: "/student-portal/outpass",    label: "Outpass",    Icon: DoorOpen },
+    { key: "clubs",        href: "/student-portal/clubs",        label: "Clubs & Groups", Icon: Award },
     { key: "attendance",   href: "/student-portal/attendance",   label: "Attendance",   Icon: ClipboardCheck },
     { key: "internships",  href: "/student-portal/internships",  label: "Internships",  Icon: Briefcase },
     { key: "fees",         href: "/student-portal/fees",         label: "Fees",         Icon: CreditCard },

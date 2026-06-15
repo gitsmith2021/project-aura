@@ -42,6 +42,7 @@ const STAFF_NAV = [
   { key: "bookings",   href: "/staff-portal/bookings",   label: "Bookings",    Icon: Building2 },
   { key: "laboratories", href: "/staff-portal/laboratories", label: "Laboratories", Icon: FlaskConical },
   { key: "outpass",    href: "/staff-portal/outpass",    label: "Outpass",     Icon: DoorOpen },
+  { key: "clubs",      href: "/staff-portal/clubs",      label: "Clubs",       Icon: Award },
   { key: "attendance", href: "/staff-portal/attendance", label: "Attendance",  Icon: ClipboardCheck },
   { key: "cia",        href: "/staff-portal/cia",        label: "CIA Marks",   Icon: ClipboardList },
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
@@ -591,6 +592,13 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               icon={<DoorOpen size={18} />}
               label="Gate & Security"
               active={pathname.includes("/gate")}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarLink
+              href={slug ? `/institutions/${slug}/clubs` : "/institutions"}
+              icon={<Award size={18} />}
+              label="Clubs & Groups"
+              active={pathname.includes("/clubs")}
               isCollapsed={isCollapsed}
             />
 
