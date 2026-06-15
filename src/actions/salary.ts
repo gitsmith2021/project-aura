@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { logAudit, logAuditBatch } from "@/lib/auditLog";
+import { notifySalaryDisbursed, notifySalaryDisbursedBulk } from "@/actions/notificationTriggers";
 import type {
   SalaryStructure, SalaryDisbursement, SalarySummary,
   StaffWithoutSalary, DisbursementMode, DisbursementStatus,
@@ -35,7 +36,7 @@ export async function getSalaryStructures(
 
     const { data, error } = await supabase
       .from("salary_structures")
-      .select("*, staff(full_name, title, designation, department_id, departments(name))")
+      .select("*, staff(full_name, title, designation, department_id, departments!department_id(name))")
       .eq("institution_id", institutionId)
       .eq("is_active", true)
       .order("staff(full_name)", { ascending: true });
@@ -70,7 +71,7 @@ export async function getStaffWithoutSalaryStructure(
 
     let query = supabase
       .from("staff")
-      .select("id, full_name, title, designation, department_id, departments(name)")
+      .select("id, full_name, title, designation, department_id, departments!department_id(name)")
       .eq("institution_id", institutionId)
       .eq("is_active", true)
       .order("full_name", { ascending: true });
@@ -143,7 +144,7 @@ export async function createSalaryStructure(
         other_deductions: payload.other_deductions,
         effective_from:   payload.effective_from,
       })
-      .select("*, staff(full_name, title, designation, department_id, departments(name))")
+      .select("*, staff(full_name, title, designation, department_id, departments!department_id(name))")
       .single();
 
     if (error) return { success: false, error: error.message };
@@ -182,7 +183,7 @@ export async function updateSalaryStructure(
       .from("salary_structures")
       .update(update)
       .eq("id", id)
-      .select("*, staff(full_name, title, designation, department_id, departments(name))")
+      .select("*, staff(full_name, title, designation, department_id, departments!department_id(name))")
       .single();
 
     if (error) return { success: false, error: error.message };
@@ -352,6 +353,16 @@ export async function processDisbursement(
       notes: "Salary disbursement processed",
     });
 
+    // Notify the staff member (fire-and-forget)
+    if (before?.staff_id) {
+      await notifySalaryDisbursed({
+        institutionId,
+        staffId: before.staff_id as string,
+        month:   (before.month as string) ?? null,
+        amount:  before.amount_disbursed != null ? Number(before.amount_disbursed) : null,
+      });
+    }
+
     revalidateSalary(institutionId);
     return { success: true };
   } catch (err: unknown) {
@@ -418,6 +429,12 @@ export async function bulkProcessDisbursements(
         }))
       );
     }
+
+    // Notify each staff member whose disbursement was in this run (fire-and-forget)
+    await notifySalaryDisbursedBulk({
+      institutionId,
+      staffIds: (beforeRows ?? []).map((r) => r.staff_id as string).filter(Boolean),
+    });
 
     revalidateSalary(institutionId);
     return { success: true, data: { processed, failed } };

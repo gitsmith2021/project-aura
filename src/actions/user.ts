@@ -87,6 +87,120 @@ export async function updatePersonProfile(payload: {
   return { success: true };
 }
 
+// ── Institution governance role (STAFF ⇄ PRINCIPAL ⇄ INST_ADMIN) ───────────────
+// HOD is intentionally NOT settable here — it's assigned via the Departments
+// page (setDepartmentHead) so the department↔head link stays consistent.
+// SUPER_ADMIN is platform-level and never assigned from an institution screen.
+
+export type GovernanceRole = "STAFF" | "PRINCIPAL" | "INST_ADMIN";
+
+/** Current institution_members.role for a staff row (by staff.id). */
+export async function getStaffMembershipRole(
+  staffId: string
+): Promise<{ success: true; role: string | null; hasLogin: boolean } | { success: false; error: string }> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Unauthorized" };
+
+  const { data: staff, error: staffErr } = await supabase
+    .from("staff")
+    .select("profile_id")
+    .eq("id", staffId)
+    .maybeSingle();
+  if (staffErr) return { success: false, error: staffErr.message };
+  if (!staff?.profile_id) return { success: true, role: null, hasLogin: false };
+
+  const { data: member } = await supabase
+    .from("institution_members")
+    .select("role")
+    .eq("profile_id", staff.profile_id)
+    .maybeSingle();
+
+  return { success: true, role: member?.role ?? "STAFF", hasLogin: true };
+}
+
+/**
+ * Promote/demote a staff member's institution role. RLS already restricts
+ * institution_members writes to SUPER_ADMIN / INST_ADMIN (PRINCIPAL normalizes
+ * to INST_ADMIN), so a HOD calling this fails at the DB layer; we also refuse
+ * to overwrite an existing HOD/DEPARTMENT_HEAD or SUPER_ADMIN here.
+ */
+export async function setStaffMembershipRole(payload: {
+  staffId: string;
+  institutionId: string;
+  role: GovernanceRole;
+}): Promise<{ success: true } | { success: false; error: string }> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Unauthorized" };
+
+  const { data: staff } = await supabase
+    .from("staff")
+    .select("profile_id")
+    .eq("id", payload.staffId)
+    .eq("institution_id", payload.institutionId)
+    .maybeSingle();
+  if (!staff?.profile_id) {
+    return { success: false, error: "This staff member has no login account yet. Enable portal access first, then assign a role." };
+  }
+
+  const { data: existing } = await supabase
+    .from("institution_members")
+    .select("id, role")
+    .eq("profile_id", staff.profile_id)
+    .maybeSingle();
+
+  if (existing && (existing.role === "HOD" || existing.role === "DEPARTMENT_HEAD")) {
+    return { success: false, error: "This member is a Head of Department — change that from the Departments page, not here." };
+  }
+  if (existing && existing.role === "SUPER_ADMIN") {
+    return { success: false, error: "Super Admin is a platform role and can't be changed here." };
+  }
+
+  if (existing) {
+    const { error } = await supabase
+      .from("institution_members")
+      .update({ role: payload.role })
+      .eq("id", existing.id);
+    if (error) return { success: false, error: error.message };
+
+    await logAudit({
+      institutionId: payload.institutionId,
+      performedBy: user.id,
+      tableName: "institution_members",
+      recordId: existing.id as string,
+      action: "UPDATE",
+      beforeData: { role: existing.role },
+      afterData: { role: payload.role },
+      notes: `Institution role changed ${existing.role} → ${payload.role}`,
+    });
+  } else {
+    const { data: inserted, error } = await supabase
+      .from("institution_members")
+      .insert({ profile_id: staff.profile_id, institution_id: payload.institutionId, role: payload.role })
+      .select("id")
+      .single();
+    if (error) return { success: false, error: error.message };
+
+    await logAudit({
+      institutionId: payload.institutionId,
+      performedBy: user.id,
+      tableName: "institution_members",
+      recordId: inserted.id as string,
+      action: "INSERT",
+      afterData: { profile_id: staff.profile_id, role: payload.role },
+      notes: `Institution role assigned: ${payload.role}`,
+    });
+  }
+
+  revalidatePath("/users/staff");
+  return { success: true };
+}
+
 export async function registerUser(prevState: any, formData: FormData) {
   const fullName = formData.get("fullName") as string;
   const email = formData.get("email") as string;

@@ -74,25 +74,26 @@ Fable 5 is included in Pro/Max/Team plans until June 22 — but it counts
 
 ---
 
-## 📅 Fable 5 Battle Plan — June 12 to June 22
+## 📅 Fable 5 Battle Plan — Module Sequence
 
-> **11 days · 8 Tier 1 modules · Maximum ROI**
+> **8 Tier 1 modules · run in order · well ahead of the June 22 window close**
 
 ```
-[x] Day 1  — June 12 (Today) 🎨  Landing Page (GSAP + Three.js + Lenis)
-[x] Day 2  — June 12 (Today) 🔐  Phase 2.5A — Razorpay Webhook Security
-[x] Day 3  — June 12 (Today) 🔐  Phase 2.5B — DPDP Act 2023 Compliance
-[x] Day 4  — June 12 (Today) 🔐  Phase 2.5C — Platform-Wide Audit Log (A8)
-[ ] Day 5  — June 13 (Tmrw)  📊  Phase 3B — Super Admin Analytics Dashboard
-[ ] Day 6  — June 14         📊  Phase 3B continued (reports + drill down)
-[ ] Day 7  — June 15         📚  Phase 4A — CIA Assessment Engine
-[ ] Day 8  — June 16         📚  Phase 4A continued (CO/PO mapping + reports)
-[ ] Day 9  — June 17         🏛️  Phase 7A — NAAC SSR Builder (scaffold)
-[ ] Day 10 — June 18         🏛️  Phase 7A continued (PDF export + criteria map)
-[ ] Day 11 — June 19         📱  Phase 8A — React Native Setup + NFC scaffold
-[ ] Buffer — June 20–22      ⏳  Buffer for Tier 1 refinements / Tier 2 work
+[x] 1   🎨  Landing Page (GSAP + Lenis)
+[x] 2   🔐  Phase 2.5A — Razorpay Webhook Security
+[x] 3   🔐  Phase 2.5B — DPDP Act 2023 Compliance
+[x] 4   🔐  Phase 2.5C — Platform-Wide Audit Log (A8)
+[x] 5   📊  Super Admin Analytics Dashboard (roadmap Phase 7A+7B)
+[x] 6   📊  Per-institution drill down + reports (roadmap Phase 7C)
+[x] 7   📚  CIA Assessment Engine — weighted results + publish flow
+[x] 8   📚  CO/PO outcome mapping + attainment reports (OBE)
+[x] 9   🏛️  NAAC SSR Builder scaffold (roadmap 7F-sub: registry + readiness)
+[x] 10  🏛️  NAAC SSR exports (Excel workbook, AISHE return, NIRF extract, print report)
+[x] 11  📱  Phase 8A — Aura Mobile foundation (Expo SDK 54 + role-adaptive bottom tabs, all 6 roles + auth + portal screens) — Opus
+[~] 12  📱  Phase 8B/8C screens — staff Leave/Payslip/Schedule, admin+HOD Approvals, student Dashboard/Fees/Attendance — Opus
+[ ] —   ⏳  Remaining: NFC (Phase 4F + EAS), push (Phase 3), in-app pay, CCTV, Parent app (Phase 6A)
 ─────────────────────────────────────────────────────
-June 23 onwards → Switch to Opus 4.8 / Sonnet 4.6 for Tier 2 & 3
+After the free window → Switch to Opus 4.8 / Sonnet 4.6 for Tier 2 & 3
 ```
 
 ---
@@ -187,10 +188,10 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 | Razorpay Webhook Security | Fable 5 | ✅ Complete (June 12) | `924abe9` |
 | DPDP Act 2023 Compliance | Fable 5 | ✅ Complete (June 12) | `d75993d` |
 | Platform Audit Log (A8) | Fable 5 | ✅ Complete (June 12) | `b3c2ed0` |
-| Super Admin Dashboard | Fable 5 | 🔲 Pending | — |
-| CIA Assessment Engine | Fable 5 | 🔲 Pending | — |
-| NAAC SSR Builder | Fable 5 | 🔲 Pending | — |
-| React Native + NFC Setup | Fable 5 | 🔲 Pending | — |
+| Super Admin Dashboard | Fable 5 | ✅ Complete (7A+7B `24f64f1` · 7C drill-down `d21e9bd`) | `d21e9bd` |
+| CIA Assessment Engine | Fable 5 | ✅ Complete — engine `aa1a694` + CO/PO mapping & attainment `2b65093` (June 12) | `2b65093` |
+| NAAC SSR Builder | Fable 5 | ✅ Complete — scaffold `e254e47` + export hub (Excel/AISHE/NIRF/PDF) `3944ed7` | `3944ed7` |
+| React Native Mobile (8A + 8B/8C screens) | Opus 4.8 | ✅ 8A complete · 8B/8C screens built — Expo SDK 54, role-adaptive tabs (6 roles), staff Leave/Payslip/Schedule, admin/HOD Approvals, student Dashboard/Fees/Attendance (NFC/push/CCTV/Parent deferred) | `301be79` · `fd762bd` · `64246fd` |
 | Notifications Infrastructure | Opus/Sonnet | 🔲 Pending | — |
 | Notification Triggers | Opus/Sonnet | 🔲 Pending | — |
 | Resend Email Integration | Opus/Sonnet | 🔲 Pending | — |
@@ -204,5 +205,5 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 
 ---
 
-*Last updated: June 12, 2026 — Fable 5 free window active (11 days remaining)*
+*Fable 5 free window active until June 22, 2026 — running well ahead of schedule. All 10 Tier‑1 web/data modules complete; mobile (module 11) built on Opus — Phase 8A done + 8B/8C screens built; NFC/push/CCTV/Parent remain.*
 *Reference: AURA_ROADMAP.md for full technical specifications per module*

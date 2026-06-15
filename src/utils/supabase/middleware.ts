@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { roleLabel } from "@/lib/roleLabel";
 
 // Server-to-server endpoints with no cookie session. Webhooks authenticate
 // their own requests (Razorpay: HMAC signature, NFC: bearer secret); the
@@ -68,6 +69,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   const isLoginPage      = pathname === "/login";
+  const isSuperAdminArea = pathname === "/admin" || pathname.startsWith("/admin/");
   // /staff-portal/view/* is the admin's read-only window into a staff member's portal.
   // Admins are allowed there; only /staff-portal (no /view) is staff-only.
   const isAdminViewStaff    = pathname.startsWith("/staff-portal/view");
@@ -98,8 +100,13 @@ export async function updateSession(request: NextRequest) {
       .eq("profile_id", user.id)
       .maybeSingle();
 
+    let memberRole: string | undefined = memberRow?.role;
+
     if (memberRow) {
-      if (memberRow.role === "SUPER_ADMIN" || memberRow.role === "INST_ADMIN") {
+      // PRINCIPAL is institution-wide leadership → same "admin" access tier as
+      // INST_ADMIN (the DB normalizes it too); its distinct identity is carried
+      // by the aura-role-label cookie set below.
+      if (memberRow.role === "SUPER_ADMIN" || memberRow.role === "INST_ADMIN" || memberRow.role === "PRINCIPAL") {
         role = "admin";
       } else if (memberRow.role === "HOD" || memberRow.role === "DEPARTMENT_HEAD") {
         role = "hod";
@@ -120,6 +127,7 @@ export async function updateSession(request: NextRequest) {
 
       if (staffRow) {
         role = "staff";
+        memberRole = memberRole ?? "STAFF";
       } else {
         const { data: studentRow } = await supabase
           .from("students")
@@ -127,6 +135,7 @@ export async function updateSession(request: NextRequest) {
           .eq("email", user.email ?? "")
           .maybeSingle();
         role = studentRow ? "student" : "admin";
+        memberRole = memberRole ?? (studentRow ? "STUDENT" : "INST_ADMIN");
       }
     }
 
@@ -137,6 +146,37 @@ export async function updateSession(request: NextRequest) {
       sameSite: "lax",
       secure:   process.env.NODE_ENV === "production",
     });
+
+    // Display label (JS-readable) — lets the UI badge show the real role
+    // (e.g. "Principal") even though the access tier collapses to "admin".
+    supabaseResponse.cookies.set("aura-role-label", roleLabel(memberRole), {
+      path:     "/",
+      httpOnly: false,
+      maxAge:   60 * 60 * 24 * 7,
+      sameSite: "lax",
+      secure:   process.env.NODE_ENV === "production",
+    });
+  }
+
+  // ── Super admin area (/admin) — SUPER_ADMIN only ───────────────────────────
+  // The aura-role cookie collapses SUPER_ADMIN and INST_ADMIN into "admin", so
+  // the platform-operator area re-checks the actual membership row on every
+  // request. This is deliberate: /admin is low-traffic, and a revoked
+  // SUPER_ADMIN must lose access immediately rather than when a cookie expires.
+  if (isSuperAdminArea) {
+    const { data: superRow } = await supabase
+      .from("institution_members")
+      .select("id")
+      .eq("profile_id", user.id)
+      .eq("role", "SUPER_ADMIN")
+      .limit(1)
+      .maybeSingle();
+    if (!superRow) {
+      const url = request.nextUrl.clone();
+      url.pathname = role === "staff" ? "/staff-portal" : role === "student" ? "/student-portal" : "/";
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
   }
 
   // Logged-in user lands on /login → send to their home

@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { logAuditBatch } from "@/lib/auditLog";
+import { computeCIA, type CIAComputation, type ComputationMode } from "@/lib/ciaEngine";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -283,6 +284,52 @@ export async function getCIAStudentSummary(
   }
 }
 
+// For staff portal — CIA components for subjects the signed-in staff teaches.
+// Pairs with the "cia_marks: staff manage own teaching subjects" RLS policy so
+// subject teachers enter their own marks instead of handing them to the HOD.
+export async function getMyTeachingCIAComponents(): Promise<
+  | { success: true; data: CIAComponent[] }
+  | { success: false; error: string }
+> {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) return { success: false, error: "Unauthorized." };
+
+    const { data: staff, error: staffErr } = await supabase
+      .from("staff")
+      .select("id, institution_id")
+      .eq("email", user.email)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (staffErr) return { success: false, error: staffErr.message };
+    if (!staff) return { success: false, error: "No staff profile found for this account." };
+
+    const { data: assigns, error: aErr } = await supabase
+      .from("teaching_assignments")
+      .select("subject_id")
+      .eq("staff_id", staff.id);
+    if (aErr) return { success: false, error: aErr.message };
+
+    const subjectIds = [...new Set((assigns ?? []).map((a) => a.subject_id).filter((v): v is string => !!v))];
+    if (subjectIds.length === 0) return { success: true, data: [] };
+
+    const { data, error } = await supabase
+      .from("cia_components")
+      .select("*, departments(name), subjects(name, code), academic_years(label)")
+      .eq("institution_id", staff.institution_id)
+      .in("subject_id", subjectIds)
+      .order("semester")
+      .order("created_at");
+    if (error) return { success: false, error: error.message };
+    return { success: true, data: (data ?? []) as CIAComponent[] };
+  } catch (e) {
+    return { success: false, error: String(e) };
+  }
+}
+
 // For student portal — personal CIA marks
 export async function getStudentCIAMarks(
   studentId: string,
@@ -312,6 +359,273 @@ export async function getStudentCIAMarks(
       data: (components ?? []).map(c => ({
         component: c as CIAComponent,
         marks_scored: marksMap.get(c.id) ?? null,
+      })),
+    };
+  } catch (e) {
+    return { success: false, error: String(e) };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 4A — CIA Assessment Engine: finalized results (compute → publish)
+// Calculation lives in src/lib/ciaEngine.ts; these actions feed it data and
+// persist its output to cia_results (draft → published).
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type CIAResultRow = {
+  id: string;
+  student_id: string;
+  full_name: string;
+  roll_number: string | null;
+  final_percentage: number;
+  computation_mode: ComputationMode;
+  missing_count: number;
+  status: "draft" | "published";
+  published_at: string | null;
+  components_snapshot: unknown;
+};
+
+export type CIAResultScope = {
+  institutionId: string;
+  departmentId: string;
+  semester: number;
+  academicYearId?: string;
+};
+
+/**
+ * Runs the engine over the scope's components + marks and upserts one DRAFT
+ * cia_results row per student. Published rows in the same scope are reset to
+ * draft (a recompute invalidates the previous publication — staff must review
+ * and publish again). Returns the full computation for immediate preview.
+ */
+export async function computeCIAResults(scope: CIAResultScope): Promise<
+  | { success: true; data: CIAComputation & { savedCount: number } }
+  | { success: false; error: string }
+> {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Same component scope as the Phase 2E report tab (dept + semester [+ year])
+    let cq = supabase
+      .from("cia_components")
+      .select("id, name, max_marks, weightage")
+      .eq("institution_id", scope.institutionId)
+      .eq("department_id", scope.departmentId)
+      .eq("semester", scope.semester);
+    if (scope.academicYearId) cq = cq.eq("academic_year_id", scope.academicYearId);
+    const { data: components, error: ce } = await cq;
+    if (ce) return { success: false, error: ce.message };
+    if (!components?.length) {
+      return { success: false, error: "No CIA components defined for this department/semester yet." };
+    }
+
+    const { data: students, error: se } = await supabase
+      .from("students")
+      .select("id, full_name, roll_number")
+      .eq("institution_id", scope.institutionId)
+      .eq("department_id", scope.departmentId)
+      .order("roll_number", { ascending: true, nullsFirst: false });
+    if (se) return { success: false, error: se.message };
+    if (!students?.length) return { success: false, error: "No students found in this department." };
+
+    const { data: marks, error: me } = await supabase
+      .from("cia_marks")
+      .select("student_id, cia_component_id, marks_scored")
+      .in("cia_component_id", components.map((c) => c.id))
+      .range(0, 49_999); // lift the 1000-row default cap
+    if (me) return { success: false, error: me.message };
+
+    const computation = computeCIA(
+      components,
+      students,
+      (marks ?? []).map((m) => ({
+        student_id: m.student_id,
+        component_id: m.cia_component_id,
+        marks_scored: Number(m.marks_scored),
+      }))
+    );
+
+    const rows = computation.results.map((r) => ({
+      institution_id: scope.institutionId,
+      student_id: r.student_id,
+      department_id: scope.departmentId,
+      academic_year_id: scope.academicYearId ?? null,
+      semester: scope.semester,
+      final_percentage: r.final_percentage,
+      computation_mode: computation.mode,
+      components_snapshot: r.components,
+      missing_count: r.missing_count,
+      status: "draft" as const,
+      computed_by: user?.id ?? null,
+      published_by: null,
+      published_at: null,
+      updated_at: new Date().toISOString(),
+    }));
+
+    const { data: saved, error: ue } = await supabase
+      .from("cia_results")
+      .upsert(rows, { onConflict: "institution_id,student_id,department_id,semester,academic_year_id" })
+      .select("id, student_id");
+    if (ue) return { success: false, error: ue.message };
+
+    // Dev Rule 13 — assessment outputs are high-stakes records
+    await logAuditBatch(
+      (saved ?? []).map((row) => ({
+        institutionId: scope.institutionId,
+        performedBy: user?.id ?? null,
+        tableName: "cia_results",
+        recordId: row.id as string,
+        action: "INSERT" as const,
+        beforeData: null,
+        afterData: rows.find((r) => r.student_id === row.student_id) ?? null,
+        notes: `CIA results computed (${computation.mode}, sem ${scope.semester})`,
+      }))
+    );
+
+    revalidatePath(`/institutions/${scope.institutionId}/cia`);
+    return { success: true, data: { ...computation, savedCount: saved?.length ?? 0 } };
+  } catch (e) {
+    return { success: false, error: String(e) };
+  }
+}
+
+/** Flips every draft row in the scope to published. Students see them from this moment. */
+export async function publishCIAResults(scope: CIAResultScope): Promise<
+  | { success: true; publishedCount: number }
+  | { success: false; error: string }
+> {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+    const { data: { user } } = await supabase.auth.getUser();
+
+    let dq = supabase
+      .from("cia_results")
+      .select("id, student_id, final_percentage, status")
+      .eq("institution_id", scope.institutionId)
+      .eq("department_id", scope.departmentId)
+      .eq("semester", scope.semester)
+      .eq("status", "draft");
+    dq = scope.academicYearId ? dq.eq("academic_year_id", scope.academicYearId) : dq.is("academic_year_id", null);
+    const { data: drafts, error: de } = await dq;
+    if (de) return { success: false, error: de.message };
+    if (!drafts?.length) return { success: false, error: "Nothing to publish — compute results first." };
+
+    const publishedAt = new Date().toISOString();
+    let uq = supabase
+      .from("cia_results")
+      .update({ status: "published", published_by: user?.id ?? null, published_at: publishedAt, updated_at: publishedAt })
+      .eq("institution_id", scope.institutionId)
+      .eq("department_id", scope.departmentId)
+      .eq("semester", scope.semester)
+      .eq("status", "draft");
+    uq = scope.academicYearId ? uq.eq("academic_year_id", scope.academicYearId) : uq.is("academic_year_id", null);
+    const { error: pe } = await uq;
+    if (pe) return { success: false, error: pe.message };
+
+    await logAuditBatch(
+      drafts.map((d) => ({
+        institutionId: scope.institutionId,
+        performedBy: user?.id ?? null,
+        tableName: "cia_results",
+        recordId: d.id as string,
+        action: "UPDATE" as const,
+        beforeData: { status: "draft", final_percentage: d.final_percentage },
+        afterData: { status: "published", final_percentage: d.final_percentage, published_at: publishedAt },
+        notes: `CIA results published (sem ${scope.semester})`,
+      }))
+    );
+
+    revalidatePath(`/institutions/${scope.institutionId}/cia`);
+    revalidatePath("/student-portal/cia");
+    return { success: true, publishedCount: drafts.length };
+  } catch (e) {
+    return { success: false, error: String(e) };
+  }
+}
+
+/** Saved results for the scope (drafts + published) — admin/HOD view. */
+export async function getCIAResults(scope: CIAResultScope): Promise<
+  | { success: true; data: CIAResultRow[] }
+  | { success: false; error: string }
+> {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
+    let q = supabase
+      .from("cia_results")
+      .select("id, student_id, final_percentage, computation_mode, missing_count, status, published_at, components_snapshot, students(full_name, roll_number)")
+      .eq("institution_id", scope.institutionId)
+      .eq("department_id", scope.departmentId)
+      .eq("semester", scope.semester)
+      .order("final_percentage", { ascending: false });
+    q = scope.academicYearId ? q.eq("academic_year_id", scope.academicYearId) : q.is("academic_year_id", null);
+    const { data, error } = await q;
+    if (error) return { success: false, error: error.message };
+
+    type Row = {
+      id: string; student_id: string; final_percentage: number;
+      computation_mode: ComputationMode; missing_count: number;
+      status: "draft" | "published"; published_at: string | null;
+      components_snapshot: unknown;
+      students: { full_name: string; roll_number: string | null } | null;
+    };
+    return {
+      success: true,
+      data: ((data ?? []) as unknown as Row[]).map((r) => ({
+        id: r.id,
+        student_id: r.student_id,
+        full_name: r.students?.full_name ?? "—",
+        roll_number: r.students?.roll_number ?? null,
+        final_percentage: Number(r.final_percentage),
+        computation_mode: r.computation_mode,
+        missing_count: r.missing_count,
+        status: r.status,
+        published_at: r.published_at,
+        components_snapshot: r.components_snapshot,
+      })),
+    };
+  } catch (e) {
+    return { success: false, error: String(e) };
+  }
+}
+
+/** Published CIA results for one student (student portal). RLS enforces published-only too. */
+export async function getStudentCIAResults(
+  studentId: string,
+  institutionId: string
+): Promise<
+  | { success: true; data: { semester: number; final_percentage: number; computation_mode: ComputationMode; published_at: string | null; academic_year: string | null }[] }
+  | { success: false; error: string }
+> {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
+    const { data, error } = await supabase
+      .from("cia_results")
+      .select("semester, final_percentage, computation_mode, published_at, academic_years(label)")
+      .eq("institution_id", institutionId)
+      .eq("student_id", studentId)
+      .eq("status", "published")
+      .order("semester");
+    if (error) return { success: false, error: error.message };
+
+    type Row = {
+      semester: number; final_percentage: number; computation_mode: ComputationMode;
+      published_at: string | null; academic_years: { label: string } | null;
+    };
+    return {
+      success: true,
+      data: ((data ?? []) as unknown as Row[]).map((r) => ({
+        semester: r.semester,
+        final_percentage: Number(r.final_percentage),
+        computation_mode: r.computation_mode,
+        published_at: r.published_at,
+        academic_year: r.academic_years?.label ?? null,
       })),
     };
   } catch (e) {

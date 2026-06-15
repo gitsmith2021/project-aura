@@ -124,7 +124,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
     // Fetch Staff with department name
     const { data: staffData, error: staffError } = await supabase
       .from('staff')
-      .select('id, full_name, email, phone, role, department_id, department:departments(name, funding_type)')
+      .select('id, full_name, email, phone, role, department_id, department:departments!department_id(name, funding_type)')
       .eq('institution_id', collegeId)
       .order('full_name', { ascending: true });
 

@@ -28,7 +28,7 @@ export default async function AdminStaffSchedule({ params }: { params: Promise<{
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: staff } = await supabase.from("staff").select("full_name, title, departments(name)").eq("id", staffId).single();
+  const { data: staff } = await supabase.from("staff").select("full_name, title, departments!department_id(name)").eq("id", staffId).single();
   if (!staff) redirect("/users/staff");
 
   const result = await getStaffSchedule(staffId);

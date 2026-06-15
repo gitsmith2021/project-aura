@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
 import { logAudit } from "@/lib/auditLog";
+import { notifyLeaveRequested, notifyLeaveReviewed } from "@/actions/notificationTriggers";
 import type {
   StaffProfile, StaffScheduleSlot, AttendanceSummaryRow,
   LeaveRequest, SalarySlip, StaffDashboardStats, AdminLeaveRequest,
@@ -42,7 +43,7 @@ export const getStaffProfile = cache(
 
       const { data, error } = await supabase
         .from("staff")
-        .select("id, full_name, title, designation, department_id, institution_id, employment_type, email, departments(name), institutions(name)")
+        .select("id, full_name, title, designation, department_id, institution_id, employment_type, email, departments!department_id(name), institutions(name)")
         .eq("email", user.email)
         .eq("is_active", true)
         .maybeSingle();
@@ -195,6 +196,15 @@ export async function applyForLeave(payload: {
       .single();
 
     if (error) return { success: false, error: error.message };
+
+    // Notify institution admins of the new request (fire-and-forget)
+    await notifyLeaveRequested({
+      institutionId: payload.institutionId,
+      staffId:       payload.staffId,
+      leaveType:     payload.leave_type,
+      fromDate:      payload.from_date,
+      toDate:        payload.to_date,
+    });
 
     revalidatePath("/staff-portal/leave");
     return { success: true, data: data as unknown as LeaveRequest };
@@ -416,6 +426,18 @@ export async function reviewLeaveRequest(
       afterData: { status: payload.status, review_note: payload.review_note?.trim() || null },
       notes: `Leave ${payload.status}`,
     });
+
+    // Notify the staff member of the decision (fire-and-forget)
+    if (before?.staff_id) {
+      await notifyLeaveReviewed({
+        institutionId,
+        staffId:   before.staff_id as string,
+        status:    payload.status,
+        leaveType: (before.leave_type as string) ?? "",
+        fromDate:  (before.from_date as string) ?? "",
+        toDate:    (before.to_date as string) ?? "",
+      });
+    }
 
     revalidatePath(`/institutions/${institutionId}/leave`);
     return { success: true };

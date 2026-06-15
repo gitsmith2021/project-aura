@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { InstitutionProvider } from "@/context/InstitutionContext";
+import { SidebarProvider } from "@/context/SidebarContext";
 import { ConsentBanner } from "@/components/auth/ConsentBanner";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
@@ -67,8 +68,10 @@ export default async function RootLayout({
       <body suppressHydrationWarning className="font-sans min-h-screen flex flex-col">
         <ThemeProvider>
           <InstitutionProvider userId={userId}>
-            {children}
-            <ConsentBanner />
+            <SidebarProvider>
+              {children}
+              <ConsentBanner />
+            </SidebarProvider>
           </InstitutionProvider>
         </ThemeProvider>
       </body>

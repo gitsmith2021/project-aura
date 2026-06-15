@@ -47,16 +47,24 @@ CREATE TABLE library_lendings (
 );
 ```
 
+> **Status:** ✅ **Complete** (migration `20260614020000_phase4a_library`). RLS:
+> all members read the catalog; a borrower reads their own lendings; admins
+> manage books + lendings. Fine math (₹2/day default), overdue detection, and
+> availability helpers are pure + unit-tested (9 tests). Copy counts adjust on
+> issue/return. Borrowers are staff/students with a login (borrower_id →
+> auth.users, per the schema).
+
 #### What to build:
-- [ ] `supabase/migrations/..._library.sql`
-- [ ] `src/app/institutions/[id]/library/page.tsx` — Book catalog with search/filter by category, dept, availability
-- [ ] `src/app/institutions/[id]/library/lend/page.tsx` — Issue/return books, scan by ISBN or search
-- [ ] `src/app/institutions/[id]/library/overdue/page.tsx` — Overdue tracker with fine calculation
-- [ ] `src/actions/library.ts` — getBooks, issueBook, returnBook, getOverdueList, calculateFine
-- [ ] `src/components/library/BookCard.tsx` — Book listing card with availability badge
-- [ ] `src/components/library/LendingDrawer.tsx` — Issue/return slide-out panel
-- [ ] Student portal: `src/app/student-portal/library/page.tsx` — My borrowed books, due dates, fines
-- [ ] Staff portal: `src/app/staff-portal/library/page.tsx` — Staff borrowed books
+- [x] `supabase/migrations/20260614020000_phase4a_library.sql` — `library_books` + `library_lendings` + RLS + indexes
+- [x] `src/app/institutions/[id]/library/page.tsx` — catalog (`LibraryManager`): search, category + availability filter, Add Book drawer, Issue
+- [x] `src/app/institutions/[id]/library/lend/page.tsx` — issued books + record returns (`LendingsTable`)
+- [x] `src/app/institutions/[id]/library/overdue/page.tsx` — overdue tracker with live fine calculation
+- [x] `src/actions/library.ts` — getBooks, addBook, searchBorrowers, issueBook, returnBook, getLendings, getMyLendings (fine math in `src/lib/library.ts`)
+- [x] `src/components/library/BookCard.tsx` — book card with availability badge
+- [x] `src/components/library/LendingDrawer.tsx` — issue slide-out (borrower search + due date); `LendingsTable` handles returns
+- [x] Student portal: `src/app/student-portal/library/page.tsx` — my borrowed books, due dates, fines (`MyLibraryList`)
+- [x] Staff portal: `src/app/staff-portal/library/page.tsx` — staff borrowed books
+- [~] Fine → fee-ledger integration: fine is computed + stored on the lending; auto-posting overdue fines into `fee_payments` deferred (light follow-up)
 
 #### Key features:
 - Fine auto-calculation (configurable rate per day overdue)
@@ -99,15 +107,22 @@ CREATE TABLE venue_bookings (
 );
 ```
 
+> **Status:** ✅ **Complete** (migration `20260614030000_phase4b_venue_bookings`).
+> Conflict detection (half-open overlap, checked on create **and** re-checked on
+> approval), approval workflow with admin notes, colour-coded upcoming agenda.
+> RLS: members read venues; booker reads/creates/cancels own bookings; admins
+> manage. Overlap/conflict logic is pure + unit-tested (10 tests).
+
 #### What to build:
-- [ ] `supabase/migrations/..._venues.sql`
-- [ ] `src/app/institutions/[id]/bookings/page.tsx` — Admin: venue list + booking calendar (week/month view)
-- [ ] `src/app/institutions/[id]/bookings/venues/page.tsx` — Manage venue registry (add/edit/deactivate)
-- [ ] `src/app/institutions/[id]/bookings/requests/page.tsx` — Approve/reject pending bookings
-- [ ] `src/actions/venueBookings.ts` — getVenues, createBooking, approveBooking, rejectBooking, getBookingCalendar
-- [ ] `src/components/bookings/BookingCalendar.tsx` — Recharts/custom calendar showing booked slots per venue
-- [ ] `src/components/bookings/BookingRequestDrawer.tsx` — Staff submit booking request
-- [ ] Staff portal: `src/app/staff-portal/bookings/page.tsx` — Submit request + view status of own bookings
+- [x] `supabase/migrations/20260614030000_phase4b_venue_bookings.sql` — venues + venue_bookings + RLS + indexes
+- [x] `src/app/institutions/[id]/bookings/page.tsx` — admin overview: upcoming agenda (colour-coded per venue) + venue/request quick links
+- [x] `src/app/institutions/[id]/bookings/venues/page.tsx` — venue registry (`VenuesManager`: add, activate/deactivate)
+- [x] `src/app/institutions/[id]/bookings/requests/page.tsx` — approve/reject pending bookings (`RequestsTable`, with notes)
+- [x] `src/actions/venueBookings.ts` — getVenues, addVenue, setVenueActive, createBooking, approveBooking, rejectBooking, cancelBooking, getBookings, getMyBookings
+- [x] `src/components/bookings/BookingCalendar.tsx` — upcoming agenda grouped by day, colour-coded per venue
+- [x] Staff submit drawer — built into `StaffBookings.tsx` (venue + datetime range + attendees)
+- [x] Staff portal: `src/app/staff-portal/bookings/page.tsx` — submit request + view/cancel own bookings
+- [~] Bookings auto-appear on the academic calendar as events — deferred (calendar-sync follow-up)
 
 #### Key features:
 - Conflict detection: cannot double-book a venue for the same time slot
@@ -215,22 +230,30 @@ CREATE TABLE hostel_maintenance_requests (
 );
 ```
 
+> **Status:** ✅ **Complete** — pass 1 (`20260614040000`): hostels/rooms/allocations
+> + floor occupancy grid + student "my hostel"; pass 2 (`20260614050000`): mess
+> menu editor + monthly billing, maintenance requests (student raise → warden
+> board), hostel announcements. One-active-room constraint via partial unique
+> index. Pure logic unit-tested (occupancy 5 + mess/maintenance 5). **Deferred:**
+> auto-linking hostel/mess fees into the central fee ledger (mess billing is a
+> self-contained ledger for now).
+
 #### What to build:
-- [ ] `supabase/migrations/..._hostels.sql`
-- [ ] `src/app/institutions/[id]/hostels/page.tsx` — Hostel overview: list of hostels, occupancy stats
-- [ ] `src/app/institutions/[id]/hostels/[hostelId]/page.tsx` — Floor plan view, room occupancy grid
-- [ ] `src/app/institutions/[id]/hostels/[hostelId]/allocations/page.tsx` — Allocate/transfer/vacate students
-- [ ] `src/app/institutions/[id]/hostels/[hostelId]/announcements/page.tsx` — Hostel-specific announcements
-- [ ] `src/app/institutions/[id]/hostels/cafeteria/page.tsx` — Cafeteria weekly menu board editor (day × meal grid)
-- [ ] `src/app/institutions/[id]/hostels/cafeteria/billing/page.tsx` — Monthly mess billing: generate bills per student, mark paid
-- [ ] `src/actions/mess.ts` — getMessMenu, updateMessMenu, generateMessBills, markMessPaid
-- [ ] `src/actions/hostels.ts` — getHostels, getRooms, allocateStudent, vacateStudent, getOccupancyStats
-- [ ] `src/actions/hostelMaintenance.ts` — raiseMaintenanceRequest, updateRequestStatus, getOpenRequests, resolveRequest
-- [ ] `src/components/hostels/RoomGrid.tsx` — Visual floor-wise room grid with colour: empty/partial/full
-- [ ] `src/components/hostels/AllocationDrawer.tsx` — Search student → assign to room
-- [ ] `src/app/institutions/[id]/hostels/[hostelId]/maintenance/page.tsx` — Warden dashboard: open requests by priority, assign maintenance staff, mark resolved with notes
-- [ ] Student portal: `src/app/student-portal/hostel/page.tsx` — Room number, hostel name, roommates, announcements, cafeteria menu, mess bill status, raise maintenance request
-- [ ] Hostel fee auto-linked to existing `fee_structures` (hostel fee type already exists)
+- [x] `supabase/migrations/20260614040000_phase4c_hostels_core.sql` — hostels, hostel_rooms, hostel_allocations + RLS
+- [x] `src/app/institutions/[id]/hostels/page.tsx` — overview: hostel cards with occupancy stats
+- [x] `src/app/institutions/[id]/hostels/[hostelId]/page.tsx` — floor-wise room grid + add room + allocate
+- [x] Allocate/transfer/vacate — built into the hostel detail via `AllocationDrawer` (no separate /allocations route)
+- [x] `src/app/institutions/[id]/hostels/[hostelId]/announcements/page.tsx` — `AnnouncementsManager`
+- [x] `src/app/institutions/[id]/hostels/cafeteria/page.tsx` — menu board editor (`MessMenuEditor`, day × meal)
+- [x] `src/app/institutions/[id]/hostels/cafeteria/billing/page.tsx` — mess billing (`MessBilling`, generate + mark paid)
+- [x] `src/actions/mess.ts` — getMessMenu, updateMessMenu, getMessBills, generateMessBills, markMessPaid, getMyMessBills
+- [x] `src/actions/hostels.ts` — getHostels, getHostel, addHostel, getRooms, addRoom, allocateStudent, vacateAllocation, getRoomRosters, searchAllocatableStudents, getMyHostel
+- [x] `src/actions/hostelMaintenance.ts` — raise, getMaintenanceRequests, updateMaintenanceRequest, getMyMaintenanceRequests (+ `hostelAnnouncements.ts`)
+- [x] `src/components/hostels/RoomGrid.tsx` — floor-wise grid colour-coded empty/partial/full
+- [x] `src/components/hostels/AllocationDrawer.tsx` — search student → assign; vacate occupants
+- [x] `src/app/institutions/[id]/hostels/[hostelId]/maintenance/page.tsx` — warden board (priority sort, assign, resolve)
+- [x] Student portal: `src/app/student-portal/hostel/page.tsx` — room, roommates, mess menu, mess bills, announcements, raise maintenance
+- [ ] Hostel/mess fee auto-linked to `fee_structures` — *deferred (self-contained mess ledger for now)*
 
 #### Key features:
 - Floor-wise room grid with colour-coded occupancy

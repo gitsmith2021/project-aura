@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, Bell, ChevronDown, User, Settings, LogOut, Sun, Moon } from "lucide-react";
+import { Menu, ChevronDown, User, Settings, LogOut, Sun, Moon } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useTheme } from "@/context/ThemeContext";
 import { ScrollableTabBar } from "./ScrollableTabBar";
 import { useInstitution } from "@/context/InstitutionContext";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 
 
@@ -19,6 +20,7 @@ export function Topbar({
 }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const [roleLabel, setRoleLabel] = useState("Admin");
   const { theme, toggle } = useTheme();
   const { institutions, selectedId, setSelectedId, loading } = useInstitution();
   const pathname = usePathname();
@@ -43,6 +45,9 @@ export function Topbar({
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.email) setEmail(user.email);
     });
+    // Real role label (e.g. "Principal") from the non-httpOnly cookie set at login
+    const label = document.cookie.split("; ").find((c) => c.startsWith("aura-role-label="));
+    if (label) setRoleLabel(decodeURIComponent(label.split("=")[1] ?? "Admin"));
   }, []);
 
   const handleTabClick = (inst: { id: string; slug: string | null }) => {
@@ -111,9 +116,7 @@ export function Topbar({
           {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
         </button>
 
-        <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
-          <Bell size={16} />
-        </button>
+        <NotificationBell />
 
         <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
 
@@ -129,7 +132,7 @@ export function Topbar({
               <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-none truncate max-w-[100px]">
                 {email ? email.split("@")[0] : "User"}
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Admin</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{roleLabel}</span>
             </div>
             <ChevronDown size={14} className="text-slate-400 ml-1 group-hover:text-slate-600 dark:group-hover:text-slate-300 shrink-0" />
           </div>

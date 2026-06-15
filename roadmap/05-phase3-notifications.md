@@ -11,7 +11,15 @@
 > the cracks. Staff get notified about leave approvals. Students get fee reminders.
 > Admins get attendance alerts.
 
-### Step 3A — Notification Infrastructure
+### Step 3A — Notification Infrastructure  ✅ Complete (migration `20260614000000_phase3a_notifications`)
+
+> Built on Opus. In-app inbox: `notifications` table (RLS: recipient reads +
+> marks-read own; rows written server-side via the service-role admin client so
+> no user can forge/erase), added to the `supabase_realtime` publication for
+> live updates. Bell + right-side drawer wired into the shared `Topbar`, so it
+> appears across admin, staff and student portals. Pure logic (`src/lib/notifications.ts`)
+> is unit-tested (8 tests). Retention registered (1 year) per Dev Rule 15.
+> Security advisors: clean for `notifications`.
 
 #### Database (run migration):
 ```sql
@@ -34,41 +42,55 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ```
 
 #### What to build:
-- [ ] Migration SQL file in `supabase/migrations/`
-- [ ] `src/actions/notifications.ts` — createNotification, getNotifications, markAsRead, markAllRead
-- [ ] `src/components/layout/NotificationBell.tsx` — Bell icon with unread badge in nav
-- [ ] `src/components/layout/NotificationPanel.tsx` — Slide-out panel listing notifications
-- [ ] `src/hooks/useNotifications.ts` — Supabase realtime subscription for live updates
+- [x] Migration SQL file in `supabase/migrations/` — `20260614000000_phase3a_notifications.sql`
+- [x] `src/actions/notifications.ts` — `createNotification` (+ `createNotificationsBulk` fan-out), `getNotifications`, `markAsRead`, `markAllRead`
+- [x] `src/components/notifications/NotificationBell.tsx` — bell + unread badge (caps at 9+) in the Topbar
+- [x] `src/components/notifications/NotificationPanel.tsx` — right-side drawer, Today/Yesterday/Earlier grouping, per-type icon/tone, click-to-navigate via `data.href`, mark-all-read
+- [x] `src/hooks/useNotifications.ts` — Supabase realtime subscription (INSERT/UPDATE/DELETE scoped to the recipient) with optimistic mark-read
+- [x] `src/lib/notifications.ts` — pure domain/presentation helpers (unread count, badge, day-bucketing, relative time, per-type meta) + `tests/unit/notifications.test.ts`
 
 ---
 
-### Step 3B — Notification Triggers
+### Step 3B — Notification Triggers  ✅ Event triggers complete (2 time-based pending a scheduler)
 
-Wire notifications into existing modules:
+> All 5 **event-driven** triggers wired into the existing actions, each
+> fire-and-forget (never breaks the primary mutation) with recipients resolved
+> via the service-role admin client. Pure message builders live in
+> `src/lib/notifications.ts` and are unit-tested. The 2 **time-based** triggers
+> (fee-due-in-7-days, low-attendance) need a scheduler (pg_cron / Vercel cron /
+> the Python service) that doesn't exist yet — deferred to that infra rather
+> than shipped un-runnable.
 
 #### What to build:
-- [ ] Fee due reminder — trigger when fee_payment is 7 days overdue → notify student
-- [ ] Payment received — trigger on fee_payment status=completed → notify student
-- [ ] Leave request — trigger on new leave application → notify institution admin
-- [ ] Leave approved/rejected — trigger on leave status update → notify staff
-- [ ] Low attendance alert — trigger when student attendance < 75% → notify student
-- [ ] Salary disbursed — trigger on disbursement status=processed → notify staff
-- [ ] Schedule published — trigger on draft published → notify all dept staff & students
-- [ ] `src/actions/notificationTriggers.ts` — all trigger functions
+- [ ] Fee due reminder — fee_payment 7 days overdue → student *(deferred: time-based, needs a scheduler)*
+- [x] Payment received — on `payment_status=completed` → student. Wired into `recordManualPayment` (manual) **and** the Razorpay `payment.captured` webhook (online)
+- [x] Leave request — on new leave application → institution admins (INST_ADMIN, PRINCIPAL). Wired into `applyForLeave`
+- [x] Leave approved/rejected — on leave status update → staff. Wired into `reviewLeaveRequest`
+- [ ] Low attendance alert — student attendance < 75% → student *(deferred: time-based, needs a scheduler)*
+- [x] Salary disbursed — on disbursement `status=processed` → staff. Wired into `processDisbursement` (single) + `bulkProcessDisbursements` (fan-out)
+- [x] Schedule published — on draft published → all dept staff + students. Wired into `publishDraftSchedule`
+- [x] `src/actions/notificationTriggers.ts` — all trigger functions (+ `buildFeeDueMessage` / `buildLowAttendanceMessage` builders ready for when the sweeps are scheduled)
 
 ---
 
 ### Step 3C — Email, SMS & WhatsApp Notifications
 
-#### Email — Resend Integration
-- [ ] Integrate Resend (resend.com) for transactional emails
-- [ ] Email template: Fee Due Reminder
-- [ ] Email template: Payment Receipt
-- [ ] Email template: Leave Approved/Rejected
-- [ ] Email template: Salary Slip
-- [ ] Email template: Exam Schedule Released
-- [ ] `src/lib/email.ts` — sendEmail() wrapper around Resend API
-- [ ] Add `RESEND_API_KEY` to .env.local
+> **Status:** ✉️ **Email live (Resend); SMS + WhatsApp stubbed** (deferred per
+> build decision — both need paid accounts + India DLT / Meta business
+> verification). `sendEmail` is safe-by-default: a no-op that logs when
+> `RESEND_API_KEY` is absent, so nothing breaks before the key is added. Email
+> is wired as a second channel inside the 3B triggers (payment receipt, leave
+> status, salary disbursed) alongside the in-app notification.
+
+#### Email — Resend Integration  ✅
+- [x] Integrate Resend (resend.com) for transactional emails — `src/lib/email.ts`
+- [ ] Email template: Fee Due Reminder *(deferred with the fee-due sweep — needs scheduler)*
+- [x] Email template: Payment Receipt — `paymentReceiptEmail`
+- [x] Email template: Leave Approved/Rejected — `leaveStatusEmail`
+- [x] Email template: Salary Slip — `salaryDisbursedEmail`
+- [ ] Email template: Exam Schedule Released *(deferred — no exam-publish trigger yet)*
+- [x] `src/lib/email.ts` — `sendEmail()` wrapper around Resend (guarded; `EMAIL_FROM` configurable); templates in `src/lib/emailTemplates.ts` (pure, unit-tested)
+- [ ] Add `RESEND_API_KEY` to `.env.local` *(user action — free Resend account; verify a domain for production)*
 
 #### SMS — MSG91 / Fast2SMS Integration
 > Indian institutions rely heavily on SMS for parents and non-tech-savvy staff who may not regularly check email.
@@ -77,8 +99,8 @@ Wire notifications into existing modules:
 - [ ] SMS trigger: Exam schedule notification
 - [ ] SMS trigger: Attendance alert (< 75%)
 - [ ] SMS trigger: OTP for parent portal registration
-- [ ] `src/lib/sms.ts` — sendSMS() wrapper
-- [ ] Add `SMS_API_KEY` and `SMS_SENDER_ID` to .env.local
+- [x] `src/lib/sms.ts` — `sendSMS()` **stub** (logs; real MSG91/Fast2SMS + DLT registration deferred)
+- [ ] Add `SMS_API_KEY` and `SMS_SENDER_ID` to .env.local *(deferred — paid + DLT)*
 
 #### WhatsApp — Meta Cloud API
 > WhatsApp Business API enables rich notifications with PDF attachments (payslips, fee receipts) — the preferred communication channel for Indian parents.
@@ -87,8 +109,8 @@ Wire notifications into existing modules:
 - [ ] WhatsApp template: Salary slip with PDF attachment
 - [ ] WhatsApp template: Leave status update (approved/rejected)
 - [ ] WhatsApp template: Exam hall ticket download link
-- [ ] `src/lib/whatsapp.ts` — sendWhatsApp() wrapper
-- [ ] Add `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` to .env.local
+- [x] `src/lib/whatsapp.ts` — `sendWhatsApp()` **stub** (logs; real Meta Cloud API + template approval deferred)
+- [ ] Add `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` to .env.local *(deferred — Meta business verification)*
 
 ---
 
@@ -119,15 +141,21 @@ CREATE TABLE notices (
 );
 ```
 
+> **Status:** ✅ **Complete** (migration `20260614010000_phase3d_notices`). RLS:
+> all institution members read; only admins (INST_ADMIN/PRINCIPAL/SUPER_ADMIN)
+> manage. Pure helpers in `src/lib/notices.ts` (type meta, expiry, pinned-sort,
+> audience targeting) are unit-tested. Notice bell now appears in the student
+> portal shell too (was admin/staff only). Retention registered.
+
 #### What to build:
-- [ ] `supabase/migrations/..._notices.sql`
-- [ ] `src/app/institutions/[id]/notices/page.tsx` — Admin: create notices, pin/unpin, manage target audience
-- [ ] `src/actions/notices.ts` — createNotice, updateNotice, deleteNotice, getActiveNotices
-- [ ] `src/components/notices/NoticeBoard.tsx` — Notice board widget embeddable in any portal dashboard
-- [ ] `src/components/notices/NoticeBadge.tsx` — Type badge (Emergency — red, Academic — violet, Event — amber)
-- [ ] Student portal: `src/app/student-portal/notices/page.tsx` — Active notices filtered for students
-- [ ] Staff portal: `src/app/staff-portal/notices/page.tsx` — Active notices filtered for staff
-- [ ] Integration: creating an Emergency or Exam notice optionally triggers a push notification (Phase 3B)
+- [x] `supabase/migrations/20260614010000_phase3d_notices.sql` — table + indexes + RLS
+- [x] `src/app/institutions/[id]/notices/page.tsx` — admin manager (`NoticesManager`): create (right-side drawer), pin/unpin, delete, audience + department targeting, expiry
+- [x] `src/actions/notices.ts` — `createNotice`, `updateNotice`, `deleteNotice`, `getNotices` (admin), `getActiveNotices` (audience + dept + non-expired filter)
+- [x] `src/components/notices/NoticeBoard.tsx` — read-only board, embeddable in any portal
+- [x] `src/components/notices/NoticeBadge.tsx` — per-type colour badge
+- [x] Student portal: `src/app/student-portal/notices/page.tsx` — active notices for students (+ their dept)
+- [x] Staff portal: `src/app/staff-portal/notices/page.tsx` — active notices for staff (+ their dept)
+- [x] Integration: Emergency/Exam notices fire an in-app notification to the audience via `notifyNoticePosted` (3B). (Email/SMS/WhatsApp fan-out for notices deferred with the rest of 3C external channels)
 
 #### Key features:
 - Audience targeting: all / students only / staff only / specific dept / hostel residents

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 // authenticated cryptographically via the HMAC-SHA256 signature below.
 import { createAdminClient } from "@/utils/supabase/admin";
 import { logAudit } from "@/lib/auditLog";
+import { notifyPaymentReceived } from "@/actions/notificationTriggers";
 
 /**
  * Razorpay webhook receiver (Phase 2.5A).
@@ -139,7 +140,7 @@ export async function POST(req: Request) {
 
   const { data: payment, error: lookupErr } = await supabase
     .from("fee_payments")
-    .select("id, institution_id, payment_status, amount_paid")
+    .select("id, institution_id, payment_status, amount_paid, student_id")
     .eq("razorpay_order_id", entity.order_id)
     .maybeSingle();
 
@@ -209,6 +210,15 @@ export async function POST(req: Request) {
       afterData: { payment_status: "completed", razorpay_payment_id: entity.id },
       notes: "Razorpay webhook: payment.captured",
     });
+
+    // Notify the student their online payment settled (fire-and-forget)
+    if (payment.student_id) {
+      await notifyPaymentReceived({
+        institutionId: payment.institution_id as string,
+        studentId: payment.student_id as string,
+        amount: Number(payment.amount_paid),
+      });
+    }
   } else {
     // payment.failed — only a still-pending row may move to failed.
     const { error: updateErr } = await supabase

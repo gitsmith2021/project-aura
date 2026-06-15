@@ -30,6 +30,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { SHIFT_PERIOD_TIMES } from "@/lib/scheduleConstants";
 import { callScheduler } from "@/lib/scheduler";
+import { notifySchedulePublished } from "@/actions/notificationTriggers";
 
 // Cohort definitions are fixed per academic structure. Adjust required_hours_per_day
 // to match your institution's timetable grid.
@@ -277,6 +278,13 @@ export async function publishDraftSchedule(draftId: string): Promise<PublishResu
   if (insertError) return { success: false, error: insertError.message };
 
   await supabase.from("draft_schedules").update({ status: "PUBLISHED" }).eq("id", draftId);
+
+  // Notify the department's staff + students (fire-and-forget)
+  await notifySchedulePublished({
+    institutionId: draft.institution_id as string,
+    departmentId:  draft.department_id as string,
+  });
+
   revalidatePath("/schedules");
 
   return { success: true, count: rows.length };

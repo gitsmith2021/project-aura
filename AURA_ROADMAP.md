@@ -94,8 +94,8 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 2 | [roadmap/02-foundation-migrations.md](roadmap/02-foundation-migrations.md) | Foundation Migrations (2-Pre-A – 2-Pre-D) | ✅ Complete |
 | 3 | [roadmap/03-phase2-academic-operations.md](roadmap/03-phase2-academic-operations.md) | Phase 2 — Academic Operations (2A–2I) | ✅ Complete |
 | 4 | [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md) | Phase 2.5 — Critical Security & Compliance Fixes | ✅ Complete (3 manual dashboard steps pending) |
-| 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🔲 Pending |
-| 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🔲 Pending |
+| 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🟢 Core complete (3A/3B/3D ✅, 3C email; SMS/WhatsApp + time-based deferred) |
+| 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🟡 In progress (4A ✅ · 4B ✅ · 4C ✅) |
 | 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | 🔲 Pending |
 | 8 | [roadmap/08-phase6-portals-tools.md](roadmap/08-phase6-portals-tools.md) | Phase 6 — Parent Portals & Extended Digital Tools (6A–6H) | 🔲 Pending |
 | 9 | [roadmap/09-phase7-super-admin.md](roadmap/09-phase7-super-admin.md) | Phase 7 — Super Admin Panel / SaaS Multi-Tenancy (7A–7F-sub2) | 🔲 Pending |
@@ -108,24 +108,24 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 
 ## 📋 Overall Progress Tracker
 
-> **Last updated:** 2026-06-12  
-> **34 of 87 modules complete — 39% of full platform built**
+> **Last updated:** 2026-06-13  
+> **45 of 87 modules complete — 52% of full platform built**
 
 ```
-Overall  █████████████░░░░░░░░░░░░░░░░░░░░  39%  (34/87)
+Overall  █████████████████░░░░░░░░░░░░░░░  52%  (45/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
-Phase 3    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/4  — Notifications)
-Phase 4    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/12 — Campus Infrastructure + Vendor POs)
+Phase 3    ███████████████████████████░░░░  88%  (3A ✅ · 3B ✅ · 3C 🟡 email live · 3D ✅ notices · SMS/WhatsApp + time-based deferred)
+Phase 4    ████████░░░░░░░░░░░░░░░░░░░░░░░  25%  (3/12 — 4A Library ✅ · 4B Bookings ✅ · 4C Hostels ✅ (rooms/allocations + mess + maintenance) · labs/assets/etc. pending)
 Phase 5    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/14 — Admissions, HR, Payroll, Budget & Lifecycle)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
-Phase 7    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Super Admin + SSR Builder + IQAC Tracker)
-Phase 8    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/6  — Mobile Apps & CCTV)
-Arch       ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%  (1/8  — Audit Log ✅ · RLS, Testing, Indexes, CI/CD, Billing pending)
+Phase 7    ████████████████░░░░░░░░░░░░░░░░  50%  (4/8  — 7A ✅ · 7B ✅ · 7C ✅ · 7F-sub SSR Builder ✅)
+Phase 8    █████░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%  (1/6  — 8A ✅ · 8B/8C screens built · NFC/push/CCTV/Parent pending)
+Arch       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░  19%  (1/8 + A2 🟡 — Audit Log ✅ · Test infra (Vitest+Playwright) foundation · RLS, Indexes, CI/CD, Billing pending)
 ```
 
-> **Next up:** Phase 3A — Notification Infrastructure (see [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md)). Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
+> **Next up:** Phase 4D — Laboratory Management (see [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md)). **Phase 3 deferred items** (revisit when infra exists): 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed; time-based triggers (fee-due, low-attendance) await a scheduler. Phase 2.5 manual leftovers: enable PITR on the Supabase dashboard, add `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets, set up UptimeRobot (see [docs/DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md))
 
 ---
 
@@ -157,6 +157,8 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 | ✅ Phase 2C | Marks & Arrears Management | Complete | — |
 | ✅ Phase 2D | Year Promotion & Graduation Workflow | Complete | — |
 | ✅ Phase 2E | CIA / Internal Assessment Ledger (NAAC) | Complete | `1df3ab8` |
+| ✅ Phase 2E+ | CIA Assessment Engine — weighted results, compute → publish (`cia_results`) | Complete | `aa1a694` |
+| ✅ Phase 2E++ | CO/PO Outcome Mapping & Attainment (OBE — NBA/NAAC) | Complete | `2b65093` |
 | ✅ Phase 2F | Syllabus & Curriculum Management | Complete | `f938ff0` |
 | ✅ Phase 2G | Teacher Lesson Plan / Daily Diary | Complete | `986bfd2` |
 | ✅ Phase 2H | Guest Lecture & Expert Talk Management | Complete | `76ac333` |
@@ -164,13 +166,13 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 | ✅ Phase 2.5A | Razorpay Webhook Signature Verification 🔒 | Complete | `924abe9` |
 | ✅ Phase 2.5B | DPDP 2023 Compliance — Consent & Erasure Framework 🔐 | Complete | `d75993d` |
 | ✅ Phase 2.5C | Backup Strategy + Scheduler Resilience ☁️ | Complete | `8509ae6` |
-| 🔲 Phase 3A | Notification Infrastructure | **Next** | — |
-| 🔲 Phase 3B | Notification Triggers | Pending | — |
-| 🔲 Phase 3C | Email + SMS + WhatsApp Notifications | Pending | — |
-| 🔲 Phase 3D | Digital Notice Board & Announcements | Pending | — |
-| 🔲 Phase 4A | Library Management System | Pending | — |
-| 🔲 Phase 4B | Auditorium & Space Booking | Pending | — |
-| 🔲 Phase 4C | Hostel Management + Mess Billing | Pending | — |
+| ✅ Phase 3A | Notification Infrastructure — `notifications` table + RLS + realtime, actions, `useNotifications` hook, bell + drawer in Topbar (all portals), pure-logic unit tests | Complete | `20260614000000` |
+| ✅ Phase 3B | Notification Triggers — 5 event triggers wired (leave req/review, payment manual+webhook, salary single+bulk, schedule publish) via `notificationTriggers.ts`; fee-due + low-attendance sweeps deferred (need a scheduler) | Complete | `12738e5`+ |
+| 🟡 Phase 3C | Email live (Resend) — `sendEmail` + templates (payment receipt, leave status, salary) wired into triggers; SMS + WhatsApp stubbed (deferred: paid + DLT/Meta verification) | Email done | `6f17d82`+ |
+| ✅ Phase 3D | Digital Notice Board — `notices` table + RLS, admin manager (create/pin/delete, audience + dept targeting, expiry), staff & student portal boards, emergency/exam → in-app notification | Complete | `20260614010000` |
+| ✅ Phase 4A | Library Management — catalog (search/filter), issue/return with copy accounting, overdue tracker + ₹2/day fines, staff & student "my library"; RLS + unit-tested fine math | Complete | `20260614020000` |
+| ✅ Phase 4B | Auditorium & Space Booking — venue registry, staff booking requests with conflict detection, admin approval workflow + notes, colour-coded upcoming agenda | Complete | `20260614030000` |
+| ✅ Phase 4C | Hostel Management + Mess Billing — hostels/rooms/allocations + occupancy grid, mess menu editor + monthly billing, maintenance (raise → warden board), hostel announcements, student "my hostel" view | Complete | `20260614040000` · `20260614050000` |
 | 🔲 Phase 4D | Laboratory Management | Pending | — |
 | 🔲 Phase 4E | Asset & Inventory Management | Pending | — |
 | 🔲 Phase 4E-sub | Vendor & Purchase Order Management | Pending | — |
@@ -202,25 +204,25 @@ Arch       ████░░░░░░░░░░░░░░░░░░░
 | 🔲 Phase 6F | Grievance Redressal System (NAAC Criterion 6.2) | Pending | — |
 | 🔲 Phase 6G | E-Learning & Study Materials LMS | Pending | — |
 | 🔲 Phase 6H | Industry Connect & MOU Management (NAAC Criterion 7.1) | Pending | — |
-| 🔲 Phase 7A | Super Admin Auth & Layout | Pending | — |
-| 🔲 Phase 7B | Platform Overview Dashboard | Pending | — |
-| 🔲 Phase 7C | Per-Institution Drill Down | Pending | — |
+| ✅ Phase 7A | Super Admin Auth & Layout | Complete | `24f64f1` |
+| ✅ Phase 7B | Platform Overview Dashboard | Complete | `24f64f1` |
+| ✅ Phase 7C | Per-Institution Drill Down | Complete | `d21e9bd` |
 | 🔲 Phase 7D | Platform Health & Audit | Pending | — |
 | 🔲 Phase 7E | SaaS Subscription & Billing Management | Pending | — |
 | 🔲 Phase 7F | IQAC & Govt Compliance Reports (NAAC/NIRF/AISHE) | Pending | — |
-| 🔲 Phase 7F-sub | NAAC SSR Builder + AISHE Return + NIRF Extract | Pending | — |
+| ✅ Phase 7F-sub | NAAC SSR Builder — registry, readiness dashboard, Excel workbook + AISHE return + NIRF extract + print-PDF report | Complete | `3944ed7` |
 | 🔲 Phase 7F-sub2 | IQAC Meeting & Action Tracker (NAAC 6.1) | Pending | — |
 | 🔲 Arch A1 | Fine-grained RLS Policies (HOD/STAFF/ADMIN) | Pending | — |
-| 🔲 Arch A2 | Testing Strategy (Vitest + Playwright) | Pending | — |
+| 🟡 Arch A2 | Testing Strategy — Vitest + Playwright infra, assessment-engine unit tests (CIA/CO-PO/role), public-route smoke crawl, `docs/testing-guide.md` (retroactive action coverage + authed e2e flows progressive) | Foundation | `ea779f2`+ |
 | 🔲 Arch A3 | Database Index Strategy | Pending | — |
 | 🔲 Arch A4 | Institution Onboarding Wizard | Pending | — |
 | 🔲 Arch A5 | CI/CD Pipeline (GitHub Actions) | Pending | — |
 | 🔲 Arch A6 | Multi-currency & Multi-timezone Support | Pending | — |
 | 🔲 Arch A7 | SaaS Billing — Minimal Viable (Trial + Expiry) | Pending | — |
 | ✅ Arch A8 | Platform-Wide Audit Log — `audit_logs` table + `logAudit()` helper | Complete | `b3c2ed0` |
-| 🔲 Phase 8A | React Native Setup | Pending | — |
-| 🔲 Phase 8B | Staff Mobile App + NFC | Pending | — |
-| 🔲 Phase 8C | Student Mobile App | Pending | — |
+| ✅ Phase 8A | React Native Setup — Expo SDK 54 + role-adaptive bottom-tab shell (all 6 roles) + Supabase auth + portal screens | Complete | `301be79` · tabs `fd762bd` · SDK54 `841bd2c` |
+| 🟡 Phase 8B | Staff Mobile — Home, Schedule, Leave (apply), Payslip, Attendance view + admin/HOD Approvals; NFC marking deferred (Phase 4F + EAS) | Screens built | `64246fd` |
+| 🟡 Phase 8C | Student Mobile — Home, Timetable, Attendance, Fees; in-app Razorpay pay + notification inbox pending | Screens built | `64246fd` |
 | 🔲 Phase 8D | Push Notifications (Staff + Student + Parent) | Pending | — |
 | 🔲 Phase 8E | CCTV Integration | Pending | — |
 | 🔲 Phase 8F | Parent Mobile App | Pending | — |
@@ -267,8 +269,10 @@ NEXT_PUBLIC_RAZORPAY_KEY_ID=
 # Scheduler
 SCHEDULER_API_URL=http://127.0.0.1:8000
 
-# Notifications
+# Notifications — Email (Phase 3C, Resend)
 RESEND_API_KEY=
+# Sender identity; defaults to Resend's onboarding sender until a domain is verified
+EMAIL_FROM="AURA <onboarding@resend.dev>"
 
 # SMS Gateway (MSG91 / Fast2SMS)
 SMS_API_KEY=
@@ -300,3 +304,5 @@ SUPABASE_DB_URL=
 *Last updated: 2026-06-10 — ERP Standards gap audit completed. Added Phase 2.5 (Razorpay webhook security, DPDP 2023 privacy, backup & scheduler resilience). Added Global ERP Standards register + Architecture & Quality register (8 items). Added 5A-sub (Admissions CRM), 5C-sub (Statutory Payroll — TDS/PF/ESI/Form 16), 4E-sub (Vendor & Purchase Orders), 7F-sub (NAAC SSR Builder + AISHE + NIRF). Closed all ERP gaps: Step 5L (Department Budget Management — NAAC 6.4), Phase 6G expanded to full LMS (SCORM + assignments + gradebook), Phase 7D expanded with ISO 27001 security audit checklist, Phase 7F expanded with AISHE field-level schema + IQAC Meeting & Action Tracker (NAAC 6.1). Added Arch A8 — Platform-Wide Audit Log (`audit_logs` table, `logAudit()` helper, append-only, NAAC/UGC/ISO 27001 compliant — resolves audit trail gap). Extended Dev Rules 10 → 17. Total: **87 tracked modules** across Foundation Migrations + 9 phases + Architecture track. Every NAAC criterion mapped. Next: Phase 2.5A — Razorpay Webhook Security Fix.*
 
 *This roadmap was split into [`roadmap/`](roadmap/) on 2026-06-12 for readability — each phase now lives in its own file with a "Depends on / Feeds into" note. See the Roadmap Index above.*
+
+*Update 2026-06-13 — **Mobile:** Phase 8A complete (Expo SDK 54, role-adaptive bottom tabs for all 6 roles, Supabase auth, portal screens); 8B/8C screens built (staff Leave/Payslip/Schedule/Attendance view + admin & HOD leave Approvals; student Dashboard/Timetable/Attendance/Fees) — NFC marking, push, in-app pay, CCTV and the Parent app remain deferred. **Web hardening (this session):** codebase audit + schema/code drift repairs (`57919e9`), PRINCIPAL role end-to-end + staff CIA marks entry (`b212733`), staff↔departments PostgREST embed disambiguation fix — repaired the empty admin Staff page and the staff-portal redirect loop (`a1af19a`), sidebar overhaul + collapse persistence (`a1af19a`), staff leave RLS fix (`1f21402`), web sidebar role-nav fix (`4ace308`). **Next new module:** Phase 3A — Notification Infrastructure.*

@@ -27,7 +27,7 @@ export default async function AdminStaffDashboard({ params }: { params: Promise<
 
   const { data: staff } = await supabase
     .from("staff")
-    .select("id, full_name, title, designation, institution_id, departments(name), institutions(name)")
+    .select("id, full_name, title, designation, institution_id, departments!department_id(name), institutions(name)")
     .eq("id", staffId).single();
 
   if (!staff) redirect("/users/staff");

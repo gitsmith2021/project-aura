@@ -38,7 +38,7 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     key: "academic-records",
     category: "Academic records (marks, results, promotions, hall tickets)",
     tables: [
-      "exam_results", "cia_marks", "student_promotions", "exam_schedules",
+      "exam_results", "cia_marks", "cia_results", "student_promotions", "exam_schedules",
     ],
     period: "Duration of enrolment + 7 years (transcripts permanently)",
     years: 7,
@@ -83,6 +83,22 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     period: "3 years after account closure",
     years: 3,
     basis: "Proof of DPDP compliance — demonstrating consent existed is itself a legal obligation",
+  },
+  {
+    key: "notifications",
+    category: "In-app notifications & alerts",
+    tables: ["notifications"],
+    period: "1 year after creation",
+    years: 1,
+    basis: "Transient operational alerts (fee/leave/attendance/results) — not a system of record; the underlying records are retained under their own policy",
+  },
+  {
+    key: "notices",
+    category: "Notice board announcements",
+    tables: ["notices"],
+    period: "Until expiry; then up to 1 year for reference",
+    years: 1,
+    basis: "Institutional announcements (minimal personal data — only the poster's id). Auto-expire via expires_at; retained briefly for reference",
   },
 ];
 

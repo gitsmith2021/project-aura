@@ -9,63 +9,63 @@
 
 > **Goal:** A bird's-eye view across ALL institutions for the Aura platform owner. This is the SaaS operator dashboard — not for college admins. Perfect for platform health monitoring.
 
-### Step 7A — Super Admin Layout & Auth
+### Step 7A — Super Admin Layout & Auth ✅ (commit `24f64f1`)
 
 **Route:** `/admin` (role=SUPER_ADMIN only)
 
 #### What to build:
-- [ ] Migration: add `SUPER_ADMIN` role to institution_members
-- [ ] `src/app/admin/layout.tsx` — Super admin layout, separate from institution nav
-- [ ] `src/middleware.ts` update — protect `/admin` route for SUPER_ADMIN only
-- [ ] `src/actions/superAdmin.ts` — cross-institution data fetching
+- [x] Migration: add `SUPER_ADMIN` role to institution_members — *no new migration needed: role already present in the CHECK constraint since `20260609000005_foundation_2pre_c_hod_role.sql`*
+- [x] `src/app/admin/layout.tsx` — Super admin layout, separate from institution nav (operator shell + AdminNav with 7C/7D/7E placeholder tabs)
+- [x] Middleware update — protect `/admin` for SUPER_ADMIN only (lives in `src/utils/supabase/middleware.ts`; membership re-checked per request since the `aura-role` cookie collapses SUPER_ADMIN/INST_ADMIN; layout re-verifies as defense in depth)
+- [x] `src/actions/superAdmin.ts` — cross-institution data fetching (SUPER_ADMIN gate → `createAdminClient()` read-only aggregates, Dev Rule 16 comment included)
 
 ---
 
-### Step 7B — Platform Overview Dashboard
+### Step 7B — Platform Overview Dashboard ✅ (commit `24f64f1`)
 
 **Route:** `/admin/page.tsx`
 
 #### What to build:
-- [ ] Platform KPI cards:
+- [x] Platform KPI cards:
   * Total Institutions registered
   * Total Students across all institutions
   * Total Staff across all institutions
   * Total Revenue collected (all fee payments)
-  * Active sessions today (live classes)
-  * Monthly Recurring Revenue trend
-- [ ] Institutions table: name, students count, staff count, revenue, last active
-- [ ] Platform growth chart: new institutions per month (recharts AreaChart)
-- [ ] Revenue chart: total fee collections per month across all institutions
-- [ ] Top performing institutions by fee collection rate
+  * Active sessions today (live classes — distinct schedules with attendance, IST)
+  * ~~Monthly Recurring Revenue trend~~ → **Collections this month + % delta vs last month** — honest stand-in until Phase 7E billing exists (MRR has no real data source before subscriptions)
+- [x] Institutions table: name, students count, staff count, revenue, last active (= latest completed payment)
+- [x] Platform growth chart: new institutions per month (recharts AreaChart, 12 months, IST buckets)
+- [x] Revenue chart: total fee collections per month across all institutions
+- [x] Top performing institutions by collections (top-3 strip; collection *rate* needs expected-fee totals — revisit with 7E)
 
 #### Premium enhancements (decided — no new dependencies):
 > Deliberately scoped: **no Three.js / globe / socket.io.** This is an operator analytics
 > tool for an all-India tenant base — data-density and scan-speed win over 3D eye-candy
 > (that lives on the Landing Page). Only two enhancements, both using already-installed packages.
 
-- [ ] **Supabase Realtime — live "Active Sessions Today" card.** Subscribe to the relevant
-  table (e.g. attendance/live-class sessions) via `supabase.channel(...)` so the active-sessions
-  KPI ticks live as classes start/end — no manual refresh. Use `@supabase/supabase-js` Realtime
-  (already installed). Clean up the channel on unmount. This is the dashboard's real-time moment.
-- [ ] **GSAP count-up on KPI cards.** Animate the headline numbers (total institutions, students,
-  staff, revenue) counting up on mount using `gsap` + `@gsap/react` `useGSAP` (already installed,
-  same as Landing Page). Tasteful only — animate the KPI numbers, **not** the charts. Respect
-  `prefers-reduced-motion`. Format the final value as INR / `en-IN` where applicable.
+- [x] **Supabase Realtime — live "Active Sessions Today" card.** Subscribes to `attendance`
+  INSERTs (table already in the `supabase_realtime` publication) via `supabase.channel(...)`;
+  events trigger a debounced (1.5s) re-count through the SUPER_ADMIN-gated server action so
+  NFC marking bursts coalesce. Channel removed on unmount.
+- [x] **GSAP count-up on KPI cards.** All six KPI numbers count up on mount via `useGSAP`
+  (imported from `src/lib/gsap.ts`, same registration as Landing Page). Charts not animated.
+  `prefers-reduced-motion` renders final values immediately. INR formatted `en-IN` with
+  lakh/crore compaction (full value in tooltip).
 
 ---
 
-### Step 7C — Per-Institution Drill Down
+### Step 7C — Per-Institution Drill Down ✅ (commit `d21e9bd`)
 
-**Route:** `/admin/institutions/[id]/page.tsx`
+**Route:** `/admin/institutions/[id]/page.tsx` (+ `/admin/institutions` register)
 
 #### What to build:
-- [ ] Full institution analytics:
-  * Enrollment trends (students per semester)
-  * Attendance rate trends
-  * Fee collection rate
-  * Payroll vs revenue ratio
-  * Department-wise breakdown
-- [ ] Quick actions: View institution, Impersonate admin (with audit log)
+- [x] Full institution analytics:
+  * Enrollment trends — students by year of study + admissions/month (12m)
+  * Attendance rate trends — 6 months, head-count queries via attendance → class_schedules → departments join; present+late = attended
+  * Fee collection rate — completed vs pending payment amounts
+  * Payroll vs revenue ratio — KPI + 12-month grouped bars (processed disbursements vs completed collections)
+  * Department-wise breakdown — students/staff/ratio per department with colors + funding labels
+- [x] Quick actions: View institution ("Open dashboard" → `/institutions/[slug]`); **Impersonate admin deferred to Phase 7D** — needs an audited `auth.admin` magic-link flow + an `IMPERSONATE` audit action type; shipping it without the audit trail would violate Dev Rule 13's spirit. Stubbed disabled in the UI with tooltip.
 
 ---
 
@@ -82,6 +82,8 @@
 
 #### ISO 27001 Security Audit Checklist (resolve during this step):
 - [ ] `docs/rls-policy-map.md` — document every table, its RLS policy, and which roles can read/write/delete
+  - Include the **intentional deny-all tables**: `razorpay_webhook_events` and `scheduler_error_logs` have RLS enabled with **no policies on purpose** — they are written exclusively through `createAdminClient()` (service role) and no client role should ever read them. The Supabase advisor flags this as "RLS Enabled No Policy" (INFO) — document the rationale here so audits don't mistake it for an oversight; add explicit deny-all policies only if/when the linter or a compliance requirement makes it mandatory (carry-over note from the 2026-06-12 advisor run).
+- [ ] **Enable leaked-password protection** (Supabase Auth → checks passwords against HaveIBeenPwned) — advisor WARN from 2026-06-12, one toggle in the dashboard. ⏸️ Deliberately deferred: requires the Supabase **Pro plan** — flip it as part of this step once the Pro upgrade is purchased.
 - [ ] Verify `createAdminClient()` (service role) is used only in server-only files — grep for any client-side usage
 - [ ] Run `EXPLAIN ANALYZE` on the 10 most-used queries and document results in `docs/query-performance.md`
 - [ ] Confirm all Supabase Storage buckets have RLS enabled — no public buckets for sensitive data

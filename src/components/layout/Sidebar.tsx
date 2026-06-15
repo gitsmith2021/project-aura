@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -36,14 +36,35 @@ const STAFF_NAV = [
   { key: "dashboard",  href: "/staff-portal",            label: "Dashboard",   Icon: LayoutDashboard, exact: true },
   { key: "schedule",   href: "/staff-portal/schedule",   label: "My Schedule", Icon: Calendar },
   { key: "calendar",   href: "/staff-portal/calendar",   label: "Calendar",    Icon: CalendarDays },
+  { key: "notices",    href: "/staff-portal/notices",    label: "Notices",     Icon: Megaphone },
+  { key: "library",    href: "/staff-portal/library",    label: "My Library",  Icon: Library },
+  { key: "bookings",   href: "/staff-portal/bookings",   label: "Bookings",    Icon: Building2 },
   { key: "attendance", href: "/staff-portal/attendance", label: "Attendance",  Icon: ClipboardCheck },
+  { key: "cia",        href: "/staff-portal/cia",        label: "CIA Marks",   Icon: ClipboardList },
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
   { key: "salary",     href: "/staff-portal/salary",     label: "Salary",      Icon: Wallet },
   { key: "privacy",    href: "/staff-portal/privacy",    label: "Privacy",     Icon: ShieldCheck },
 ] as const;
 
-// ── NavItem ───────────────────────────────────────────────────────────────────
-function NavItem({
+// ── Shared style tokens (sidebar is always dark, both themes) ─────────────────
+const ROW_BASE   = "flex items-center rounded-lg font-medium transition-colors duration-150";
+const LEAF_IDLE  = "text-slate-300 hover:bg-white/[0.07] hover:text-white";
+const LEAF_ACTIVE = "bg-purple-600 text-white shadow-sm shadow-purple-950/40";
+const SUB_IDLE   = "text-slate-400 hover:bg-white/[0.06] hover:text-white";
+const SUB_ACTIVE = "bg-purple-600 text-white";
+const POPOVER    = "rounded-xl bg-slate-800 ring-1 ring-white/10 shadow-2xl shadow-black/50";
+
+// ── Hover tooltip / flyout (collapsed mode) ───────────────────────────────────
+function Tooltip({ label }: { label: string }) {
+  return (
+    <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1 rounded-md bg-slate-800 ring-1 ring-white/10 text-slate-100 text-[11px] font-medium whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 shadow-lg">
+      {label}
+    </div>
+  );
+}
+
+// ── Leaf link (top-level standalone items) ────────────────────────────────────
+function SidebarLink({
   icon, label, active = false, isCollapsed, href,
 }: {
   icon: React.ReactNode; label: string; active?: boolean; isCollapsed: boolean; href: string;
@@ -52,31 +73,40 @@ function NavItem({
     <div className="relative group">
       <Link
         href={href}
-        className={`flex items-center rounded-md text-sm font-medium transition-colors ${
-          isCollapsed ? "justify-center p-2 mx-auto w-10 h-10" : "gap-3 px-3 py-2"
-        } ${
-          active
-            ? "bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-600/20 dark:text-purple-400 dark:border-purple-500/20"
-            : "text-slate-600 hover:bg-slate-200 hover:text-slate-900 border border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-        }`}
+        className={`${ROW_BASE} text-[13px] ${
+          isCollapsed ? "justify-center w-10 h-10 mx-auto" : "gap-3 px-2.5 py-2"
+        } ${active ? LEAF_ACTIVE : LEAF_IDLE}`}
       >
-        <div className={active ? "text-purple-700 dark:text-purple-400" : ""}>{icon}</div>
+        <span className={`shrink-0 ${active ? "text-white" : "text-slate-400"}`}>{icon}</span>
         {!isCollapsed && <span className="truncate">{label}</span>}
       </Link>
-      {isCollapsed && (
-        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-slate-700 dark:bg-slate-800 text-slate-100 text-xs rounded-md border border-slate-600 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
-          {label}
-        </div>
-      )}
+      {isCollapsed && <Tooltip label={label} />}
     </div>
   );
 }
 
-// ── NavGroup — collapsible parent with NavItem children ───────────────────────
-function NavGroup({
-  groupKey, icon, label, isActive, isOpen, onToggle, isCollapsed, children,
+// ── Sub link (group children — uniform size everywhere) ───────────────────────
+function SubLink({
+  icon, label, active = false, href,
 }: {
-  groupKey: string; icon: React.ReactNode; label: string;
+  icon: React.ReactNode; label: string; active?: boolean; href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`${ROW_BASE} gap-2.5 px-2.5 py-1.5 text-[12px] ${active ? SUB_ACTIVE : SUB_IDLE}`}
+    >
+      <span className={`shrink-0 ${active ? "text-white" : "text-slate-500"}`}>{icon}</span>
+      <span className="truncate">{label}</span>
+    </Link>
+  );
+}
+
+// ── Collapsible group (expanded: accordion · collapsed: hover flyout) ──────────
+function NavGroup({
+  icon, label, isActive, isOpen, onToggle, isCollapsed, children,
+}: {
+  icon: React.ReactNode; label: string;
   isActive: boolean; isOpen: boolean; onToggle: () => void;
   isCollapsed: boolean; children: React.ReactNode;
 }) {
@@ -86,16 +116,20 @@ function NavGroup({
         <button
           type="button"
           onClick={onToggle}
-          className={`flex justify-center p-2 mx-auto w-10 h-10 rounded-md text-sm font-medium transition-colors border ${
-            isActive
-              ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-600/20 dark:text-purple-400 dark:border-purple-500/20"
-              : "text-slate-600 hover:bg-slate-200 hover:text-slate-900 border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          className={`${ROW_BASE} justify-center w-10 h-10 mx-auto text-[13px] ${
+            isActive ? LEAF_ACTIVE : LEAF_IDLE
           }`}
         >
-          <span className={isActive ? "text-purple-700 dark:text-purple-400" : ""}>{icon}</span>
+          <span className={`shrink-0 ${isActive ? "text-white" : "text-slate-400"}`}>{icon}</span>
         </button>
-        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-slate-700 dark:bg-slate-800 text-slate-100 text-xs rounded-md border border-slate-600 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
-          {label}
+        {/* Flyout — pl-2 (not ml) keeps a continuous hover bridge to the panel */}
+        <div className="absolute left-full top-0 pl-2 hidden group-hover:block z-50">
+          <div className={`min-w-[190px] p-1.5 ${POPOVER}`}>
+            <p className="px-2.5 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              {label}
+            </p>
+            <div className="space-y-0.5">{children}</div>
+          </div>
         </div>
       </div>
     );
@@ -103,88 +137,25 @@ function NavGroup({
 
   return (
     <div>
-      {/* Group header — no href, toggle only */}
       <button
         type="button"
         onClick={onToggle}
-        className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors border ${
-          isActive
-            ? "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-600/10 dark:text-purple-400 dark:border-purple-500/10"
-            : "text-slate-600 hover:bg-slate-200 hover:text-slate-900 border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+        className={`${ROW_BASE} w-full gap-3 px-2.5 py-2 text-[13px] ${
+          isActive ? "bg-white/[0.06] text-white" : LEAF_IDLE
         }`}
       >
-        <span className={`shrink-0 ${isActive ? "text-purple-700 dark:text-purple-400" : ""}`}>{icon}</span>
+        <span className={`shrink-0 ${isActive ? "text-white" : "text-slate-400"}`}>{icon}</span>
         <span className="flex-1 text-left truncate">{label}</span>
         <ChevronDown
-          size={13}
+          size={14}
           strokeWidth={2.5}
           className={`shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""} ${
-            isActive ? "text-purple-500" : "text-slate-400"
-          }`}
-        />
-      </button>
-
-      {/* Children */}
-      {isOpen && (
-        <div className="mt-0.5 ml-3 pl-3 border-l-2 border-slate-200 dark:border-slate-700 space-y-0.5 py-0.5">
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Finance accordion (sub-links are <Link> not NavItem) ──────────────────────
-function FinanceAccordion({
-  isActive, isOpen, onToggle, isCollapsed, children,
-}: {
-  isActive: boolean; isOpen: boolean; onToggle: () => void;
-  isCollapsed: boolean; children: React.ReactNode;
-}) {
-  if (isCollapsed) {
-    return (
-      <div className="relative group">
-        <button
-          type="button"
-          onClick={onToggle}
-          className={`flex justify-center p-2 mx-auto w-10 h-10 rounded-md text-sm font-medium transition-colors border ${
-            isActive
-              ? "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-600/20 dark:text-purple-400 dark:border-purple-500/20"
-              : "text-slate-600 hover:bg-slate-200 hover:text-slate-900 border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-          }`}
-        >
-          <Wallet size={18} className={isActive ? "text-purple-700 dark:text-purple-400" : ""} />
-        </button>
-        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-slate-700 dark:bg-slate-800 text-slate-100 text-xs rounded-md border border-slate-600 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
-          Finance
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={onToggle}
-        className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors border ${
-          isActive
-            ? "bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-600/10 dark:text-purple-400 dark:border-purple-500/10"
-            : "text-slate-600 hover:bg-slate-200 hover:text-slate-900 border-transparent dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-        }`}
-      >
-        <Wallet size={18} className={`shrink-0 ${isActive ? "text-purple-700 dark:text-purple-400" : ""}`} />
-        <span className="flex-1 text-left">Finance</span>
-        <ChevronDown
-          size={13}
-          strokeWidth={2.5}
-          className={`shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""} ${
-            isActive ? "text-purple-500" : "text-slate-400"
+            isActive ? "text-slate-300" : "text-slate-500"
           }`}
         />
       </button>
       {isOpen && (
-        <div className="mt-0.5 ml-3 pl-3 border-l-2 border-slate-200 dark:border-slate-700 space-y-0.5 py-0.5">
+        <div className="mt-0.5 ml-[18px] pl-2.5 border-l border-white/10 space-y-0.5 py-0.5">
           {children}
         </div>
       )}
@@ -193,24 +164,39 @@ function FinanceAccordion({
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
-export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
+export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; toggleSidebar?: () => void }) {
   const pathname = usePathname();
   const [role, setRole] = useState<string | null>(null);
   const [userAuth, setUserAuth] = useState<{ role: string; tenant_id: string; department_id: string } | null>(null);
 
   useEffect(() => {
-    const cookiesList = document.cookie.split("; ");
-    const roleCookie = cookiesList.find(row => row.startsWith("aura-role="));
-    const currentRole = roleCookie ? roleCookie.split("=")[1] : null;
-    setRole(currentRole);
-
-    if (currentRole === "hod") {
-      const supabase = createClient();
-      supabase.rpc("get_user_authorizations").then(({ data }) => {
-        if (data && data.length > 0) setUserAuth(data[0]);
-      });
-    }
-  }, [pathname]);
+    // The access-tier cookie (aura-role) is httpOnly, so it is NOT readable from
+    // document.cookie — reading it here always yielded null, which collapsed
+    // every non-admin into the admin sidebar. Resolve the real role from the
+    // authoritative RPC instead; fall back to the readable label cookie only if
+    // the user has no institution_members row.
+    let active = true;
+    const supabase = createClient();
+    supabase.rpc("get_user_authorizations").then(({ data }) => {
+      if (!active) return;
+      const row = data && data.length > 0 ? data[0] : null;
+      if (row?.role) {
+        const r = String(row.role);
+        const tier =
+          r === "STAFF" ? "staff" :
+          r === "STUDENT" ? "student" :
+          (r === "HOD" || r === "DEPARTMENT_HEAD") ? "hod" : "admin";
+        setRole(tier);
+        if (tier === "hod") setUserAuth(row);
+        return;
+      }
+      // Fallback: non-httpOnly display label set at login (Staff/Student/HOD/Admin/…)
+      const label = document.cookie.split("; ").find(c => c.startsWith("aura-role-label="));
+      const v = label ? decodeURIComponent(label.split("=")[1] ?? "") : "";
+      setRole(v === "Staff" ? "staff" : v === "Student" ? "student" : v === "HOD" ? "hod" : v ? "admin" : null);
+    });
+    return () => { active = false; };
+  }, []);
 
   const isStaffPortal = pathname.startsWith("/staff-portal") && !pathname.startsWith("/staff-portal/view") && role === "staff";
 
@@ -320,9 +306,12 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
     if (key === "institutions")
       return (pathname === "/institutions" || pathname.startsWith("/institutions/")) &&
         !pathname.includes("/finance") && !pathname.includes("/compliance") &&
-        !pathname.includes("/audit-log") && !isAcademicPath(pathname);
+        !pathname.includes("/audit-log") && !pathname.includes("/iqac") &&
+        !pathname.includes("/notices") && !isAcademicPath(pathname);
     if (key === "compliance")     return pathname.includes("/compliance");
     if (key === "audit-log")      return pathname.includes("/audit-log");
+    if (key === "iqac")           return pathname.includes("/iqac");
+    if (key === "notices")        return pathname.includes("/notices");
     if (key === "lesson-plans")   return pathname.includes("/lesson-plans");
     if (key === "guest-lectures") return pathname.includes("/guest-lectures");
     if (key === "internships")    return pathname.includes("/internships");
@@ -360,6 +349,11 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const internshipsHref    = slug ? `/institutions/${slug}/internships`      : "/institutions";
   const complianceHref     = slug ? `/institutions/${slug}/compliance`       : "/institutions";
   const auditLogHref       = slug ? `/institutions/${slug}/audit-log`        : "/institutions";
+  const iqacSsrHref        = slug ? `/institutions/${slug}/iqac/ssr`         : "/institutions";
+  const noticesHref        = slug ? `/institutions/${slug}/notices`          : "/institutions";
+  const libraryHref        = slug ? `/institutions/${slug}/library`          : "/institutions";
+  const bookingsHref       = slug ? `/institutions/${slug}/bookings`         : "/institutions";
+  const hostelsHref        = slug ? `/institutions/${slug}/hostels`          : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -381,49 +375,46 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
 
   const hodAcademicsItems = adminAcademicsItems.filter(i => i.key !== "promotion");
 
-  // ── Sub-link renderer for Finance ─────────────────────────────────────────
-  const financeSubLink = (item: typeof FINANCE_SUB[number]) => {
+  // ── Finance children (shared between expanded list and collapsed flyout) ──
+  const financeChildren = FINANCE_SUB.map(item => {
     const fSlug = financeInstSlug ?? activeInstSlug;
     const href = item.key === "overview" ? item.href() : fSlug ? item.href(fSlug) : "/finance";
     return (
-      <Link key={item.key} href={href}
-        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[12px] font-medium transition-colors ${
-          isFinanceSubActive(item.key)
-            ? "bg-purple-100/80 text-purple-700 dark:bg-purple-600/15 dark:text-purple-400"
-            : "text-slate-500 hover:bg-slate-200/80 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-        }`}
-      >
-        <item.Icon size={13} strokeWidth={2} className="shrink-0" />
-        <span className="truncate">{item.label}</span>
-      </Link>
+      <SubLink
+        key={item.key}
+        href={href}
+        icon={<item.Icon size={14} strokeWidth={2} />}
+        label={item.label}
+        active={isFinanceSubActive(item.key)}
+      />
     );
-  };
+  });
 
   return (
     <aside
       className={`
-        bg-slate-100 border-r border-slate-300
-        dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 dark:border-slate-800
+        bg-[linear-gradient(180deg,#1b2139_0%,#151a2d_55%,#0e1220_100%)]
+        border-r border-white/5 text-slate-300
         h-screen fixed top-0 left-0 flex flex-col z-20 transition-all duration-300
         ${isCollapsed ? "w-16" : "w-56"}
       `}
     >
       {/* Logo */}
-      <div className={`flex items-center h-14 border-b border-slate-300 dark:border-slate-800 transition-all duration-300 ${
+      <div className={`flex items-center h-14 border-b border-white/5 transition-all duration-300 ${
         isCollapsed ? "justify-center px-0" : "px-4 gap-3"
       }`}>
-        <div className="w-7 h-7 rounded-md bg-purple-600 flex items-center justify-center shrink-0 border border-purple-500">
+        <div className="w-7 h-7 rounded-lg bg-purple-600 flex items-center justify-center shrink-0 ring-1 ring-purple-400/40 shadow-sm shadow-purple-950/50">
           <Building2 className="text-white w-4 h-4" />
         </div>
         {!isCollapsed && (
           <div className="min-w-0">
-            <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight block truncate">AURA</span>
+            <span className="text-lg font-bold text-white tracking-tight block truncate">AURA</span>
             {isStaffPortal ? (
-              <span className="text-[9px] font-semibold text-purple-500 dark:text-purple-400 uppercase tracking-widest -mt-0.5 block">
+              <span className="text-[9px] font-semibold text-purple-400 uppercase tracking-widest -mt-0.5 block">
                 Staff Portal
               </span>
             ) : role === "hod" ? (
-              <span className="text-[9px] font-semibold text-purple-500 dark:text-purple-400 uppercase tracking-widest -mt-0.5 block">
+              <span className="text-[9px] font-semibold text-purple-400 uppercase tracking-widest -mt-0.5 block">
                 HOD Panel
               </span>
             ) : null}
@@ -432,11 +423,13 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-3 space-y-0.5 overflow-y-auto px-2">
+      <nav className={`flex-1 py-3 space-y-0.5 px-2 ${
+        isCollapsed ? "overflow-visible" : "overflow-y-auto overflow-x-hidden custom-scrollbar"
+      }`}>
 
         {/* ══ STAFF PORTAL ══ */}
         {isStaffPortal && STAFF_NAV.map(item => (
-          <NavItem
+          <SidebarLink
             key={item.key}
             href={item.href}
             icon={<item.Icon size={18} />}
@@ -450,7 +443,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
         {!isStaffPortal && (
           <>
             {/* Dashboard — always standalone */}
-            <NavItem
+            <SidebarLink
               href="/"
               icon={<LayoutDashboard size={18} />}
               label="Dashboard"
@@ -460,7 +453,7 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
 
             {/* HOD: My Department standalone */}
             {role === "hod" && slug && deptId && (
-              <NavItem
+              <SidebarLink
                 href={myDeptHref}
                 icon={<Layers size={18} />}
                 label="My Department"
@@ -472,7 +465,6 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
             {/* GROUP: Institution (admin only) */}
             {role !== "hod" && (
               <NavGroup
-                groupKey="institution"
                 icon={<Landmark size={18} />}
                 label="Institution"
                 isActive={
@@ -485,20 +477,23 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
                 onToggle={() => toggleGroup("institution")}
                 isCollapsed={isCollapsed}
               >
-                <NavItem href="/institutions" icon={<Landmark size={14} />} label="Institutions"
-                  active={isItemActive("institutions", "/institutions")} isCollapsed={false} />
-                <NavItem href="/departments" icon={<Layers size={14} />} label="Departments"
-                  active={isItemActive("departments", "/departments")} isCollapsed={false} />
-                <NavItem href={complianceHref} icon={<ShieldCheck size={14} />} label="Compliance"
-                  active={isItemActive("compliance", complianceHref)} isCollapsed={false} />
-                <NavItem href={auditLogHref} icon={<ScrollText size={14} />} label="Audit Log"
-                  active={isItemActive("audit-log", auditLogHref)} isCollapsed={false} />
+                <SubLink href="/institutions" icon={<Landmark size={14} />} label="Institutions"
+                  active={isItemActive("institutions", "/institutions")} />
+                <SubLink href="/departments" icon={<Layers size={14} />} label="Departments"
+                  active={isItemActive("departments", "/departments")} />
+                <SubLink href={complianceHref} icon={<ShieldCheck size={14} />} label="Compliance"
+                  active={isItemActive("compliance", complianceHref)} />
+                <SubLink href={auditLogHref} icon={<ScrollText size={14} />} label="Audit Log"
+                  active={isItemActive("audit-log", auditLogHref)} />
+                <SubLink href={iqacSsrHref} icon={<Landmark size={14} />} label="IQAC / NAAC SSR"
+                  active={isItemActive("iqac", iqacSsrHref)} />
+                <SubLink href={noticesHref} icon={<Megaphone size={14} />} label="Notices"
+                  active={isItemActive("notices", noticesHref)} />
               </NavGroup>
             )}
 
             {/* GROUP: People */}
             <NavGroup
-              groupKey="people"
               icon={<Users size={18} />}
               label="People"
               isActive={pathname.startsWith("/users")}
@@ -506,15 +501,14 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
               onToggle={() => toggleGroup("people")}
               isCollapsed={isCollapsed}
             >
-              <NavItem href="/users/staff" icon={<Users size={14} />} label="Staff"
-                active={isItemActive("staff", "/users/staff")} isCollapsed={false} />
-              <NavItem href="/users/students" icon={<GraduationCap size={14} />} label="Students"
-                active={isItemActive("students", "/users/students")} isCollapsed={false} />
+              <SubLink href="/users/staff" icon={<Users size={14} />} label="Staff"
+                active={isItemActive("staff", "/users/staff")} />
+              <SubLink href="/users/students" icon={<GraduationCap size={14} />} label="Students"
+                active={isItemActive("students", "/users/students")} />
             </NavGroup>
 
             {/* GROUP: Academics */}
             <NavGroup
-              groupKey="academics"
               icon={<BookOpen size={18} />}
               label="Academics"
               isActive={isAcademicPath(pathname)}
@@ -523,32 +517,56 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
               isCollapsed={isCollapsed}
             >
               {(role === "hod" ? hodAcademicsItems : adminAcademicsItems).map(item => (
-                <NavItem
+                <SubLink
                   key={item.key}
                   href={item.href}
                   icon={<item.Icon size={14} />}
                   label={item.label}
                   active={isItemActive(item.key, item.href)}
-                  isCollapsed={false}
                 />
               ))}
             </NavGroup>
 
+            {/* Campus — Library + Space Booking */}
+            <SidebarLink
+              href={libraryHref}
+              icon={<Library size={18} />}
+              label="Library"
+              active={pathname.includes("/library")}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarLink
+              href={bookingsHref}
+              icon={<Building2 size={18} />}
+              label="Bookings"
+              active={pathname.includes("/bookings")}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarLink
+              href={hostelsHref}
+              icon={<BedDouble size={18} />}
+              label="Hostels"
+              active={pathname.includes("/hostels")}
+              isCollapsed={isCollapsed}
+            />
+
             {/* Finance (admin only) */}
             {role !== "hod" && (
-              <FinanceAccordion
+              <NavGroup
+                icon={<Wallet size={18} />}
+                label="Finance"
                 isActive={isFinanceActive}
                 isOpen={financeOpen}
                 onToggle={() => setFinanceOpen(o => !o)}
                 isCollapsed={isCollapsed}
               >
-                {FINANCE_SUB.map(financeSubLink)}
-              </FinanceAccordion>
+                {financeChildren}
+              </NavGroup>
             )}
 
             {/* Settings (admin only) */}
             {role !== "hod" && (
-              <NavItem
+              <SidebarLink
                 href="/settings"
                 icon={<Settings size={18} />}
                 label="Settings"
@@ -559,6 +577,29 @@ export function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
           </>
         )}
       </nav>
+
+      {/* Collapse / expand toggle */}
+      {toggleSidebar && (
+        <div className="border-t border-white/5 p-2">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={`${ROW_BASE} w-full text-[12px] ${LEAF_IDLE} ${
+              isCollapsed ? "justify-center w-10 h-10 mx-auto" : "gap-2.5 px-2.5 py-2"
+            }`}
+          >
+            {isCollapsed ? (
+              <ChevronsRight size={18} className="text-slate-400" />
+            ) : (
+              <>
+                <ChevronsLeft size={16} className="text-slate-400" />
+                <span>Collapse</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

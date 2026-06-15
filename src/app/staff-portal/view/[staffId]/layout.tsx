@@ -19,7 +19,7 @@ export default async function StaffViewLayout({ children, params }: Props) {
 
   const { data: staff } = await supabase
     .from("staff")
-    .select("id, full_name, title, designation, department_id, institution_id, departments(name), institutions(name)")
+    .select("id, full_name, title, designation, department_id, institution_id, departments!department_id(name), institutions(name)")
     .eq("id", staffId)
     .single();
 

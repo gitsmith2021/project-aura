@@ -5,10 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   GraduationCap, LayoutDashboard, Calendar, ClipboardCheck,
-  CreditCard, Menu, Bell, Sun, Moon, ChevronDown, LogOut, ClipboardList, CalendarDays, Award, BadgePercent, BookOpen, Briefcase, ShieldCheck,
+  CreditCard, Menu, Sun, Moon, ChevronDown, LogOut, ClipboardList, CalendarDays, Award, BadgePercent, BookOpen, Briefcase, ShieldCheck, Megaphone, BedDouble,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { createClient } from "@/utils/supabase/client";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 type StudentPortalShellProps = {
   studentId: string;
@@ -74,6 +75,9 @@ export function StudentPortalShell({
     { key: "curriculum", href: "/student-portal/curriculum", label: "Syllabus",   Icon: BookOpen },
     { key: "results",    href: "/student-portal/results",    label: "Results",    Icon: Award },
     { key: "calendar",   href: "/student-portal/calendar",   label: "Calendar",   Icon: CalendarDays },
+    { key: "notices",    href: "/student-portal/notices",    label: "Notices",    Icon: Megaphone },
+    { key: "library",    href: "/student-portal/library",    label: "Library",    Icon: BookOpen },
+    { key: "hostel",     href: "/student-portal/hostel",     label: "Hostel",     Icon: BedDouble },
     { key: "attendance",   href: "/student-portal/attendance",   label: "Attendance",   Icon: ClipboardCheck },
     { key: "internships",  href: "/student-portal/internships",  label: "Internships",  Icon: Briefcase },
     { key: "fees",         href: "/student-portal/fees",         label: "Fees",         Icon: CreditCard },
@@ -166,9 +170,7 @@ export function StudentPortalShell({
               {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
-            <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
-              <Bell size={16} />
-            </button>
+            <NotificationBell />
 
             <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
 

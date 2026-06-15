@@ -198,7 +198,7 @@ export async function getSalaryDisbursementReport(
 
     let staffQ = supabase
       .from("staff")
-      .select("id, full_name, title, designation, department_id, departments(name)")
+      .select("id, full_name, title, designation, department_id, departments!department_id(name)")
       .eq("institution_id", institutionId)
       .eq("is_active", true)
       .order("full_name");
