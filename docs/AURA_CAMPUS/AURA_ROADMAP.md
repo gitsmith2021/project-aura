@@ -95,7 +95,7 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 3 | [roadmap/03-phase2-academic-operations.md](roadmap/03-phase2-academic-operations.md) | Phase 2 — Academic Operations (2A–2I) | ✅ Complete |
 | 4 | [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md) | Phase 2.5 — Critical Security & Compliance Fixes | ✅ Complete (3 manual dashboard steps pending) |
 | 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🟢 Core complete (3A/3B/3D ✅, 3C email; pg_cron sweeps live — fee-due + low-attendance + outpass-overdue; only SMS/WhatsApp deferred) |
-| 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🟡 In progress (4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅ · 4H ✅) |
+| 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | 🟡 In progress (4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅ · 4H ✅ · 4I ✅ · 4J ✅) |
 | 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | 🔲 Pending |
 | 8 | [roadmap/08-phase6-portals-tools.md](roadmap/08-phase6-portals-tools.md) | Phase 6 — Parent Portals & Extended Digital Tools (6A–6H) | 🔲 Pending |
 | 9 | [roadmap/09-phase7-super-admin.md](roadmap/09-phase7-super-admin.md) | Phase 7 — Super Admin Panel / SaaS Multi-Tenancy (7A–7F-sub2) | 🔲 Pending |
@@ -182,7 +182,7 @@ Arch       ██████░░░░░░░░░░░░░░░░░
 | ✅ Phase 4G | Gate Pass & Visitor Management — visitor logbook (check-in/out + ID proof/vehicle), student outpass workflow (apply → warden/admin approve/reject → security mark-returned), live overdue, hostel-warden approval; student + staff portals; RLS + 10 unit tests | Complete | `20260615040000` |
 | ✅ Phase 4H | Student Clubs & Organizations (NSS/NCC/Cultural) | Complete | c1a528c |
 | ✅ Phase 4I | Health & Medical Records (Infirmary) — `medical_records` (blood group, allergies, emergency contact, insurance) + `medical_visits` (symptoms, diagnosis, medicines dispensed JSONB, referral, follow-up); admin dashboard (today's visits, pending follow-ups, referral stats); log-visit drawer with patient search (student+staff); medical records manager; student portal health page; strict RLS (staff read all, student reads own); 24 unit tests | Complete | `20260615090000` |
-| 🔲 Phase 4J | Sports & Physical Education | Pending | — |
+| ✅ Phase 4J | Sports & Physical Education — `sports_facilities` + `sports_teams` + `sports_team_members` + `sports_achievements`; tabbed manager (Overview/Teams/Facilities); 2-step TeamDrawer (create→roster); AchievementDrawer (level/position/team-vs-individual); AchievementsManager with level filter + NIRF CSV export; student portal MySportsView (my teams + achievements sorted by prestige); Trophy sidebar icon; 28 unit tests | Complete | `TBD` |
 | 🔲 Phase 4K | Annual Day & Large Campus Event Management | Pending | — |
 | 🔲 Phase 5A | Student Admissions System (public-facing) | Pending | — |
 | 🔲 Phase 5A-sub | Admissions CRM + Enquiry Management + Merit List | Pending | — |

@@ -836,13 +836,23 @@ CREATE TABLE sports_achievements (
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._sports.sql`
-- [ ] `src/app/institutions/[id]/sports/page.tsx` — Sports overview: teams, achievements trophy wall, facilities
-- [ ] `src/app/institutions/[id]/sports/achievements/page.tsx` — Log achievements: student, level, position, event
-- [ ] `src/actions/sports.ts` — getTeams, addTeam, logAchievement, getSportsReport
-- [ ] `src/components/sports/AchievementCard.tsx` — Card: sport, level badge, position medal icon
-- [ ] Student portal: `src/app/student-portal/sports/page.tsx` — My sports teams, personal achievements
-- [ ] NAAC/NIRF export: sports achievements per academic year, level-wise breakdown
+- [x] `supabase/migrations/20260615100000_phase4j_sports.sql` — 4 tables (sports_facilities, sports_teams, sports_team_members, sports_achievements) + RLS + indexes
+- [x] `src/app/institutions/[id]/sports/page.tsx` — Sports overview: teams trophy wall, facilities, achievements
+- [x] `src/app/institutions/[id]/sports/achievements/page.tsx` — Achievements table with level filter + NIRF CSV export
+- [x] `src/actions/sports.ts` — getTeams, getFacilities, getAchievements, addTeam, addTeamMember, removeTeamMember, logAchievement, getMyTeams, getMyAchievements, searchStudentsForSports
+- [x] `src/lib/sports.ts` — levelBadgeClass, positionBadgeClass, positionLabel, computeSportsStats, sortAchievements, computeNIRFSportsReport (pure, unit-tested)
+- [x] `src/components/sports/AchievementCard.tsx` — Card: sport, level badge, position medal icon
+- [x] `src/components/sports/AchievementDrawer.tsx` — Log achievement drawer with position quick-select chips, team/individual toggle
+- [x] `src/components/sports/TeamDrawer.tsx` — 2-step: create team then manage roster (add/remove players)
+- [x] `src/components/sports/SportsManager.tsx` — Tabbed manager (Overview / Teams / Facilities)
+- [x] `src/components/sports/AchievementsManager.tsx` — Full table + level filter chips + NIRF export
+- [x] `src/components/sports/MySportsView.tsx` — Student portal: my teams cards + achievements list
+- [x] Student portal: `src/app/student-portal/sports/page.tsx` — My sports teams, personal achievements
+- [x] `tests/unit/sports.test.ts` — 28 unit tests covering all pure functions
+- [x] Sidebar: Trophy icon + "Sports" link after Infirmary
+- [x] NAAC/NIRF export: level-wise breakdown CSV (International → Inter-Class)
+
+> **Status:** ✅ **Complete** (migration `20260615100000_phase4j_sports`, commit `TBD`). 4 tables with RLS. 28 pure-function unit tests. Total suite: 192 tests passing.
 
 #### Key features:
 - Achievement levels colour-coded: International (gold) → State (silver) → District (bronze)
@@ -926,8 +936,8 @@ CREATE TABLE event_participants (
 - [x] Smart cards: NFC card registry with issuance and deactivation working
 - [x] Gate pass: visitor log and student outpass working with warden approval
 - [x] Clubs: NSS/NCC and all clubs registered with activity logs and NAAC export (commit c1a528c)
-- [x] Infirmary: visit log and student medical profiles working (commit `20260615090000`, 24 unit tests)
-- [ ] Sports: teams, facilities, and achievements logged with NIRF export
+- [x] Infirmary: visit log and student medical profiles working (commit `4ae4070`, 24 unit tests)
+- [x] Sports: teams, facilities, and achievements logged with NIRF export (commit `TBD`, 28 unit tests)
 - [ ] Campus Events: event registry with committee assignment, participant rosters, and budget tracking
 - [ ] All campus infrastructure modules integrated with student and staff portals
 - [ ] `git commit -m "feat: Phase 4 — Campus Infrastructure & Laboratories complete"`

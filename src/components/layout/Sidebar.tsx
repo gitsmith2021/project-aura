@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -365,6 +365,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const idCardsHref        = slug ? `/institutions/${slug}/id-cards`         : "/institutions";
   const gateHref           = slug ? `/institutions/${slug}/gate`             : "/institutions";
   const infirmaryHref      = slug ? `/institutions/${slug}/infirmary`        : "/institutions";
+  const sportsHref         = slug ? `/institutions/${slug}/sports`           : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -607,6 +608,13 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               icon={<Stethoscope size={18} />}
               label="Infirmary"
               active={pathname.includes("/infirmary")}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarLink
+              href={sportsHref}
+              icon={<Trophy size={18} />}
+              label="Sports"
+              active={pathname.includes("/sports")}
               isCollapsed={isCollapsed}
             />
 
