@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -40,6 +40,7 @@ const STAFF_NAV = [
   { key: "library",    href: "/staff-portal/library",    label: "My Library",  Icon: Library },
   { key: "bookings",   href: "/staff-portal/bookings",   label: "Bookings",    Icon: Building2 },
   { key: "laboratories", href: "/staff-portal/laboratories", label: "Laboratories", Icon: FlaskConical },
+  { key: "outpass",    href: "/staff-portal/outpass",    label: "Outpass",     Icon: DoorOpen },
   { key: "attendance", href: "/staff-portal/attendance", label: "Attendance",  Icon: ClipboardCheck },
   { key: "cia",        href: "/staff-portal/cia",        label: "CIA Marks",   Icon: ClipboardList },
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
@@ -359,6 +360,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const assetsHref         = slug ? `/institutions/${slug}/assets`           : "/institutions";
   const vendorsHref        = slug ? `/institutions/${slug}/vendors`          : "/institutions";
   const idCardsHref        = slug ? `/institutions/${slug}/id-cards`         : "/institutions";
+  const gateHref           = slug ? `/institutions/${slug}/gate`             : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -580,6 +582,13 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               icon={<Nfc size={18} />}
               label="ID Cards"
               active={pathname.includes("/id-cards")}
+              isCollapsed={isCollapsed}
+            />
+            <SidebarLink
+              href={gateHref}
+              icon={<DoorOpen size={18} />}
+              label="Gate & Security"
+              active={pathname.includes("/gate")}
               isCollapsed={isCollapsed}
             />
 

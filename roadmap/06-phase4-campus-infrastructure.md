@@ -629,14 +629,26 @@ CREATE TABLE student_outpasses (
 );
 ```
 
+> **Status:** ✅ **Complete** (migration `20260615040000_phase4g_gate`). Visitor
+> logbook (check-in with ID proof + vehicle → check-out, live duration) and a
+> student outpass workflow: student applies → warden/admin approves or rejects →
+> security marks returned on re-entry. Outpasses auto-link the student's active
+> hostel (4C) so the **warden of that hostel** can approve via the staff portal;
+> overdue is derived live (approved + past expected return, unreturned). RLS:
+> visitors members-read/admins-manage; outpasses student-reads/applies-own,
+> warden-or-admin approves. Pure helpers (overdue, live status, tallies, durations)
+> unit-tested (10 tests). **Deferred:** overdue → warden notification (Phase 3 +
+> scheduler sweep); visitor/outpass CSV report export.
+
 #### What to build:
-- [ ] `supabase/migrations/..._gate_management.sql`
-- [ ] `src/app/institutions/[id]/gate/page.tsx` — Security dashboard: active visitors, pending outpasses, real-time log
-- [ ] `src/app/institutions/[id]/gate/visitors/page.tsx` — Log new visitor + check-out
-- [ ] `src/app/institutions/[id]/gate/outpasses/page.tsx` — Approve/reject student outpass requests
-- [ ] `src/actions/gateManagement.ts` — logVisitor, checkOutVisitor, requestOutpass, approveOutpass
-- [ ] Student portal: `src/app/student-portal/outpass/page.tsx` — Apply for outpass, track approval status
-- [ ] Staff portal: `src/app/staff-portal/outpass/page.tsx` — Wardens approve pending outpasses for their hostel
+- [x] `supabase/migrations/20260615040000_phase4g_gate.sql` — visitor_log + student_outpasses + RLS + indexes
+- [x] `src/app/institutions/[id]/gate/page.tsx` — security dashboard (`GateDashboard`): on-campus visitors, pending outpasses, overdue/out counters
+- [x] `src/app/institutions/[id]/gate/visitors/page.tsx` — log visitor + check-out (`VisitorsManager`)
+- [x] `src/app/institutions/[id]/gate/outpasses/page.tsx` — approve/reject + mark-returned (`OutpassList`)
+- [x] `src/actions/gateManagement.ts` — logVisitor, checkOutVisitor, getVisitors, getOutpasses, approveOutpass, rejectOutpass, markOutpassReturned, requestOutpass, getMyOutpasses, getWardenOutpasses
+- [x] Student portal: `src/app/student-portal/outpass/page.tsx` — apply + track status (`StudentOutpass`)
+- [x] Staff portal: `src/app/staff-portal/outpass/page.tsx` — wardens approve pending outpasses for their hostel(s)
+- [~] Overdue alert → warden notification — *deferred (needs Phase 3 + a scheduler sweep)*
 
 #### Key features:
 - Visitor log with ID proof type, vehicle entry, and check-in/out timestamps
@@ -901,7 +913,7 @@ CREATE TABLE event_participants (
 - [x] Laboratories: labs registry, student batches, experiment sessions, and portal views
 - [x] Assets: stock registry, low stock alerts, allocations to labs, and maintenance logs
 - [x] Smart cards: NFC card registry with issuance and deactivation working
-- [ ] Gate pass: visitor log and student outpass working with warden approval
+- [x] Gate pass: visitor log and student outpass working with warden approval
 - [ ] Clubs: NSS/NCC and all clubs registered with activity logs and NAAC export
 - [ ] Infirmary: visit log and student medical profiles working
 - [ ] Sports: teams, facilities, and achievements logged with NIRF export

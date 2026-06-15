@@ -91,7 +91,7 @@ Fable 5 is included in Pro/Max/Team plans until June 22 — but it counts
 [x] 10  🏛️  NAAC SSR exports (Excel workbook, AISHE return, NIRF extract, print report)
 [x] 11  📱  Phase 8A — Aura Mobile foundation (Expo SDK 54 + role-adaptive bottom tabs, all 6 roles + auth + portal screens) — Opus
 [~] 12  📱  Phase 8B/8C screens — staff Leave/Payslip/Schedule, admin+HOD Approvals, student Dashboard/Fees/Attendance — Opus
-[x] +   🏛️  Phase 4 Campus Infra (roadmap 4A Library · 4B Bookings · 4C Hostels · 4D Laboratories · 4E Assets · 4E-sub Vendors/PO · 4F ID Cards) — Opus
+[x] +   🏛️  Phase 4 Campus Infra (roadmap 4A Library · 4B Bookings · 4C Hostels · 4D Labs · 4E Assets · 4E-sub Vendors/PO · 4F ID Cards · 4G Gate) — Opus
 [ ] —   ⏳  Remaining: NFC (Phase 4F + EAS), push (Phase 3), in-app pay, CCTV, Parent app (Phase 6A)
 ─────────────────────────────────────────────────────
 After the free window → Switch to Opus 4.8 / Sonnet 4.6 for Tier 2 & 3
@@ -193,7 +193,7 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 | CIA Assessment Engine | Fable 5 | ✅ Complete — engine `aa1a694` + CO/PO mapping & attainment `2b65093` (June 12) | `2b65093` |
 | NAAC SSR Builder | Fable 5 | ✅ Complete — scaffold `e254e47` + export hub (Excel/AISHE/NIRF/PDF) `3944ed7` | `3944ed7` |
 | React Native Mobile (8A + 8B/8C screens) | Opus 4.8 | ✅ 8A complete · 8B/8C screens built — Expo SDK 54, role-adaptive tabs (6 roles), staff Leave/Payslip/Schedule, admin/HOD Approvals, student Dashboard/Fees/Attendance (NFC/push/CCTV/Parent deferred) | `301be79` · `fd762bd` · `64246fd` |
-| Phase 4 Campus Infrastructure (4A–4F) | Opus 4.8 | ✅ Library · Bookings · Hostels · Laboratories · Assets · Vendors/PO · ID Cards complete (gate/clubs/infirmary/sports/events pending) | `20260615000000` (4D) · `…010000` (4E) · `…020000` (4E-sub) · `…030000` (4F) |
+| Phase 4 Campus Infrastructure (4A–4G) | Opus 4.8 | ✅ Library · Bookings · Hostels · Laboratories · Assets · Vendors/PO · ID Cards · Gate complete (clubs/infirmary/sports/events pending) | `20260615000000` (4D) · `…010000` (4E) · `…020000` (4E-sub) · `…030000` (4F) · `…040000` (4G) |
 | Notifications Infrastructure | Opus/Sonnet | 🔲 Pending | — |
 | Notification Triggers | Opus/Sonnet | 🔲 Pending | — |
 | Resend Email Integration | Opus/Sonnet | 🔲 Pending | — |
