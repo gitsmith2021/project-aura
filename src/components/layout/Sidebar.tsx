@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -31,6 +31,12 @@ const ACADEMIC_PATH_FRAGMENTS = [
   "/internships", "/exams", "/cia", "/results", "/promotion", "/calendar",
 ] as const;
 const isAcademicPath = (path: string) => ACADEMIC_PATH_FRAGMENTS.some(f => path.includes(f));
+
+const CAMPUS_PATH_FRAGMENTS = [
+  "/library", "/bookings", "/hostels", "/laboratories", "/assets",
+  "/vendors", "/id-cards", "/gate", "/clubs", "/infirmary", "/sports", "/events",
+] as const;
+const isCampusPath = (path: string) => CAMPUS_PATH_FRAGMENTS.some(f => path.includes(f));
 
 // ── Staff portal nav (flat — already short) ───────────────────────────────────
 const STAFF_NAV = [
@@ -283,6 +289,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const detectOpenGroup = (path: string): string => {
     if (path === "/" || path.startsWith("/settings")) return "";
     if (isAcademicPath(path)) return "academics";
+    if (isCampusPath(path)) return "campus";
     if (path.startsWith("/institutions") || path.startsWith("/departments")) return "institution";
     if (path.startsWith("/users")) return "people";
     if (path.includes("/finance")) return "finance";
@@ -484,7 +491,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                   pathname === "/institutions" ||
                   pathname.startsWith("/departments") ||
                   (pathname.startsWith("/institutions/") &&
-                    !pathname.includes("/finance") && !isAcademicPath(pathname))
+                    !pathname.includes("/finance") && !isAcademicPath(pathname) && !isCampusPath(pathname))
                 }
                 isOpen={openGroups.has("institution")}
                 onToggle={() => toggleGroup("institution")}
@@ -540,91 +547,28 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               ))}
             </NavGroup>
 
-            {/* Campus — Library + Space Booking */}
-            <SidebarLink
-              href={libraryHref}
-              icon={<Library size={18} />}
-              label="Library"
-              active={pathname.includes("/library")}
+            {/* GROUP: Campus Infrastructure */}
+            <NavGroup
+              icon={<School size={18} />}
+              label="Campus"
+              isActive={isCampusPath(pathname)}
+              isOpen={openGroups.has("campus")}
+              onToggle={() => toggleGroup("campus")}
               isCollapsed={isCollapsed}
-            />
-            <SidebarLink
-              href={bookingsHref}
-              icon={<Building2 size={18} />}
-              label="Bookings"
-              active={pathname.includes("/bookings")}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarLink
-              href={hostelsHref}
-              icon={<BedDouble size={18} />}
-              label="Hostels"
-              active={pathname.includes("/hostels")}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarLink
-              href={laboratoriesHref}
-              icon={<FlaskConical size={18} />}
-              label="Laboratories"
-              active={pathname.includes("/laboratories")}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarLink
-              href={assetsHref}
-              icon={<Package size={18} />}
-              label="Assets"
-              active={pathname.includes("/assets")}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarLink
-              href={vendorsHref}
-              icon={<Truck size={18} />}
-              label="Vendors"
-              active={pathname.includes("/vendors")}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarLink
-              href={idCardsHref}
-              icon={<Nfc size={18} />}
-              label="ID Cards"
-              active={pathname.includes("/id-cards")}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarLink
-              href={gateHref}
-              icon={<DoorOpen size={18} />}
-              label="Gate & Security"
-              active={pathname.includes("/gate")}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarLink
-              href={slug ? `/institutions/${slug}/clubs` : "/institutions"}
-              icon={<Award size={18} />}
-              label="Clubs & Groups"
-              active={pathname.includes("/clubs")}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarLink
-              href={infirmaryHref}
-              icon={<Stethoscope size={18} />}
-              label="Infirmary"
-              active={pathname.includes("/infirmary")}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarLink
-              href={sportsHref}
-              icon={<Trophy size={18} />}
-              label="Sports"
-              active={pathname.includes("/sports")}
-              isCollapsed={isCollapsed}
-            />
-            <SidebarLink
-              href={eventsHref}
-              icon={<Star size={18} />}
-              label="Events"
-              active={pathname.includes("/events")}
-              isCollapsed={isCollapsed}
-            />
+            >
+              <SubLink href={libraryHref}        icon={<Library size={14} />}      label="Library"        active={pathname.includes("/library")} />
+              <SubLink href={bookingsHref}       icon={<Building2 size={14} />}    label="Bookings"       active={pathname.includes("/bookings")} />
+              <SubLink href={hostelsHref}        icon={<BedDouble size={14} />}    label="Hostels"        active={pathname.includes("/hostels")} />
+              <SubLink href={laboratoriesHref}   icon={<FlaskConical size={14} />} label="Laboratories"   active={pathname.includes("/laboratories")} />
+              <SubLink href={assetsHref}         icon={<Package size={14} />}      label="Assets"         active={pathname.includes("/assets")} />
+              <SubLink href={vendorsHref}        icon={<Truck size={14} />}        label="Vendors"        active={pathname.includes("/vendors")} />
+              <SubLink href={idCardsHref}        icon={<Nfc size={14} />}          label="ID Cards"       active={pathname.includes("/id-cards")} />
+              <SubLink href={gateHref}           icon={<DoorOpen size={14} />}     label="Gate & Security" active={pathname.includes("/gate")} />
+              <SubLink href={slug ? `/institutions/${slug}/clubs` : "/institutions"} icon={<Award size={14} />} label="Clubs & Groups" active={pathname.includes("/clubs")} />
+              <SubLink href={infirmaryHref}      icon={<Stethoscope size={14} />}  label="Infirmary"      active={pathname.includes("/infirmary")} />
+              <SubLink href={sportsHref}         icon={<Trophy size={14} />}       label="Sports"         active={pathname.includes("/sports")} />
+              <SubLink href={eventsHref}         icon={<Star size={14} />}         label="Events"         active={pathname.includes("/events")} />
+            </NavGroup>
 
             {/* Finance (admin only) */}
             {role !== "hod" && (
