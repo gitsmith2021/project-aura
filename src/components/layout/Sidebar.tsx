@@ -210,10 +210,8 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
 
   const isStaffPortal = pathname.startsWith("/staff-portal") && !pathname.startsWith("/staff-portal/view") && role === "staff";
 
-  // ── Finance accordion ─────────────────────────────────────────────────────
+  // ── Finance active detection ──────────────────────────────────────────────
   const isFinanceActive = pathname === "/finance" || pathname.includes("/finance");
-  const [financeOpen, setFinanceOpen] = useState(isFinanceActive);
-  useEffect(() => { if (isFinanceActive) setFinanceOpen(true); }, [isFinanceActive]);
 
   // ── Slug resolution ───────────────────────────────────────────────────────
   const [financeInstSlug, setFinanceInstSlug] = useState<string | null>(null);
@@ -296,19 +294,15 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
     return "";
   };
 
-  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+  const [openGroup, setOpenGroup] = useState<string>(() => detectOpenGroup(pathname));
 
   useEffect(() => {
     const g = detectOpenGroup(pathname);
-    if (g) setOpenGroups(prev => new Set([...prev, g]));
+    if (g) setOpenGroup(g);
   }, [pathname]);
 
   function toggleGroup(key: string) {
-    setOpenGroups(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
+    setOpenGroup(prev => prev === key ? "" : key);
   }
 
   // ── Active detection ──────────────────────────────────────────────────────
@@ -493,7 +487,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                   (pathname.startsWith("/institutions/") &&
                     !pathname.includes("/finance") && !isAcademicPath(pathname) && !isCampusPath(pathname))
                 }
-                isOpen={openGroups.has("institution")}
+                isOpen={openGroup === "institution"}
                 onToggle={() => toggleGroup("institution")}
                 isCollapsed={isCollapsed}
               >
@@ -517,7 +511,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               icon={<Users size={18} />}
               label="People"
               isActive={pathname.startsWith("/users")}
-              isOpen={openGroups.has("people")}
+              isOpen={openGroup === "people"}
               onToggle={() => toggleGroup("people")}
               isCollapsed={isCollapsed}
             >
@@ -532,7 +526,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               icon={<BookOpen size={18} />}
               label="Academics"
               isActive={isAcademicPath(pathname)}
-              isOpen={openGroups.has("academics")}
+              isOpen={openGroup === "academics"}
               onToggle={() => toggleGroup("academics")}
               isCollapsed={isCollapsed}
             >
@@ -552,7 +546,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               icon={<School size={18} />}
               label="Campus"
               isActive={isCampusPath(pathname)}
-              isOpen={openGroups.has("campus")}
+              isOpen={openGroup === "campus"}
               onToggle={() => toggleGroup("campus")}
               isCollapsed={isCollapsed}
             >
@@ -576,8 +570,8 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                 icon={<Wallet size={18} />}
                 label="Finance"
                 isActive={isFinanceActive}
-                isOpen={financeOpen}
-                onToggle={() => setFinanceOpen(o => !o)}
+                isOpen={openGroup === "finance"}
+                onToggle={() => toggleGroup("finance")}
                 isCollapsed={isCollapsed}
               >
                 {financeChildren}
