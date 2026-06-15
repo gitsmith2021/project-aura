@@ -560,13 +560,25 @@ CREATE INDEX idx_smart_cards_student ON smart_cards(student_id);
 CREATE INDEX idx_smart_cards_staff ON smart_cards(staff_id);
 ```
 
+> **Status:** ✅ **Complete** (migration `20260615030000_phase4f_smart_cards`).
+> NFC card registry with issued/active/lost/deactivated counts, issue (holder
+> search → UID, excludes anyone who already holds an active card), report-lost,
+> deactivate, and a replace flow (old → `replaced`, new active card issued,
+> `replaced_by` back-link). DB enforces globally-unique `card_uid`, a one-active-
+> card-per-holder partial unique index, and a holder-type/reference check. The NFC
+> attendance webhook now accepts an optional `card_uid` and **rejects lost /
+> deactivated cards with 403** (the security layer). RLS: members read; admins
+> manage. Pure helpers (usable, UID normalise/validate, stats, mask) unit-tested
+> (8 tests). Admin-only. **Note:** mobile NFC scanning still needs an EAS dev
+> client (Phase 8B) — this module provides the card registry it depends on.
+
 #### What to build:
-- [ ] `supabase/migrations/..._smart_cards.sql`
-- [ ] `src/app/institutions/[id]/id-cards/page.tsx` — Card registry: list all issued cards, filter by status / holder type
-- [ ] `src/app/institutions/[id]/id-cards/issue/page.tsx` — Issue new card: scan or enter NFC UID → link to student/staff record
-- [ ] `src/actions/smartCards.ts` — issueCard, deactivateCard, replaceCard, lookupCardHolder, reportLost
-- [ ] `src/components/id-cards/CardIssuanceDrawer.tsx` — Scan / manually enter NFC UID → assign to person
-- [ ] Update NFC attendance webhook (`/api/attendance/nfc`) to validate card status — reject deactivated/lost cards with 403
+- [x] `supabase/migrations/20260615030000_phase4f_smart_cards.sql` — smart_cards + RLS + indexes + uniqueness constraints
+- [x] `src/app/institutions/[id]/id-cards/page.tsx` — registry (`SmartCardsManager`): stats, status/holder filters, UID/holder search, per-card actions
+- [x] `src/app/institutions/[id]/id-cards/issue/page.tsx` — standalone issue page (`IssueCardLauncher` → `CardIssuanceDrawer`)
+- [x] `src/actions/smartCards.ts` — getCards, getCardStats, searchCardHolders, issueCard, deactivateCard, reportLost, replaceCard
+- [x] `src/components/id-cards/CardIssuanceDrawer.tsx` — holder search + NFC UID entry → assign (+ `SmartCardsManager` registry/replace modal)
+- [x] Update NFC attendance webhook (`/api/attendance/nfc`) to validate card status — deactivated/lost cards rejected with 403 (optional `card_uid` path)
 
 #### Key features:
 - NFC UID uniqueness enforced at DB level
@@ -888,7 +900,7 @@ CREATE TABLE event_participants (
 - [ ] Hostel: room allocation, occupancy grid, mess billing, maintenance requests, student portal hostel view
 - [x] Laboratories: labs registry, student batches, experiment sessions, and portal views
 - [x] Assets: stock registry, low stock alerts, allocations to labs, and maintenance logs
-- [ ] Smart cards: NFC card registry with issuance and deactivation working
+- [x] Smart cards: NFC card registry with issuance and deactivation working
 - [ ] Gate pass: visitor log and student outpass working with warden approval
 - [ ] Clubs: NSS/NCC and all clubs registered with activity logs and NAAC export
 - [ ] Infirmary: visit log and student medical profiles working

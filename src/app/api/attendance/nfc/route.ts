@@ -11,6 +11,12 @@ import { createClient } from "@supabase/supabase-js";
  *
  * Payload B (explicit course): { device_uid, subject_id, student_id }
  *   subject_id = public.subjects.id, student_id = learner profile UUID.
+ *
+ * Optional card-based identification (Phase 4F): any payload may also include
+ *   { card_uid }  — the scanned student's NFC card UID. When present, the learner
+ *   is resolved from public.smart_cards and the card must be 'active'; lost or
+ *   deactivated cards are rejected with 403. subject_id is then treated as the
+ *   course subject (public.subjects.id).
  */
 export async function POST(request: Request) {
   const webhookSecret = process.env.AURA_NFC_WEBHOOK_SECRET;
@@ -29,7 +35,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { device_uid?: string; subject_id?: string; student_id?: string };
+  let body: { device_uid?: string; subject_id?: string; student_id?: string; card_uid?: string };
   try {
     body = await request.json();
   } catch {
@@ -40,6 +46,8 @@ export async function POST(request: Request) {
   const subject_id = typeof body.subject_id === "string" ? body.subject_id.trim() : "";
   const explicit_student_id =
     typeof body.student_id === "string" ? body.student_id.trim() : "";
+  const card_uid =
+    typeof body.card_uid === "string" ? body.card_uid.trim().toUpperCase().replace(/[\s:]+/g, "") : "";
 
   if (!device_uid || !subject_id) {
     return NextResponse.json(
@@ -82,7 +90,33 @@ export async function POST(request: Request) {
   let student_id: string;
   let courseSubjectId: string | null = null;
 
-  if (explicit_student_id) {
+  if (card_uid) {
+    // Phase 4F — resolve the learner from their scanned NFC card and enforce status.
+    const { data: card, error: cardErr } = await supabase
+      .from("smart_cards")
+      .select("student_id, holder_type, status, institution_id")
+      .eq("card_uid", card_uid)
+      .maybeSingle();
+
+    if (cardErr) {
+      console.error("NFC smart_cards lookup:", cardErr);
+      return NextResponse.json({ error: "Card lookup failed" }, { status: 500 });
+    }
+    if (!card) {
+      return NextResponse.json({ error: "Unknown card" }, { status: 404 });
+    }
+    if (card.status !== "active") {
+      return NextResponse.json({ error: `Card is ${card.status}` }, { status: 403 });
+    }
+    if (card.holder_type !== "student" || !card.student_id) {
+      return NextResponse.json({ error: "Card does not belong to a student" }, { status: 403 });
+    }
+    if (card.institution_id !== device.tenant_id) {
+      return NextResponse.json({ error: "Card not in this tenant" }, { status: 403 });
+    }
+    student_id = card.student_id;
+    courseSubjectId = subject_id; // subject_id is the course when a card identifies the learner
+  } else if (explicit_student_id) {
     courseSubjectId = subject_id;
     student_id = explicit_student_id;
   } else {

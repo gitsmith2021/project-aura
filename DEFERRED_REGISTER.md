@@ -13,7 +13,7 @@
 > - Review this register at the start of each new phase — some items are cheapest
 >   to clear in batches (see **Batchable clusters** below).
 >
-> **Last updated:** 2026-06-15 (after Phase 4E-sub — Vendor & Purchase Order Management)
+> **Last updated:** 2026-06-15 (after Phase 4F — Smart ID Card & NFC Card Registry)
 
 ---
 
@@ -84,7 +84,7 @@ Legend — **Status:** 🔲 open · 🟡 partial · ✅ done. **Priority:** 🔴
 ### Phase 8 — Mobile Apps & CCTV
 | # | Deferred item | Source | Blocker / reason | Pickup phase | Priority | Status |
 |---|---------------|--------|------------------|--------------|----------|--------|
-| 8-1 | NFC attendance marking on mobile | [roadmap/10](roadmap/10-phase8-mobile-apps.md) | Needs Phase 4F (card registry) + EAS dev client | Phase 8B | 🟡 | 🔲 |
+| 8-1 | NFC attendance marking on mobile | [roadmap/10](roadmap/10-phase8-mobile-apps.md) | Card registry now exists (Phase 4F ✅) + webhook validates card status; **only EAS dev client remains** | Phase 8B | 🟡 | 🔲 |
 | 8-2 | Push notifications (staff/student/parent) | [roadmap/10](roadmap/10-phase8-mobile-apps.md) | Needs Phase 3 push infra + EAS | Phase 8D | 🟡 | 🔲 |
 | 8-3 | CCTV RTSP streaming in app | [roadmap/10](roadmap/10-phase8-mobile-apps.md) | Needs native EAS build | Phase 8E | 🟢 | 🔲 |
 | 8-4 | In-app Razorpay pay (student mobile) | [roadmap/10](roadmap/10-phase8-mobile-apps.md) | Native checkout integration | Phase 8C cont. | 🟡 | 🔲 |
