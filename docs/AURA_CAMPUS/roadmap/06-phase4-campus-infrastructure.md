@@ -909,14 +909,23 @@ CREATE TABLE event_participants (
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._campus_events.sql`
-- [ ] `src/app/institutions/[id]/events/page.tsx` — Event registry: upcoming and past events, budget vs spend overview
-- [ ] `src/app/institutions/[id]/events/[eventId]/page.tsx` — Event detail: committee roster, participant list, budget line items, photo gallery
-- [ ] `src/actions/campusEvents.ts` — createEvent, addParticipant, bulkAddParticipants, updateBudget, uploadEventPhotos
-- [ ] `src/components/events/EventCard.tsx` — Card: event type badge, date, venue, participant count, budget status (over/under)
-- [ ] Student portal: `src/app/student-portal/events/page.tsx` — Upcoming events in their institution, registered events, volunteer sign-up
-- [ ] Academic calendar integration: creating a campus event auto-adds it to the academic calendar (Step 2A) as an `annual_day` / `sports_day` etc. event entry
-- [ ] NAAC Criterion 5.3 export: number of institutional events per year, student participation counts
+- [x] `supabase/migrations/20260615110000_phase4k_campus_events.sql` — `campus_events` + `event_participants` with RLS; student self-register INSERT policy
+- [x] `src/app/institutions/[id]/events/page.tsx` — Client-side event registry (upcoming/past tabs) + event detail drill-down in same route
+- [x] `src/actions/campusEvents.ts` — getCampusEvents, getCampusEvent, getEventParticipants, createCampusEvent, updateCampusEvent, addParticipant, bulkAddParticipants, removeParticipant, getMyEvents, registerForEvent, getStaffOptions, getAcademicYearOptions, searchStudentsForEvent
+- [x] `src/lib/campusEvents.ts` — toAcademicEventType, eventTypeBadgeClass, budgetStatus, budgetUtilisation, budgetBarWidth, budgetStatusClass, formatBudget, computeEventStats, sortEvents, computeNaacEventsReport, parsePhotoUrls, parseCommittee, isToday, isUpcoming (pure, unit-tested)
+- [x] `src/components/events/EventCard.tsx` — Card: event type badge, date, venue, participant count, animated budget bar
+- [x] `src/components/events/EventDrawer.tsx` — Create/edit event with committee member management (add/remove with role selector)
+- [x] `src/components/events/EventsManager.tsx` — Upcoming/past tabs + stat cards + NAAC CSV export
+- [x] `src/components/events/EventDetail.tsx` — Committee roster + participants table (with remove) + inline actual-spend edit + budget bar
+- [x] `src/components/events/ParticipantDrawer.tsx` — Live student search + role selector chip; bulk import info panel
+- [x] `src/components/events/MyEventsView.tsx` — Student portal: upcoming events + one-tap self-registration + my registrations list
+- [x] Student portal: `src/app/student-portal/events/page.tsx`
+- [x] Academic calendar integration: `createCampusEvent` auto-inserts into `academic_events` (maps to nearest type: annual_day/sports_day/cultural/expo/other)
+- [x] `tests/unit/campusEvents.test.ts` — 48 unit tests covering all pure functions
+- [x] Sidebar: Star icon + "Events" link after Sports
+- [x] NAAC Criterion 5.3 export: event-type breakdown CSV with participant counts
+
+> **Status:** ✅ **Complete** (migration `20260615110000_phase4k_campus_events`, commit `TBD`). 2 tables with RLS (incl. student self-register policy). 48 pure-function unit tests. Total suite: 240 tests passing.
 
 #### Key features:
 - Committee assignment: designate organizing staff and their roles (Coordinator, Stage Manager, MC, etc.)
@@ -938,8 +947,8 @@ CREATE TABLE event_participants (
 - [x] Clubs: NSS/NCC and all clubs registered with activity logs and NAAC export (commit c1a528c)
 - [x] Infirmary: visit log and student medical profiles working (commit `4ae4070`, 24 unit tests)
 - [x] Sports: teams, facilities, and achievements logged with NIRF export (commit `dc8d836`, 28 unit tests)
-- [ ] Campus Events: event registry with committee assignment, participant rosters, and budget tracking
-- [ ] All campus infrastructure modules integrated with student and staff portals
+- [x] Campus Events: event registry with committee assignment, participant rosters, budget tracking, and NAAC export (commit `TBD`, 48 unit tests)
+- [x] All campus infrastructure modules integrated with student and staff portals
 - [ ] `git commit -m "feat: Phase 4 — Campus Infrastructure & Laboratories complete"`
 - [ ] `git push origin main`
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   GraduationCap, LayoutDashboard, Calendar, ClipboardCheck,
-  CreditCard, Menu, Sun, Moon, ChevronDown, LogOut, ClipboardList, CalendarDays, Award, BadgePercent, BookOpen, Briefcase, ShieldCheck, Megaphone, BedDouble, FlaskConical, DoorOpen, Stethoscope, Trophy,
+  CreditCard, Menu, Sun, Moon, ChevronDown, LogOut, ClipboardList, CalendarDays, Award, BadgePercent, BookOpen, Briefcase, ShieldCheck, Megaphone, BedDouble, FlaskConical, DoorOpen, Stethoscope, Trophy, Star,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { createClient } from "@/utils/supabase/client";
@@ -83,6 +83,7 @@ export function StudentPortalShell({
     { key: "clubs",        href: "/student-portal/clubs",        label: "Clubs & Groups", Icon: Award },
     { key: "health",       href: "/student-portal/health",       label: "Health",         Icon: Stethoscope },
     { key: "sports",       href: "/student-portal/sports",       label: "Sports",         Icon: Trophy },
+    { key: "events",       href: "/student-portal/events",       label: "Events",         Icon: Star },
     { key: "attendance",   href: "/student-portal/attendance",   label: "Attendance",   Icon: ClipboardCheck },
     { key: "internships",  href: "/student-portal/internships",  label: "Internships",  Icon: Briefcase },
     { key: "fees",         href: "/student-portal/fees",         label: "Fees",         Icon: CreditCard },
