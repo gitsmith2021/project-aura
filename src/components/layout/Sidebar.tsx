@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -372,6 +372,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const admissionsHref     = slug ? `/institutions/${slug}/admissions`       : "/institutions";
   const admissionsCrmHref  = slug ? `/institutions/${slug}/admissions/crm`   : "/institutions";
   const meritListHref      = slug ? `/institutions/${slug}/admissions/crm/merit-list` : "/institutions";
+  const recruitmentHref    = slug ? `/institutions/${slug}/recruitment`       : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -489,7 +490,8 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                   pathname === "/institutions" ||
                   pathname.startsWith("/departments") ||
                   (pathname.startsWith("/institutions/") &&
-                    !pathname.includes("/finance") && !isAcademicPath(pathname) && !isCampusPath(pathname) && !pathname.includes("/admissions"))
+                    !pathname.includes("/finance") && !isAcademicPath(pathname) && !isCampusPath(pathname) &&
+                    !pathname.includes("/admissions") && !pathname.includes("/recruitment"))
                 }
                 isOpen={openGroup === "institution"}
                 onToggle={() => toggleGroup("institution")}
@@ -585,6 +587,17 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                 <SubLink href={meritListHref} icon={<ListOrdered size={14} />} label="Merit List"
                   active={pathname.includes("/merit-list")} />
               </NavGroup>
+            )}
+
+            {/* Recruitment (admin only) — Phase 5B */}
+            {role !== "hod" && (
+              <SidebarLink
+                href={recruitmentHref}
+                icon={<Search size={18} />}
+                label="Recruitment"
+                active={pathname.includes("/recruitment")}
+                isCollapsed={isCollapsed}
+              />
             )}
 
             {/* Finance (admin only) */}

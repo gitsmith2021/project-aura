@@ -108,6 +108,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     years: 1,
     basis: "Institutional announcements (minimal personal data — only the poster's id). Auto-expire via expires_at; retained briefly for reference",
   },
+  {
+    key: "recruitment",
+    category: "Staff recruitment data (job postings & applicant CVs)",
+    tables: ["job_postings", "job_applications"],
+    period: "3 years after the hiring cycle; hired applicants' contact data migrates to identity-profile",
+    years: 3,
+    basis: "Audit trail for hiring decisions (equal-opportunity compliance, NAAC Criterion 2.4 faculty quality evidence); hired staff data becomes part of the staff identity record",
+  },
 ];
 
 /** Consent types captured by the platform (mirrors the DB CHECK constraint). */
