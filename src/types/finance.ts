@@ -169,6 +169,74 @@ export type ExpenseSummary = {
   topVendors: { vendor_name: string; total: number; count: number }[];
 };
 
+// ── Statutory Payroll ─────────────────────────────────────────────────────────
+
+export type StatutoryPayrollConfig = {
+  id:               string;
+  institution_id:   string;
+  pf_employer_pct:  number;
+  pf_employee_pct:  number;
+  epf_wage_ceiling: number;
+  esi_employer_pct: number;
+  esi_employee_pct: number;
+  esi_wage_ceiling: number;
+  tan_number:       string | null;
+  pf_number:        string | null;
+  esi_number:       string | null;
+  updated_at:       string;
+};
+
+export type StaffTaxDeclaration = {
+  id:                  string;
+  institution_id:      string;
+  staff_id:            string;
+  academic_year_id:    string | null;
+  tax_regime:          "old" | "new";
+  declared_investments: {
+    section_80c?: number;
+    section_80d?: number;
+    hra_exempt?:  number;
+    lta_exempt?:  number;
+  };
+  total_declared:      number;
+  updated_at:          string;
+};
+
+export type MonthlyStatutoryDeduction = {
+  id:                     string;
+  institution_id:         string;
+  staff_id:               string;
+  salary_disbursement_id: string | null;
+  month:                  string;
+  gross_salary:           number;
+  basic_salary:           number;
+  tds_deducted:           number;
+  pf_employee:            number;
+  pf_employer:            number;
+  esi_employee:           number;
+  esi_employer:           number;
+  net_salary:             number;
+  tax_regime:             "old" | "new";
+  created_at:             string;
+  staff?: {
+    full_name:   string;
+    title:       string | null;
+    designation: string | null;
+    employee_id: string | null;
+    departments: { name: string } | null;
+  } | null;
+};
+
+export type StatutorySummary = {
+  totalTds:        number;
+  totalPfEmployee: number;
+  totalPfEmployer: number;
+  totalEsiEmployee: number;
+  totalEsiEmployer: number;
+  staffProcessed:  number;
+  staffPending:    number;
+};
+
 // ── Reports ───────────────────────────────────────────────────────────────────
 
 export type MonthlyPLData = {
