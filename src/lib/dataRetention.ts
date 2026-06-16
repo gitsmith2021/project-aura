@@ -93,6 +93,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Transient operational alerts (fee/leave/attendance/results) — not a system of record; the underlying records are retained under their own policy",
   },
   {
+    key: "admissions-prospects",
+    category: "Prospective applicant data (admission enquiries & applications)",
+    tables: ["admission_enquiries", "admissions"],
+    period: "3 years after the admission cycle; converted applicants migrate to identity-profile",
+    years: 3,
+    basis: "Lead nurturing and audit of the admission process; data of applicants who enrol becomes part of their student identity record (identity-profile)",
+  },
+  {
     key: "notices",
     category: "Notice board announcements",
     tables: ["notices"],

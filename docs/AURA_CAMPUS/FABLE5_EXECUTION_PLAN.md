@@ -198,7 +198,7 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 | Notification Triggers | Opus/Sonnet | 🔲 Pending | — |
 | Resend Email Integration | Opus/Sonnet | 🔲 Pending | — |
 | Super Admin Auth & Layout | Opus/Sonnet | 🔲 Pending | — |
-| Admissions CRM | Opus/Sonnet | 🔲 Pending | — |
+| Admissions (5A + 5A-sub CRM/Merit List) | Opus/Sonnet | ✅ 5A apply/pipeline/enroll + 5A-sub enquiry funnel, convert-to-application, merit list (CSV/print) + offer letters | `20260616020000` |
 | Curriculum & Syllabus | Opus/Sonnet | 🔲 Pending | — |
 | Exam Management | Opus/Sonnet | 🔲 Pending | — |
 | LMS Core | Opus/Sonnet | 🔲 Pending | — |

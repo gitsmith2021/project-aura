@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -286,6 +286,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   // Determine which group the current path belongs to and auto-open it
   const detectOpenGroup = (path: string): string => {
     if (path === "/" || path.startsWith("/settings")) return "";
+    if (path.includes("/admissions")) return "admissions";
     if (isAcademicPath(path)) return "academics";
     if (isCampusPath(path)) return "campus";
     if (path.startsWith("/institutions") || path.startsWith("/departments")) return "institution";
@@ -368,6 +369,9 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const infirmaryHref      = slug ? `/institutions/${slug}/infirmary`        : "/institutions";
   const sportsHref         = slug ? `/institutions/${slug}/sports`           : "/institutions";
   const eventsHref         = slug ? `/institutions/${slug}/events`           : "/institutions";
+  const admissionsHref     = slug ? `/institutions/${slug}/admissions`       : "/institutions";
+  const admissionsCrmHref  = slug ? `/institutions/${slug}/admissions/crm`   : "/institutions";
+  const meritListHref      = slug ? `/institutions/${slug}/admissions/crm/merit-list` : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -485,7 +489,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                   pathname === "/institutions" ||
                   pathname.startsWith("/departments") ||
                   (pathname.startsWith("/institutions/") &&
-                    !pathname.includes("/finance") && !isAcademicPath(pathname) && !isCampusPath(pathname))
+                    !pathname.includes("/finance") && !isAcademicPath(pathname) && !isCampusPath(pathname) && !pathname.includes("/admissions"))
                 }
                 isOpen={openGroup === "institution"}
                 onToggle={() => toggleGroup("institution")}
@@ -564,15 +568,23 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               <SubLink href={eventsHref}         icon={<Star size={14} />}         label="Events"         active={pathname.includes("/events")} />
             </NavGroup>
 
-            {/* Admissions (admin only) — Phase 5 */}
+            {/* GROUP: Admissions (admin only) — Phase 5 */}
             {role !== "hod" && (
-              <SidebarLink
-                href={slug ? `/institutions/${slug}/admissions` : "/institutions"}
-                icon={<ClipboardList size={18} />}
+              <NavGroup
+                icon={<UserPlus size={18} />}
                 label="Admissions"
-                active={pathname.includes("/admissions")}
+                isActive={pathname.includes("/admissions")}
+                isOpen={openGroup === "admissions"}
+                onToggle={() => toggleGroup("admissions")}
                 isCollapsed={isCollapsed}
-              />
+              >
+                <SubLink href={admissionsHref} icon={<ClipboardList size={14} />} label="Applications"
+                  active={pathname.includes("/admissions") && !pathname.includes("/crm")} />
+                <SubLink href={admissionsCrmHref} icon={<FileText size={14} />} label="Enquiries (CRM)"
+                  active={pathname.includes("/admissions/crm") && !pathname.includes("/merit-list")} />
+                <SubLink href={meritListHref} icon={<ListOrdered size={14} />} label="Merit List"
+                  active={pathname.includes("/merit-list")} />
+              </NavGroup>
             )}
 
             {/* Finance (admin only) */}

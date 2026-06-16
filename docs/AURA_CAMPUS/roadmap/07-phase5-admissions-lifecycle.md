@@ -111,16 +111,35 @@ CREATE POLICY "admission_enquiries: institution members can manage"
   ));
 ```
 
+> **Status:** ✅ **Complete** (migration `20260616020000_admission_enquiries`).
+> CRM funnel board (New → Contacted → Interested → Applied, + Not Interested / Lost
+> closed lane) with per-card advance, **Convert to Application** (creates an
+> `admissions` row, links it back, marks the enquiry applied + audit-logged),
+> right-side create/edit drawer, source-breakdown bar chart, and overdue
+> follow-up highlighting. Merit list generator filters by programme/department,
+> ranks by qualifying marks (no-marks last, ties by name), exports **CSV** and
+> **print** (statutory noticeboard), and produces a printable **provisional offer
+> letter** per admitted/enrolled candidate. RLS mirrors `admissions`
+> (SUPER_ADMIN + INST_ADMIN). PII retention entry added (`admissions-prospects`).
+> Admissions sidebar item promoted to a NavGroup (Applications · Enquiries (CRM) ·
+> Merit List). Pure helpers unit-tested (16 tests). **Deferred:** offer-acceptance
+> → confirmation-fee collection (links to fee structures — tracked for Phase 5
+> finance integration); offer letter is generated on demand rather than
+> auto-fired on the `admitted` transition.
+
 #### What to build:
-- [ ] `supabase/migrations/..._admission_enquiries.sql`
-- [ ] `src/app/institutions/[id]/admissions/crm/page.tsx` — CRM board: enquiries by status (Kanban), follow-up calendar, source breakdown chart
-- [ ] `src/app/institutions/[id]/admissions/crm/merit-list/page.tsx` — Merit list generator: filter by program/department, sort by marks %, generate ranked list, export as PDF
-- [ ] `src/actions/admissionsCRM.ts` — createEnquiry, updateEnquiryStatus, scheduleFollowUp, generateMeritList, exportMeritListPDF, generateOfferLetter
-- [ ] `src/components/admissions/EnquiryCard.tsx` — Card: name, program, source badge, last-contact date, follow-up countdown
-- [ ] `src/components/admissions/MeritListTable.tsx` — Ranked table: rank, applicant name, marks %, category, offer status
-- [ ] `src/components/admissions/OfferLetterTemplate.tsx` — Printable offer letter with institution letterhead, program, intake year, fee structure reference
-- [ ] Enquiry → Application conversion: "Convert to Application" button on enquiry card creates a new row in `admissions` table
-- [ ] Offer letter trigger: when application status moves to `admitted`, offer letter auto-generated and linked to the record
+- [x] `supabase/migrations/20260616020000_admission_enquiries.sql`
+- [x] `src/app/institutions/[id]/admissions/crm/page.tsx` — CRM board: enquiries by status (Kanban), follow-up highlighting, source breakdown chart
+- [x] `src/app/institutions/[id]/admissions/crm/merit-list/page.tsx` — Merit list generator: filter by program/department, sort by marks %, ranked list, CSV + print export
+- [x] `src/actions/admissionsCRM.ts` — getEnquiries, createEnquiry, updateEnquiry, updateEnquiryStatus, scheduleFollowUp, convertEnquiryToApplication, getMeritList, deleteEnquiry
+- [x] `src/lib/admissionsCRM.ts` — pure helpers (funnel flow, stats, source breakdown, follow-up countdown, merit ranking, CSV)
+- [x] `src/components/admissions/EnquiryCard.tsx` — Card: name, program, source badge, follow-up countdown
+- [x] `src/components/admissions/EnquiryDrawer.tsx` — right-side create/edit drawer
+- [x] `src/components/admissions/CrmBoard.tsx` — funnel board + stats + source chart + close controls
+- [x] `src/components/admissions/MeritListView.tsx` — ranked table: rank, applicant name, marks %, status, offer-letter action
+- [x] `src/components/admissions/OfferLetterTemplate.tsx` — Printable offer letter with institution letterhead, program, intake year
+- [x] Enquiry → Application conversion: "Convert" button on enquiry card creates a new row in `admissions` table
+- [~] Offer letter trigger: generated on demand from the merit list for admitted/enrolled candidates (auto-fire on `admitted` deferred)
 
 #### Key features:
 - CRM funnel: enquiry → contacted → interested → applied → admitted pipeline
