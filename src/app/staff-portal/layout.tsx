@@ -37,9 +37,11 @@ export default async function StaffPortalLayout({ children }: { children: React.
     redirect("/staff-portal/reset-password");
   }
 
-  // View routes (/staff-portal/view/*) have their own StaffViewShell layout.
-  // Skip DashboardLayout here to avoid a double topbar/sidebar.
-  if (pathname.startsWith("/staff-portal/view/")) {
+  // Standalone pages — no DashboardLayout (no sidebar/topbar should render)
+  if (
+    pathname.startsWith("/staff-portal/view/") ||
+    pathname.startsWith("/staff-portal/reset-password")
+  ) {
     return <>{children}</>;
   }
 
