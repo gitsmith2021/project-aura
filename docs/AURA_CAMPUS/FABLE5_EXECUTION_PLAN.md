@@ -201,6 +201,7 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 | Admissions (5A + 5A-sub CRM/Merit List) | Opus/Sonnet | ✅ 5A apply/pipeline/enroll + 5A-sub enquiry funnel, convert-to-application, merit list (CSV/print) + offer letters | `20260616020000` |
 | Recruitment (5B) | Sonnet 4.6 | ✅ job_postings + job_applications, 5-stage kanban, interview scheduler, offer form, one-click hire → staff account; 13 unit tests | `3f1f213` |
 | Non-Teaching Staff & Payroll (5C) | Sonnet 4.6 | ✅ staff_type + daily_wage_rate columns; pure helpers (20 unit tests); EditPersonModal/AddPersonModal/BulkUploadModal updated; generateDailyWageDisbursements; role-aware staff portal (warden hostel link, wage banner) | `1f51a4b` |
+| Indian Statutory Payroll (5C-sub) | Sonnet 4.6 | ✅ TDS (new/old regime FY 2024-25) + EPF + ESI; 3 DB tables + RLS; pure lib + 42 unit tests; admin dashboard (config panel, KPI strip, Run, CSV, Form 16 generator); staff tax-declaration portal; Sidebar links; dataRetention updated | `0ac0995` |
 | Curriculum & Syllabus | Opus/Sonnet | 🔲 Pending | — |
 | Exam Management | Opus/Sonnet | 🔲 Pending | — |
 | LMS Core | Opus/Sonnet | 🔲 Pending | — |

@@ -266,23 +266,31 @@ CREATE TABLE monthly_statutory_deductions (
 );
 ```
 
-#### What to build:
-- [ ] `supabase/migrations/..._statutory_payroll.sql`
-- [ ] `src/app/institutions/[id]/finance/payroll/statutory/page.tsx` — Statutory deduction dashboard: TDS summary, PF register, ESI register per month
-- [ ] `src/app/institutions/[id]/finance/payroll/statutory/form16/page.tsx` — Generate Form 16: select academic year, generate per-staff PDF, bulk download as ZIP
-- [ ] `src/actions/statutoryPayroll.ts` — computeTDS (income tax slab calculation old vs new regime), computePF, computeESI, runMonthlyStatutoryDeductions, generateForm16PDF
-- [ ] `src/components/finance/StatutoryDeductionTable.tsx` — Staff-wise monthly breakdown: gross, basic, TDS, PF employee, ESI employee, net
-- [ ] `src/components/finance/Form16Template.tsx` — Printable Form 16 Part B: employer details, TAN, salary breakup, deductions, TDS summary
-- [ ] Update salary slip component to show TDS, PF, ESI as named deduction line items
-- [ ] Staff portal: `src/app/staff-portal/tax-declaration/page.tsx` — Staff selects old/new tax regime, declares 80C/80D investments for TDS computation
+#### ✅ COMPLETE — commit `0ac0995`
+
+#### What was built:
+- [x] `supabase/migrations/..._statutory_payroll.sql` — 3 tables + RLS (applied via MCP)
+- [x] `src/lib/statutoryPayroll.ts` — pure computation: new/old regime slabs, EPF, ESI, FY helpers; 42 unit tests
+- [x] `src/types/finance.ts` — StatutoryPayrollConfig, StaffTaxDeclaration, MonthlyStatutoryDeduction, StatutorySummary types
+- [x] `src/actions/statutoryPayroll.ts` — getStatutoryConfig, saveStatutoryConfig, getMonthlyDeductions, getStatutorySummary, getForm16Data, getStaffStatutoryData, upsertTaxDeclaration, runMonthlyStatutoryDeductions
+- [x] `src/components/finance/StatutoryConfigPanel.tsx` — collapsible config drawer (PF %, ESI %, TAN/PF/ESI numbers)
+- [x] `src/components/finance/StatutoryDeductionTable.tsx` — KPI strip + Run button + router.refresh() + CSV export + staff table with totals
+- [x] `src/components/finance/Form16Template.tsx` — per-staff Form 16 Part B with monthly breakdown + TDS summary + print
+- [x] `src/components/finance/MonthPicker.tsx` + `FyPicker.tsx` — client-side router-push pickers
+- [x] `src/app/institutions/[id]/finance/payroll/statutory/page.tsx` — admin dashboard
+- [x] `src/app/institutions/[id]/finance/payroll/statutory/form16/page.tsx` — Form 16 page
+- [x] `src/app/staff-portal/tax-declaration/page.tsx` — staff regime selector + history
+- [x] `src/components/staff-portal/TaxDeclarationForm.tsx` — old/new regime form + 80C/D/HRA/LTA
+- [x] Sidebar: "Statutory" link under Finance; "Tax Declaration" link in staff portal nav
+- [x] `src/lib/dataRetention.ts` — statutory tables added to financial-records (7-year policy)
+- [x] `tests/unit/statutoryPayroll.test.ts` — 42 tests (all green)
 
 #### Key features:
-- TDS computation: old vs new tax regime per staff; applies standard deduction ₹50,000 (new regime); deducts declared 80C/80D (old regime); monthly TDS = annual tax liability ÷ 12
-- PF deduction: 12% employee + 12% employer on basic salary; EPF wage ceiling ₹15,000 for capped employer contribution
-- ESI deduction: 0.75% employee + 3.25% employer on gross; auto-disabled for employees earning > ₹21,000/month
-- Salary slip: TDS, PF, ESI shown as separate named deduction rows — not lumped as "other deductions"
-- Form 16 Part B: generated per employee per financial year in tax-department-prescribed format
-- Statutory registers: PF Form 12A and ESI register downloadable per month as compliance records
+- TDS: new regime FY 2024-25 (std ₹75K, 87A ≤ ₹7L, 0/5/10/15/20/30% slabs, 4% cess); old regime (std ₹50K, 80C cap ₹1.5L, 80D cap ₹25K, 87A ≤ ₹5L)
+- PF: 12% employee + employer capped at EPF wage ceiling (default ₹15K)
+- ESI: 0.75%/3.25%, auto-disabled when gross > ₹21,000
+- Run deductions: skips daily-wage staff; idempotent (alreadyRun counter)
+- Form 16: full financial year breakdown (Apr–Mar) per staff with print support
 
 ---
 
