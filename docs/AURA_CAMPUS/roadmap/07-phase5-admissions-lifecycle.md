@@ -38,19 +38,32 @@ CREATE TABLE admissions (
 );
 ```
 
+> **Status:** ✅ **Complete** (migration `20260616000000_phase5a_admissions`).
+> Public application form + status-check at `/admissions/[slug]` (no auth — opened
+> via middleware `PUBLIC_PREFIXES`; institution + departments resolved with the
+> service-role client so anon visitors read only this public data). RLS: anyone may
+> INSERT a new application (guarded to `status='applied'` so a direct call can't
+> self-admit); admins read + manage. Admin pipeline (Applied → Shortlisted →
+> Interview → Admitted → Enrolled, + Rejected) with per-card advance/reject and a
+> copyable public link. **One-click Enroll** creates an auth account
+> (`admin.auth.admin.createUser`) + profile + student record, generates a roll
+> number (`PROG/YYYY/NNNN`), marks the application enrolled, and returns the login +
+> temp password for the admin to share. Pure helpers (status flow, stats, roll-no,
+> email) unit-tested (8 tests). **Deferred:** automated welcome email (creds shown
+> to admin instead); 5A-sub CRM/merit-list.
+
 #### What to build:
-- [ ] `supabase/migrations/..._admissions.sql`
-- [ ] Supabase Storage bucket: `admissions-documents` (policy: authenticated write, public read for issued documents)
-- [ ] `src/lib/storage.ts` — uploadDocument(), getDocumentUrl() helpers using Supabase Storage client
-- [ ] `src/app/admissions/[slug]/page.tsx` — Public application form (no auth required)
-- [ ] `src/app/admissions/[slug]/apply/page.tsx` — Multi-step application wizard (personal → academic → documents → submit)
-- [ ] `src/app/admissions/[slug]/status/page.tsx` — Applicant status check page (enter email + DOB)
-- [ ] `src/app/institutions/[id]/admissions/page.tsx` — Admin: applications kanban (Applied → Shortlisted → Interview → Admitted → Enrolled)
-- [ ] `src/app/institutions/[id]/admissions/[applicationId]/page.tsx` — Application detail + action buttons
-- [ ] `src/actions/admissions.ts` — submitApplication, updateStatus, enrollStudent (converts application → student record)
-- [ ] `src/components/admissions/ApplicationKanban.tsx` — Drag-and-drop status pipeline
-- [ ] `src/components/admissions/ApplicationDetail.tsx` — Full application view with document previews
-- [ ] `src/components/admissions/EnrollModal.tsx` — Confirm enrollment: auto-creates student + Supabase auth account + sends welcome email
+- [x] `supabase/migrations/20260616000000_phase5a_admissions.sql` — admissions + RLS (anon apply, admins manage) + indexes
+- [~] Supabase Storage bucket: `admissions-documents` — uploaded client-side via `src/lib/storage.ts`; **bucket created manually** (public, like `receipts`)
+- [x] `src/lib/storage.ts` — `uploadDocument()` / `getDocumentUrl()` helpers
+- [x] `src/app/admissions/[slug]/page.tsx` — public application form (sectioned: personal → academic → documents); no auth
+- [x] `src/app/admissions/[slug]/status/page.tsx` — applicant status check (email + DOB)
+- [x] `src/app/institutions/[id]/admissions/page.tsx` — admin applications kanban + public-link copy + stats
+- [x] `src/app/institutions/[id]/admissions/[applicationId]/page.tsx` — application detail + stage controls + notes + enroll
+- [x] `src/actions/admissions.ts` — getPublicInstitution, submitApplication, checkApplicationStatus, getApplications, getApplication, updateApplicationStatus, enrollStudent
+- [x] `src/components/admissions/ApplicationKanban.tsx` — pipeline columns with click-to-advance (robust over native DnD)
+- [x] `src/components/admissions/ApplicationDetail.tsx` — full view with document links + stage/notes controls
+- [x] `src/components/admissions/EnrollModal.tsx` — enroll → student + auth account; shows generated credentials (welcome email deferred)
 
 #### Key features:
 - Public URL shareable on institution website

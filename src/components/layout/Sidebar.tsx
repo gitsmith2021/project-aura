@@ -564,6 +564,17 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               <SubLink href={eventsHref}         icon={<Star size={14} />}         label="Events"         active={pathname.includes("/events")} />
             </NavGroup>
 
+            {/* Admissions (admin only) — Phase 5 */}
+            {role !== "hod" && (
+              <SidebarLink
+                href={slug ? `/institutions/${slug}/admissions` : "/institutions"}
+                icon={<ClipboardList size={18} />}
+                label="Admissions"
+                active={pathname.includes("/admissions")}
+                isCollapsed={isCollapsed}
+              />
+            )}
+
             {/* Finance (admin only) */}
             {role !== "hod" && (
               <NavGroup

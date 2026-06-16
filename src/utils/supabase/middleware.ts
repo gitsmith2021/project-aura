@@ -12,6 +12,12 @@ const WEBHOOK_PATHS = ["/api/razorpay-webhook", "/api/attendance/nfc", "/api/sch
 // /privacy-policy is legally required to be public (DPDP Act 2023).
 const PUBLIC_PATHS = ["/", "/login", "/privacy-policy"];
 
+// Public route prefixes anyone may reach without auth (e.g. the admissions
+// application + status pages at /admissions/[slug]). The admin admissions panel
+// lives under /institutions/[id]/admissions and is NOT matched by this.
+const PUBLIC_PREFIXES = ["/admissions"];
+const isPublicPrefix = (p: string) => PUBLIC_PREFIXES.some((pre) => p === pre || p.startsWith(pre + "/"));
+
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -79,8 +85,8 @@ export async function updateSession(request: NextRequest) {
 
   // ── Unauthenticated ───────────────────────────────────────────────────────
   if (!user) {
-    // Allow landing, login and privacy policy pages without auth
-    if (PUBLIC_PATHS.includes(pathname)) return supabaseResponse;
+    // Allow landing, login, privacy policy and public prefixes (admissions) without auth
+    if (PUBLIC_PATHS.includes(pathname) || isPublicPrefix(pathname)) return supabaseResponse;
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     const res = NextResponse.redirect(url);
@@ -189,6 +195,9 @@ export async function updateSession(request: NextRequest) {
   // Privacy policy stays reachable for every authenticated role —
   // it must be exempt from the portal fences below
   if (pathname === "/privacy-policy") return supabaseResponse;
+
+  // Public admissions pages stay reachable for any signed-in role too
+  if (isPublicPrefix(pathname)) return supabaseResponse;
 
   // Staff must stay inside /staff-portal
   if (role === "staff" && !isStaffPortal) {
