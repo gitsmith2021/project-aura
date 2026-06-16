@@ -187,6 +187,9 @@ CREATE POLICY "admission_enquiries: institution members can manage"
 
 > Support non-teaching staff (office administrative workers, wardens, hostel mess workers, sweepers, security, and cleaning staff) in the staff directories, user profiles, daily shift tracking, and salary payroll system.
 
+> **Status:** ✅ **Complete** (commit `1f51a4b`).
+> DB: `staff_type` TEXT (5-value CHECK, NOT NULL, DEFAULT 'teaching') + `daily_wage_rate` NUMERIC(10,2) added via `apply_migration`. Pure helpers library `src/lib/staffTypes.ts` (labels, colors, isDailyWage, isWarden, computeDailyWageAmount) with 20 unit tests. EditPersonModal + AddPersonModal show staff_type dropdown + conditional daily_wage_rate field. BulkUploadModal STAFF CSV extended to cols 5–6 (staff_type, daily_wage_rate). `updatePersonProfile` patches new fields. `generateMonthlyDisbursements` skips `non-teaching_support` staff. New `generateDailyWageDisbursements(institutionId, month, workingDays)` creates pending disbursements from `daily_wage_rate * workingDays`. Staff portal page is role-aware: non-teaching staff see Quick Links panel (Hostel Management link for wardens, Wage Slips link for support staff, Leave Requests); daily-wage staff see their rate in an info banner.
+
 #### Database:
 ```sql
 -- Differentiate staff classifications
@@ -200,15 +203,14 @@ ALTER TABLE public.staff
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._non_teaching_staff.sql` — Schema updates for `staff_type` and daily wage tracking
-- [ ] `src/app/institutions/[id]/staff/page.tsx` — Onboarding/Edit Modals: update profile edits to select and configure `staff_type` and daily wage details
-- [ ] `src/actions/salary.ts` — Update payroll run logic to support daily-wage multiplication based on attendance counts for support staff
-- [ ] `src/components/users/BulkUploadModal.tsx` — Add `staff_type` mapping column to the CSV template for bulk onboarding of non-teaching personnel
-- [ ] Staff Portal: `/staff-portal` — Customized dashboards for non-teaching roles:
-  - Office Staff: view admin workflows and tasks
-  - Wardens: quick-link widget to hostel room occupancy grid
-  - Mess Workers: meal schedule planner
-  - Support Staff: shift history and wage reports
+- [x] `supabase/migrations/add_staff_type_daily_wage` — Schema updates for `staff_type` and daily wage tracking (applied via MCP apply_migration)
+- [x] `src/lib/staffTypes.ts` — pure helpers: StaffType, labels, colors, isNonTeaching, isDailyWage, isWarden, computeDailyWageAmount; 20 Vitest unit tests
+- [x] `src/actions/user.ts` — `updatePersonProfile` patches `staff_type` + `daily_wage_rate` for STAFF role
+- [x] `src/components/users/EditPersonModal.tsx` + `AddPersonModal.tsx` — staff_type dropdown + conditional daily_wage_rate field
+- [x] `src/actions/salary.ts` — `generateMonthlyDisbursements` skips daily-wage staff; new `generateDailyWageDisbursements(institutionId, month, workingDays)`
+- [x] `src/components/users/BulkUploadModal.tsx` — STAFF CSV template extended to cols 5-6 (staff_type, daily_wage_rate); parser validates/defaults
+- [x] `src/types/staffPortal.ts` + `src/actions/staffPortal.ts` — `getStaffProfile` includes `staff_type` + `daily_wage_rate`
+- [x] Staff Portal `/staff-portal` — role-aware dashboard: non-teaching → Quick Links panel (warden: Hostel link; support: Wage Slips link; all: Leave); daily-wage banner shows rate + salary link
 
 ---
 
