@@ -4,6 +4,7 @@ import { X, Upload } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { normalizeStudentProgram } from "@/lib/studentProgram";
+import { STAFF_TYPES, isDailyWage, type StaffType } from "@/lib/staffTypes";
 
 type Props = {
   isOpen: boolean;
@@ -83,7 +84,7 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
   const downloadTemplate = () => {
     const header =
       role === "STAFF"
-        ? "full_name,email,phone,department_name\nExample Faculty,faculty@college.edu,,Computer Science\n"
+        ? "full_name,email,phone,department_name,staff_type,daily_wage_rate\nExample Faculty,faculty@college.edu,,Computer Science,teaching,\nExample Support,,,,non-teaching_support,450.00\n"
         : "full_name,email,phone,department_name,program,year\nExample Student,student@college.edu,,Computer Science,UG,1\n";
     const blob = new Blob([header], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -162,12 +163,19 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
       }
 
       if (role === "STAFF") {
+        const staffTypeRaw = (cells[4] ?? "").trim() as StaffType;
+        const staffType: StaffType = STAFF_TYPES.includes(staffTypeRaw) ? staffTypeRaw : "teaching";
+        const dailyWageRaw = (cells[5] ?? "").trim();
+        const dailyWageRate = isDailyWage(staffType) && dailyWageRaw ? parseFloat(dailyWageRaw) : null;
+
         payloads.push({
           full_name,
           email: rowEmail,
           phone,
           institution_id: tenantId,
           department_id: deptId,
+          staff_type: staffType,
+          daily_wage_rate: Number.isFinite(dailyWageRate) ? dailyWageRate : null,
         });
         continue;
       }
@@ -304,7 +312,11 @@ export function BulkUploadModal({ isOpen, onClose, onSuccess, role, tenantId, te
               <p>
                 Columns: <code className="text-violet-700">full_name</code>,{" "}
                 <code className="text-violet-700">email</code>, <code className="text-violet-700">phone</code>,{" "}
-                <code className="text-violet-700">department_name</code>
+                <code className="text-violet-700">department_name</code>,{" "}
+                <code className="text-violet-700">staff_type</code>{" "}
+                <span className="text-slate-400">(teaching / non-teaching_office / non-teaching_warden / non-teaching_mess / non-teaching_support)</span>,{" "}
+                <code className="text-violet-700">daily_wage_rate</code>{" "}
+                <span className="text-slate-400">(₹/day — for non-teaching_support only)</span>
               </p>
             ) : (
               <p>

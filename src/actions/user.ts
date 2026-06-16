@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { logAudit } from "@/lib/auditLog";
 import type { StudentProgram } from "@/lib/studentProgram";
+import type { StaffType } from "@/lib/staffTypes";
 
 export async function updatePersonProfile(payload: {
   id: string;
@@ -13,6 +14,8 @@ export async function updatePersonProfile(payload: {
   full_name: string;
   phone: string | null;
   department_id: string;
+  staff_type?: StaffType;
+  daily_wage_rate?: number | null;
   student_program?: StudentProgram | null;
   student_year?: number | null;
 }): Promise<{ success: true } | { success: false; error: string }> {
@@ -65,9 +68,12 @@ export async function updatePersonProfile(payload: {
   };
 
   if (payload.role === "STAFF") {
+    const staffPatch: Record<string, unknown> = { ...base };
+    if (payload.staff_type !== undefined) staffPatch.staff_type = payload.staff_type;
+    if (payload.daily_wage_rate !== undefined) staffPatch.daily_wage_rate = payload.daily_wage_rate ?? null;
     const { error } = await supabase
       .from("staff")
-      .update(base)
+      .update(staffPatch)
       .eq("id", payload.id)
       .eq("institution_id", payload.institution_id);
     if (error) return { success: false, error: error.message };

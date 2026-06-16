@@ -2,16 +2,18 @@ export type LeaveType   = 'sick' | 'casual' | 'earned' | 'maternity' | 'paternit
 export type LeaveStatus = 'pending' | 'approved' | 'rejected';
 
 export type StaffProfile = {
-  id:              string;
-  full_name:       string;
-  title:           string | null;
-  designation:     string | null;
-  department_id:   string | null;
-  institution_id:  string;
-  employment_type: string | null;
-  email:           string | null;
-  departments:     { name: string } | null;
-  institutions:    { name: string } | null;
+  id:               string;
+  full_name:        string;
+  title:            string | null;
+  designation:      string | null;
+  department_id:    string | null;
+  institution_id:   string;
+  employment_type:  string | null;
+  email:            string | null;
+  staff_type:       string | null;
+  daily_wage_rate:  number | null;
+  departments:      { name: string } | null;
+  institutions:     { name: string } | null;
 };
 
 export type LeaveRequest = {

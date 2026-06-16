@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { fundingTypeShortLabel } from "@/lib/deptFunding";
 import { studentProgramLabel, yearOptionsForProgram, type StudentProgram } from "@/lib/studentProgram";
+import { STAFF_TYPES, STAFF_TYPE_LABELS, isDailyWage, type StaffType } from "@/lib/staffTypes";
 
 type Props = {
   isOpen: boolean;
@@ -42,6 +43,8 @@ export function AddPersonModal({
   const [departments, setDepartments] = useState<{ id: string; name: string; funding_type?: string | null }[]>([]);
 
   const [phone, setPhone] = useState('');
+  const [staffType, setStaffType] = useState<StaffType>("teaching");
+  const [dailyWageRate, setDailyWageRate] = useState<string>("");
   const [studentProgram, setStudentProgram] = useState<StudentProgram>("UG");
   const [studentYear, setStudentYear] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -110,6 +113,8 @@ export function AddPersonModal({
       document.body.style.overflow = "hidden";
       setFullName('');
       setPhone('');
+      setStaffType("teaching");
+      setDailyWageRate("");
       setRole(defaultRole);
 
       // Store pending dept before setting tenantId (which triggers async dept load)
@@ -145,6 +150,10 @@ export function AddPersonModal({
 
     if (role === "STAFF") {
       row.email = domain ? `${buildEmailLocal(fullName)}@${domain}` : null;
+      row.staff_type = staffType;
+      if (isDailyWage(staffType) && dailyWageRate) {
+        row.daily_wage_rate = parseFloat(dailyWageRate);
+      }
     }
 
     if (role === "STUDENT") {
@@ -276,6 +285,39 @@ export function AddPersonModal({
                 <option value="STUDENT">Student</option>
               </select>
             </div>
+
+            {role === "STAFF" && (
+              <>
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-slate-700">Staff Type</label>
+                  <select
+                    value={staffType}
+                    onChange={(e) => { setStaffType(e.target.value as StaffType); setDailyWageRate(""); }}
+                    className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs appearance-none"
+                  >
+                    {STAFF_TYPES.map((t) => (
+                      <option key={t} value={t}>{STAFF_TYPE_LABELS[t]}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {isDailyWage(staffType) && (
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-slate-700">Daily Wage Rate (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={dailyWageRate}
+                      onChange={(e) => setDailyWageRate(e.target.value)}
+                      placeholder="e.g. 450.00"
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs"
+                    />
+                    <p className="text-[10px] text-slate-400">Amount paid per working day actually attended</p>
+                  </div>
+                )}
+              </>
+            )}
 
             {role === "STUDENT" && (
               <>

@@ -240,7 +240,15 @@ export async function generateMonthlyDisbursements(
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) return { success: false, error: "Unauthorized." };
 
-    // Get all active structures for this institution
+    // Get all daily-wage staff ids to exclude from monthly salary run
+    const { data: dailyWageStaff } = await supabase
+      .from("staff")
+      .select("id")
+      .eq("institution_id", institutionId)
+      .eq("staff_type", "non-teaching_support");
+    const dailyWageIds = new Set((dailyWageStaff ?? []).map(s => s.id as string));
+
+    // Get all active structures for this institution (skip daily-wage staff — no structure for them)
     const { data: structures, error: strErr } = await supabase
       .from("salary_structures")
       .select("id, staff_id, net_salary")
@@ -248,7 +256,8 @@ export async function generateMonthlyDisbursements(
       .eq("is_active", true);
 
     if (strErr) return { success: false, error: strErr.message };
-    if (!structures?.length) {
+    const monthlyStructures = (structures ?? []).filter(s => !dailyWageIds.has(s.staff_id as string));
+    if (!monthlyStructures.length) {
       return { success: true, data: { generated: 0, skipped: 0 } };
     }
 
@@ -262,7 +271,7 @@ export async function generateMonthlyDisbursements(
     const existingSet = new Set((existing ?? []).map(d => d.staff_id as string));
     const skipped = existingSet.size;
 
-    const toInsert = structures
+    const toInsert = monthlyStructures
       .filter(s => !existingSet.has(s.staff_id))
       .map(s => ({
         institution_id:      institutionId,
@@ -438,6 +447,91 @@ export async function bulkProcessDisbursements(
 
     revalidateSalary(institutionId);
     return { success: true, data: { processed, failed } };
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
+  }
+}
+
+// ── generateDailyWageDisbursements ────────────────────────────────────────────
+// Creates pending disbursements for non-teaching_support (daily-wage) staff.
+// workingDays: number of institution working days in the month (admin-supplied).
+// Assumes full attendance; admin can adjust amount_disbursed before processing.
+
+export async function generateDailyWageDisbursements(
+  institutionId: string,
+  month: string,
+  workingDays: number,
+): Promise<
+  | { success: true; data: { generated: number; skipped: number } }
+  | { success: false; error: string }
+> {
+  if (!institutionId) return { success: false, error: "Institution ID required." };
+  if (!month)         return { success: false, error: "Month is required." };
+  if (workingDays <= 0) return { success: false, error: "Working days must be greater than 0." };
+
+  try {
+    const supabase = await getSupabase();
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) return { success: false, error: "Unauthorized." };
+
+    // Fetch all active daily-wage staff with a rate set
+    const { data: dailyStaff, error: staffErr } = await supabase
+      .from("staff")
+      .select("id, daily_wage_rate")
+      .eq("institution_id", institutionId)
+      .eq("staff_type", "non-teaching_support")
+      .eq("is_active", true)
+      .not("daily_wage_rate", "is", null);
+
+    if (staffErr) return { success: false, error: staffErr.message };
+    if (!dailyStaff?.length) return { success: true, data: { generated: 0, skipped: 0 } };
+
+    // Skip those who already have a disbursement this month
+    const { data: existing } = await supabase
+      .from("salary_disbursements")
+      .select("staff_id")
+      .eq("institution_id", institutionId)
+      .eq("month", month)
+      .in("staff_id", dailyStaff.map(s => s.id));
+
+    const existingSet = new Set((existing ?? []).map(d => d.staff_id as string));
+    const skipped = existingSet.size;
+
+    const toInsert = dailyStaff
+      .filter(s => !existingSet.has(s.id as string))
+      .map(s => ({
+        institution_id:      institutionId,
+        staff_id:            s.id,
+        salary_structure_id: null,
+        month,
+        amount_disbursed:    parseFloat((Number(s.daily_wage_rate) * workingDays).toFixed(2)),
+        payment_mode:        "cash" as DisbursementMode,
+        status:              "pending" as DisbursementStatus,
+        remarks:             `Daily wage: ₹${s.daily_wage_rate}/day × ${workingDays} days`,
+      }));
+
+    if (toInsert.length === 0) return { success: true, data: { generated: 0, skipped } };
+
+    const { data: inserted, error: insErr } = await supabase
+      .from("salary_disbursements")
+      .insert(toInsert)
+      .select("id, staff_id, month, amount_disbursed, status");
+    if (insErr) return { success: false, error: insErr.message };
+
+    await logAuditBatch(
+      (inserted ?? []).map(row => ({
+        institutionId,
+        performedBy: user.id,
+        tableName: "salary_disbursements",
+        recordId: row.id as string,
+        action: "INSERT" as const,
+        afterData: row,
+        notes: `Daily-wage disbursement run for ${month} (${workingDays} working days)`,
+      }))
+    );
+
+    revalidateSalary(institutionId);
+    return { success: true, data: { generated: toInsert.length, skipped } };
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
   }

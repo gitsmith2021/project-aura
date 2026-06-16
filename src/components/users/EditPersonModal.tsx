@@ -9,6 +9,7 @@ import {
 } from "@/actions/user";
 import { fundingTypeShortLabel } from "@/lib/deptFunding";
 import { studentProgramLabel, yearOptionsForProgram, type StudentProgram } from "@/lib/studentProgram";
+import { STAFF_TYPES, STAFF_TYPE_LABELS, isDailyWage, type StaffType } from "@/lib/staffTypes";
 
 // Roles assignable from this screen. HOD is department-driven; Super Admin is platform-level.
 const GOVERNANCE_OPTIONS: { value: GovernanceRole; label: string; hint: string }[] = [
@@ -32,6 +33,8 @@ export type PersonEditPayload = {
   department_id: string;
   email?: string | null;
   phone?: string | null;
+  staff_type?: StaffType | null;
+  daily_wage_rate?: number | null;
   student_program?: StudentProgram | null;
   student_year?: number | null;
 };
@@ -49,6 +52,8 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [departmentId, setDepartmentId] = useState("");
+  const [staffType, setStaffType] = useState<StaffType>("teaching");
+  const [dailyWageRate, setDailyWageRate] = useState<string>("");
   const [studentProgram, setStudentProgram] = useState<StudentProgram>("UG");
   const [studentYear, setStudentYear] = useState<number>(1);
   const [departments, setDepartments] = useState<{ id: string; name: string; funding_type?: string | null }[]>([]);
@@ -77,6 +82,8 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
     setEmail(person.email ?? "");
     setPhone(person.phone ?? "");
     setDepartmentId(person.department_id);
+    setStaffType(person.staff_type ?? "teaching");
+    setDailyWageRate(person.daily_wage_rate != null ? String(person.daily_wage_rate) : "");
     setStudentProgram(person.student_program ?? "UG");
     setStudentYear(
       person.student_year ?? 1
@@ -152,6 +159,10 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
       full_name: fullName.trim(),
       phone: phone.trim() || null,
       department_id: departmentId,
+      ...(person.role === "STAFF" && {
+        staff_type: staffType,
+        daily_wage_rate: isDailyWage(staffType) && dailyWageRate ? parseFloat(dailyWageRate) : null,
+      }),
       student_program: person.role === "STUDENT" ? studentProgram : null,
       student_year: person.role === "STUDENT" ? studentYear : null,
     });
@@ -303,6 +314,39 @@ export function EditPersonModal({ isOpen, onClose, onSuccess, person }: Props) {
                 )}
               </select>
             </div>
+
+            {person.role === "STAFF" && (
+              <>
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-slate-700">Staff Type</label>
+                  <select
+                    value={staffType}
+                    onChange={(e) => { setStaffType(e.target.value as StaffType); setDailyWageRate(""); }}
+                    className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs appearance-none"
+                  >
+                    {STAFF_TYPES.map((t) => (
+                      <option key={t} value={t}>{STAFF_TYPE_LABELS[t]}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {isDailyWage(staffType) && (
+                  <div className="space-y-1">
+                    <label className="block text-xs font-medium text-slate-700">Daily Wage Rate (₹)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={dailyWageRate}
+                      onChange={(e) => setDailyWageRate(e.target.value)}
+                      placeholder="e.g. 450.00"
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-md focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors text-xs"
+                    />
+                    <p className="text-[10px] text-slate-400">Amount paid per working day actually attended</p>
+                  </div>
+                )}
+              </>
+            )}
 
             {person.role === "STUDENT" && (
               <>
