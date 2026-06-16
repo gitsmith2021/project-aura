@@ -157,15 +157,27 @@ CREATE POLICY "admission_enquiries: institution members can manage"
 
 > Manage the hiring pipeline for new faculty and staff. From job posting to offer letter. Hired staff convert to main directory profiles.
 
+> **Status:** ✅ **Complete** (commit `3f1f213`).
+> `job_postings` (open/on_hold/closed) + `job_applications` (applied→screened→interview→offer→joined/rejected).
+> 5-column kanban per posting; interview scheduler (date + notes); offer form (date + terms);
+> **one-click Hire** creates auth account + `profiles` + `staff` record (mirrors `enrollStudent`),
+> links back via `converted_staff_id`, audit-logged. Recruitment standalone sidebar link.
+> `dataRetention.ts` updated with 3-year "recruitment" PII policy. 13 unit tests.
+
 #### What to build:
-- [ ] `supabase/migrations/..._recruitment.sql` — `job_postings`, `job_applications` (applicant details, CV URL, status)
-- [ ] `src/app/institutions/[id]/recruitment/page.tsx` — Active job postings + pipeline overview
-- [ ] `src/app/institutions/[id]/recruitment/[jobId]/page.tsx` — Applications list with status kanban
-- [ ] `src/app/institutions/[id]/recruitment/[jobId]/[applicationId]/page.tsx` — Application detail + interview scheduling
-- [ ] `src/actions/recruitment.ts` — createJobPosting, updateApplicationStatus, scheduleInterview
-- [ ] `src/components/recruitment/JobPostingCard.tsx` — Role, dept, type (full-time/contract), deadline
-- [ ] `src/components/recruitment/ApplicationPipeline.tsx` — Kanban: Applied → Screened → Interview → Offer → Joined/Rejected
-- [ ] Hired applicant → one-click convert to Staff record (mirrors admissions enroll flow)
+- [x] `supabase/migrations/20260616030000_recruitment.sql` — `job_postings`, `job_applications` + RLS + indexes
+- [x] `src/app/institutions/[id]/recruitment/page.tsx` — Active job postings + pipeline overview (Server Component)
+- [x] `src/app/institutions/[id]/recruitment/[jobId]/page.tsx` — Applications list with status kanban + stats
+- [x] `src/app/institutions/[id]/recruitment/[jobId]/[applicationId]/page.tsx` — Application detail + interview scheduling + hire
+- [x] `src/actions/recruitment.ts` — createJobPosting, updateJobPosting, getJobPostings, getJobPosting, getJobApplications, getJobApplication, createJobApplication, updateApplicationStatus, scheduleInterview, makeOffer, hireApplicant
+- [x] `src/components/recruitment/JobPostingCard.tsx` — Role, dept, type (full-time/contract), deadline countdown, app count
+- [x] `src/components/recruitment/JobPostingDrawer.tsx` — right-side create/edit drawer
+- [x] `src/components/recruitment/RecruitmentBoard.tsx` — client board with stats strip
+- [x] `src/components/recruitment/ApplicationPipeline.tsx` — Kanban: Applied → Screened → Interview → Offer → Joined/Rejected
+- [x] `src/components/recruitment/ApplicationDetailView.tsx` — pipeline steps + interview scheduler + offer form + hire/reject actions
+- [x] `src/components/recruitment/AddApplicantPanel.tsx` — inline drawer to manually add candidates
+- [x] `src/components/recruitment/HireDrawer.tsx` — designation, joining date, dept → creates staff account + shows credentials
+- [x] Hired applicant → one-click convert to Staff record (mirrors admissions enroll flow)
 
 ---
 

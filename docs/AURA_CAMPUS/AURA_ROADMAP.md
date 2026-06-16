@@ -96,7 +96,7 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 4 | [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md) | Phase 2.5 — Critical Security & Compliance Fixes | ✅ Complete (3 manual dashboard steps pending) |
 | 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🟢 Core complete (3A/3B/3D ✅, 3C email; pg_cron sweeps live — fee-due + low-attendance + outpass-overdue; only SMS/WhatsApp deferred) |
 | 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | ✅ Complete (4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅ · 4H ✅ · 4I ✅ · 4J ✅ · 4K ✅) |
-| 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | 🟡 In progress (5A ✅) |
+| 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | 🟡 In progress (5A ✅ · 5A-sub ✅ · 5B ✅) |
 | 8 | [roadmap/08-phase6-portals-tools.md](roadmap/08-phase6-portals-tools.md) | Phase 6 — Parent Portals & Extended Digital Tools (6A–6H) | 🔲 Pending |
 | 9 | [roadmap/09-phase7-super-admin.md](roadmap/09-phase7-super-admin.md) | Phase 7 — Super Admin Panel / SaaS Multi-Tenancy (7A–7F-sub2) | 🔲 Pending |
 | 10 | [roadmap/10-phase8-mobile-apps.md](roadmap/10-phase8-mobile-apps.md) | Phase 8 — React Native Mobile Apps & CCTV (8A–8F) | 🔲 Pending |
@@ -110,23 +110,23 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-16  
-> **56 of 87 modules complete — 64% of full platform built**
+> **57 of 87 modules complete — 66% of full platform built**
 
 ```
-Overall  █████████████████████░░░░░░░░░░░  64%  (56/87)
+Overall  ██████████████████████░░░░░░░░░░  66%  (57/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
 Phase 3    █████████████████████████████░  95%  (3A ✅ · 3B ✅ · 3C 🟡 email live · 3D ✅ notices · pg_cron sweeps live: fee-due + low-attendance + outpass-overdue · only SMS/WhatsApp deferred)
 Phase 4    ████████████████████████████████  100% (12/12 — 4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅ · 4H ✅ · 4I ✅ · 4J ✅ · 4K ✅)
-Phase 5    █████░░░░░░░░░░░░░░░░░░░░░░░░░░░  14%  (2/14 — 5A Admissions ✅ · 5A-sub CRM + Merit List ✅ · recruitment/payroll/alumni/etc. pending)
+Phase 5    ███████░░░░░░░░░░░░░░░░░░░░░░░░░  21%  (3/14 — 5A Admissions ✅ · 5A-sub CRM + Merit List ✅ · 5B Recruitment ✅ · payroll/alumni/etc. pending)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
 Phase 7    ████████████████░░░░░░░░░░░░░░░░  50%  (4/8  — 7A ✅ · 7B ✅ · 7C ✅ · 7F-sub SSR Builder ✅)
 Phase 8    █████░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%  (1/6  — 8A ✅ · 8B/8C screens built · NFC/push/CCTV/Parent pending)
 Arch       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░  19%  (1/8 + A2 🟡 — Audit Log ✅ · Test infra (Vitest+Playwright) foundation · RLS, Indexes, CI/CD, Billing pending)
 ```
 
-> **Next up:** Phase 5B — Staff Recruitment Module (see [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md)). **5A-sub Admissions CRM ✅** — enquiry funnel (`admission_enquiries`), convert-to-application, source breakdown, overdue follow-ups, merit list (CSV + print) and printable offer letters; Admissions sidebar is now a NavGroup. **5A Student Admissions ✅** — public apply/status form at `/admissions/[slug]`, admin pipeline, one-click enroll (creates student + auth account). **Phase 4 complete** — all 12 campus infrastructure modules shipped. **Scheduler now live:** pg_cron runs `private.sweep_overdue_outpasses` (30 min) + `private.sweep_low_attendance` (daily) — migration `20260615050000`. **Phase 3 deferred:** only 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed. **Phase 2.5 manual leftovers:** PITR (Supabase Dashboard → Database → Backups → Point in Time, project `nsaheksysxinemtjcako`), GitHub repo secrets (`SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY`), UptimeRobot monitor on `/api/scheduler-health` (see [DISASTER_RECOVERY.md](../DISASTER_RECOVERY.md))
+> **Next up:** Phase 5C — Non-Teaching Staff & Payroll (see [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md)). **5A-sub Admissions CRM ✅** — enquiry funnel (`admission_enquiries`), convert-to-application, source breakdown, overdue follow-ups, merit list (CSV + print) and printable offer letters; Admissions sidebar is now a NavGroup. **5A Student Admissions ✅** — public apply/status form at `/admissions/[slug]`, admin pipeline, one-click enroll (creates student + auth account). **Phase 4 complete** — all 12 campus infrastructure modules shipped. **Scheduler now live:** pg_cron runs `private.sweep_overdue_outpasses` (30 min) + `private.sweep_low_attendance` (daily) — migration `20260615050000`. **Phase 3 deferred:** only 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed. **Phase 2.5 manual leftovers:** PITR (Supabase Dashboard → Database → Backups → Point in Time, project `nsaheksysxinemtjcako`), GitHub repo secrets (`SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY`), UptimeRobot monitor on `/api/scheduler-health` (see [DISASTER_RECOVERY.md](../DISASTER_RECOVERY.md))
 
 ---
 
@@ -186,7 +186,7 @@ Arch       ██████░░░░░░░░░░░░░░░░░
 | ✅ Phase 4K | Annual Day & Large Campus Event Management — `campus_events` (9 event types, committee JSONB, budget tracking, photo URLs) + `event_participants` (4 roles, student self-register); EventsManager (upcoming/past tabs, stat cards, NAAC CSV export); EventDetail (inline spend edit, committee roster, participants table); EventDrawer (committee builder with roles); student portal one-tap self-registration; academic calendar auto-sync; 48 unit tests | Complete | `dca2243` |
 | ✅ Phase 5A | Student Admissions System — public apply + status form (`/admissions/[slug]`, no auth), admin pipeline (applied→shortlisted→interview→admitted→enrolled), one-click Enroll creates student + auth account + roll number; RLS (anon apply, admins manage) + 8 unit tests | Complete | `20260616000000` |
 | ✅ Phase 5A-sub | Admissions CRM + Enquiry Management + Merit List — `admission_enquiries` funnel (new→contacted→interested→applied, +lost), convert-to-application (audit-logged), source breakdown, overdue follow-ups; merit list (rank by marks, CSV + print) + printable offer letters; Admissions sidebar NavGroup; 16 unit tests | Complete | `20260616020000` |
-| 🔲 Phase 5B | Staff Recruitment Module | Pending | — |
+| ✅ Phase 5B | Staff Recruitment Module — `job_postings` + `job_applications`, 5-stage hiring pipeline (applied→screened→interview→offer→joined), interview scheduler, offer form, one-click Hire creates staff auth account + profile + staff record (mirrors enrollStudent); Recruitment sidebar link; 13 unit tests | Complete | `3f1f213` |
 | 🔲 Phase 5C | Non-Teaching Staff & Payroll | Pending | — |
 | 🔲 Phase 5C-sub | Indian Statutory Payroll (TDS / PF / ESI / Form 16) | Pending | — |
 | 🔲 Phase 5D | Alumni System & Panel | Pending | — |

@@ -199,6 +199,7 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 | Resend Email Integration | Opus/Sonnet | 🔲 Pending | — |
 | Super Admin Auth & Layout | Opus/Sonnet | 🔲 Pending | — |
 | Admissions (5A + 5A-sub CRM/Merit List) | Opus/Sonnet | ✅ 5A apply/pipeline/enroll + 5A-sub enquiry funnel, convert-to-application, merit list (CSV/print) + offer letters | `20260616020000` |
+| Recruitment (5B) | Sonnet 4.6 | ✅ job_postings + job_applications, 5-stage kanban, interview scheduler, offer form, one-click hire → staff account; 13 unit tests | `3f1f213` |
 | Curriculum & Syllabus | Opus/Sonnet | 🔲 Pending | — |
 | Exam Management | Opus/Sonnet | 🔲 Pending | — |
 | LMS Core | Opus/Sonnet | 🔲 Pending | — |
