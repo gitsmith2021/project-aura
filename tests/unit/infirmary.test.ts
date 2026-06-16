@@ -8,11 +8,12 @@ import {
   followUpBadgeClass,
 } from "@/lib/infirmary";
 
-// Fixed reference date for tests: 2026-06-15 (today in the session)
+// Fixed reference date for tests — injected into the date-aware helpers so they
+// stay deterministic regardless of when the suite runs.
+const NOW = new Date(2026, 5, 15, 12, 0, 0); // 15 Jun 2026, local noon
 const TODAY = "2026-06-15";
 const YESTERDAY = "2026-06-14";
 const TOMORROW = "2026-06-16";
-const THIS_MONTH = "2026-06";
 
 describe("parseMedicines", () => {
   it("returns empty array for null/undefined", () => {
@@ -51,17 +52,17 @@ describe("isOverdueFollowUp", () => {
   });
 
   it("returns true for a past date", () => {
-    expect(isOverdueFollowUp(YESTERDAY)).toBe(true);
-    expect(isOverdueFollowUp("2026-01-01")).toBe(true);
+    expect(isOverdueFollowUp(YESTERDAY, NOW)).toBe(true);
+    expect(isOverdueFollowUp("2026-01-01", NOW)).toBe(true);
   });
 
   it("returns false for today", () => {
-    expect(isOverdueFollowUp(TODAY)).toBe(false);
+    expect(isOverdueFollowUp(TODAY, NOW)).toBe(false);
   });
 
   it("returns false for a future date", () => {
-    expect(isOverdueFollowUp(TOMORROW)).toBe(false);
-    expect(isOverdueFollowUp("2026-12-31")).toBe(false);
+    expect(isOverdueFollowUp(TOMORROW, NOW)).toBe(false);
+    expect(isOverdueFollowUp("2026-12-31", NOW)).toBe(false);
   });
 });
 
@@ -72,16 +73,16 @@ describe("followUpStatus", () => {
   });
 
   it("returns 'overdue' for past dates", () => {
-    expect(followUpStatus(YESTERDAY)).toBe("overdue");
+    expect(followUpStatus(YESTERDAY, NOW)).toBe("overdue");
   });
 
   it("returns 'today' for today's date", () => {
-    expect(followUpStatus(TODAY)).toBe("today");
+    expect(followUpStatus(TODAY, NOW)).toBe("today");
   });
 
   it("returns 'upcoming' for future dates", () => {
-    expect(followUpStatus(TOMORROW)).toBe("upcoming");
-    expect(followUpStatus("2026-07-01")).toBe("upcoming");
+    expect(followUpStatus(TOMORROW, NOW)).toBe("upcoming");
+    expect(followUpStatus("2026-07-01", NOW)).toBe("upcoming");
   });
 });
 
@@ -99,25 +100,25 @@ describe("computeInfirmaryStats", () => {
   ];
 
   it("counts today's visits correctly", () => {
-    const stats = computeInfirmaryStats(visits);
+    const stats = computeInfirmaryStats(visits, NOW);
     expect(stats.todayVisits).toBe(2);
   });
 
   it("counts pending follow-ups (today + overdue)", () => {
     // YESTERDAY is overdue, TODAY is today → 2 pending
-    const stats = computeInfirmaryStats(visits);
+    const stats = computeInfirmaryStats(visits, NOW);
     expect(stats.pendingFollowUps).toBe(2);
   });
 
   it("counts referrals this month only", () => {
     // "City Hospital" on TODAY (this month) + "Apollo" on 2026-06-05 (this month) = 2
-    const stats = computeInfirmaryStats(visits);
+    const stats = computeInfirmaryStats(visits, NOW);
     expect(stats.referralsThisMonth).toBe(2);
   });
 
   it("counts total visits this month", () => {
     // visits[0],[1],[2],[3] are in June 2026 → 4
-    const stats = computeInfirmaryStats(visits);
+    const stats = computeInfirmaryStats(visits, NOW);
     expect(stats.totalThisMonth).toBe(4);
   });
 

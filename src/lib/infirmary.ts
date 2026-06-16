@@ -28,10 +28,11 @@ export function parseMedicines(raw: unknown): MedicineEntry[] {
   );
 }
 
-/** True when a follow-up date is in the past (before today's midnight). */
-export function isOverdueFollowUp(followUpDate: string | null | undefined): boolean {
+/** True when a follow-up date is in the past (before today's midnight).
+ *  `now` is injectable so the logic is deterministically unit-testable. */
+export function isOverdueFollowUp(followUpDate: string | null | undefined, now: Date = new Date()): boolean {
   if (!followUpDate) return false;
-  const today = new Date();
+  const today = new Date(now);
   today.setHours(0, 0, 0, 0);
   const fup = new Date(followUpDate);
   fup.setHours(0, 0, 0, 0);
@@ -39,9 +40,9 @@ export function isOverdueFollowUp(followUpDate: string | null | undefined): bool
 }
 
 /** Classify a follow-up date relative to today. */
-export function followUpStatus(followUpDate: string | null | undefined): FollowUpStatus {
+export function followUpStatus(followUpDate: string | null | undefined, now: Date = new Date()): FollowUpStatus {
   if (!followUpDate) return "none";
-  const today = new Date();
+  const today = new Date(now);
   today.setHours(0, 0, 0, 0);
   const fup = new Date(followUpDate);
   fup.setHours(0, 0, 0, 0);
@@ -56,16 +57,17 @@ export function computeInfirmaryStats(
     visit_date: string;
     follow_up_date: string | null;
     referred_to: string | null;
-  }>
+  }>,
+  now: Date = new Date()
 ): InfirmaryStats {
-  const todayStr = new Date().toDateString();
-  const thisMonth = new Date().toISOString().slice(0, 7);
+  const todayStr = new Date(now).toDateString();
+  const thisMonth = new Date(now).toISOString().slice(0, 7);
   return {
     todayVisits: visits.filter(
       (v) => new Date(v.visit_date).toDateString() === todayStr
     ).length,
     pendingFollowUps: visits.filter((v) => {
-      const s = followUpStatus(v.follow_up_date);
+      const s = followUpStatus(v.follow_up_date, now);
       return s === "today" || s === "overdue";
     }).length,
     referralsThisMonth: visits.filter(

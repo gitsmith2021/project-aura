@@ -54,7 +54,7 @@ CREATE TABLE admissions (
 
 #### What to build:
 - [x] `supabase/migrations/20260616000000_phase5a_admissions.sql` — admissions + RLS (anon apply, admins manage) + indexes
-- [~] Supabase Storage bucket: `admissions-documents` — uploaded client-side via `src/lib/storage.ts`; **bucket created manually** (public, like `receipts`)
+- [x] Supabase Storage bucket: `admissions-documents` — created (public) via migration `20260616010000` with anon-upload + public-read policies; uploaded client-side via `src/lib/storage.ts`
 - [x] `src/lib/storage.ts` — `uploadDocument()` / `getDocumentUrl()` helpers
 - [x] `src/app/admissions/[slug]/page.tsx` — public application form (sectioned: personal → academic → documents); no auth
 - [x] `src/app/admissions/[slug]/status/page.tsx` — applicant status check (email + DOB)
