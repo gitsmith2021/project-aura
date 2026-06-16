@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { logAudit } from "@/lib/auditLog";
-import { employeeIdFromSeq, type ApplicationStatus, type EmploymentType, type JobStatus, type JobPosting, type JobApplication } from "@/lib/recruitment";
+import { employeeIdFromSeq, generateStaffEmail, type ApplicationStatus, type EmploymentType, type JobStatus, type JobPosting, type JobApplication } from "@/lib/recruitment";
 
 type Result<T> = { success: true; data: T } | { success: false; error: string };
 
@@ -315,19 +315,37 @@ export async function hireApplicant(input: {
     if (app.status !== "offer") return { success: false, error: "Only applicants with an offer can be hired." };
 
     const admin = createAdminClient();
-    const email = (app.applicant_email as string).trim().toLowerCase();
 
-    const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });
-    if (list?.users?.some((u) => u.email === email)) {
-      return { success: false, error: `An account already exists for ${email}.` };
+    // Fetch institution email domain — required for institutional email generation
+    const { data: inst } = await admin
+      .from("institutions")
+      .select("email_domain")
+      .eq("id", input.institutionId)
+      .single();
+    if (!inst?.email_domain) {
+      return { success: false, error: "Institution email domain is not configured. Please set it in institution settings before hiring." };
     }
 
-    const password = `Aura@${Math.floor(1000 + Math.random() * 9000)}`;
+    // Generate institutional email: firstname.lastname@domain (unique if clash)
+    const baseEmail = generateStaffEmail(app.applicant_name as string, inst.email_domain as string);
+    const { data: list } = await admin.auth.admin.listUsers({ perPage: 1000 });
+    const existingEmails = new Set((list?.users ?? []).map((u) => u.email));
+    let email = baseEmail;
+    if (existingEmails.has(email)) {
+      let n = 2;
+      const [local, domain] = baseEmail.split("@");
+      while (existingEmails.has(`${local}${n}@${domain}`)) n++;
+      email = `${local}${n}@${domain}`;
+    }
+
+    // Fixed first-time password; staff must reset on first login
+    const password = "Aura@1234";
     const { data: created, error: cErr } = await admin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name: app.applicant_name },
+      user_metadata:  { full_name: app.applicant_name },
+      app_metadata:   { must_reset_password: true },
     });
     if (cErr || !created?.user) return { success: false, error: cErr?.message ?? "Could not create the login." };
     const uid = created.user.id;

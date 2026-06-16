@@ -1,5 +1,7 @@
 "use server";
 
+import { cookies } from "next/headers";
+import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 export type StaffAuthStatus = {
@@ -59,6 +61,28 @@ export async function setStaffPassword(
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     return { success: false, created: false, error: msg };
+  }
+}
+
+/**
+ * Clears the must_reset_password flag from the current user's app_metadata.
+ * Called after a successful first-login password reset.
+ * Requires the service-role key (admin API — app_metadata is server-only).
+ */
+export async function clearMustResetPassword(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = createClient(await cookies());
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: "Not authenticated." };
+
+    const admin = createAdminClient();
+    const { error } = await admin.auth.admin.updateUserById(user.id, {
+      app_metadata: { must_reset_password: false },
+    });
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  } catch (e: unknown) {
+    return { success: false, error: e instanceof Error ? e.message : "Unknown error" };
   }
 }
 

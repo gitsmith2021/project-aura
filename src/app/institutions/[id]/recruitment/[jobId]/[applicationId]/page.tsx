@@ -17,14 +17,16 @@ export default async function ApplicationDetailPage({ params, searchParams }: Pa
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [appRes, deptRes] = await Promise.all([
+  const [appRes, deptRes, instRes] = await Promise.all([
     getJobApplication(applicationId),
     supabase.from("departments").select("id, name").eq("institution_id", id).order("name"),
+    supabase.from("institutions").select("email_domain").eq("id", id).single(),
   ]);
 
   if (!appRes.success) redirect(`/institutions/${id}/recruitment/${jobId}`);
-  const application = appRes.data;
-  const departments = (deptRes.data ?? []).map(d => ({ id: d.id as string, name: d.name as string }));
+  const application  = appRes.data;
+  const departments  = (deptRes.data ?? []).map(d => ({ id: d.id as string, name: d.name as string }));
+  const emailDomain  = (instRes.data?.email_domain as string | null) ?? null;
 
   return (
     <DashboardLayout>
@@ -57,6 +59,7 @@ export default async function ApplicationDetailPage({ params, searchParams }: Pa
           application={application}
           institutionId={id}
           departments={departments}
+          emailDomain={emailDomain}
           autoOpenHire={action === "hire"}
         />
       </div>

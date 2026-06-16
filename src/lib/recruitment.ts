@@ -208,3 +208,18 @@ export function deadlineLabel(deadline: string | null, today: string): string | 
 export function employeeIdFromSeq(seq: number): string {
   return `EMP${String(seq).padStart(4, "0")}`;
 }
+
+// ── Institutional email generator ─────────────────────────────────────────────
+
+/**
+ * Derives an institutional email from a full name and institution email domain.
+ * "Shalini Immanuel" + "bhc.edu.in" → "shalini.immanuel@bhc.edu.in"
+ * Single-word names use the same word for both parts: "Rajan" → "rajan.rajan@domain"
+ */
+export function generateStaffEmail(fullName: string, emailDomain: string): string {
+  const sanitize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const parts    = fullName.trim().split(/\s+/);
+  const first    = sanitize(parts[0] ?? "staff");
+  const last     = sanitize(parts.slice(1).join("")) || first;
+  return `${first}.${last}@${emailDomain}`;
+}

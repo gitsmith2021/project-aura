@@ -21,11 +21,13 @@ export function ApplicationDetailView({
   application: initial,
   institutionId,
   departments,
+  emailDomain = null,
   autoOpenHire = false,
 }: {
   application: JobApplication;
   institutionId: string;
   departments: Dept[];
+  emailDomain?: string | null;
   autoOpenHire?: boolean;
 }) {
   const router = useRouter();
@@ -370,6 +372,7 @@ export function ApplicationDetailView({
         application={app}
         institutionId={institutionId}
         departments={departments}
+        emailDomain={emailDomain}
         onClose={() => setHireOpen(false)}
       />
     </div>

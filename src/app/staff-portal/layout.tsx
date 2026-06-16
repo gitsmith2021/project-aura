@@ -25,10 +25,20 @@ export default async function StaffPortalLayout({ children }: { children: React.
     if (!staff) redirect("/institutions");
   }
 
-  // View routes (/staff-portal/view/*) have their own StaffViewShell layout.
-  // Skip DashboardLayout here to avoid a double topbar/sidebar.
+  // Force password reset on first login (set when account is created via hire/add).
+  // app_metadata is server-verified — cannot be forged by the client.
   const headerList  = await headers();
   const pathname    = headerList.get("x-pathname") ?? "";
+  if (
+    user.app_metadata?.must_reset_password === true &&
+    !pathname.startsWith("/staff-portal/reset-password") &&
+    role !== "admin"
+  ) {
+    redirect("/staff-portal/reset-password");
+  }
+
+  // View routes (/staff-portal/view/*) have their own StaffViewShell layout.
+  // Skip DashboardLayout here to avoid a double topbar/sidebar.
   if (pathname.startsWith("/staff-portal/view/")) {
     return <>{children}</>;
   }

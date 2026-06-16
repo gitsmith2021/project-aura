@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { X, UserCheck, Copy, Check } from "lucide-react";
+import { X, UserCheck, Copy, Check, Info } from "lucide-react";
 import { hireApplicant } from "@/actions/recruitment";
-import type { JobApplication } from "@/lib/recruitment";
+import { generateStaffEmail, type JobApplication } from "@/lib/recruitment";
 
 type Dept = { id: string; name: string };
 
@@ -13,12 +13,14 @@ export function HireDrawer({
   application,
   institutionId,
   departments,
+  emailDomain = null,
   onClose,
 }: {
   open: boolean;
   application: JobApplication;
   institutionId: string;
   departments: Dept[];
+  emailDomain?: string | null;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -98,6 +100,29 @@ export function HireDrawer({
             )}
           </div>
 
+          {/* Institutional email preview / domain warning */}
+          {emailDomain ? (
+            <div className="mb-4 flex items-start gap-2 p-3 rounded-xl bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800/40">
+              <Info size={13} className="text-violet-500 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[11px] font-semibold text-violet-700 dark:text-violet-300">Institutional login will be created</p>
+                <p className="text-[11px] text-violet-600 dark:text-violet-400 font-mono mt-0.5">
+                  {generateStaffEmail(application.applicant_name, emailDomain)}
+                </p>
+                <p className="text-[10px] text-violet-500 dark:text-violet-500 mt-1">
+                  Temporary password: <span className="font-mono font-semibold">Aura@1234</span> — staff must reset on first login.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-4 flex items-start gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/40">
+              <Info size={13} className="text-rose-500 mt-0.5 shrink-0" />
+              <p className="text-[11px] text-rose-600 dark:text-rose-400">
+                Institution email domain is not configured. Set it in institution settings before hiring.
+              </p>
+            </div>
+          )}
+
           {/* Success state */}
           {result ? (
             <div className="space-y-4">
@@ -106,7 +131,7 @@ export function HireDrawer({
                   Hired successfully!
                 </p>
                 <p className="text-[12px] text-emerald-700 dark:text-emerald-400">
-                  Staff account and profile created. Share these credentials with the new hire:
+                  Institutional account created. Share these credentials with the new hire:
                 </p>
               </div>
 
@@ -125,7 +150,7 @@ export function HireDrawer({
               </button>
 
               <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center">
-                The new hire should change their password on first login.
+                Staff will be prompted to set a new password on their first login.
               </p>
             </div>
           ) : (
@@ -181,10 +206,6 @@ export function HireDrawer({
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 text-[12px] text-amber-700 dark:text-amber-400">
-                This will create a staff account and login credentials for{" "}
-                <strong>{application.applicant_name}</strong> ({application.applicant_email}).
-              </div>
             </div>
           )}
         </div>
@@ -198,8 +219,9 @@ export function HireDrawer({
             <button
               type="button"
               onClick={handleHire}
-              disabled={busy}
+              disabled={busy || !emailDomain}
               className="px-4 py-2 text-[13px] font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!emailDomain ? "Set institution email domain first" : undefined}
             >
               {busy ? "Hiring…" : "Confirm Hire"}
             </button>
