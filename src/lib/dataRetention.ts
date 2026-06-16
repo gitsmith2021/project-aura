@@ -29,6 +29,7 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     tables: [
       "fee_payments", "fee_structures", "fee_concessions",
       "salary_disbursements", "expenses", "razorpay_webhook_events",
+      "monthly_statutory_deductions", "staff_tax_declarations", "statutory_payroll_config",
     ],
     period: "7 years after the financial year they belong to",
     years: 7,

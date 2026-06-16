@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -20,6 +20,7 @@ const FINANCE_SUB = [
   { key: "payments",    label: "All Payments",    Icon: CreditCard,     href: (id: string) => `/institutions/${id}/finance/fees/payments` },
   { key: "concessions", label: "Concessions",     Icon: BadgePercent,   href: (id: string) => `/institutions/${id}/finance/concessions` },
   { key: "salary",      label: "Salaries",        Icon: Users,          href: (id: string) => `/institutions/${id}/finance/salary` },
+  { key: "statutory",   label: "Statutory",       Icon: ShieldAlert,    href: (id: string) => `/institutions/${id}/finance/payroll/statutory` },
   { key: "reports",     label: "Reports",         Icon: BarChart2,      href: (id: string) => `/institutions/${id}/finance/reports` },
 ] as const;
 
@@ -52,8 +53,9 @@ const STAFF_NAV = [
   { key: "attendance", href: "/staff-portal/attendance", label: "Attendance",  Icon: ClipboardCheck },
   { key: "cia",        href: "/staff-portal/cia",        label: "CIA Marks",   Icon: ClipboardList },
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
-  { key: "salary",     href: "/staff-portal/salary",     label: "Salary",      Icon: Wallet },
-  { key: "privacy",    href: "/staff-portal/privacy",    label: "Privacy",     Icon: ShieldCheck },
+  { key: "salary",          href: "/staff-portal/salary",           label: "Salary",          Icon: Wallet },
+  { key: "tax-declaration", href: "/staff-portal/tax-declaration", label: "Tax Declaration", Icon: FileText },
+  { key: "privacy",         href: "/staff-portal/privacy",         label: "Privacy",         Icon: ShieldCheck },
 ] as const;
 
 // ── Shared style tokens (sidebar is always dark, both themes) ─────────────────
@@ -338,6 +340,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
     if (key === "fees")        return pathname.includes("/finance/fees") && !pathname.includes("/payments");
     if (key === "concessions") return pathname.includes("/finance/concessions");
     if (key === "salary")      return pathname.includes("/finance/salary");
+    if (key === "statutory")   return pathname.includes("/finance/payroll/statutory");
     if (key === "reports")     return pathname.includes("/finance/reports");
     return false;
   };
