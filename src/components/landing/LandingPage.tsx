@@ -12,6 +12,7 @@ import { ComparisonSection } from "./Comparison/ComparisonSection";
 import { InstitutionTypesSection } from "./Institutions/InstitutionTypesSection";
 import { PricingSection } from "./Pricing/PricingSection";
 import { TechStackSection } from "./TechStack/TechStackSection";
+import { BuiltWithSection } from "./TechStack/BuiltWithSection";
 import { CTASection } from "./CTA/CTASection";
 import { Footer } from "./Footer";
 
@@ -70,6 +71,7 @@ export function LandingPage() {
             <InstitutionTypesSection />
             <PricingSection />
             <TechStackSection />
+            <BuiltWithSection />
             <CTASection />
           </main>
           <Footer />

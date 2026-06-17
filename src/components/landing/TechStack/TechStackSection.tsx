@@ -32,10 +32,11 @@ export function TechStackSection() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {PLATFORM_TRUST.map(t => (
+        {/* 12-col grid: row 1 = 4 cards (span 3), row 2 = 3 cards (span 4) → both rows fill the full width. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4">
+          {PLATFORM_TRUST.map((t, i) => (
             <article key={t.title}
-              className="tech-card rounded-2xl border border-slate-200 dark:border-slate-800/70 bg-white dark:bg-slate-900/50 p-5 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg hover:border-violet-300 dark:hover:border-violet-500/30 cursor-default">
+              className={`tech-card rounded-2xl border border-slate-200 dark:border-slate-800/70 bg-white dark:bg-slate-900/50 p-5 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg hover:border-violet-300 dark:hover:border-violet-500/30 cursor-default ${i < 4 ? "lg:col-span-3" : "lg:col-span-4"}`}>
               <div className="w-11 h-11 rounded-xl bg-violet-100 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/25 flex items-center justify-center mb-3.5">
                 <t.Icon size={20} className="text-violet-600 dark:text-violet-400" />
               </div>
