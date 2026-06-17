@@ -2,7 +2,8 @@ import {
   GraduationCap, Users, Calendar, ClipboardList, Wallet, BarChart2,
   Shield, Award, Briefcase, Mic2, BookText, Library, BadgePercent,
   Activity, Database, Smartphone, FlaskConical, Landmark, Building2,
-  School, Cpu, type LucideIcon,
+  School, Cpu, Cloud, DatabaseBackup, KeyRound, Layers, ShieldCheck,
+  RefreshCw, type LucideIcon,
 } from "lucide-react";
 
 export type DemoFormData = {
@@ -17,7 +18,7 @@ export const NAV_LINKS = [
   { id: "naac",     label: "Accreditation" },
   { id: "why",      label: "Why AURA" },
   { id: "pricing",  label: "Pricing" },
-  { id: "tech",     label: "Tech Stack" },
+  { id: "tech",     label: "Platform" },
   { id: "contact",  label: "Contact" },
 ];
 
@@ -195,6 +196,17 @@ export const MARQUEE_ITEMS = [
   { Icon: BarChart2,     label: "Accreditation Reports", color: "from-rose-500 to-pink-500" },
   { Icon: Shield,        label: "NAAC Compliance",       color: "from-violet-500 to-indigo-500" },
   { Icon: Database,      label: "Secure Data",           color: "from-sky-500 to-teal-500" },
+];
+
+/** Enterprise-grade platform trust indicators (institution leadership, not developers). */
+export const PLATFORM_TRUST: { Icon: LucideIcon; title: string; desc: string }[] = [
+  { Icon: Cloud,          title: "Secure Cloud Infrastructure", desc: "Hosted in India on enterprise cloud — encrypted, monitored and always on." },
+  { Icon: DatabaseBackup, title: "Automated Backups",            desc: "Point-in-time backups run continuously, so your institutional data is never at risk." },
+  { Icon: KeyRound,       title: "Role-Based Access Control",    desc: "Principals, HODs, staff and students each see exactly what they should — nothing more." },
+  { Icon: Smartphone,     title: "Mobile Ready",                 desc: "Every portal works on any phone, tablet or desktop — no app store required." },
+  { Icon: Layers,         title: "Multi-Tenant Architecture",    desc: "Run multiple campuses or institutions with fully isolated, secure data." },
+  { Icon: ShieldCheck,    title: "Data Privacy & Compliance Ready", desc: "Built around the DPDP Act 2023 with audit trails and consent management." },
+  { Icon: RefreshCw,      title: "Continuous Updates",           desc: "New features and improvements ship automatically — no upgrade projects, ever." },
 ];
 
 export const TECH = [
