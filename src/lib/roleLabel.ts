@@ -12,6 +12,8 @@ export function roleLabel(role: string | null | undefined): string {
     case "DEPARTMENT_HEAD": return "HOD";
     case "STAFF":           return "Staff";
     case "STUDENT":         return "Student";
+    case "Alumnus":
+    case "ALUMNUS":         return "Alumnus";
     default:                return "Admin";
   }
 }

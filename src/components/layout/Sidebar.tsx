@@ -376,6 +376,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const admissionsCrmHref  = slug ? `/institutions/${slug}/admissions/crm`   : "/institutions";
   const meritListHref      = slug ? `/institutions/${slug}/admissions/crm/merit-list` : "/institutions";
   const recruitmentHref    = slug ? `/institutions/${slug}/recruitment`       : "/institutions";
+  const alumniHref         = slug ? `/institutions/${slug}/alumni`            : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -599,6 +600,17 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                 icon={<Search size={18} />}
                 label="Recruitment"
                 active={pathname.includes("/recruitment")}
+                isCollapsed={isCollapsed}
+              />
+            )}
+
+            {/* Alumni (admin only) — Phase 5D */}
+            {role !== "hod" && (
+              <SidebarLink
+                href={alumniHref}
+                icon={<GraduationCap size={18} />}
+                label="Alumni"
+                active={pathname.includes("/alumni")}
                 isCollapsed={isCollapsed}
               />
             )}

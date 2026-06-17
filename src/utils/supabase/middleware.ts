@@ -18,6 +18,12 @@ const PUBLIC_PATHS = ["/", "/login", "/privacy-policy"];
 const PUBLIC_PREFIXES = ["/admissions"];
 const isPublicPrefix = (p: string) => PUBLIC_PREFIXES.some((pre) => p === pre || p.startsWith(pre + "/"));
 
+// Resolve a role's landing page.
+const homePathFor = (r?: string) =>
+  r === "staff" ? "/staff-portal" :
+  r === "student" ? "/student-portal" :
+  r === "alumni" ? "/alumni-portal" : "/";
+
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -82,6 +88,7 @@ export async function updateSession(request: NextRequest) {
   const isStaffPortal       = pathname.startsWith("/staff-portal") && !isAdminViewStaff;
   const isAdminViewStudent  = pathname.startsWith("/student-portal/view");
   const isStudentPortal     = pathname.startsWith("/student-portal") && !isAdminViewStudent;
+  const isAlumniPortal      = pathname.startsWith("/alumni-portal");
 
   // ── Unauthenticated ───────────────────────────────────────────────────────
   if (!user) {
@@ -96,10 +103,19 @@ export async function updateSession(request: NextRequest) {
 
   // ── Authenticated: determine role ─────────────────────────────────────────
   // Read the cached cookie set at login (avoids a DB query on every request)
-  let role = request.cookies.get("aura-role")?.value as "staff" | "admin" | "student" | "hod" | undefined;
+  let role = request.cookies.get("aura-role")?.value as "staff" | "admin" | "student" | "hod" | "alumni" | undefined;
 
   if (!role) {
-    // Cookie missing — query once and cache it
+    // Cookie missing — query once and cache it.
+    // Alumni take precedence: a graduated student keeps their student row, but an
+    // active alumni record routes them to the alumni portal.
+    const { data: alumnusRow } = await supabase
+      .from("alumni")
+      .select("id")
+      .eq("profile_id", user.id)
+      .eq("is_active", true)
+      .maybeSingle();
+
     const { data: memberRow } = await supabase
       .from("institution_members")
       .select("role")
@@ -108,7 +124,10 @@ export async function updateSession(request: NextRequest) {
 
     let memberRole: string | undefined = memberRow?.role;
 
-    if (memberRow) {
+    if (alumnusRow) {
+      role = "alumni";
+      memberRole = "Alumnus";
+    } else if (memberRow) {
       // PRINCIPAL is institution-wide leadership → same "admin" access tier as
       // INST_ADMIN (the DB normalizes it too); its distinct identity is carried
       // by the aura-role-label cookie set below.
@@ -179,7 +198,7 @@ export async function updateSession(request: NextRequest) {
       .maybeSingle();
     if (!superRow) {
       const url = request.nextUrl.clone();
-      url.pathname = role === "staff" ? "/staff-portal" : role === "student" ? "/student-portal" : "/";
+      url.pathname = homePathFor(role);
       return NextResponse.redirect(url);
     }
     return supabaseResponse;
@@ -188,7 +207,7 @@ export async function updateSession(request: NextRequest) {
   // Logged-in user lands on /login → send to their home
   if (isLoginPage) {
     const url = request.nextUrl.clone();
-    url.pathname = role === "staff" ? "/staff-portal" : role === "student" ? "/student-portal" : "/";
+    url.pathname = homePathFor(role);
     return NextResponse.redirect(url);
   }
 
@@ -198,6 +217,18 @@ export async function updateSession(request: NextRequest) {
 
   // Public admissions pages stay reachable for any signed-in role too
   if (isPublicPrefix(pathname)) return supabaseResponse;
+
+  // Alumni must stay inside /alumni-portal; everyone else is kept out of it.
+  if (role === "alumni" && !isAlumniPortal) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/alumni-portal";
+    return NextResponse.redirect(url);
+  }
+  if (role !== "alumni" && isAlumniPortal) {
+    const url = request.nextUrl.clone();
+    url.pathname = homePathFor(role);
+    return NextResponse.redirect(url);
+  }
 
   // Staff must stay inside /staff-portal
   if (role === "staff" && !isStaffPortal) {

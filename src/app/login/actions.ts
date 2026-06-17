@@ -19,6 +19,28 @@ export async function login(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?error=Invalid login credentials");
 
+  // ── Alumni take precedence ───────────────────────────────────────────────
+  // A graduated student keeps their student row + STUDENT membership, but an
+  // active alumni record (created by Import Graduates) routes them to the
+  // alumni portal instead. Checked first so it wins over the student fallback.
+  const { data: alumnusRow } = await supabase
+    .from("alumni")
+    .select("id")
+    .eq("profile_id", user.id)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (alumnusRow) {
+    const cookieOpts = {
+      path: "/", maxAge: 60 * 60 * 24 * 7, sameSite: "lax" as const,
+      secure: process.env.NODE_ENV === "production",
+    };
+    cookieStore.set("aura-role", "alumni", { ...cookieOpts, httpOnly: true });
+    cookieStore.set("aura-role-label", "Alumnus", { ...cookieOpts, httpOnly: false });
+    revalidatePath("/", "layout");
+    redirect("/alumni-portal");
+  }
+
   // ── Determine role: HOD/Admin → Staff → Student ──────────────────────────
   const { data: memberRow } = await supabase
     .from("institution_members")

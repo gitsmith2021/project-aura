@@ -110,6 +110,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Institutional announcements (minimal personal data — only the poster's id). Auto-expire via expires_at; retained briefly for reference",
   },
   {
+    key: "alumni",
+    category: "Alumni records (graduate directory & batch announcements)",
+    tables: ["alumni", "alumni_announcements"],
+    period: "Retained while the alumni relationship is active; erased on approved erasure request",
+    years: null,
+    basis: "Ongoing alumni engagement, transcript/verification requests and institutional development (NIRF/NAAC alumni-outcome evidence); DPDP right to erasure applies",
+  },
+  {
     key: "recruitment",
     category: "Staff recruitment data (job postings & applicant CVs)",
     tables: ["job_postings", "job_applications"],
