@@ -2,7 +2,7 @@
 
 **Purpose.** All planning and development documentation for Aura Campus, the multi-tenant Academic ERP — the only Aura product currently in active development.
 
-**Scope.** The master build roadmap (`AURA_ROADMAP.md` + the per-phase `roadmap/` folder), the Fable 5 execution plan, the deferred-items register, competitive advantage, functional spec, database design, and release notes.
+**Scope.** The master build roadmap (`AURA_ROADMAP.md` + the per-phase `roadmap/` folder), the Fable 5 execution plan, the deferred-items register, competitive advantage, the [engines register](AURA_CAMPUS_ENGINES.md) (IP classification of every intelligence-producing subsystem), functional spec, database design, and release notes.
 
 **Ownership.** Aura Campus product + engineering team.
 
