@@ -298,7 +298,16 @@ CREATE TABLE monthly_statutory_deductions (
 
 **Routes:** `/alumni-portal` (alumni self-service) · `/institutions/[id]/alumni` (admin)
 
+> **Status:** ✅ **Complete** (migration `20260616030000_phase5d_alumni`, commit `035d11a`).
+
 > Graduates from year promotion (Step 2D) land here automatically. Alumni can update their profile; admins can broadcast to batches.
+
+#### ✅ COMPLETE — commit `035d11a`
+- Tables `alumni` + `alumni_announcements` with RLS. Directory/announcement reads are scoped by `private.alumni_institution_ids()` (SECURITY DEFINER) so an alumnus can read fellow alumni of their own institution without the policy recursing on the `alumni` table.
+- Schema deviation: the spec's `current_role` column is named `current_designation` (`current_role` is a reserved word in Postgres). Added `profile_id` (carried-over login) + `source_student_id` (provenance) beyond the spec.
+- **Auth routing:** an active `alumni` row keyed on `profile_id` takes precedence over the retained student row in both `login` and `middleware`, routing the user to `/alumni-portal`; a middleware fence keeps alumni in and non-alumni out.
+- **Import Graduates** (in place of an automatic 2D hook): pulls `students.is_graduated = true`, carries over their auth account, skips anyone already imported, and tags a graduation year.
+- 12 Vitest unit tests (`tests/unit/alumni.test.ts`); retention entry added to `src/lib/dataRetention.ts`.
 
 #### Database:
 ```sql
@@ -323,15 +332,16 @@ CREATE TABLE alumni (
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._alumni.sql`
-- [ ] `src/app/institutions/[id]/alumni/page.tsx` — Admin alumni directory (filter by batch, dept, year)
-- [ ] `src/app/institutions/[id]/alumni/announcements/page.tsx` — Broadcast messages to alumni batches
-- [ ] `src/app/alumni-portal/layout.tsx` — Alumni portal shell (teal theme, similar to student portal)
-- [ ] `src/app/alumni-portal/page.tsx` — Alumni dashboard: batch stats, recent announcements
-- [ ] `src/app/alumni-portal/profile/page.tsx` — Update employer, role, LinkedIn, city
-- [ ] `src/app/alumni-portal/directory/page.tsx` — Browse fellow alumni (same batch/dept)
-- [ ] `src/actions/alumni.ts` — getAlumniProfile, updateAlumniProfile, getAlumniDirectory, sendAlumniAnnouncement
-- [ ] Login flow update: detect alumni role → redirect to `/alumni-portal`
+- [x] `supabase/migrations/20260616030000_phase5d_alumni.sql`
+- [x] `src/app/institutions/[id]/alumni/page.tsx` — Admin alumni directory (filter by batch, dept, year) + stats + CSV + Import Graduates → `AlumniDirectoryView`
+- [x] `src/app/institutions/[id]/alumni/announcements/page.tsx` — Broadcast messages to alumni batches → `AlumniAnnouncementsManager`
+- [x] `src/app/alumni-portal/layout.tsx` — Alumni portal shell (teal theme) → `AlumniPortalShell`
+- [x] `src/app/alumni-portal/page.tsx` — Alumni dashboard: batch stats, recent (audience-matched) announcements
+- [x] `src/app/alumni-portal/profile/page.tsx` — Update employer, designation, LinkedIn, city, phone → `AlumniProfileForm`
+- [x] `src/app/alumni-portal/directory/page.tsx` — Browse fellow alumni grouped by graduating batch
+- [x] `src/actions/alumni.ts` — getAlumniProfile, updateAlumniProfile, getAlumniDirectory, getAlumniForAdmin, createAlumni, updateAlumniAdmin, setAlumniActive, importGraduates, get/send/deleteAlumniAnnouncement
+- [x] Login + middleware update: detect active alumni record → redirect to `/alumni-portal`
+- [x] `src/lib/alumni.ts` pure helpers + `tests/unit/alumni.test.ts` (12 tests); `src/lib/dataRetention.ts` entry; Sidebar admin Alumni link
 
 #### Key features:
 - Auto-populated from year promotion (Step 2D)

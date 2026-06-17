@@ -96,7 +96,7 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 4 | [roadmap/04-phase2.5-critical-fixes.md](roadmap/04-phase2.5-critical-fixes.md) | Phase 2.5 — Critical Security & Compliance Fixes | ✅ Complete (3 manual dashboard steps pending) |
 | 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🟢 Core complete (3A/3B/3D ✅, 3C email; pg_cron sweeps live — fee-due + low-attendance + outpass-overdue; only SMS/WhatsApp deferred) |
 | 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | ✅ Complete (4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅ · 4H ✅ · 4I ✅ · 4J ✅ · 4K ✅) |
-| 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | 🟡 In progress (5A ✅ · 5A-sub ✅ · 5B ✅ · 5C ✅) |
+| 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | 🟡 In progress (5A ✅ · 5A-sub ✅ · 5B ✅ · 5C ✅ · 5C-sub ✅ · 5D ✅) |
 | 8 | [roadmap/08-phase6-portals-tools.md](roadmap/08-phase6-portals-tools.md) | Phase 6 — Parent Portals & Extended Digital Tools (6A–6H) | 🔲 Pending |
 | 9 | [roadmap/09-phase7-super-admin.md](roadmap/09-phase7-super-admin.md) | Phase 7 — Super Admin Panel / SaaS Multi-Tenancy (7A–7F-sub2) | 🔲 Pending |
 | 10 | [roadmap/10-phase8-mobile-apps.md](roadmap/10-phase8-mobile-apps.md) | Phase 8 — React Native Mobile Apps & CCTV (8A–8F) | 🔲 Pending |
@@ -109,24 +109,24 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 
 ## 📋 Overall Progress Tracker
 
-> **Last updated:** 2026-06-16  
-> **59 of 87 modules complete — 68% of full platform built**
+> **Last updated:** 2026-06-17  
+> **60 of 87 modules complete — 69% of full platform built**
 
 ```
-Overall  ██████████████████████░░░░░░░░░░  68%  (59/87)
+Overall  ██████████████████████░░░░░░░░░░  69%  (60/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
 Phase 3    █████████████████████████████░  95%  (3A ✅ · 3B ✅ · 3C 🟡 email live · 3D ✅ notices · pg_cron sweeps live: fee-due + low-attendance + outpass-overdue · only SMS/WhatsApp deferred)
 Phase 4    ████████████████████████████████  100% (12/12 — 4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅ · 4H ✅ · 4I ✅ · 4J ✅ · 4K ✅)
-Phase 5    █████████░░░░░░░░░░░░░░░░░░░░░░░  36%  (5/14 — 5A Admissions ✅ · 5A-sub CRM + Merit List ✅ · 5B Recruitment ✅ · 5C Non-Teaching Staff + Daily-Wage Payroll ✅ · 5C-sub Indian Statutory Payroll ✅ · alumni/appraisal/etc. pending)
+Phase 5    ██████████░░░░░░░░░░░░░░░░░░░░░░  43%  (6/14 — 5A Admissions ✅ · 5A-sub CRM + Merit List ✅ · 5B Recruitment ✅ · 5C Non-Teaching Staff + Daily-Wage Payroll ✅ · 5C-sub Indian Statutory Payroll ✅ · 5D Alumni System ✅ · appraisal/placement/etc. pending)
 Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
 Phase 7    ████████████████░░░░░░░░░░░░░░░░  50%  (4/8  — 7A ✅ · 7B ✅ · 7C ✅ · 7F-sub SSR Builder ✅)
 Phase 8    █████░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%  (1/6  — 8A ✅ · 8B/8C screens built · NFC/push/CCTV/Parent pending)
 Arch       ██████░░░░░░░░░░░░░░░░░░░░░░░░░░  19%  (1/8 + A2 🟡 — Audit Log ✅ · Test infra (Vitest+Playwright) foundation · RLS, Indexes, CI/CD, Billing pending)
 ```
 
-> **5C-sub Indian Statutory Payroll ✅ (commit `0ac0995`)** — 3 DB tables (statutory_payroll_config, staff_tax_declarations, monthly_statutory_deductions) + RLS; pure computation lib (TDS new/old regime, EPF, ESI, FY helpers); 7 server actions; admin dashboard with collapsible config panel, KPI strip, deduction table (Run + CSV export), Form 16 generator (per-staff breakdowns + print); staff tax-declaration portal (regime selector + 80C/D/HRA/LTA form + deduction history); Sidebar links; 42 unit tests. **Next up:** Phase 5D Alumni System. **5C Non-Teaching Staff ✅** — staff_type (5 values) + daily_wage_rate columns. **Phase 4 complete** — all 12 campus infrastructure modules shipped. **Scheduler now live:** pg_cron runs `private.sweep_overdue_outpasses` (30 min) + `private.sweep_low_attendance` (daily) — migration `20260615050000`. **Phase 3 deferred:** only 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed. **Phase 2.5 manual leftovers:** PITR (Supabase Dashboard → Database → Backups → Point in Time, project `nsaheksysxinemtjcako`), GitHub repo secrets (`SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY`), UptimeRobot monitor on `/api/scheduler-health` (see [DISASTER_RECOVERY.md](../DISASTER_RECOVERY.md))
+> **5C-sub Indian Statutory Payroll ✅ (commit `0ac0995`)** — 3 DB tables (statutory_payroll_config, staff_tax_declarations, monthly_statutory_deductions) + RLS; pure computation lib (TDS new/old regime, EPF, ESI, FY helpers); 7 server actions; admin dashboard with collapsible config panel, KPI strip, deduction table (Run + CSV export), Form 16 generator (per-staff breakdowns + print); staff tax-declaration portal (regime selector + 80C/D/HRA/LTA form + deduction history); Sidebar links; 42 unit tests. **5D Alumni System ✅ (commit `035d11a`)** — `alumni` + `alumni_announcements` tables + RLS; admin directory (stats, filters, CSV, Import Graduates, add/edit drawer) + batch-targeted announcements; teal alumni portal (dashboard, profile, directory); login + middleware route active alumni to `/alumni-portal`; 12 unit tests. **Next up:** Phase 5E Staff Appraisal & NAAC Workload Reports. **5C Non-Teaching Staff ✅** — staff_type (5 values) + daily_wage_rate columns. **Phase 4 complete** — all 12 campus infrastructure modules shipped. **Scheduler now live:** pg_cron runs `private.sweep_overdue_outpasses` (30 min) + `private.sweep_low_attendance` (daily) — migration `20260615050000`. **Phase 3 deferred:** only 3C SMS (MSG91 + DLT) & WhatsApp (Meta) — wrappers stubbed. **Phase 2.5 manual leftovers:** PITR (Supabase Dashboard → Database → Backups → Point in Time, project `nsaheksysxinemtjcako`), GitHub repo secrets (`SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY`), UptimeRobot monitor on `/api/scheduler-health` (see [DISASTER_RECOVERY.md](../DISASTER_RECOVERY.md))
 
 ---
 
@@ -189,7 +189,7 @@ Arch       ██████░░░░░░░░░░░░░░░░░
 | ✅ Phase 5B | Staff Recruitment Module — `job_postings` + `job_applications`, 5-stage hiring pipeline (applied→screened→interview→offer→joined), interview scheduler, offer form, one-click Hire creates staff auth account + profile + staff record (mirrors enrollStudent); Recruitment sidebar link; 13 unit tests | Complete | `3f1f213` |
 | ✅ Phase 5C | Non-Teaching Staff & Payroll — `staff_type` (5-value CHECK) + `daily_wage_rate` columns; `src/lib/staffTypes.ts` pure helpers; EditPersonModal/AddPersonModal/BulkUploadModal updated (staff_type dropdown + daily_wage_rate field + CSV cols 5-6); `generateDailyWageDisbursements` for daily-wage staff; `generateMonthlyDisbursements` skips daily-wage; role-aware staff portal dashboard (Quick Links for warden/support, daily-wage banner); 20 unit tests | Complete | `1f51a4b` |
 | ✅ Phase 5C-sub | Indian Statutory Payroll — 3 DB tables (statutory_payroll_config / staff_tax_declarations / monthly_statutory_deductions) + RLS; pure computation lib (TDS new/old regime FY 2024-25, EPF, ESI, FY helpers); 7 server actions; admin dashboard (config panel + KPI strip + deduction table + Run + CSV export); Form 16 generator (per-staff annual breakdown + print); staff tax-declaration portal (regime selector + 80C/D/HRA/LTA form + deduction history); Sidebar links; 42 unit tests | Complete | `0ac0995` |
-| 🔲 Phase 5D | Alumni System & Panel | Pending | — |
+| ✅ Phase 5D | Alumni System & Panel — `alumni` + `alumni_announcements` tables + RLS (private `alumni_institution_ids()` SECURITY DEFINER helper avoids self-referential recursion); admin directory (stats, batch/dept/programme filters, CSV export, add/edit drawer), Import Graduates (carries over `students.is_graduated` logins), batch-targeted announcements; teal alumni portal (dashboard, self-service profile, directory); login + middleware route active alumni to `/alumni-portal`; 12 unit tests | Complete | `035d11a` |
 | 🔲 Phase 5E | Staff Appraisal & NAAC Workload Reports | Pending | — |
 | 🔲 Phase 5F | Placement Cell & Career Services | Pending | — |
 | 🔲 Phase 5G | Scholarship Management | Pending | — |
