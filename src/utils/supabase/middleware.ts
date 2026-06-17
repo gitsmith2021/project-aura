@@ -9,8 +9,9 @@ import { roleLabel } from "@/lib/roleLabel";
 const WEBHOOK_PATHS = ["/api/razorpay-webhook", "/api/attendance/nfc", "/api/scheduler-health"];
 
 // Pages every visitor may read regardless of auth state or role —
-// /privacy-policy is legally required to be public (DPDP Act 2023).
-const PUBLIC_PATHS = ["/", "/login", "/privacy-policy"];
+// /privacy-policy is legally required to be public (DPDP Act 2023);
+// /forgot-password must be reachable while signed out to reset a password.
+const PUBLIC_PATHS = ["/", "/login", "/privacy-policy", "/forgot-password"];
 
 // Public route prefixes anyone may reach without auth (e.g. the admissions
 // application + status pages at /admissions/[slug]). The admin admissions panel
