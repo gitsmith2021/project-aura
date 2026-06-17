@@ -354,7 +354,25 @@ CREATE TABLE alumni (
 
 **Route:** `/institutions/[id]/appraisals`
 
+> **Status:** ✅ **Complete** (migration `20260616040000_phase5e_appraisals`, commit `79f8199`).
+
 > Annual staff appraisal system for NAAC compliance. Records teaching performance, research output, and faculty development activities. Generates workload reports showing hours taught vs planned per staff per week.
+
+#### ✅ COMPLETE — commit `79f8199`
+- Tables `staff_appraisals` (adds `self_remarks`, `submitted_at`, `reviewed_at` + `unique(staff_id, appraisal_period)` beyond spec) + `staff_appraisal_activities`, with RLS: staff read/edit their own while `pending`/`submitted`; admins (SUPER_ADMIN/INST_ADMIN) manage all; HODs scoped to their department's staff. Admin activity policy's `WITH CHECK` mirrors `USING` (no always-true INSERT path — caught by advisor).
+- `appraisal-docs` public storage bucket created in-migration (authenticated upload + public read) for activity proof documents.
+- **Scoring:** reviewer assigns teaching/research/admin out of 100; overall is weighted 50/30/20 (`computeOverallScore`), with letter grade bands. Save (→ reviewed) or Finalize (→ completed).
+- **Workload report:** `generateWorkloadReport` computes planned weekly hours from `class_schedules` (slot durations) and actual hours from distinct `attendance` sessions (schedule × date) in an optional date range; CSV export.
+- Staff self-appraisal portal page; 17 Vitest unit tests (`tests/unit/appraisals.test.ts`); retention entry (`staff-appraisals`, NAAC 2.4).
+
+#### What was built:
+- [x] `supabase/migrations/20260616040000_phase5e_appraisals.sql`
+- [x] `src/app/institutions/[id]/appraisals/page.tsx` — cycle overview → `AppraisalsOverview` (per-period stats, completion, New Cycle drawer, NAAC CSV)
+- [x] `src/app/institutions/[id]/appraisals/[appraisalId]/page.tsx` — review → `AppraisalReviewPanel` (activities + weighted scoring + feedback)
+- [x] `src/app/institutions/[id]/appraisals/workload/page.tsx` — `WorkloadTable` (planned vs actual hours, range filter, CSV)
+- [x] `src/actions/appraisals.ts` — createAppraisalCycle, getAppraisals/getAppraisal, activities CRUD, submitAppraisal, saveAppraisalRemarks, reviewAppraisal, getMyAppraisals, generateWorkloadReport
+- [x] `src/components/appraisals/AppraisalForm.tsx` — staff self-assessment (remarks + activity log + proof upload + submit)
+- [x] `src/app/staff-portal/appraisal/page.tsx` — staff portal entry; Sidebar links (admin People group + staff nav)
 
 #### Database:
 ```sql
@@ -387,16 +405,6 @@ CREATE TABLE staff_appraisal_activities (
   document_url     TEXT   -- Proof document via Supabase Storage
 );
 ```
-
-#### What to build:
-- [ ] `supabase/migrations/..._appraisals.sql`
-- [ ] `src/app/institutions/[id]/appraisals/page.tsx` — Appraisal cycles overview: list of appraisal periods and staff completion status
-- [ ] `src/app/institutions/[id]/appraisals/[appraisalId]/page.tsx` — Individual appraisal form: review scores + activity log
-- [ ] `src/app/institutions/[id]/appraisals/workload/page.tsx` — Workload report: hours taught per staff per week (from class_schedules + attendance data)
-- [ ] `src/actions/appraisals.ts` — createAppraisalCycle, submitAppraisal, reviewAppraisal, generateWorkloadReport
-- [ ] `src/components/appraisals/AppraisalForm.tsx` — Self-assessment form: scores + activities log with document upload
-- [ ] `src/components/appraisals/WorkloadTable.tsx` — Staff-wise teaching hours vs planned hours per week
-- [ ] Staff portal: `src/app/staff-portal/appraisal/page.tsx` — Staff fills self-appraisal, uploads activity proof documents
 
 #### Key features:
 - Self-appraisal: staff log their own activities (papers, FDPs, conferences, awards)
