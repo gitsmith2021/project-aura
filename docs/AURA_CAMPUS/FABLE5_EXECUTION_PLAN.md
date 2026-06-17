@@ -204,6 +204,7 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 | Indian Statutory Payroll (5C-sub) | Sonnet 4.6 | ✅ TDS (new/old regime FY 2024-25) + EPF + ESI; 3 DB tables + RLS; pure lib + 42 unit tests; admin dashboard (config panel, KPI strip, Run, CSV, Form 16 generator); staff tax-declaration portal; Sidebar links; dataRetention updated | `0ac0995` |
 | Alumni System & Panel (5D) | Opus 4.8 | ✅ alumni + alumni_announcements tables + RLS (private alumni_institution_ids helper); admin directory (stats, filters, CSV, Import Graduates, add/edit drawer) + batch announcements; teal alumni portal (dashboard, profile, directory); login+middleware alumni routing; 12 unit tests | `035d11a` |
 | Staff Appraisal & Workload (5E) | Opus 4.8 | ✅ staff_appraisals + staff_appraisal_activities + RLS (staff/admin/HOD-dept) + appraisal-docs bucket; admin cycle overview + review panel (weighted 50/30/20 scoring) + faculty workload report (planned vs attendance hours, CSV); staff self-appraisal portal with proof upload; 17 unit tests | `79f8199` |
+| Placement Cell & Career Services (5F) | Opus 4.8 | ✅ companies + placement_drives + placement_registrations + RLS; admin dashboard/company registry/drive pipeline (stage tracking + offer CTC + student notify)/NIRF statistics (dept-wise + CSV); eligibility-gated student registration with exclusivity block; 23 unit tests | `8a43dea` |
 | Curriculum & Syllabus | Opus/Sonnet | 🔲 Pending | — |
 | Exam Management | Opus/Sonnet | 🔲 Pending | — |
 | LMS Core | Opus/Sonnet | 🔲 Pending | — |

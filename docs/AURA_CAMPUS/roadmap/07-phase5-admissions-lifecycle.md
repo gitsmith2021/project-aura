@@ -419,7 +419,25 @@ CREATE TABLE staff_appraisal_activities (
 
 **Route:** `/institutions/[id]/placements`
 
+> **Status:** ✅ **Complete** (migration `20260616050000_phase5f_placements`, commit `8a43dea`).
+
 > Single most important module for college reputation and NIRF rankings. Tracks every placement drive from company onboarding to offer letters. Feeds NIRF Criterion 5.2 (Student Progression).
+
+#### ✅ COMPLETE — commit `8a43dea`
+- Tables `companies`, `placement_drives` (+ `is_exclusive`, `created_at`), `placement_registrations` (+ `notes`, `registered_at`) with RLS: institution members read drives/companies; students see + register their own; admins manage all in their institution.
+- Eligibility (`checkEligibility`): department enforced strictly (data we hold); `min_cgpa`/`no_backlogs` are advisory (students have no stored CGPA/backlog columns, so they only block when a value is known). Exclusivity blocks already-placed students from re-registering on exclusive drives.
+- Stage pipeline registered → shortlisted → interviewed → offered → placed (+ rejected). Stage change fires an in-app notification to the student (`type: "placement"`).
+- Statistics computed at query time from registrations + drives + departments → institution KPIs (placement %, avg/highest CTC over distinct placed students) + department-wise breakdown + NIRF CSV.
+- Student portal: eligibility-gated one-click register, live stage display; 23 Vitest unit tests; dataRetention entry (NIRF 5.2).
+
+#### What was built:
+- [x] `supabase/migrations/20260616050000_phase5f_placements.sql`
+- [x] `src/app/institutions/[id]/placements/page.tsx` → `PlacementDashboard` (+ `PlacementStatsCard`)
+- [x] `src/app/institutions/[id]/placements/drives/[driveId]/page.tsx` → `DriveDetailView` (registration pipeline + stage updates)
+- [x] `src/app/institutions/[id]/placements/companies/page.tsx` → `CompaniesManager`
+- [x] `src/app/institutions/[id]/placements/statistics/page.tsx` → `PlacementStatistics` (dept-wise + NIRF CSV)
+- [x] `src/actions/placements.ts` — companies/drives CRUD, getDriveRegistrations, updateStageStatus (+ notify), updateDriveStatus, getPlacementStats, getDrivesForStudent, registerForDrive
+- [x] Student portal: `src/app/student-portal/placements/page.tsx` → `StudentPlacementsView`; Sidebar links (admin + student nav)
 
 #### Database:
 ```sql
@@ -459,16 +477,6 @@ CREATE TABLE placement_registrations (
   UNIQUE(drive_id, student_id)
 );
 ```
-
-#### What to build:
-- [ ] `supabase/migrations/..._placements.sql`
-- [ ] `src/app/institutions/[id]/placements/page.tsx` — Placement cell dashboard: drives, stats, company list
-- [ ] `src/app/institutions/[id]/placements/drives/[driveId]/page.tsx` — Drive management: registrations, pipeline stages, results
-- [ ] `src/app/institutions/[id]/placements/companies/page.tsx` — Company registry with HR contacts
-- [ ] `src/app/institutions/[id]/placements/statistics/page.tsx` — Placement stats: % placed, avg CTC, highest package, dept-wise breakdown
-- [ ] `src/actions/placements.ts` — getDrives, registerStudent, updateStageStatus, getPlacementStats, exportNIRF
-- [ ] `src/components/placements/PlacementStatsCard.tsx` — KPI cards: total placed, avg package, highest package
-- [ ] Student portal: `src/app/student-portal/placements/page.tsx` — Upcoming drives, one-click register, track application status
 
 #### Key features:
 - Full pipeline: company → drive → registration → stage tracking → placed
