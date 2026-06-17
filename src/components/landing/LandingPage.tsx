@@ -5,9 +5,11 @@ import { SmoothScrollProvider } from "./SmoothScrollProvider";
 import { Navbar } from "./Navbar";
 import { HeroSection } from "./Hero/HeroSection";
 import { StatsSection } from "./Stats/StatsSection";
+import { TimetableSpotlight } from "./Spotlight/TimetableSpotlight";
 import { FeaturesSection } from "./Features/FeaturesSection";
 import { AccreditationSection } from "./Accreditation/AccreditationSection";
 import { ComparisonSection } from "./Comparison/ComparisonSection";
+import { InstitutionTypesSection } from "./Institutions/InstitutionTypesSection";
 import { PricingSection } from "./Pricing/PricingSection";
 import { TechStackSection } from "./TechStack/TechStackSection";
 import { CTASection } from "./CTA/CTASection";
@@ -56,11 +58,16 @@ export function LandingPage() {
         <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white overflow-x-hidden transition-colors duration-300">
           <Navbar isDark={isDark} onToggleDark={() => setIsDark(d => !d)} />
           <main>
+            {/* Storytelling flow: Hero → Trust → AI Timetable → Accreditation →
+                Why Switch → Core Features → Institution Types → Pricing →
+                Tech Stack → Final CTA */}
             <HeroSection />
             <StatsSection />
-            <FeaturesSection />
+            <TimetableSpotlight />
             <AccreditationSection />
             <ComparisonSection />
+            <FeaturesSection />
+            <InstitutionTypesSection />
             <PricingSection />
             <TechStackSection />
             <CTASection />

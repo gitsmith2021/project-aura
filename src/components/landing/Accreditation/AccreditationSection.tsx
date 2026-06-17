@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef } from "react";
-import { Award, CheckCircle2, Database, Shield } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { gsap, useGSAP, prefersReducedMotion } from "@/lib/gsap";
-import { ACCREDITATION } from "../data";
+import { ACCREDITATION, COMPLIANCE_FRAMEWORKS, ACCREDITATION_TOOLS } from "../data";
 
 export function AccreditationSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -29,40 +29,41 @@ export function AccreditationSection() {
     >
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
         <div className="naac-intro">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 mb-3">Compliance Built-In</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 mb-3">Accreditation &amp; Compliance</p>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-5 leading-tight text-slate-900 dark:text-white">
-            Accreditation-ready.
+            Built for
             <br />
-            <span className="bg-gradient-to-r from-violet-600 to-pink-500 dark:from-violet-400 dark:to-pink-400 bg-clip-text text-transparent">Out of the box.</span>
+            <span className="bg-gradient-to-r from-violet-600 to-pink-500 dark:from-violet-400 dark:to-pink-400 bg-clip-text text-transparent">Accreditation Excellence.</span>
           </h2>
           <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm mb-6">
-            AURA is designed around accreditation frameworks and ranking parameters from the ground up.
-            Every module captures evidence-ready structured data — no more manual exports, no spreadsheet cleanup the week before a site visit.
+            Accreditation shouldn&apos;t mean months of late nights before a site visit. AURA captures
+            evidence-ready, structured data through everyday workflows — so your IQAC team stays
+            audit-ready year-round and cuts accreditation effort to a fraction.
           </p>
-          <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
-            {[
-              "NAAC Criteria 1–7 fully mapped across all modules",
-              "NIRF ranking parameters covered end-to-end",
-              "NBA, ABET and other frameworks supported",
-              "One-click structured data export for submissions",
-            ].map(pt => (
-              <li key={pt} className="flex items-start gap-2">
-                <CheckCircle2 size={14} className="text-violet-500 mt-0.5 shrink-0" />
-                <span>{pt}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="flex flex-wrap gap-3 mt-6">
-            {[
-              { Icon: Shield,   label: "NAAC Criteria 1–7",  c: "bg-violet-100 dark:bg-violet-500/10 border-violet-200 dark:border-violet-500/30 text-violet-700 dark:text-violet-300" },
-              { Icon: Award,    label: "NIRF Rankings",       c: "bg-purple-100 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/30 text-purple-700 dark:text-purple-300" },
-              { Icon: Database, label: "Structured Evidence", c: "bg-indigo-100 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-300" },
-            ].map(b => (
-              <span key={b.label} className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-full text-xs font-semibold ${b.c}`}>
-                <b.Icon size={11} /> {b.label}
+
+          {/* Frameworks supported */}
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">Frameworks supported</p>
+          <div className="flex flex-wrap gap-2 mb-6">
+            {COMPLIANCE_FRAMEWORKS.map(f => (
+              <span key={f} className="px-3 py-1.5 border rounded-full text-xs font-bold bg-violet-100 dark:bg-violet-500/10 border-violet-200 dark:border-violet-500/30 text-violet-700 dark:text-violet-300">
+                {f}
               </span>
             ))}
           </div>
+
+          {/* Built-in accreditation tooling */}
+          <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+            {ACCREDITATION_TOOLS.map(pt => (
+              <li key={pt} className="flex items-start gap-2">
+                <CheckCircle2 size={14} className="text-violet-500 mt-0.5 shrink-0" />
+                <span><span className="font-semibold text-slate-700 dark:text-slate-300">{pt}</span></span>
+              </li>
+            ))}
+            <li className="flex items-start gap-2">
+              <CheckCircle2 size={14} className="text-violet-500 mt-0.5 shrink-0" />
+              <span>One-click structured data export for every submission</span>
+            </li>
+          </ul>
         </div>
 
         <div className="naac-rows space-y-2.5">

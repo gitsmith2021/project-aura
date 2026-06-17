@@ -5,40 +5,37 @@ import { CheckCircle2 } from "lucide-react";
 import { gsap, useGSAP, prefersReducedMotion } from "@/lib/gsap";
 import { useLenis } from "../SmoothScrollProvider";
 
-// Exact tiers from the current page — pricing is not invented here.
+// Fixed public pricing.
 const TIERS = [
   {
-    name: "Starter",
-    price: "₹3,000 – ₹8,000",
+    name: "Essential",
+    price: "₹9,999",
     period: "/ month",
-    audience: "Coaching centres, small institutes",
-    size: "Up to 500 students",
-    features: ["Attendance", "Fee Collection", "Marks & Results", "Timetable", "Student Portal"],
+    audience: "Best for institutions up to 1,000 students",
+    features: ["Admissions", "Attendance", "Timetable", "Fee Management", "Student Portal", "Staff Portal"],
     checkColor: "text-teal-500",
     highlight: false,
   },
   {
-    name: "Growth",
-    price: "₹15,000 – ₹40,000",
+    name: "Professional",
+    price: "₹24,999",
     period: "/ month",
-    audience: "Colleges & autonomous institutions",
-    size: "500 – 3,000 students",
+    audience: "Best for institutions up to 5,000 students",
     features: [
-      "Everything in Starter", "NAAC Exports", "CIA Ledger", "Hall Tickets",
-      "HR & Payroll", "Accreditation Reports", "Guest Lectures", "Lesson Plans",
+      "Everything in Essential", "Library", "Hostel", "Payroll", "Recruitment",
+      "Inventory", "Events", "Sports", "Medical", "Accreditation Tools",
     ],
     checkColor: "text-violet-500",
     highlight: true,
   },
   {
     name: "Enterprise",
-    price: "Custom pricing",
-    period: " ",
-    audience: "Universities & multi-campus chains",
-    size: "3,000+ students",
+    price: "Custom Pricing",
+    period: " ",
+    audience: "Universities, autonomous & multi-campus groups",
     features: [
-      "Everything in Growth", "Multi-campus", "NAAC SSR Builder",
-      "Dedicated Support", "SLA Guarantee", "Custom Integrations",
+      "Everything in Professional", "Multi-campus support", "SSR Builder",
+      "API Access", "Dedicated Support", "SLA", "Custom Integrations",
     ],
     checkColor: "text-teal-500",
     highlight: false,
@@ -103,9 +100,8 @@ export function PricingSection() {
                 {tier.name}
               </p>
               <p className="text-2xl font-black text-slate-900 dark:text-white mb-1">{tier.price}</p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-2">{tier.period}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{tier.audience}</p>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-5">{tier.size}</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">{tier.period}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">{tier.audience}</p>
               <ul className="space-y-2 mb-7 flex-1">
                 {tier.features.map(f => (
                   <li key={f} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
@@ -124,7 +120,7 @@ export function PricingSection() {
               ) : tier.highlight ? (
                 <button type="button" onClick={() => scrollToId("hero")}
                   className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold transition-all hover:scale-[1.02] shadow-md shadow-violet-500/20 border border-violet-500">
-                  Schedule a Demo
+                  Schedule Demo
                 </button>
               ) : (
                 <button type="button" onClick={() => scrollToId("hero")}
@@ -136,7 +132,10 @@ export function PricingSection() {
           ))}
         </div>
 
-        <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-8">
+        <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-8 max-w-2xl mx-auto">
+          Pricing may vary based on student strength, deployment model, and support requirements.
+        </p>
+        <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-2">
           No implementation fees. No 6-month setup. Cancel anytime. Prices in INR + GST.
         </p>
       </div>

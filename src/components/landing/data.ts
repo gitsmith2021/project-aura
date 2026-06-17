@@ -1,7 +1,8 @@
 import {
   GraduationCap, Users, Calendar, ClipboardList, Wallet, BarChart2,
   Shield, Award, Briefcase, Mic2, BookText, Library, BadgePercent,
-  Activity, Database, Smartphone, type LucideIcon,
+  Activity, Database, Smartphone, FlaskConical, Landmark, Building2,
+  School, Cpu, type LucideIcon,
 } from "lucide-react";
 
 export type DemoFormData = {
@@ -121,6 +122,42 @@ export const ACCREDITATION = [
   { code: "5.2", label: "Placement & Industrial Training",         module: "Internship + Ranking Export" },
   { code: "6.4", label: "Finance & Budget Management",             module: "Finance & Fee Module" },
   { code: "7.1", label: "Institutional Values & Best Practices",   module: "Reports & Compliance" },
+];
+
+/** Task 1 — AI Timetable Engine flagship spotlight. */
+export const TIMETABLE_BENEFITS = [
+  "Faculty availability handling",
+  "Room allocation",
+  "Conflict detection",
+  "Workload balancing",
+  "Automated optimization",
+  "One-click publishing",
+];
+
+/** Task 2 — accreditation frameworks + tooling highlighted in the Accreditation section. */
+export const COMPLIANCE_FRAMEWORKS = ["NAAC", "NIRF", "AISHE", "OBE", "CBCS"];
+export const ACCREDITATION_TOOLS = [
+  "SSR Builder", "CO/PO Mapping", "CIA Ledger", "Outcome Attainment", "Accreditation Reports",
+];
+
+/** Task 3 — "Why institutions switch": pain → outcome transformations (not a module list). */
+export const TRANSFORMATIONS: { from: string; to: string }[] = [
+  { from: "Manual timetable creation",        to: "AI-powered timetable generation" },
+  { from: "NAAC documentation chaos",         to: "Built-in accreditation workflows" },
+  { from: "Multiple disconnected systems",    to: "One unified platform" },
+  { from: "Spreadsheet-driven administration", to: "Real-time dashboards" },
+  { from: "Students standing in queues",      to: "Self-service portals" },
+  { from: "Manual fee tracking",              to: "Automated fee management" },
+];
+
+/** Task 5 — institution types AURA Campus is built for. */
+export const INSTITUTION_TYPES: { Icon: LucideIcon; label: string }[] = [
+  { Icon: BookText,      label: "Arts & Science Colleges" },
+  { Icon: Cpu,           label: "Engineering Colleges" },
+  { Icon: Landmark,      label: "Autonomous Colleges" },
+  { Icon: Building2,     label: "Universities" },
+  { Icon: FlaskConical,  label: "Polytechnic Colleges" },
+  { Icon: School,        label: "Teacher Education Institutions" },
 ];
 
 export const COMPARE: [string, string, string][] = [
