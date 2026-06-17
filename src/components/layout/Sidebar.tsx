@@ -53,6 +53,7 @@ const STAFF_NAV = [
   { key: "attendance", href: "/staff-portal/attendance", label: "Attendance",  Icon: ClipboardCheck },
   { key: "cia",        href: "/staff-portal/cia",        label: "CIA Marks",   Icon: ClipboardList },
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
+  { key: "appraisal",  href: "/staff-portal/appraisal",  label: "Appraisal",   Icon: ClipboardCheck },
   { key: "salary",          href: "/staff-portal/salary",           label: "Salary",          Icon: Wallet },
   { key: "tax-declaration", href: "/staff-portal/tax-declaration", label: "Tax Declaration", Icon: FileText },
   { key: "privacy",         href: "/staff-portal/privacy",         label: "Privacy",         Icon: ShieldCheck },
@@ -377,6 +378,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const meritListHref      = slug ? `/institutions/${slug}/admissions/crm/merit-list` : "/institutions";
   const recruitmentHref    = slug ? `/institutions/${slug}/recruitment`       : "/institutions";
   const alumniHref         = slug ? `/institutions/${slug}/alumni`            : "/institutions";
+  const appraisalsHref     = slug ? `/institutions/${slug}/appraisals`        : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -529,6 +531,10 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                 active={isItemActive("staff", "/users/staff")} />
               <SubLink href="/users/students" icon={<GraduationCap size={14} />} label="Students"
                 active={isItemActive("students", "/users/students")} />
+              {role !== "hod" && (
+                <SubLink href={appraisalsHref} icon={<ClipboardCheck size={14} />} label="Appraisals"
+                  active={pathname.includes("/appraisals")} />
+              )}
             </NavGroup>
 
             {/* GROUP: Academics */}

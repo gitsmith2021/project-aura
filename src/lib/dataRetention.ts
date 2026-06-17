@@ -110,6 +110,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Institutional announcements (minimal personal data — only the poster's id). Auto-expire via expires_at; retained briefly for reference",
   },
   {
+    key: "staff-appraisals",
+    category: "Staff appraisal records (self-appraisals, scores & activity proofs)",
+    tables: ["staff_appraisals", "staff_appraisal_activities"],
+    period: "7 years after the appraisal period",
+    years: 7,
+    basis: "NAAC Criterion 2.4 (faculty performance evidence) & UGC career-advancement / promotion record-keeping",
+  },
+  {
     key: "alumni",
     category: "Alumni records (graduate directory & batch announcements)",
     tables: ["alumni", "alumni_announcements"],
