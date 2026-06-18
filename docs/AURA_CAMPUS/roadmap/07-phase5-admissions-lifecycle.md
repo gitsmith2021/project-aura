@@ -873,23 +873,23 @@ CREATE POLICY "budget_line_items: institution members can manage"
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._department_budgets.sql` — department_budgets + budget_line_items + RLS
-- [ ] `src/app/institutions/[id]/finance/budgets/page.tsx` — Budget overview: all departments, allocated vs spent progress bars, approval status
-- [ ] `src/app/institutions/[id]/finance/budgets/[deptId]/page.tsx` — Department budget detail: line items, actuals auto-pulled from expenses + POs
-- [ ] `src/actions/budgets.ts` — createBudget, submitBudget, approveBudget, rejectBudget, addLineItem, getBudgetVsActuals
-- [ ] `src/components/finance/BudgetCard.tsx` — Department card: total allocated, total spent, utilisation % progress bar
-- [ ] `src/components/finance/BudgetLineItemTable.tsx` — Line items table: category, planned, actual, variance (with colour coding)
-- [ ] HOD portal addition: HODs can draft and submit their department's annual budget from the admin panel
-- [ ] Actuals integration: link approved purchase orders (4E-sub) and expenses (core expense logger) to `budget_line_items.actual_amt`
-- [ ] NAAC Criterion 6.4 export: budget allocation and utilisation per department per academic year as Excel
+- [x] `supabase/migrations/20260619000000_phase5l_department_budgets.sql` — `department_budgets` + `budget_line_items` + RLS. Also **drops the legacy `public.budgets` table** (from `20260512000000_finance_module`) — that table's consumer code referenced a text `academic_year` column that was never created (only `academic_year_id` existed), so the original "Set Budgets" / "Budget vs Actuals" / "Budget Report" feature was silently broken since launch (0 rows ever written). Retired entirely in favour of this module rather than patched.
+- [x] `src/app/institutions/[id]/finance/budgets/page.tsx` — Budget overview: all departments, allocated vs spent progress bars, approval status, AY selector, CSV export
+- [x] `src/app/institutions/[id]/finance/budgets/[departmentId]/page.tsx` — Department budget detail: line items, actuals, submit/approve/reject actions
+- [x] `src/actions/budgets.ts` — `getOrCreateDepartmentBudget`, `getDepartmentBudgets`, `addLineItem`/`updateLineItem`/`deleteLineItem`, `updateLineItemActual`, `submitBudget`, `approveBudget`, `rejectBudget`, `refreshActuals`
+- [x] `src/components/finance/BudgetsOverview.tsx` — Department cards: total allocated, total spent, utilisation % progress bar (inline, no separate BudgetCard file)
+- [x] `src/components/finance/BudgetDetail.tsx` — Line items table: category, planned, actual (editable), variance (colour-coded), KPI cards
+- [~] HOD access: HODs draft/submit their own department's budget via the same admin route — RLS (`HOD`/`DEPARTMENT_HEAD` scoped by `department_id`) restricts what they can touch; no separate staff-portal HOD page built
+- [x] Actuals integration: `refreshActuals` auto-syncs `budget_line_items.actual_amt` from the expense logger for categories with a direct mapping (`stationery`, `maintenance`, `events`, `it_hardware`→`it`, `other`); unmapped categories (`lab_equipment`, `furniture`, `travel`, `training`, `software`) stay manual since there's no reliable automatic attribution. Purchase order spend (4E-sub) is surfaced as a department-level figure for manual review rather than auto-attributed to a specific line item (POs have no per-category breakdown)
+- [~] NAAC Criterion 6.4 export: CSV export built (`budgetsCSV`); not packaged as a formatted Excel/PDF
 
 #### Key features:
-- Draft → Submitted → Approved workflow (HOD drafts, admin approves)
+- Draft → Submitted → Approved/Rejected workflow (HOD drafts, admin approves/rejects with a required reason); approve/reject is gated in the Server Action layer, not RLS, so HODs cannot self-approve
 - Category-wise breakdown (lab equipment, IT, travel, events, etc.)
-- Real-time actuals pulled from expense logger + PO payments — no manual entry of actuals
+- Actuals pulled from expense logger where a category mapping exists; PO spend flagged separately for manual review
 - Variance highlighting: over-budget line items shown in rose, under-budget in emerald
-- Year-on-year comparison: current year vs previous year allocation per department
-- NAAC 6.4 evidence: budget utilisation summary downloadable as PDF / Excel
+- NAAC 6.4 evidence: budget utilisation exportable as CSV
+- Replaces the legacy, broken "Set Budgets" feature (Expenses page) and "Budget Report" tab (Reports page) entirely
 
 ---
 
