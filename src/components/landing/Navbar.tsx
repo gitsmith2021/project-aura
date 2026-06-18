@@ -90,6 +90,16 @@ export function Navbar({ isDark, onToggleDark }: NavbarProps) {
               {l.label}
             </button>
           ))}
+
+          {/* Full-width, labelled theme toggle — a reliable tap target on mobile
+              (the icon-only toggle in the top bar is small and easy to miss). */}
+          <button type="button" onClick={onToggleDark}
+            className="flex w-full items-center justify-between py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors border-b border-slate-100 dark:border-slate-800"
+            aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}>
+            <span>{isDark ? "Light mode" : "Dark mode"}</span>
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
           <div className="pt-3">
             <Link href="/login" onClick={() => setMenuOpen(false)}
               className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-white bg-violet-600 hover:bg-violet-500 rounded-full transition-colors">
