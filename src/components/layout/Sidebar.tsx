@@ -380,6 +380,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const alumniHref         = slug ? `/institutions/${slug}/alumni`            : "/institutions";
   const appraisalsHref     = slug ? `/institutions/${slug}/appraisals`        : "/institutions";
   const placementsHref     = slug ? `/institutions/${slug}/placements`        : "/institutions";
+  const scholarshipsHref   = slug ? `/institutions/${slug}/scholarships`      : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -629,6 +630,17 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                 icon={<Briefcase size={18} />}
                 label="Placements"
                 active={pathname.includes("/placements")}
+                isCollapsed={isCollapsed}
+              />
+            )}
+
+            {/* Scholarships (admin only) — Phase 5G */}
+            {role !== "hod" && (
+              <SidebarLink
+                href={scholarshipsHref}
+                icon={<Award size={18} />}
+                label="Scholarships"
+                active={pathname.includes("/scholarships")}
                 isCollapsed={isCollapsed}
               />
             )}

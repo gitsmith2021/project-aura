@@ -110,6 +110,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Institutional announcements (minimal personal data — only the poster's id). Auto-expire via expires_at; retained briefly for reference",
   },
   {
+    key: "scholarships",
+    category: "Scholarship records (schemes, applications & proof documents)",
+    tables: ["scholarship_schemes", "scholarship_applications"],
+    period: "8 years after disbursement",
+    years: 8,
+    basis: "Government scholarship audit requirements (central/state scheme reconciliation) & financial-aid record-keeping",
+  },
+  {
     key: "placements",
     category: "Placement records (companies, drives & student registrations)",
     tables: ["companies", "placement_drives", "placement_registrations"],

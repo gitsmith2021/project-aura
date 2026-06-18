@@ -87,6 +87,7 @@ export function StudentPortalShell({
     { key: "attendance",   href: "/student-portal/attendance",   label: "Attendance",   Icon: ClipboardCheck },
     { key: "internships",  href: "/student-portal/internships",  label: "Internships",  Icon: Briefcase },
     { key: "placements",   href: "/student-portal/placements",   label: "Placements",   Icon: Briefcase },
+    { key: "scholarships", href: "/student-portal/scholarships", label: "Scholarships", Icon: Award },
     { key: "fees",         href: "/student-portal/fees",         label: "Fees",         Icon: CreditCard },
     { key: "privacy",      href: "/student-portal/privacy",      label: "Privacy",      Icon: ShieldCheck },
   ];
