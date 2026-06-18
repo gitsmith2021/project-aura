@@ -491,7 +491,25 @@ CREATE TABLE placement_registrations (
 
 **Route:** `/institutions/[id]/scholarships`
 
+> **Status:** ✅ **Complete** (migration `20260616060000_phase5g_scholarships`, commit `ebd5caf`).
+
 > Most Indian colleges manage multiple government schemes — SC/ST, OBC, merit, minority, sports quota scholarships. Manual tracking is error-prone. Auto-eligibility checks and fee integration save hours of admin work.
+
+#### ✅ COMPLETE — commit `ebd5caf`
+- Tables `scholarship_schemes` (8 scheme types + eligibility JSONB) + `scholarship_applications` (applied → verified → approved → rejected → disbursed) with RLS: members read schemes; students read/apply their own; admins manage all. `scholarship-docs` public bucket for proof uploads.
+- **Eligibility** (`checkEligibility`): category enforced strictly (students hold `category`); min-marks and income-limit are advisory (no stored marks/income columns → only block when the value is known, verified from proof docs at the verification step).
+- **Fee integration:** disbursing creates an **approved `fee_concession`** (type mapped from the scheme via `concessionTypeForScheme` — sports→sports_quota, merit→merit, else other) so the amount is deducted from the student's dues; audited (Dev Rule 13) and an in-app notification is sent (`type: "scholarship"`).
+- Student portal: eligibility-gated apply with proof-document upload + status/disbursement tracking. `EligibilityChecker` component reused in admin + student views; 13 Vitest tests; dataRetention entry (8-yr govt audit).
+- **Deferred:** WhatsApp notification on approval/disbursement (Phase 3C SMS/WhatsApp remains deferred platform-wide) — in-app notification is wired.
+
+#### What was built:
+- [x] `supabase/migrations/20260616060000_phase5g_scholarships.sql`
+- [x] `src/app/institutions/[id]/scholarships/page.tsx` → `ScholarshipsDashboard` (+ `SchemeDrawer`)
+- [x] `src/app/institutions/[id]/scholarships/[schemeId]/page.tsx` → `SchemeApplications` (verify/approve/disburse)
+- [x] `src/actions/scholarships.ts` — schemes CRUD, getApplications/getSchemeApplications, updateApplicationStatus, disburseScholarship (+ fee_concession), getAvailableSchemes, applyForScholarship, getMyScholarshipApplications
+- [x] `src/components/scholarships/EligibilityChecker.tsx`
+- [x] Student portal: `src/app/student-portal/scholarships/page.tsx` → `StudentScholarshipsView`; Sidebar links (admin + student nav)
+- [x] Fee integration: approved disbursement → approved `fee_concession` reduces dues
 
 #### Database:
 ```sql
@@ -524,15 +542,6 @@ CREATE TABLE scholarship_applications (
   UNIQUE(scheme_id, student_id, academic_year_id)
 );
 ```
-
-#### What to build:
-- [ ] `supabase/migrations/..._scholarships.sql`
-- [ ] `src/app/institutions/[id]/scholarships/page.tsx` — Scholarship schemes registry + applications dashboard
-- [ ] `src/app/institutions/[id]/scholarships/[schemeId]/page.tsx` — Applications per scheme: verify, approve, disburse
-- [ ] `src/actions/scholarships.ts` — getSchemes, applyForScholarship, approveScholarship, disburseScholarship
-- [ ] `src/components/scholarships/EligibilityChecker.tsx` — Auto-check student profile against scheme criteria
-- [ ] Student portal: `src/app/student-portal/scholarships/page.tsx` — Available schemes, apply, track disbursement status
-- [ ] Fee integration: approved scholarship amount auto-deducted from student fee dues (finance module)
 
 #### Key features:
 - Auto-eligibility check against student profile (category, marks, income limit)
