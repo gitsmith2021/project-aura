@@ -756,10 +756,22 @@ CREATE POLICY "staff_attendance: institution members can manage"
 
 **Route:** `/institutions/[id]/staff/career`
 
+> **Status:** ✅ **Complete** (migration `20260618000000_phase5k_staff_career`, commit `29752a9`).
+
 > Staff join, get promoted, receive increments, transfer departments, and eventually resign or
 > retire. Without a lifecycle log there is no seniority data for salary increments, no paper
 > trail for promotions, and no formal offboarding to trigger the Relieving Letter in the
 > Certificate module (Step 6C). This module provides the complete audit trail.
+
+#### ✅ COMPLETE — commit `29752a9`
+- Table `staff_career_events` + RLS (staff read own via `profile_id`; admins manage all; HODs scoped to their department's staff — same `private.get_user_authorizations()` pattern as Phase 5J) + `staff-career-docs` public storage bucket for scanned order/letter uploads.
+- **Increment workflow:** mirrors `createSalaryStructure`'s versioned pattern — deactivates the staff member's current active `salary_structures` row (`effective_to` = event date) and inserts a new one carrying forward HRA/TA/DA/deductions with the updated `basic_salary`. Errors clearly if no active structure exists yet (admin must create one in Salaries first — `net_salary` is a generated column and cannot be set directly).
+- **Promotion** updates `staff.designation`; **transfer** updates `staff.department_id` (auto-resolves the new department's name for the `new_value` display field); **resignation/retirement/termination** set `staff.is_active = false`. All four paths call `logAudit()` (Dev Rule 13 extended to cover `staff` designation/department_id/is_active and `salary_structures`).
+- `previous_value`/`new_value` auto-derive from the staff record's prior state when not explicitly supplied (e.g. previous designation, prior department name, prior salary formatted in `en-IN`).
+- Admin: career events log (`CareerEventsLog`) — stat cards (total/promotions/increments/offboarded), event-type + search filters, NAAC CSV export, "Record Event" drawer (staff picker, event-type-conditional fields, document upload). Per-staff timeline page (`StaffCareerDetail`) — service-years badge, quick Resignation/Retirement confirm-dialog shortcuts, vertical `CareerTimeline`.
+- Staff portal: read-only `/staff-portal/career` ("My Career") — own joining date, designation, department, service years, and full event timeline.
+- Pure helpers `src/lib/staffCareer.ts` (event types/labels/colors, `serviceYears()`, `careerStats`, `filterCareerEvents`, `careerEventsCSV`); 23 unit tests. `dataRetention.ts` entry (permanent — NAAC 2.4 faculty stability evidence).
+- **Deferred:** auto-creating a Relieving Letter request on resignation/retirement — the Certificate module (Step 6C) does not exist yet; will be wired when 6C ships. Appraisal-triggered increment/promotion (HOD shortcut from a completed 5E review) also deferred — `recordCareerEvent` is ready to be called from that flow once prioritized.
 
 #### Database:
 ```sql
@@ -788,16 +800,16 @@ CREATE POLICY "staff_career_events: institution members can manage"
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._staff_career_events.sql`
-- [ ] `src/app/institutions/[id]/staff/career/page.tsx` — Career events log: filter by event_type, department, date range
-- [ ] `src/app/institutions/[id]/staff/career/[staffId]/page.tsx` — Individual staff career timeline: chronological events from joining to present
-- [ ] `src/actions/staffCareer.ts` — recordCareerEvent, getCareerTimeline, processResignation, processRetirement, getServiceYears
-- [ ] `src/components/staff/CareerTimeline.tsx` — Vertical timeline: event type badge, old→new value, effective date, document link
-- [ ] Increment workflow: recording an `increment` event auto-updates `staff.salary` to the new value — no separate manual edit needed
-- [ ] Resignation / Retirement workflow: sets `staff.is_active = false`, auto-creates a Relieving Letter request in the Certificate module (Step 6C)
-- [ ] Staff portal: `src/app/staff-portal/career/page.tsx` — Staff views their own career history (joining date, confirmations, promotions) — read-only
-- [ ] Appraisal integration (Step 5E): HOD can trigger an increment or promotion career event directly from a completed appraisal review
-- [ ] Seniority calculation: derive years of service from the `joining` event for salary increment eligibility
+- [x] `supabase/migrations/20260618000000_phase5k_staff_career.sql`
+- [x] `src/app/institutions/[id]/staff/career/page.tsx` — Career events log: filter by event_type + search; department filter available server-side via `getCareerEvents`
+- [x] `src/app/institutions/[id]/staff/career/[staffId]/page.tsx` — Individual staff career timeline: chronological events from joining to present
+- [x] `src/actions/staffCareer.ts` — recordCareerEvent, getCareerTimeline, getCareerEvents, getMyCareerTimeline, processResignation, processRetirement, getServiceYears
+- [x] `src/components/staff/CareerTimeline.tsx` — Vertical timeline: event type badge, old→new value, effective date, document link
+- [x] Increment workflow: recording an `increment` event creates a new `salary_structures` row (no `staff.salary` column exists — salary lives in `salary_structures`, see commit note above) — no separate manual edit needed
+- [~] Resignation / Retirement workflow: sets `staff.is_active = false`; auto-creating a Relieving Letter request deferred — Certificate module (Step 6C) doesn't exist yet
+- [x] Staff portal: `src/app/staff-portal/career/page.tsx` — Staff views their own career history (joining date, confirmations, promotions) — read-only
+- [~] Appraisal integration (Step 5E): deferred — `recordCareerEvent` is ready to be called from a completed appraisal review once prioritized
+- [x] Seniority calculation: `serviceYears()` derives years of service from `staff.joining_date`, shown on both admin and staff-portal views
 
 #### Key features:
 - Full audit trail: every career change recorded with effective date, before/after values, and document reference number
