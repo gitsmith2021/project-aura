@@ -388,6 +388,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const disciplinaryHref   = slug ? `/institutions/${slug}/disciplinary`      : "/institutions";
   const researchHref       = slug ? `/institutions/${slug}/research`          : "/institutions";
   const staffAttendanceHref = slug ? `/institutions/${slug}/staff-attendance`  : "/institutions";
+  const parentsHref        = slug ? `/institutions/${slug}/parents`           : "/institutions";
   const staffCareerHref     = slug ? `/institutions/${slug}/staff/career`      : "/institutions";
 
   const deptId = userAuth?.department_id;
@@ -552,6 +553,10 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               {role !== "hod" && (
                 <SubLink href={staffCareerHref} icon={<UserCog size={14} />} label="Career Lifecycle"
                   active={pathname.includes("/staff/career")} />
+              )}
+              {role !== "hod" && (
+                <SubLink href={parentsHref} icon={<Users size={14} />} label="Parents"
+                  active={pathname.includes("/parents")} />
               )}
             </NavGroup>
 

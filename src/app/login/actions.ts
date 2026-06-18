@@ -41,6 +41,24 @@ export async function login(formData: FormData) {
     redirect("/alumni-portal");
   }
 
+  // ── Parents route to the parent portal ───────────────────────────────────
+  const { data: parentRow } = await supabase
+    .from("parents")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (parentRow) {
+    const cookieOpts = {
+      path: "/", maxAge: 60 * 60 * 24 * 7, sameSite: "lax" as const,
+      secure: process.env.NODE_ENV === "production",
+    };
+    cookieStore.set("aura-role", "parent", { ...cookieOpts, httpOnly: true });
+    cookieStore.set("aura-role-label", "Parent", { ...cookieOpts, httpOnly: false });
+    revalidatePath("/", "layout");
+    redirect("/parent-portal");
+  }
+
   // ── Determine role: HOD/Admin → Staff → Student ──────────────────────────
   const { data: memberRow } = await supabase
     .from("institution_members")

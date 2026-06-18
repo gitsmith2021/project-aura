@@ -23,7 +23,8 @@ const isPublicPrefix = (p: string) => PUBLIC_PREFIXES.some((pre) => p === pre ||
 const homePathFor = (r?: string) =>
   r === "staff" ? "/staff-portal" :
   r === "student" ? "/student-portal" :
-  r === "alumni" ? "/alumni-portal" : "/";
+  r === "alumni" ? "/alumni-portal" :
+  r === "parent" ? "/parent-portal" : "/";
 
 export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -90,6 +91,7 @@ export async function updateSession(request: NextRequest) {
   const isAdminViewStudent  = pathname.startsWith("/student-portal/view");
   const isStudentPortal     = pathname.startsWith("/student-portal") && !isAdminViewStudent;
   const isAlumniPortal      = pathname.startsWith("/alumni-portal");
+  const isParentPortal      = pathname.startsWith("/parent-portal");
 
   // ── Unauthenticated ───────────────────────────────────────────────────────
   if (!user) {
@@ -104,17 +106,22 @@ export async function updateSession(request: NextRequest) {
 
   // ── Authenticated: determine role ─────────────────────────────────────────
   // Read the cached cookie set at login (avoids a DB query on every request)
-  let role = request.cookies.get("aura-role")?.value as "staff" | "admin" | "student" | "hod" | "alumni" | undefined;
+  let role = request.cookies.get("aura-role")?.value as "staff" | "admin" | "student" | "hod" | "alumni" | "parent" | undefined;
 
   if (!role) {
     // Cookie missing — query once and cache it.
-    // Alumni take precedence: a graduated student keeps their student row, but an
-    // active alumni record routes them to the alumni portal.
+    // Alumni & parents take precedence (they may not have an institution_members row).
     const { data: alumnusRow } = await supabase
       .from("alumni")
       .select("id")
       .eq("profile_id", user.id)
       .eq("is_active", true)
+      .maybeSingle();
+
+    const { data: parentRow } = await supabase
+      .from("parents")
+      .select("id")
+      .eq("user_id", user.id)
       .maybeSingle();
 
     const { data: memberRow } = await supabase
@@ -128,6 +135,9 @@ export async function updateSession(request: NextRequest) {
     if (alumnusRow) {
       role = "alumni";
       memberRole = "Alumnus";
+    } else if (parentRow) {
+      role = "parent";
+      memberRole = "Parent";
     } else if (memberRow) {
       // PRINCIPAL is institution-wide leadership → same "admin" access tier as
       // INST_ADMIN (the DB normalizes it too); its distinct identity is carried
@@ -226,6 +236,18 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
   if (role !== "alumni" && isAlumniPortal) {
+    const url = request.nextUrl.clone();
+    url.pathname = homePathFor(role);
+    return NextResponse.redirect(url);
+  }
+
+  // Parents must stay inside /parent-portal; everyone else is kept out of it.
+  if (role === "parent" && !isParentPortal) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/parent-portal";
+    return NextResponse.redirect(url);
+  }
+  if (role !== "parent" && isParentPortal) {
     const url = request.nextUrl.clone();
     url.pathname = homePathFor(role);
     return NextResponse.redirect(url);

@@ -110,6 +110,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Institutional announcements (minimal personal data — only the poster's id). Auto-expire via expires_at; retained briefly for reference",
   },
   {
+    key: "parents",
+    category: "Parent accounts & parent-student links",
+    tables: ["parents", "parent_student_links"],
+    period: "While the linked child is enrolled; erased on approved erasure request",
+    years: null,
+    basis: "Parent/guardian contact for academic communication and fee notices; DPDP right to erasure applies",
+  },
+  {
     key: "staff-attendance",
     category: "Staff daily attendance records",
     tables: ["staff_attendance"],
