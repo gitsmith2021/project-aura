@@ -19,6 +19,7 @@ const FINANCE_SUB = [
   { key: "demands",     label: "Fee Demands",     Icon: Receipt,        href: (id: string) => `/institutions/${id}/finance/demands` },
   { key: "payments",    label: "All Payments",    Icon: CreditCard,     href: (id: string) => `/institutions/${id}/finance/fees/payments` },
   { key: "concessions", label: "Concessions",     Icon: BadgePercent,   href: (id: string) => `/institutions/${id}/finance/concessions` },
+  { key: "budgets",     label: "Dept. Budgets",   Icon: Wallet,         href: (id: string) => `/institutions/${id}/finance/budgets` },
   { key: "salary",      label: "Salaries",        Icon: Users,          href: (id: string) => `/institutions/${id}/finance/salary` },
   { key: "statutory",   label: "Statutory",       Icon: ShieldAlert,    href: (id: string) => `/institutions/${id}/finance/payroll/statutory` },
   { key: "reports",     label: "Reports",         Icon: BarChart2,      href: (id: string) => `/institutions/${id}/finance/reports` },

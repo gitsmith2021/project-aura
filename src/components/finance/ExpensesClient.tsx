@@ -4,7 +4,7 @@ import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus, Search, Filter, Paperclip, Pencil, Trash2,
-  ChevronLeft, ChevronRight, AlertTriangle, Target,
+  ChevronLeft, ChevronRight,
   Zap, Wrench, ShoppingBag, Calendar, FileText, Building, Monitor, Package,
   type LucideIcon,
 } from "lucide-react";
@@ -12,11 +12,9 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { LogExpenseDrawer }    from "@/components/finance/LogExpenseDrawer";
 import { EditExpenseDrawer }   from "@/components/finance/EditExpenseDrawer";
 import { DeleteExpenseDialog } from "@/components/finance/DeleteExpenseDialog";
-import { BudgetSetupModal }    from "@/components/finance/BudgetSetupModal";
-import { getExpenses, getBudgetVsActuals, getBudgets } from "@/actions/expenses";
+import { getExpenses } from "@/actions/expenses";
 import type {
   Expense, ExpenseCategory, ExpensePaymentMode, ExpenseSummary,
-  Budget, BudgetVsActual,
 } from "@/types/finance";
 
 // ── Category config ───────────────────────────────────────────────────────────
@@ -66,10 +64,7 @@ type Props = {
   initialTotal:         number;
   summary:              ExpenseSummary;
   departments:          { id: string; name: string }[];
-  initialBudgets:       Budget[];
-  initialBudgetVsActuals: BudgetVsActual[];
   currentMonth:         string;
-  currentAY:            string;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -80,16 +75,13 @@ export function ExpensesClient({
   initialTotal,
   summary,
   departments,
-  initialBudgets,
-  initialBudgetVsActuals,
   currentMonth,
-  currentAY,
 }: Props) {
   const router = useRouter();
   const [, startTransition] = useTransition();
 
   // ── Tab ─────────────────────────────────────────────────────────────────
-  const [tab, setTab] = useState<"list" | "byCategory" | "budget">("list");
+  const [tab, setTab] = useState<"list" | "byCategory">("list");
 
   // ── Tab 1: All Expenses ─────────────────────────────────────────────────
   const [expenses,  setExpenses]  = useState(initialExpenses);
@@ -103,13 +95,6 @@ export function ExpensesClient({
   const [logOpen,   setLogOpen]   = useState(false);
   const [editTarget, setEditTarget]   = useState<Expense | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Expense | null>(null);
-
-  // ── Tab 3: Budget ───────────────────────────────────────────────────────
-  const [budgets,       setBudgets]       = useState(initialBudgets);
-  const [bva,           setBva]           = useState(initialBudgetVsActuals);
-  const [ay,            setAy]            = useState(currentAY);
-  const [budgetOpen,    setBudgetOpen]    = useState(false);
-  const [fetchingBva,   setFetchingBva]   = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -143,24 +128,10 @@ export function ExpensesClient({
     startTransition(() => fetchExpenses(p, catFilter, deptFilter, month, search));
   }
 
-  async function fetchBva(academicYear: string) {
-    setFetchingBva(true);
-    const [bvaRes, budRes] = await Promise.all([
-      getBudgetVsActuals(institutionId, academicYear),
-      getBudgets(institutionId, academicYear),
-    ]);
-    setFetchingBva(false);
-    if (bvaRes.success) setBva(bvaRes.data);
-    if (budRes.success) setBudgets(budRes.data);
-  }
-
   function onMutationSuccess() {
     router.refresh();
     fetchExpenses(page, catFilter, deptFilter, month, search);
   }
-
-  // Over-budget rows
-  const overBudget = bva.filter(b => b.utilisation_pct > 100);
 
   // Summary stats
   const topCat    = (Object.entries(summary.byCategory) as [ExpenseCategory, number][])
@@ -195,10 +166,10 @@ export function ExpensesClient({
 
       {/* ── Tab bar ── */}
       <div className="flex gap-0 border-b border-slate-200/80 dark:border-slate-700/60 shrink-0">
-        {(["list","byCategory","budget"] as const).map(t => (
+        {(["list","byCategory"] as const).map(t => (
           <button key={t} type="button" onClick={() => setTab(t)}
             className={`px-5 py-2.5 text-xs font-semibold border-b-2 transition-all -mb-px whitespace-nowrap ${tab === t ? "border-violet-600 text-violet-700 dark:text-violet-400" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"}`}>
-            {t === "list" ? "All Expenses" : t === "byCategory" ? "By Category" : "Budget vs Actuals"}
+            {t === "list" ? "All Expenses" : "By Category"}
           </button>
         ))}
       </div>
@@ -440,111 +411,6 @@ export function ExpensesClient({
         </>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════
-          TAB 3 — BUDGET VS ACTUALS
-      ══════════════════════════════════════════════════════════════════ */}
-      {tab === "budget" && (
-        <>
-          {/* Controls */}
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <input type="text" placeholder="e.g. 2026-27" value={ay}
-              onChange={e => {
-                setAy(e.target.value);
-                if (/^\d{4}-\d{2}$/.test(e.target.value)) startTransition(() => fetchBva(e.target.value));
-              }}
-              className="px-3 py-1.5 bg-white/70 dark:bg-slate-800/60 border border-white/40 dark:border-slate-700/50 rounded-lg text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-violet-400 backdrop-blur-sm w-28" />
-            <button
-              onClick={() => setBudgetOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white bg-violet-600 hover:bg-violet-700 border border-violet-700 rounded-lg transition-colors shadow-sm"
-            >
-              <Target size={13} /> Set Budgets
-            </button>
-          </div>
-
-          {/* Over-budget warning */}
-          {overBudget.length > 0 && (
-            <div className="shrink-0 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-rose-50/70 dark:bg-rose-900/15 border border-rose-200/60 dark:border-rose-800/40">
-              <AlertTriangle size={14} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-xs font-semibold text-rose-700 dark:text-rose-300">
-                  {overBudget.length} categor{overBudget.length !== 1 ? "ies" : "y"} over budget
-                </p>
-                <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-0.5">
-                  {overBudget.map(b => `${b.category} (${b.department_name})`).join(", ")}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* BvA table */}
-          {fetchingBva ? (
-            <div className="flex items-center justify-center h-32">
-              <span className="w-6 h-6 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin" />
-            </div>
-          ) : bva.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-white/40 dark:bg-slate-800/20 py-16">
-              <div className="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-900/30 flex items-center justify-center">
-                <Target className="w-5 h-5 text-violet-400" />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No budgets set for {ay}</p>
-                <p className="text-xs text-slate-400 mt-1">Click "Set Budgets" to allocate spending limits per category.</p>
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-xl bg-white/70 dark:bg-slate-800/60 border border-white/40 dark:border-slate-700/50 backdrop-blur-sm shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-slate-100/80 dark:border-slate-700/60">
-                    {["Category","Department","Allocated","Actual Spent","Remaining","Utilisation"].map(h => (
-                      <th key={h} className="px-4 py-2.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100/60 dark:divide-slate-700/40">
-                  {bva.map((b, i) => {
-                    const pct     = b.utilisation_pct;
-                    const barCls  = pct > 100 ? "bg-rose-500" : pct >= 90 ? "bg-amber-500" : "bg-emerald-500";
-                    const overBgt = pct > 100;
-                    return (
-                      <tr key={i} className={`hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition-colors ${overBgt ? "bg-rose-50/30 dark:bg-rose-900/10" : ""}`}>
-                        <td className="px-4 py-3">
-                          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 capitalize">{b.category}</span>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">{b.department_name}</td>
-                        <td className="px-4 py-3 text-xs text-slate-700 dark:text-slate-300 tabular-nums">{fmtINR(b.allocated)}</td>
-                        <td className="px-4 py-3 text-xs font-medium text-rose-600 dark:text-rose-400 tabular-nums">{fmtINR(b.actual_spent)}</td>
-                        <td className="px-4 py-3">
-                          <span className={`text-xs font-medium tabular-nums ${b.remaining >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                            {fmtINR(Math.abs(b.remaining))}{b.remaining < 0 ? " over" : ""}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 min-w-[140px]">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full transition-all ${barCls}`}
-                                style={{ width: `${Math.min(100, pct)}%` }} />
-                            </div>
-                            <span className={`text-[10px] font-bold tabular-nums ${overBgt ? "text-rose-600 dark:text-rose-400" : "text-slate-600 dark:text-slate-300"}`}>
-                              {pct.toFixed(0)}%
-                            </span>
-                            {overBgt && (
-                              <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40 whitespace-nowrap">
-                                OVER
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
-
       {/* ── Drawers & Modals ── */}
       <LogExpenseDrawer
         isOpen={logOpen}
@@ -567,15 +433,6 @@ export function ExpensesClient({
         institutionId={institutionId}
         onClose={() => setDeleteTarget(null)}
         onSuccess={onMutationSuccess}
-      />
-
-      <BudgetSetupModal
-        isOpen={budgetOpen}
-        institutionId={institutionId}
-        departments={departments}
-        existingBudgets={budgets}
-        onClose={() => setBudgetOpen(false)}
-        onSuccess={() => { fetchBva(ay); router.refresh(); }}
       />
     </div>
   );

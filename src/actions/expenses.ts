@@ -10,7 +10,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import type {
-  Expense, ExpenseCategory, Budget, BudgetVsActual, ExpenseSummary,
+  Expense, ExpenseCategory, ExpenseSummary,
   ExpensePaymentMode,
 } from "@/types/finance";
 
@@ -24,11 +24,6 @@ async function getSupabase() {
 async function revalidateExpenses(institutionId: string) {
   revalidatePath(`/institutions/${institutionId}/finance/expenses`);
   revalidatePath("/finance");
-}
-
-async function ayToRange(ay: string): Promise<{ start: string; end: string }> {
-  const startYear = parseInt(ay.split("-")[0], 10);
-  return { start: `${startYear}-04-01`, end: `${startYear + 1}-03-31` };
 }
 
 async function currentAY(): Promise<string> {
@@ -309,125 +304,6 @@ export async function getExpenseSummary(
         topVendors,
       },
     };
-  } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
-  }
-}
-
-// ── getBudgets ────────────────────────────────────────────────────────────────
-
-export async function getBudgets(
-  institutionId: string,
-  academicYear:  string
-): Promise<{ success: true; data: Budget[] } | { success: false; error: string }> {
-  if (!institutionId) return { success: false, error: "Institution ID required." };
-
-  try {
-    const supabase = await getSupabase();
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !user) return { success: false, error: "Unauthorized." };
-
-    const { data, error } = await supabase
-      .from("budgets")
-      .select("*, departments(name)")
-      .eq("institution_id", institutionId)
-      .eq("academic_year",  academicYear)
-      .order("category", { ascending: true });
-
-    if (error) return { success: false, error: error.message };
-    return { success: true, data: (data ?? []) as unknown as Budget[] };
-  } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
-  }
-}
-
-// ── upsertBudget ──────────────────────────────────────────────────────────────
-
-export async function upsertBudget(payload: {
-  institution_id:   string;
-  department_id?:   string | null;
-  category:         string;
-  academic_year:    string;
-  allocated_amount: number;
-}): Promise<{ success: true } | { success: false; error: string }> {
-  try {
-    const supabase = await getSupabase();
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !user) return { success: false, error: "Unauthorized." };
-
-    const { error } = await supabase.from("budgets").upsert(
-      {
-        institution_id:   payload.institution_id,
-        department_id:    payload.department_id ?? null,
-        category:         payload.category,
-        academic_year:    payload.academic_year,
-        allocated_amount: payload.allocated_amount,
-        updated_at:       new Date().toISOString(),
-      },
-      { onConflict: "institution_id,department_id,category,academic_year" }
-    );
-
-    if (error) return { success: false, error: error.message };
-
-    await revalidateExpenses(payload.institution_id);
-    return { success: true };
-  } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
-  }
-}
-
-// ── getBudgetVsActuals ────────────────────────────────────────────────────────
-
-export async function getBudgetVsActuals(
-  institutionId: string,
-  academicYear:  string
-): Promise<{ success: true; data: BudgetVsActual[] } | { success: false; error: string }> {
-  if (!institutionId) return { success: false, error: "Institution ID required." };
-
-  try {
-    const supabase = await getSupabase();
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !user) return { success: false, error: "Unauthorized." };
-
-    const { start, end } = await ayToRange(academicYear);
-
-    const [budgetsRes, expensesRes] = await Promise.all([
-      supabase.from("budgets")
-        .select("*, departments(name)")
-        .eq("institution_id", institutionId)
-        .eq("academic_year",  academicYear),
-      supabase.from("expenses")
-        .select("category, amount, department_id")
-        .eq("institution_id", institutionId)
-        .gte("expense_date", start)
-        .lte("expense_date", end),
-    ]);
-
-    if (budgetsRes.error) return { success: false, error: budgetsRes.error.message };
-
-    const expenses = (expensesRes.data ?? []) as { category: string; amount: number; department_id: string | null }[];
-    const budgets  = (budgetsRes.data ?? []) as unknown as Budget[];
-
-    const result: BudgetVsActual[] = budgets.map(b => {
-      const actual = expenses
-        .filter(e => e.category === b.category && e.department_id === b.department_id)
-        .reduce((s, e) => s + Number(e.amount), 0);
-
-      const allocated     = Number(b.allocated_amount);
-      const remaining     = allocated - actual;
-      const utilisation   = allocated > 0 ? (actual / allocated) * 100 : 0;
-
-      return {
-        category:         b.category,
-        department_name:  b.departments?.name ?? "Institution-wide",
-        allocated,
-        actual_spent:     actual,
-        remaining,
-        utilisation_pct:  Math.round(utilisation * 10) / 10,
-      };
-    });
-
-    return { success: true, data: result.sort((a, b) => b.utilisation_pct - a.utilisation_pct) };
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
   }

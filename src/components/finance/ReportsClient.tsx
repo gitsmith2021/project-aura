@@ -4,7 +4,7 @@ import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   TrendingUp, TrendingDown, Wallet, Users, CheckCircle2, Clock,
-  AlertTriangle, Building2, ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { PLChart }       from "@/components/finance/PLChart";
@@ -12,12 +12,11 @@ import { ExportButton }  from "@/components/finance/ExportButton";
 import { ReportFilters } from "@/components/finance/ReportFilters";
 import {
   getMonthlyPLReport, getStudentFeeReport,
-  getSalaryDisbursementReport, getDepartmentBudgetReport,
+  getSalaryDisbursementReport,
   getFinancialSummaryReport,
 } from "@/actions/reports";
 import type {
-  MonthlyPLData, StudentFeeReportRow, SalaryReportRow,
-  BudgetReportRow, FinancialSummary,
+  MonthlyPLData, StudentFeeReportRow, SalaryReportRow, FinancialSummary,
 } from "@/types/finance";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -61,7 +60,7 @@ export function ReportsClient({
   const [, startTransition] = useTransition();
 
   // ── Tab state ──────────────────────────────────────────────────────────
-  const [tab, setTab] = useState<"pl" | "fees" | "salary" | "budget">("pl");
+  const [tab, setTab] = useState<"pl" | "fees" | "salary">("pl");
 
   // ── Tab 1: P&L ─────────────────────────────────────────────────────────
   const [plYear,    setPlYear]    = useState(currentYear);
@@ -85,12 +84,6 @@ export function ReportsClient({
   const [salMonth,     setSalMonth]     = useState(currentMonth);
   const [salDept,      setSalDept]      = useState("");
   const [salStatus,    setSalStatus]    = useState("");
-
-  // ── Tab 4: Budget ──────────────────────────────────────────────────────
-  const [budgetRows,   setBudgetRows]   = useState<BudgetReportRow[]>([]);
-  const [budgetFetched, setBudgetFetched] = useState(false);
-  const [fetchingBudget, setFetchingBudget] = useState(false);
-  const [budgetAY,     setBudgetAY]     = useState(currentAY);
 
   // ── Computed: P&L aggregates ───────────────────────────────────────────
   const annualIncome  = plData.reduce((s, m) => s + m.income, 0);
@@ -117,12 +110,6 @@ export function ReportsClient({
     { name: "Pending",   value: salPending,           color: "#f59e0b" },
     { name: "On Hold",   value: salRows.filter(r => r.disbursement_status === "on_hold").length, color: "#94a3b8" },
   ].filter(d => d.value > 0);
-
-  // ── Computed: budget totals ────────────────────────────────────────────
-  const budgetTotal    = budgetRows.reduce((s, r) => s + r.allocated, 0);
-  const budgetSpent    = budgetRows.reduce((s, r) => s + r.actual_spent, 0);
-  const budgetOverall  = budgetTotal > 0 ? (budgetSpent / budgetTotal) * 100 : 0;
-  const budgetOverRows = budgetRows.filter(r => r.utilisation_pct > 100);
 
   // ── Data fetchers ──────────────────────────────────────────────────────
 
@@ -159,18 +146,10 @@ export function ReportsClient({
     if (res.success) setSalRows(res.data);
   }
 
-  async function fetchBudget(ay: string) {
-    setFetchingBudget(true); setBudgetFetched(true);
-    const res = await getDepartmentBudgetReport(institutionId, ay);
-    setFetchingBudget(false);
-    if (res.success) setBudgetRows(res.data);
-  }
-
   function handleTabChange(t: typeof tab) {
     setTab(t);
-    if (t === "fees"   && !feeFetched)    startTransition(() => fetchFees(feeAY, feeDept, feeStatus));
-    if (t === "salary" && !salFetched)    startTransition(() => fetchSalary(salMonth, salDept, salStatus));
-    if (t === "budget" && !budgetFetched) startTransition(() => fetchBudget(budgetAY));
+    if (t === "fees"   && !feeFetched) startTransition(() => fetchFees(feeAY, feeDept, feeStatus));
+    if (t === "salary" && !salFetched) startTransition(() => fetchSalary(salMonth, salDept, salStatus));
   }
 
   // ── Export serializers ─────────────────────────────────────────────────
@@ -201,16 +180,6 @@ export function ReportsClient({
     "Transaction Ref": r.transaction_ref ?? "",
   }));
 
-  const budgetExport = budgetRows.map(r => ({
-    Department: r.department_name,
-    Category: r.category,
-    "Academic Year": r.academic_year,
-    "Allocated (₹)": r.allocated,
-    "Spent (₹)": r.actual_spent,
-    "Remaining (₹)": r.remaining,
-    "Utilisation %": r.utilisation_pct,
-  }));
-
   // ── Render ─────────────────────────────────────────────────────────────
 
   return (
@@ -230,7 +199,6 @@ export function ReportsClient({
           { key: "pl",     label: "P&L Summary" },
           { key: "fees",   label: "Student Fees" },
           { key: "salary", label: "Salary Report" },
-          { key: "budget", label: "Budget Report" },
         ] as const).map(t => (
           <button key={t.key} type="button" onClick={() => handleTabChange(t.key)}
             className={`px-5 py-2.5 text-xs font-semibold border-b-2 transition-all -mb-px whitespace-nowrap ${
@@ -577,110 +545,6 @@ export function ReportsClient({
         </>
       )}
 
-      {/* ══════════════════════════════════════════════════════════════════
-          TAB 4 — BUDGET REPORT
-      ══════════════════════════════════════════════════════════════════ */}
-      {tab === "budget" && (
-        <>
-          <div className="flex flex-wrap items-center justify-between gap-3 shrink-0">
-            <div className="flex items-center gap-2">
-              <ReportFilters
-                filters={[{ type: "year", key: "ay", label: "Academic Year", value: budgetAY, options: AY_OPTIONS }]}
-                onChange={(_, v) => { setBudgetAY(v); startTransition(() => fetchBudget(v)); }}
-              />
-            </div>
-            <ExportButton data={budgetExport} filename={`budget-report-${budgetAY}`} reportTitle={`Budget vs Actuals ${budgetAY}`} />
-          </div>
-
-          {/* Institution-wide totals banner */}
-          {budgetFetched && !fetchingBudget && budgetRows.length > 0 && (
-            <div className="shrink-0 grid grid-cols-3 gap-3">
-              <div className={`${cardCls} border-violet-200/60 dark:border-violet-800/40`}>
-                <p className="text-sm font-bold text-violet-700 dark:text-violet-400">{fmtINR(budgetTotal)}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Total Allocated</p>
-              </div>
-              <div className={`${cardCls} border-rose-200/60 dark:border-rose-800/40`}>
-                <p className="text-sm font-bold text-rose-600 dark:text-rose-400">{fmtINR(budgetSpent)}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Total Spent</p>
-              </div>
-              <div className={`${cardCls} ${budgetOverall > 90 ? "border-rose-200/60 dark:border-rose-800/40" : budgetOverall > 70 ? "border-amber-200/60 dark:border-amber-800/40" : "border-emerald-200/60 dark:border-emerald-800/40"}`}>
-                <p className={`text-sm font-bold ${budgetOverall > 90 ? "text-rose-600 dark:text-rose-400" : budgetOverall > 70 ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"}`}>
-                  {fmtPct(budgetOverall)}
-                </p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Overall Utilisation</p>
-              </div>
-            </div>
-          )}
-
-          {/* Over-budget warning */}
-          {budgetOverRows.length > 0 && (
-            <div className="shrink-0 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-rose-50/70 dark:bg-rose-900/15 border border-rose-200/60 dark:border-rose-800/40">
-              <AlertTriangle size={14} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-rose-700 dark:text-rose-300">
-                <strong>{budgetOverRows.length} {budgetOverRows.length === 1 ? "category" : "categories"} over budget:</strong>{" "}
-                {budgetOverRows.map(r => `${r.department_name} → ${r.category}`).join(", ")}
-              </p>
-            </div>
-          )}
-
-          {fetchingBudget ? (
-            <div className="flex items-center justify-center h-32"><span className="w-6 h-6 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin" /></div>
-          ) : !budgetFetched ? (
-            <div className="flex items-center justify-center h-32 text-xs text-slate-400">Loading…</div>
-          ) : budgetRows.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-16 text-sm text-slate-500">
-              <Building2 className="w-8 h-8 opacity-30" />
-              <p>No budget data for {budgetAY}.</p>
-            </div>
-          ) : (
-            <div className="rounded-xl bg-white/70 dark:bg-slate-800/60 border border-white/40 dark:border-slate-700/50 backdrop-blur-sm shadow-sm overflow-hidden">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-slate-100/80 dark:border-slate-700/60">
-                    {["Department","Category","Allocated","Spent","Remaining","Utilisation"].map(h => (
-                      <th key={h} className="px-4 py-2.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100/60 dark:divide-slate-700/40">
-                  {budgetRows.map((r, i) => {
-                    const pct = r.utilisation_pct;
-                    const barCls = pct > 100 ? "bg-rose-500" : pct >= 90 ? "bg-amber-500" : "bg-emerald-500";
-                    return (
-                      <tr key={i} className={`hover:bg-violet-50/40 dark:hover:bg-violet-900/10 transition-colors ${pct > 100 ? "bg-rose-50/20 dark:bg-rose-900/10" : ""}`}>
-                        <td className="px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300">{r.department_name}</td>
-                        <td className="px-4 py-2.5 text-xs text-slate-500 dark:text-slate-400 capitalize">{r.category}</td>
-                        <td className="px-4 py-2.5 text-xs text-slate-700 dark:text-slate-300 tabular-nums">{fmtINR(r.allocated)}</td>
-                        <td className="px-4 py-2.5 text-xs text-rose-600 dark:text-rose-400 tabular-nums">{fmtINR(r.actual_spent)}</td>
-                        <td className="px-4 py-2.5 text-xs font-medium tabular-nums">
-                          <span className={r.remaining >= 0 ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}>
-                            {fmtINR(Math.abs(r.remaining))}{r.remaining < 0 ? " over" : ""}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 min-w-[150px]">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full ${barCls}`} style={{ width: `${Math.min(100, pct)}%` }} />
-                            </div>
-                            <span className={`text-[10px] font-bold tabular-nums w-9 text-right ${pct > 100 ? "text-rose-600 dark:text-rose-400" : "text-slate-600 dark:text-slate-400"}`}>
-                              {pct.toFixed(0)}%
-                            </span>
-                            {pct > 100 && (
-                              <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40">
-                                OVER
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
     </div>
   );
 }

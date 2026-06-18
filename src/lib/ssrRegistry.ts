@@ -114,7 +114,7 @@ export const SSR_CRITERIA: SSRCriterion[] = [
       { key: "leave_requests", label: "Staff welfare & HR workflows (6.3)", status: "live", table: "leave_requests", column: "institution_id" },
       { key: "salary", label: "Payroll & financial governance (6.4)", status: "live", table: "salary_disbursements", column: "institution_id" },
       { key: "iqac_meetings", label: "IQAC meetings, minutes & action items (6.5)", status: "pending", phase: "Phase 7F-sub2 — IQAC Meeting & Action Tracker" },
-      { key: "budgets", label: "Department budget planning (6.4)", status: "pending", phase: "Phase 5L — Department Budget Management" },
+      { key: "budgets", label: "Department budget planning (6.4)", status: "live", table: "department_budgets", column: "institution_id" },
       { key: "appraisals", label: "Staff appraisals & workload reports (6.3)", status: "pending", phase: "Phase 5E — Staff Appraisal" },
     ],
   },

@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import type {
   MonthlyPLData, StudentFeeReportRow, SalaryReportRow,
-  BudgetReportRow, FinancialSummary,
+  FinancialSummary,
 } from "@/types/finance";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -250,68 +250,6 @@ export async function getSalaryDisbursementReport(
       : result;
 
     return { success: true, data: filtered };
-  } catch (err: unknown) {
-    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
-  }
-}
-
-// ── getDepartmentBudgetReport ─────────────────────────────────────────────────
-
-export async function getDepartmentBudgetReport(
-  institutionId: string,
-  academicYear:  string
-): Promise<{ success: true; data: BudgetReportRow[] } | { success: false; error: string }> {
-  if (!institutionId) return { success: false, error: "Institution ID required." };
-
-  try {
-    const supabase = await getSupabase();
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !user) return { success: false, error: "Unauthorized." };
-
-    // Map AY "YYYY-YY" to date range (Indian AY: April–March)
-    const startYear = parseInt(academicYear.split("-")[0], 10);
-    const rangeStart = `${startYear}-04-01`;
-    const rangeEnd   = `${startYear + 1}-03-31`;
-
-    const [{ data: budgets }, { data: expenses }] = await Promise.all([
-      supabase.from("budgets")
-        .select("*, departments(name)")
-        .eq("institution_id", institutionId)
-        .eq("academic_year", academicYear),
-      supabase.from("expenses")
-        .select("category, amount, department_id")
-        .eq("institution_id", institutionId)
-        .gte("expense_date", rangeStart)
-        .lte("expense_date", rangeEnd),
-    ]);
-
-    const expenseData = (expenses ?? []) as { category: string; amount: number; department_id: string | null }[];
-
-    const result: BudgetReportRow[] = (budgets ?? []).map(b => {
-      const actual = expenseData
-        .filter(e => e.category === b.category && e.department_id === b.department_id)
-        .reduce((s, e) => s + Number(e.amount), 0);
-
-      const allocated    = Number(b.allocated_amount);
-      const remaining    = allocated - actual;
-      const utilisation  = allocated > 0 ? (actual / allocated) * 100 : 0;
-
-      return {
-        department_id:   b.department_id ?? null,
-        department_name: (b.departments as { name: string } | null)?.name ?? "Institution-wide",
-        category:        b.category,
-        academic_year:   b.academic_year,
-        allocated,
-        actual_spent:    actual,
-        remaining,
-        utilisation_pct: Math.round(utilisation * 10) / 10,
-      };
-    });
-
-    return {
-      success: true,
-      data: result.sort((a, b) => b.utilisation_pct - a.utilisation_pct),
-    };
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
   }

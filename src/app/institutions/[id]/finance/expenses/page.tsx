@@ -3,9 +3,7 @@ import { redirect } from "next/navigation";
 import Link         from "next/link";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ExpensesClient }  from "@/components/finance/ExpensesClient";
-import {
-  getExpenses, getExpenseSummary, getBudgets, getBudgetVsActuals, currentAY,
-} from "@/actions/expenses";
+import { getExpenses, getExpenseSummary } from "@/actions/expenses";
 import { createClient } from "@/utils/supabase/server";
 import type { ExpenseSummary } from "@/types/finance";
 
@@ -28,18 +26,15 @@ export default async function ExpensesPage({ params }: PageProps) {
 
   const now          = new Date();
   const currentMonth = now.toISOString().slice(0, 7);
-  const ay           = await currentAY();
 
   const [{ data: institution }, { data: departments }] = await Promise.all([
     supabase.from("institutions").select("name").eq("id", id).single(),
     supabase.from("departments").select("id, name").eq("institution_id", id).order("name"),
   ]);
 
-  const [expResult, sumResult, budResult, bvaResult] = await Promise.all([
+  const [expResult, sumResult] = await Promise.all([
     getExpenses(id, { page: 1, pageSize: 10, month: currentMonth }),
     getExpenseSummary(id, currentMonth),
-    getBudgets(id, ay),
-    getBudgetVsActuals(id, ay),
   ]);
 
   const breadcrumb = (
@@ -69,10 +64,7 @@ export default async function ExpensesPage({ params }: PageProps) {
             initialTotal={expResult.success ? expResult.total : 0}
             summary={sumResult.success ? sumResult.data : EMPTY_SUMMARY}
             departments={departments ?? []}
-            initialBudgets={budResult.success ? budResult.data : []}
-            initialBudgetVsActuals={bvaResult.success ? bvaResult.data : []}
             currentMonth={currentMonth}
-            currentAY={ay}
           />
         </div>
       </div>

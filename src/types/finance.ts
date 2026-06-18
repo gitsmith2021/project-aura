@@ -142,25 +142,6 @@ export type Expense = {
   departments: { name: string } | null;
 };
 
-export type Budget = {
-  id: string;
-  institution_id: string;
-  department_id: string | null;
-  category: string;
-  academic_year: string;
-  allocated_amount: number;
-  departments: { name: string } | null;
-};
-
-export type BudgetVsActual = {
-  category: string;
-  department_name: string;
-  allocated: number;
-  actual_spent: number;
-  remaining: number;
-  utilisation_pct: number;
-};
-
 export type ExpenseSummary = {
   totalExpenses: number;
   totalExpensesAllTime: number;
@@ -273,17 +254,6 @@ export type SalaryReportRow = {
   disbursed_at:        string | null;
   transaction_ref:     string | null;
   payment_mode:        string | null;
-};
-
-export type BudgetReportRow = {
-  department_id:   string | null;
-  department_name: string;
-  category:        string;
-  academic_year:   string;
-  allocated:       number;
-  actual_spent:    number;
-  remaining:       number;
-  utilisation_pct: number;
 };
 
 export type FinancialSummary = {
