@@ -137,16 +137,26 @@ CREATE TABLE transport_allocations (
 
 **Route:** `/institutions/[id]/certificates`
 
+> **Status:** ✅ **Complete** (migration `20260622000000_phase6c_certificates`, commit `048e0cc`).
+
 > High-demand feature. Students request documents; admin approves + generates.
 
-#### What to build:
-- [ ] `supabase/migrations/..._certificate_requests.sql` — `certificate_requests` (student, type, status, issued_at)
-- [ ] **Student certificate types:** Bonafide, Transfer Certificate, Character Certificate, NOC, Course Completion
-- [ ] **Staff certificate types:** Offer Letter, Experience Certificate, Relieving Letter, Salary Certificate, Service Certificate
-- [ ] `src/app/institutions/[id]/certificates/page.tsx` — Admin: pending requests + issue action
-- [ ] `src/actions/certificates.ts` — requestCertificate, approveCertificate, generatePDF
-- [ ] `src/components/certificates/` — Printable template components per certificate type (auto-filled with student data)
-- [ ] Student portal: `src/app/student-portal/certificates/page.tsx` — Request certificate, track status, download when issued
+#### ✅ COMPLETE — commit `048e0cc`
+- Single `certificate_requests` table covering both holders (a `requester_type` + matching `student_id`/`staff_id` CHECK), all 10 document types, the `requested → approved → issued / rejected` lifecycle and the issued certificate number. RLS: admins manage their institution's requests; a student reads and raises only their own (no cross-student leakage).
+- `src/lib/certificates.ts` — type/label/prefix metadata, status styling, `formatCertificateNo` (`BON/2026/0007`) and **formal body-text templates per document type** auto-filled from holder context, with **12 Vitest tests**.
+- `src/actions/certificates.ts` — request / approve / reject / issue (assigns a per-type, per-year sequential number), direct **staff-document issuance** (offer/experience/relieving/salary/service letters issued straight by admin), delete, and a print-context reader gated by RLS (admin or the owning student).
+- **Printable** `CertificateDocument` — letterhead, ref no + date, underlined title, justified body, signature block and a browser print-to-PDF button — shared by the admin and student print routes.
+- Admin queue with status filters and inline issue/reject + "issue staff document" drawer; student portal request/track/download page. Nav links added to both sidebars; dataRetention `certificates` entry.
+- **Note:** PDF is produced via the browser's print-to-PDF on the styled document (consistent with the 5H warning-letter / 5C Form-16 precedent) rather than a server-side PDF lib.
+
+#### What was built:
+- [x] `supabase/migrations/20260622000000_phase6c_certificates.sql` — `certificate_requests` (holder, type, status, cert no, issued_at)
+- [x] **Student certificate types:** Bonafide, Transfer Certificate, Character Certificate, NOC, Course Completion
+- [x] **Staff certificate types:** Offer Letter, Experience Certificate, Relieving Letter, Salary Certificate, Service Certificate
+- [x] `src/app/institutions/[id]/certificates/page.tsx` — Admin: requests queue + issue/reject + print
+- [x] `src/actions/certificates.ts` — requestCertificate, approve/reject/issueCertificate, issueStaffCertificate, getCertificateForPrint
+- [x] `src/components/certificates/` — printable `CertificateDocument` + admin/student managers (auto-filled holder data)
+- [x] Student portal: `src/app/student-portal/certificates/page.tsx` — request, track status, download when issued
 
 ---
 
