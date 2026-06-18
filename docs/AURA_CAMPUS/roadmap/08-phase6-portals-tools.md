@@ -68,6 +68,8 @@ CREATE TABLE parent_student_links (
 
 **Route:** `/institutions/[id]/transport`
 
+> **Status:** ✅ **Complete** (migration `20260621000000_phase6b_transport`, commit `eb1756c`).
+
 > Manage institution transport services and vehicle allocation.
 > 
 > *Note on Optimization:* Integrate with the **Python Engine's Vehicle Routing Problem (VRP) solver** to generate turn-by-turn routes, optimize student stop pickup sequences, and reduce overall fleet fuel consumption.
@@ -109,15 +111,25 @@ CREATE TABLE transport_allocations (
 );
 ```
 
-#### What to build:
-- [ ] `supabase/migrations/..._transport.sql` — vehicles, bus_routes, transport_allocations
-- [ ] `src/app/institutions/[id]/transport/vehicles/page.tsx` — Vehicle & driver registry (RC number, insurance/fitness expiry alerts)
-- [ ] `src/app/institutions/[id]/transport/page.tsx` — Route list with vehicle + student count per route
-- [ ] `src/app/institutions/[id]/transport/[routeId]/page.tsx` — Route detail: stops, timing, vehicle assigned, allocated students
-- [ ] `src/actions/transport.ts` — getVehicles, getRoutes, assignStudent, getStudentRoute, getExpiryAlerts
-- [ ] Student portal: `src/app/student-portal/transport/page.tsx` — My bus route, boarding stop, pickup time
-- [ ] Transport fee auto-linked to `fee_structures` (bus fee type)
-- [ ] Vehicle compliance alerts: flag vehicles with insurance/fitness certificates expiring within 30 days
+#### ✅ COMPLETE — commit `eb1756c`
+- Tables `vehicles`, `bus_routes` (JSONB `stops`) and `transport_allocations` with RLS: admins manage their institution's fleet/routes/allocations; a **student reads only their own allocation** plus the route and vehicle it points at (nested `auth.email()` ownership policies), so the student portal works through normal RLS — no service-role needed.
+- `src/lib/transport.ts` pure helpers — vehicle typing, insurance/fitness **expiry classification** (`EXPIRY_WARN_DAYS = 30`), fleet alert aggregation, stop parsing and pickup-time lookup — with **14 Vitest tests**.
+- `src/actions/transport.ts` — vehicle CRUD, route CRUD (with ordered stops), student allocation/unassignment, `getExpiryAlerts`, and `getStudentRoute` for the portal.
+- Admin UI (sky theme, right-drawer forms): vehicle & driver registry with insurance/fitness expiry badges + a fleet compliance banner; route list with vehicle + student/capacity counts; route detail with a stops timeline and the allocated-students table.
+- Student portal **My Transport** page: route, boarding stop, pickup time, vehicle + driver contact (tap-to-call) and the full stops timeline with the student's stop highlighted.
+- `fee_structures.fee_type` CHECK extended with `'transport'` so bus fees can be raised; dataRetention `transport` policy entry (driver/student PII).
+- Nav links added to both the admin Sidebar (Campus group) and the student-portal sidebar.
+
+#### What was built:
+- [x] `supabase/migrations/20260621000000_phase6b_transport.sql` — vehicles, bus_routes, transport_allocations
+- [x] `src/app/institutions/[id]/transport/vehicles/page.tsx` — Vehicle & driver registry (insurance/fitness expiry alerts)
+- [x] `src/app/institutions/[id]/transport/page.tsx` — Route list with vehicle + student count per route
+- [x] `src/app/institutions/[id]/transport/[routeId]/page.tsx` — Route detail: stops, timing, vehicle, allocated students
+- [x] `src/actions/transport.ts` — getVehicles, getRoutes, assignStudent, getStudentRoute, getExpiryAlerts (+ CRUD)
+- [x] Student portal: `src/app/student-portal/transport/page.tsx` — My bus route, boarding stop, pickup time
+- [x] Transport fee linked to `fee_structures` (added `transport` fee type)
+- [x] Vehicle compliance alerts: insurance/fitness certificates expiring within 30 days
+- [~] Python VRP route-optimization solver — deferred (stretch; `stops` store optional lat/lng for it)
 
 ---
 
