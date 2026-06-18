@@ -110,6 +110,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Institutional announcements (minimal personal data — only the poster's id). Auto-expire via expires_at; retained briefly for reference",
   },
   {
+    key: "research",
+    category: "Research records (projects, publications & grants)",
+    tables: ["research_projects", "publications"],
+    period: "Retained permanently as part of the institutional research record",
+    years: null,
+    basis: "NAAC Criterion 3 (Research, Innovation & Extension) & NIRF reporting; publications are a permanent academic-output record",
+  },
+  {
     key: "disciplinary",
     category: "Disciplinary & anti-ragging records (incidents & committee actions)",
     tables: ["disciplinary_incidents", "disciplinary_actions"],

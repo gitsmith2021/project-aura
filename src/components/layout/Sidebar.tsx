@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -54,6 +54,7 @@ const STAFF_NAV = [
   { key: "cia",        href: "/staff-portal/cia",        label: "CIA Marks",   Icon: ClipboardList },
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
   { key: "appraisal",  href: "/staff-portal/appraisal",  label: "Appraisal",   Icon: ClipboardCheck },
+  { key: "research",   href: "/staff-portal/research",   label: "My Research", Icon: Microscope },
   { key: "salary",          href: "/staff-portal/salary",           label: "Salary",          Icon: Wallet },
   { key: "tax-declaration", href: "/staff-portal/tax-declaration", label: "Tax Declaration", Icon: FileText },
   { key: "privacy",         href: "/staff-portal/privacy",         label: "Privacy",         Icon: ShieldCheck },
@@ -382,6 +383,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const placementsHref     = slug ? `/institutions/${slug}/placements`        : "/institutions";
   const scholarshipsHref   = slug ? `/institutions/${slug}/scholarships`      : "/institutions";
   const disciplinaryHref   = slug ? `/institutions/${slug}/disciplinary`      : "/institutions";
+  const researchHref       = slug ? `/institutions/${slug}/research`          : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -644,6 +646,17 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                 icon={<Award size={18} />}
                 label="Scholarships"
                 active={pathname.includes("/scholarships")}
+                isCollapsed={isCollapsed}
+              />
+            )}
+
+            {/* Research (admin only) — Phase 5I */}
+            {role !== "hod" && (
+              <SidebarLink
+                href={researchHref}
+                icon={<Microscope size={18} />}
+                label="Research"
+                active={pathname.includes("/research")}
                 isCollapsed={isCollapsed}
               />
             )}
