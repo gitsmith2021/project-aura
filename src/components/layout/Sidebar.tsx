@@ -371,6 +371,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const hostelsHref        = slug ? `/institutions/${slug}/hostels`          : "/institutions";
   const laboratoriesHref   = slug ? `/institutions/${slug}/laboratories`     : "/institutions";
   const transportHref      = slug ? `/institutions/${slug}/transport`        : "/institutions";
+  const certificatesHref   = slug ? `/institutions/${slug}/certificates`     : "/institutions";
   const assetsHref         = slug ? `/institutions/${slug}/assets`           : "/institutions";
   const vendorsHref        = slug ? `/institutions/${slug}/vendors`          : "/institutions";
   const idCardsHref        = slug ? `/institutions/${slug}/id-cards`         : "/institutions";
@@ -595,6 +596,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               <SubLink href={hostelsHref}        icon={<BedDouble size={14} />}    label="Hostels"        active={pathname.includes("/hostels")} />
               <SubLink href={laboratoriesHref}   icon={<FlaskConical size={14} />} label="Laboratories"   active={pathname.includes("/laboratories")} />
               <SubLink href={transportHref}      icon={<Bus size={14} />}          label="Transport"      active={pathname.includes("/transport")} />
+              <SubLink href={certificatesHref}   icon={<FileText size={14} />}     label="Certificates"   active={pathname.includes("/certificates")} />
               <SubLink href={assetsHref}         icon={<Package size={14} />}      label="Assets"         active={pathname.includes("/assets")} />
               <SubLink href={vendorsHref}        icon={<Truck size={14} />}        label="Vendors"        active={pathname.includes("/vendors")} />
               <SubLink href={idCardsHref}        icon={<Nfc size={14} />}          label="ID Cards"       active={pathname.includes("/id-cards")} />

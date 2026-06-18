@@ -118,6 +118,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Parent/guardian contact for academic communication and fee notices; DPDP right to erasure applies",
   },
   {
+    key: "certificates",
+    category: "Certificate & document requests (bonafide, TC, experience letters, etc.)",
+    tables: ["certificate_requests"],
+    period: "7 years after issuance",
+    years: 7,
+    basis: "Issued certificates are official institutional records subject to verification requests; UGC/NAAC document-retention norms",
+  },
+  {
     key: "transport",
     category: "Transport records (vehicles, drivers, routes & student allocations)",
     tables: ["vehicles", "bus_routes", "transport_allocations"],
