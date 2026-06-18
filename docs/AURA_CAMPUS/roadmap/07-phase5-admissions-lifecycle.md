@@ -623,7 +623,25 @@ CREATE TABLE disciplinary_actions (
 
 **Route:** `/institutions/[id]/research`
 
+> **Status:** ✅ **Complete** (migration `20260616080000_phase5i_research`, commit `aaf9778`).
+
 > NAAC Criterion 3 is entirely about Research & Innovation. Tracks staff research projects, publications, funding grants, and patents. Links to Staff Appraisal (Step 5E) for NAAC API data.
+
+#### ✅ COMPLETE — commit `aaf9778`
+- Tables `research_projects` (adds `funding_spent` beyond spec, for sanctioned-vs-utilised tracking) + `publications` with RLS: institution members read; **staff manage their OWN publications** (`staff_id` ↔ their staff row); admins manage all. `research-docs` public bucket for publication PDFs.
+- **Appraisal auto-link (5E):** when a staff member logs a publication from their portal, a matching `paper_published` activity is auto-created on their open (`pending`/`submitted`) appraisal — best-effort, so they never enter the same evidence twice.
+- Admin: research dashboard (active/completed projects, funding sanctioned/utilised, publications, Scopus/UGC/patents KPIs + faculty research leaderboard) · projects registry (PI, co-investigators, grant tracking, status) · publications directory with Scopus / UGC-CARE / type / year filters + **NIRF Criterion 3 CSV export**.
+- `src/lib/research.ts` pure helpers (`researchStats`, `publicationsByFaculty`, `publicationsCSV`); 9 Vitest tests; dataRetention entry (NAAC 3, permanent).
+- **Deferred:** h-index per faculty needs citation data (not stored) — impact-factor aggregates shipped instead.
+
+#### What was built:
+- [x] `supabase/migrations/20260616080000_phase5i_research.sql`
+- [x] `src/app/institutions/[id]/research/page.tsx` — dashboard (KPIs + faculty leaderboard)
+- [x] `src/app/institutions/[id]/research/projects/page.tsx` → `ProjectsRegistry` (+ `ProjectDrawer`)
+- [x] `src/app/institutions/[id]/research/publications/page.tsx` → `PublicationsDirectory` (+ `PublicationDrawer`, NIRF CSV)
+- [x] `src/actions/research.ts` — projects CRUD, publications CRUD, getMyPublications, addMyPublication (auto-links appraisal), deleteMyPublication
+- [x] Staff portal: `src/app/staff-portal/research/page.tsx` → `StaffPublications` (auto-links to Appraisal 5E); Sidebar links (admin + staff nav)
+- [x] NIRF Research & Innovation export (Criterion 3 CSV)
 
 #### Database:
 ```sql
@@ -660,15 +678,6 @@ CREATE TABLE publications (
   document_url   TEXT
 );
 ```
-
-#### What to build:
-- [ ] `supabase/migrations/..._research.sql`
-- [ ] `src/app/institutions/[id]/research/page.tsx` — Research dashboard: active projects, publications count, funding total
-- [ ] `src/app/institutions/[id]/research/projects/page.tsx` — Research projects registry
-- [ ] `src/app/institutions/[id]/research/publications/page.tsx` — Publications directory with Scopus/UGC/impact factor filters
-- [ ] `src/actions/research.ts` — getProjects, addProject, addPublication, getNIRFResearchData
-- [ ] Staff portal: `src/app/staff-portal/research/page.tsx` — Staff logs own publications (auto-links to Appraisal 5E)
-- [ ] NIRF Research & Innovation export (Criterion 3 format)
 
 #### Key features:
 - Scopus/UGC-listed flag for publications (critical for NAAC scoring)
