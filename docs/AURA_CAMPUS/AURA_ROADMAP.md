@@ -97,7 +97,7 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 5 | [roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md) | Phase 3 — Notification Engine & Alert Infrastructure | 🟢 Core complete (3A/3B/3D ✅, 3C email; pg_cron sweeps live — fee-due + low-attendance + outpass-overdue; only SMS/WhatsApp deferred) |
 | 6 | [roadmap/06-phase4-campus-infrastructure.md](roadmap/06-phase4-campus-infrastructure.md) | Phase 4 — Campus Infrastructure & Laboratories (4A–4K) | ✅ Complete (4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅ · 4H ✅ · 4I ✅ · 4J ✅ · 4K ✅) |
 | 7 | [roadmap/07-phase5-admissions-lifecycle.md](roadmap/07-phase5-admissions-lifecycle.md) | Phase 5 — Admissions, Recruitment & Lifecycle Intake (5A–5L) | ✅ Complete (5A ✅ · 5A-sub ✅ · 5B ✅ · 5C ✅ · 5C-sub ✅ · 5D ✅ · 5E ✅ · 5F ✅ · 5G ✅ · 5H ✅ · 5I ✅ · 5J ✅ · 5K ✅ · 5L ✅) |
-| 8 | [roadmap/08-phase6-portals-tools.md](roadmap/08-phase6-portals-tools.md) | Phase 6 — Parent Portals & Extended Digital Tools (6A–6H) | 🔲 Pending |
+| 8 | [roadmap/08-phase6-portals-tools.md](roadmap/08-phase6-portals-tools.md) | Phase 6 — Parent Portals & Extended Digital Tools (6A–6H) | 🟡 In progress (6A ✅) |
 | 9 | [roadmap/09-phase7-super-admin.md](roadmap/09-phase7-super-admin.md) | Phase 7 — Super Admin Panel / SaaS Multi-Tenancy (7A–7F-sub2) | 🔲 Pending |
 | 9X | [AURA_CAMPUS_KNOWLEDGE_HUB.md](AURA_CAMPUS_KNOWLEDGE_HUB.md) | Phase 7X — Aura Knowledge Hub (KH-1 through KH-5) — *Vision & Architecture approved; implementation begins after Phase 8* | 🗓️ Strategic Deferred |
 | 10 | [roadmap/10-phase8-mobile-apps.md](roadmap/10-phase8-mobile-apps.md) | Phase 8 — React Native Mobile Apps & CCTV (8A–8F) | 🔲 Pending |
@@ -111,17 +111,17 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-18  
-> **67 of 87 modules complete — 77% of full platform built**
+> **68 of 87 modules complete — 78% of full platform built**
 
 ```
-Overall  █████████████████████████░░░░░  77%  (67/87)
+Overall  █████████████████████████░░░░░  78%  (68/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
 Phase 3    █████████████████████████████░  95%  (3A ✅ · 3B ✅ · 3C 🟡 email live · 3D ✅ notices · pg_cron sweeps live: fee-due + low-attendance + outpass-overdue · only SMS/WhatsApp deferred)
 Phase 4    ████████████████████████████████  100% (12/12 — 4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅ · 4H ✅ · 4I ✅ · 4J ✅ · 4K ✅)
 Phase 5    ████████████████████████████████  100% (14/14 — 5A Admissions ✅ · 5A-sub CRM + Merit List ✅ · 5B Recruitment ✅ · 5C Non-Teaching Staff + Daily-Wage Payroll ✅ · 5C-sub Indian Statutory Payroll ✅ · 5D Alumni System ✅ · 5E Staff Appraisal + Workload ✅ · 5F Placement Cell ✅ · 5G Scholarship Management ✅ · 5H Disciplinary & Anti-Ragging ✅ · 5I Research & Publications ✅ · 5J Staff Attendance + LOP ✅ · 5K Career Lifecycle ✅ · 5L Department Budgets ✅)
-Phase 6    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%   (0/8  — Extended Portals & Tools + Full LMS)
+Phase 6    ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░  13%  (1/8  — 6A Parent Portal ✅ · transport/certificates/online-exams/feedback/grievance/LMS/MOU pending)
 Phase 7    ████████████████░░░░░░░░░░░░░░░░  50%  (4/8  — 7A ✅ · 7B ✅ · 7C ✅ · 7F-sub SSR Builder ✅)
 Phase 7X   ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  🗓️ Strategic Deferred  (Knowledge Hub KH-1→KH-5 · Vision 📐 approved · implementation after Phase 8)
 Phase 8    █████░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%  (1/6  — 8A ✅ · 8B/8C screens built · NFC/push/CCTV/Parent pending)
@@ -200,7 +200,7 @@ Arch       ██████░░░░░░░░░░░░░░░░░
 | ✅ Phase 5J | Staff Daily Attendance + LOP-Payroll Integration — `staff_attendance` + RLS (staff read own, admins manage, HOD dept); admin daily register (bulk-present + exceptions) + monthly report (present/absent/LOP/leave + attendance %, NAAC 2.4 avg, CSV); staff `/staff-portal/my-attendance`; leave approval auto-marks `on_leave`; payroll run deducts LOP (guarded/additive); 11 unit tests | Complete | `f3f6667` |
 | ✅ Phase 5K | Staff Career Lifecycle (Increments, Transfers, Resignation) — `staff_career_events` + RLS + `staff-career-docs` bucket; increment versions `salary_structures`, promotion/transfer update staff designation/department, resignation/retirement/termination deactivate staff (audit-logged); admin career log + per-staff timeline; staff-portal read-only My Career; serviceYears() seniority calc; 23 unit tests | Complete | `29752a9` |
 | ✅ Phase 5L | Department Budget Management (NAAC 6.4) — `department_budgets` + `budget_line_items` + RLS (admins any dept, HOD own dept); replaces the schema-drifted legacy `budgets` table (0 rows, broken consumer queries) and its "Set Budgets"/"Budget Report" UI; draft → submitted → approved/rejected workflow (approve/reject gated in Server Actions, not RLS); category-mapped actuals auto-synced from expense logger, PO spend surfaced for manual review; admin overview + detail page + CSV export; 11 unit tests | Complete | `0ce6b1e` |
-| 🔲 Phase 6A | Parent Portal (multi-child via junction table) | Pending | — |
+| ✅ Phase 6A | Parent Portal (multi-child via junction table) — `parents` + `parent_student_links` + RLS; amber portal with cookie child-switcher (dashboard/attendance/results/fees ledger); child data served via service-role after verified link; login + middleware `aura-role=parent` routing + fence; admin create-parent-login + link/unlink children; 8 unit tests. Razorpay pay-on-behalf deferred | Complete | `a85f205` |
 | 🔲 Phase 6B | Transport Management + Vehicle Registry | Pending | — |
 | 🔲 Phase 6C | Certificate & Document Generator (Student + Staff) | Pending | — |
 | 🔲 Phase 6D | Online Examination System + Anti-Cheating | Pending | — |

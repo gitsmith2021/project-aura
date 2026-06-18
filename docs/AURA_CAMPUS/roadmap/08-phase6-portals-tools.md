@@ -13,8 +13,28 @@
 
 **Route:** `/parent-portal`
 
+> **Status:** ✅ **Complete** (migration `20260620000000_phase6a_parents`, commit `a85f205`).
+
 > Read-only view of a child's academic activity. Parents can also pay fees. One parent account
 > can be linked to multiple children (e.g. siblings in the same institution) via a junction table.
+
+#### ✅ COMPLETE — commit `a85f205`
+- Tables `parents` + `parent_student_links` (siblings via the junction table) with RLS: a parent reads their own account + links; admins manage their institution's parents/links.
+- **Child data security:** parents have no RLS path to another student's `attendance`/`cia_results`/`fee_demands`. Each read in `parentPortal.ts` first verifies the parent↔student link, then fetches with the service-role client (Dev Rule 16 justification documented in-file) — rather than adding parent-aware RLS to every academic table.
+- Parent portal (amber theme) with a **cookie-persisted child-switcher** in the topbar: dashboard (overall attendance %, fees due, upcoming exams), subject-wise attendance, published `cia_results`, and a fees ledger.
+- **Auth:** `login` + `middleware` detect a `parents.user_id` and route to `/parent-portal` (`aura-role=parent`), with a fence keeping parents in and others out.
+- **Admin:** `/institutions/[id]/parents` — create a parent login (temp password `Aura@1234`, must-reset) and link/unlink one or many children with a relationship.
+- `src/lib/parentPortal.ts` pure helpers + 8 Vitest tests; dataRetention entry.
+- **Deferred:** parent-initiated Razorpay "pay on behalf" — `createRazorpayOrder` is RLS-bound to the student/admin and a secure parent payment path needs its own RLS work; the fees page shows the ledger with a clear note. Tracked for a follow-up.
+
+#### What was built:
+- [x] `supabase/migrations/20260620000000_phase6a_parents.sql`
+- [x] `src/app/parent-portal/layout.tsx` → `ParentPortalShell` (amber, child-switcher)
+- [x] `src/app/parent-portal/page.tsx` (dashboard) · `attendance/` · `results/` · `fees/`
+- [x] `src/actions/parentPortal.ts` — getLinkedStudents, getSelectedChild, getChild{Attendance,Results,Fees,UpcomingExams}, admin getParents/createParent/linkStudent/unlinkStudent
+- [x] Login + middleware parent-role routing
+- [x] Admin: `src/app/institutions/[id]/parents/page.tsx` → `ParentsManager`; Sidebar link (People group)
+- [~] Razorpay payment on behalf — deferred (see note above)
 
 #### Database:
 ```sql
@@ -41,17 +61,6 @@ CREATE TABLE parent_student_links (
   UNIQUE(parent_id, student_id)
 );
 ```
-
-#### What to build:
-- [ ] `supabase/migrations/..._parents.sql`
-- [ ] `src/app/parent-portal/layout.tsx` — Parent portal shell (amber/orange theme) with child-switcher in topbar (dropdown listing all linked children by name; persists selected child in session)
-- [ ] `src/app/parent-portal/page.tsx` — Dashboard: selected child's attendance %, upcoming exams, fees due; if multiple children are linked, show a child-selector card grid on first visit
-- [ ] `src/app/parent-portal/attendance/page.tsx` — Selected child's subject-wise attendance
-- [ ] `src/app/parent-portal/results/page.tsx` — Selected child's marks and arrear status (Step 2C)
-- [ ] `src/app/parent-portal/fees/page.tsx` — Selected child's fees ledger + Razorpay payment on behalf
-- [ ] `src/actions/parentPortal.ts` — getLinkedStudents (returns all children via parent_student_links), getChildAttendance, getChildResults, getChildFees
-- [ ] Login flow: detect parent role (check `parents` table) → redirect to `/parent-portal`
-- [ ] Admin: `src/app/institutions/[id]/parents/page.tsx` — Link parent accounts to students via `parent_student_links`; one parent can be linked to multiple students
 
 ---
 
