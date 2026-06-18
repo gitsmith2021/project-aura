@@ -692,10 +692,29 @@ CREATE TABLE publications (
 
 **Route:** `/institutions/[id]/staff-attendance`
 
+> **Status:** ✅ **Complete** (migration `20260616090000_phase5j_staff_attendance`, commit `f3f6667`).
+
 > The existing attendance system tracks student attendance per class session. This separate
 > module tracks whether each staff member is present on campus each working day. Required for
 > payroll accuracy (absent days without approved leave are deducted as LOP), leave balance
 > validation, and NAAC Criterion 2.4 (Teacher Quality evidence).
+
+#### ✅ COMPLETE — commit `f3f6667`
+- Table `staff_attendance` (`unique(staff_id, date)`) with RLS: staff read their own; admins manage all; HODs manage their department's staff. The spec's single permissive member-policy was tightened to this role-scoped model.
+- Admin daily register: one-click **"mark all present"** (skips anyone already marked), then set per-staff exceptions (absent / half-day / late / on-duty). `on_leave` and `holiday` rows are locked from manual edit.
+- Monthly report: per-staff present/absent/half/late/leave + **LOP days** + attendance %; institution **NAAC 2.4 average attendance**; CSV export.
+- **Leave cross-reference:** `reviewLeaveRequest` (Step 1A) now auto-upserts `on_leave` rows for every date in an approved leave range — best-effort/guarded so it never breaks the approval.
+- **Payroll integration:** `generateMonthlyDisbursements` deducts LOP (`absent + half/2` days × `net ÷ days-in-month`) from `amount_disbursed`. **Additive & guarded** — with no `staff_attendance` data, LOP = 0 and payroll is byte-for-byte unchanged (fully backward-compatible).
+- Staff portal personal view at **`/staff-portal/my-attendance`** (a new route — the existing `/staff-portal/attendance` class-marking page is untouched), with an LOP warning that prompts leave regularisation. 11 Vitest tests; dataRetention entry (5-yr).
+
+#### What was built:
+- [x] `supabase/migrations/20260616090000_phase5j_staff_attendance.sql`
+- [x] `src/app/institutions/[id]/staff-attendance/page.tsx` → `DailyRegister`
+- [x] `src/app/institutions/[id]/staff-attendance/reports/page.tsx` → `MonthlyReport`
+- [x] `src/actions/staffAttendance.ts` — getDailyRegister, markStaffAttendance, bulkMarkPresent, getMonthlyReport, getMyAttendance
+- [x] Staff portal: `src/app/staff-portal/my-attendance/page.tsx` → `MyAttendanceView`; Sidebar links (admin People group + staff nav)
+- [x] Payroll integration (LOP deduction in `salary.ts`) + leave cross-reference (`staffPortal.ts`)
+- [x] NAAC Criterion 2.4 — institution average teacher-attendance metric
 
 #### Database:
 ```sql
@@ -723,16 +742,6 @@ CREATE POLICY "staff_attendance: institution members can manage"
     SELECT institution_id FROM institution_members WHERE profile_id = auth.uid()
   ));
 ```
-
-#### What to build:
-- [ ] `supabase/migrations/..._staff_attendance.sql`
-- [ ] `src/app/institutions/[id]/staff-attendance/page.tsx` — Daily register: all staff with today's status, one-click bulk mark present, admin marks exceptions (absent/late/half-day)
-- [ ] `src/app/institutions/[id]/staff-attendance/reports/page.tsx` — Monthly report per staff: present days, absent days, LOP days, late count, leave days
-- [ ] `src/actions/staffAttendance.ts` — markStaffAttendance, bulkMarkPresent, getMonthlyReport, getLOPSummary
-- [ ] `src/components/staff-attendance/DailyRegister.tsx` — Tabular register: staff name, department, status toggle (P / A / L / HD / OD)
-- [ ] Staff portal: `src/app/staff-portal/attendance/page.tsx` — Personal monthly attendance view: days present, absences, late count, leave days
-- [ ] Payroll integration: monthly attendance summary feeds into `salary_disbursements` — absent days without approved leave deducted as LOP (Loss of Pay) from gross salary
-- [ ] Leave cross-reference: when a leave request is approved (Step 1A), auto-mark those dates as `status='on_leave'` in staff_attendance
 
 #### Key features:
 - Daily register with one-click bulk-mark all present; admin marks exceptions only
