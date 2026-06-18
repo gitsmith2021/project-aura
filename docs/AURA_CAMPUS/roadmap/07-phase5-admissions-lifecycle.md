@@ -556,7 +556,26 @@ CREATE TABLE scholarship_applications (
 
 **Route:** `/institutions/[id]/disciplinary`
 
+> **Status:** ✅ **Complete** (migration `20260616070000_phase5h_disciplinary`, commit `8c5b3e9`).
+
 > UGC mandates an anti-ragging committee and formal disciplinary mechanism. NAAC Criterion 6.2 requires documented evidence of grievance/disciplinary actions taken.
+
+#### ✅ COMPLETE — commit `8c5b3e9`
+- Tables `disciplinary_incidents` + `disciplinary_actions` with **confidentiality-first RLS**: any institution member (student/staff/admin) may INSERT a report (`status='reported'`), but only admins (INST_ADMIN/SUPER_ADMIN) can SELECT/UPDATE/DELETE incidents and manage actions. Students have **no read access** to incidents.
+- **Anonymous reporting:** when a student chooses anonymity, `reported_by` is stored NULL and the insert deliberately does not `.select()` the row back (no read access) — the complainant's identity is never persisted.
+- Admin: incident register (type/status/search filters, stats, report drawer, NAAC 6.2 CSV) · incident detail (status `reported→under_review→resolved/escalated` + committee remarks + action summary; recorded `disciplinary_actions` with suspension duration / fine; **printable warning letter** via a browser print view) · UGC anti-ragging register (ragging-only view + resolution stats).
+- **Warning letters** are generated via a client print view (a new window with formatted letter → `window.print()`) rather than a public storage bucket — avoids exposing sensitive disciplinary letters by URL. The full certificate-module PDF path remains for Step 6C.
+- Student portal anonymous reporting form; 9 Vitest tests; dataRetention entry (7-yr, UGC/NAAC 6.2, no complainant identity).
+
+#### What was built:
+- [x] `supabase/migrations/20260616070000_phase5h_disciplinary.sql`
+- [x] `src/app/institutions/[id]/disciplinary/page.tsx` → `IncidentRegister`
+- [x] `src/app/institutions/[id]/disciplinary/[incidentId]/page.tsx` → `IncidentDetail` (status + actions + warning-letter print)
+- [x] `src/app/institutions/[id]/disciplinary/anti-ragging/page.tsx` → `AntiRaggingRegister`
+- [x] `src/actions/disciplinary.ts` — reportIncident, submitReport (student anonymous), updateIncidentStatus, recordAction/getActions/deleteAction, getIncidents/getIncident
+- [x] Student portal: `src/app/student-portal/anti-ragging/page.tsx` → `StudentReportForm`; Sidebar links (admin Institution group + student nav)
+- [~] Warning letter PDF via certificate module (Step 6C) — print-view stand-in shipped; full certificate integration deferred to 6C
+- [x] NAAC Criterion 6.2 evidence export (incident register CSV)
 
 #### Database:
 ```sql
@@ -591,16 +610,6 @@ CREATE TABLE disciplinary_actions (
   document_url   TEXT   -- Warning letter PDF
 );
 ```
-
-#### What to build:
-- [ ] `supabase/migrations/..._disciplinary.sql`
-- [ ] `src/app/institutions/[id]/disciplinary/page.tsx` — Incident register: filter by type, status, student
-- [ ] `src/app/institutions/[id]/disciplinary/[incidentId]/page.tsx` — Incident detail + committee action recording
-- [ ] `src/app/institutions/[id]/disciplinary/anti-ragging/page.tsx` — UGC anti-ragging committee incident register
-- [ ] `src/actions/disciplinary.ts` — reportIncident, updateStatus, recordAction, generateWarningLetter
-- [ ] Student portal: anonymous ragging reporting form
-- [ ] Warning letter auto-generation: PDF via certificate module (Step 6C)
-- [ ] NAAC Criterion 6.2: evidence export of disciplinary mechanism
 
 #### Key features:
 - Anonymous reporting protects complainant identity (no student_id stored for anonymous reports)
