@@ -9,6 +9,7 @@ import { TimetableSpotlight } from "./Spotlight/TimetableSpotlight";
 import { FeaturesSection } from "./Features/FeaturesSection";
 import { AccreditationSection } from "./Accreditation/AccreditationSection";
 import { ComparisonSection } from "./Comparison/ComparisonSection";
+import { RolesSection } from "./Roles/RolesSection";
 import { InstitutionTypesSection } from "./Institutions/InstitutionTypesSection";
 import { PricingSection } from "./Pricing/PricingSection";
 import { TechStackSection } from "./TechStack/TechStackSection";
@@ -60,13 +61,14 @@ export function LandingPage() {
           <Navbar isDark={isDark} onToggleDark={() => setIsDark(d => !d)} />
           <main>
             {/* Storytelling flow: Hero → Trust → AI Timetable → Accreditation →
-                Why Switch → Core Features → Institution Types → Pricing →
-                Tech Stack → Final CTA */}
+                Why Switch → Roles (every stakeholder) → Core Features →
+                Institution Types → Pricing → Tech Stack → Final CTA */}
             <HeroSection />
             <StatsSection />
             <TimetableSpotlight />
             <AccreditationSection />
             <ComparisonSection />
+            <RolesSection />
             <FeaturesSection />
             <InstitutionTypesSection />
             <PricingSection />
