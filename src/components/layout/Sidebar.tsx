@@ -381,6 +381,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const appraisalsHref     = slug ? `/institutions/${slug}/appraisals`        : "/institutions";
   const placementsHref     = slug ? `/institutions/${slug}/placements`        : "/institutions";
   const scholarshipsHref   = slug ? `/institutions/${slug}/scholarships`      : "/institutions";
+  const disciplinaryHref   = slug ? `/institutions/${slug}/disciplinary`      : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -517,6 +518,8 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                   active={isItemActive("iqac", iqacSsrHref)} />
                 <SubLink href={noticesHref} icon={<Megaphone size={14} />} label="Notices"
                   active={isItemActive("notices", noticesHref)} />
+                <SubLink href={disciplinaryHref} icon={<ShieldAlert size={14} />} label="Disciplinary"
+                  active={pathname.includes("/disciplinary")} />
               </NavGroup>
             )}
 

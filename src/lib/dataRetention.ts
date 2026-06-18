@@ -110,6 +110,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Institutional announcements (minimal personal data — only the poster's id). Auto-expire via expires_at; retained briefly for reference",
   },
   {
+    key: "disciplinary",
+    category: "Disciplinary & anti-ragging records (incidents & committee actions)",
+    tables: ["disciplinary_incidents", "disciplinary_actions"],
+    period: "7 years after resolution; anonymous reports store no complainant identity",
+    years: 7,
+    basis: "UGC anti-ragging regulations (2009) & NAAC Criterion 6.2 grievance/disciplinary evidence; anonymous reports never store the reporter's identity",
+  },
+  {
     key: "scholarships",
     category: "Scholarship records (schemes, applications & proof documents)",
     tables: ["scholarship_schemes", "scholarship_applications"],

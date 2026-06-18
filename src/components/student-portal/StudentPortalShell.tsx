@@ -84,6 +84,7 @@ export function StudentPortalShell({
     { key: "health",       href: "/student-portal/health",       label: "Health",         Icon: Stethoscope },
     { key: "sports",       href: "/student-portal/sports",       label: "Sports",         Icon: Trophy },
     { key: "events",       href: "/student-portal/events",       label: "Events",         Icon: Star },
+    { key: "anti-ragging", href: "/student-portal/anti-ragging", label: "Report Incident", Icon: ShieldCheck },
     { key: "attendance",   href: "/student-portal/attendance",   label: "Attendance",   Icon: ClipboardCheck },
     { key: "internships",  href: "/student-portal/internships",  label: "Internships",  Icon: Briefcase },
     { key: "placements",   href: "/student-portal/placements",   label: "Placements",   Icon: Briefcase },
