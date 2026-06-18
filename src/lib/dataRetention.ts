@@ -166,6 +166,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Ongoing alumni engagement, transcript/verification requests and institutional development (NIRF/NAAC alumni-outcome evidence); DPDP right to erasure applies",
   },
   {
+    key: "staff-career",
+    category: "Staff career lifecycle records (joining, promotions, increments, transfers, offboarding)",
+    tables: ["staff_career_events"],
+    period: "Retained permanently as part of the institutional service record",
+    years: null,
+    basis: "NAAC Criterion 2.4 (faculty stability evidence), service-record/pension verification, and statutory record-keeping for promotion/increment audit trails",
+  },
+  {
     key: "recruitment",
     category: "Staff recruitment data (job postings & applicant CVs)",
     tables: ["job_postings", "job_applications"],

@@ -3,8 +3,9 @@
 //
 // Dev Rule 13: every Server Action mutating exam_results, cia_marks,
 // fee_payments, salary_disbursements, promotion_logs, fee_concessions,
-// leave_requests, institution_members, lms_submissions or
-// department_budgets MUST call logAudit() / logAuditBatch().
+// leave_requests, institution_members, lms_submissions, department_budgets,
+// staff (designation/department_id/is_active) or salary_structures
+// MUST call logAudit() / logAuditBatch().
 //
 // Properties:
 //  - Fire-and-forget: never throws, never blocks the primary action.

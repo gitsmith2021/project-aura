@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -58,6 +58,7 @@ const STAFF_NAV = [
   { key: "my-attendance", href: "/staff-portal/my-attendance", label: "My Attendance", Icon: CalendarCheck },
   { key: "salary",          href: "/staff-portal/salary",           label: "Salary",          Icon: Wallet },
   { key: "tax-declaration", href: "/staff-portal/tax-declaration", label: "Tax Declaration", Icon: FileText },
+  { key: "career",          href: "/staff-portal/career",          label: "My Career",       Icon: UserCog },
   { key: "privacy",         href: "/staff-portal/privacy",         label: "Privacy",         Icon: ShieldCheck },
 ] as const;
 
@@ -386,6 +387,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const disciplinaryHref   = slug ? `/institutions/${slug}/disciplinary`      : "/institutions";
   const researchHref       = slug ? `/institutions/${slug}/research`          : "/institutions";
   const staffAttendanceHref = slug ? `/institutions/${slug}/staff-attendance`  : "/institutions";
+  const staffCareerHref     = slug ? `/institutions/${slug}/staff/career`      : "/institutions";
 
   const deptId = userAuth?.department_id;
   const myDeptHref = slug && deptId ? `/institutions/${slug}/department/${deptId}` : "/institutions";
@@ -546,6 +548,10 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               )}
               <SubLink href={staffAttendanceHref} icon={<CalendarCheck size={14} />} label="Staff Attendance"
                 active={pathname.includes("/staff-attendance")} />
+              {role !== "hod" && (
+                <SubLink href={staffCareerHref} icon={<UserCog size={14} />} label="Career Lifecycle"
+                  active={pathname.includes("/staff/career")} />
+              )}
             </NavGroup>
 
             {/* GROUP: Academics */}

@@ -253,7 +253,7 @@ Arch       ██████░░░░░░░░░░░░░░░░░
 10. **Never expose secrets** — `RAZORPAY_KEY_SECRET`, `SUPABASE_SERVICE_ROLE_KEY` server-only
 11. **Webhook security** — all incoming webhooks (Razorpay, NFC) must verify HMAC signatures before processing any payload
 12. **Consent before PII** — any new page or action collecting personal data must check `data_consent_logs` for valid consent
-13. **Audit trail** — every Server Action mutating `marks`, `cia_marks`, `fee_payments`, `salary_disbursements`, `student_promotions`, `fee_concessions`, `leave_requests`, `institution_members`, `lms_submissions`, or `department_budgets` **must** call `logAudit()` from `src/lib/auditLog.ts` — no exceptions
+13. **Audit trail** — every Server Action mutating `marks`, `cia_marks`, `fee_payments`, `salary_disbursements`, `student_promotions`, `fee_concessions`, `leave_requests`, `institution_members`, `lms_submissions`, `department_budgets`, `staff` (designation/department_id/is_active), or `salary_structures` **must** call `logAudit()` from `src/lib/auditLog.ts` — no exceptions
 14. **Scheduler resilience** — all calls to the Python scheduler must go through the `callScheduler()` wrapper with timeout and fallback error handling
 15. **Privacy by default** — new tables storing PII must document their data retention period in `src/lib/dataRetention.ts`
 16. **No RLS bypass without justification** — `createAdminClient()` (service role) may only be used in server-only files; add a comment above each use explaining why RLS bypass is necessary
