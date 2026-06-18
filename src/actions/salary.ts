@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { logAudit, logAuditBatch } from "@/lib/auditLog";
+import { lopDaysFromRecords, lopDeduction, parseMonth, daysInMonth, type StaffAttStatus } from "@/lib/staffAttendance";
 import { notifySalaryDisbursed, notifySalaryDisbursedBulk } from "@/actions/notificationTriggers";
 import type {
   SalaryStructure, SalaryDisbursement, SalarySummary,
@@ -271,17 +272,48 @@ export async function generateMonthlyDisbursements(
     const existingSet = new Set((existing ?? []).map(d => d.staff_id as string));
     const skipped = existingSet.size;
 
+    // Phase 5J — Loss of Pay: absent days (no approved leave) reduce this month's
+    // disbursement. Guarded & additive: with no staff_attendance data, lopDays = 0
+    // and amounts are unchanged (fully backward-compatible).
+    const lopByStaff = new Map<string, number>();
+    try {
+      const { year, month: mm } = parseMonth(month);
+      const pad = String(mm).padStart(2, "0");
+      const from = `${year}-${pad}-01`;
+      const to = `${year}-${pad}-${String(daysInMonth(year, mm)).padStart(2, "0")}`;
+      const { data: att } = await supabase
+        .from("staff_attendance")
+        .select("staff_id, status")
+        .eq("institution_id", institutionId)
+        .gte("date", from).lte("date", to);
+      const grouped = new Map<string, { status: StaffAttStatus }[]>();
+      for (const a of att ?? []) {
+        const arr = grouped.get(a.staff_id as string) ?? [];
+        arr.push({ status: a.status as StaffAttStatus });
+        grouped.set(a.staff_id as string, arr);
+      }
+      for (const [sid, recs] of grouped) lopByStaff.set(sid, lopDaysFromRecords(recs));
+    } catch { /* attendance optional — fall back to full salary */ }
+
+    const { year: ly, month: lm } = parseMonth(month);
+    const monthDays = daysInMonth(ly, lm);
+
     const toInsert = monthlyStructures
       .filter(s => !existingSet.has(s.staff_id))
-      .map(s => ({
-        institution_id:      institutionId,
-        staff_id:            s.staff_id,
-        salary_structure_id: s.id,
-        month,
-        amount_disbursed:    s.net_salary ?? 0,
-        payment_mode:        "bank_transfer" as DisbursementMode,
-        status:              "pending"      as DisbursementStatus,
-      }));
+      .map(s => {
+        const net = s.net_salary ?? 0;
+        const lop = lopByStaff.get(s.staff_id as string) ?? 0;
+        const amount = Math.max(0, net - lopDeduction(net, lop, monthDays));
+        return {
+          institution_id:      institutionId,
+          staff_id:            s.staff_id,
+          salary_structure_id: s.id,
+          month,
+          amount_disbursed:    Math.round(amount * 100) / 100,
+          payment_mode:        "bank_transfer" as DisbursementMode,
+          status:              "pending"      as DisbursementStatus,
+        };
+      });
 
     if (toInsert.length === 0) {
       return { success: true, data: { generated: 0, skipped } };

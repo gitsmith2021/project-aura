@@ -110,6 +110,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Institutional announcements (minimal personal data — only the poster's id). Auto-expire via expires_at; retained briefly for reference",
   },
   {
+    key: "staff-attendance",
+    category: "Staff daily attendance records",
+    tables: ["staff_attendance"],
+    period: "5 years (payroll & LOP audit window)",
+    years: 5,
+    basis: "Payroll accuracy / Loss-of-Pay computation, leave reconciliation and NAAC Criterion 2.4 teacher-attendance evidence",
+  },
+  {
     key: "research",
     category: "Research records (projects, publications & grants)",
     tables: ["research_projects", "publications"],

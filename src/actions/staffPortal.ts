@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { cache } from "react";
 import { createClient } from "@/utils/supabase/server";
 import { logAudit } from "@/lib/auditLog";
+import { eachDateInRange } from "@/lib/staffAttendance";
 import { notifyLeaveRequested, notifyLeaveReviewed } from "@/actions/notificationTriggers";
 import type {
   StaffProfile, StaffScheduleSlot, AttendanceSummaryRow,
@@ -437,6 +438,26 @@ export async function reviewLeaveRequest(
         fromDate:  (before.from_date as string) ?? "",
         toDate:    (before.to_date as string) ?? "",
       });
+    }
+
+    // Cross-reference (Phase 5J): approved leave auto-marks those dates 'on_leave'
+    // in the staff daily-attendance register, so they're not counted as LOP.
+    if (payload.status === "approved" && before?.staff_id && before?.from_date && before?.to_date) {
+      try {
+        const dates = eachDateInRange(before.from_date as string, before.to_date as string);
+        if (dates.length) {
+          await supabase.from("staff_attendance").upsert(
+            dates.map(d => ({
+              institution_id: institutionId,
+              staff_id:       before.staff_id as string,
+              date:           d,
+              status:         "on_leave",
+              logged_by:      user.id,
+            })),
+            { onConflict: "staff_id,date" }
+          );
+        }
+      } catch { /* attendance sync is best-effort — must not fail the approval */ }
     }
 
     revalidatePath(`/institutions/${institutionId}/leave`);
