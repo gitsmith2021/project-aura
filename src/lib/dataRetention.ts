@@ -118,6 +118,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Parent/guardian contact for academic communication and fee notices; DPDP right to erasure applies",
   },
   {
+    key: "transport",
+    category: "Transport records (vehicles, drivers, routes & student allocations)",
+    tables: ["vehicles", "bus_routes", "transport_allocations"],
+    period: "While the vehicle/route is in service; allocations kept for the academic year + 1 year",
+    years: 1,
+    basis: "Operational fleet management and student safety/boarding records; driver contact details are retained only while the driver is engaged",
+  },
+  {
     key: "staff-attendance",
     category: "Staff daily attendance records",
     tables: ["staff_attendance"],
