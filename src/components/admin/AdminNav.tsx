@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "/admin", label: "Overview", ready: true },
   { href: "/admin/institutions", label: "Institutions", ready: true }, // Phase 7C
-  // Built in Phase 7D/7E — visible now so the operator IA is stable.
-  { href: "/admin/health", label: "Health", ready: false },
-  { href: "/admin/billing", label: "Billing", ready: false },
+  { href: "/admin/health", label: "Health", ready: true },             // Phase 7D
+  { href: "/admin/security", label: "Security", ready: true },         // Phase 7D
+  { href: "/admin/billing", label: "Billing", ready: false },          // Phase 7E
 ];
 
 export function AdminNav() {
