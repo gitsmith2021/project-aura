@@ -409,7 +409,24 @@ CREATE POLICY "lms_submissions: institution members can manage"
 
 **Route:** `/institutions/[id]/industry-connect`
 
+> **Status:** ✅ **Complete** (migration `20260627000000_phase6h_industry_connect`, commit `5018171`).
+
 > Track Memoranda of Understanding with industry and academic partners. NAAC Criterion 7.1 (Institutional Values). MOU expiry alerts prevent lapsed partnerships from hurting NAAC scores.
+
+#### ✅ COMPLETE — commit `5018171`
+- `mou_partners` + `industry_interactions` with admin-managed institution-scoped RLS, plus a public `mou-documents` storage bucket (per the existing convention) for the signed MOU PDF.
+- `src/lib/industryConnect.ts` — partner/interaction typing, **expiry bands** (60-day warning, 30-day critical, expired), `computeExpiry` (UTC-safe `mou_date + validity_years`), fleet stats, per-partner activity/students rollup and the **NAAC Criterion 7.1 CSV** — **9 Vitest tests**.
+- `src/actions/industryConnect.ts` — MOU CRUD (+document upload, activate/deactivate), activity logging (optionally linked to an MOU), and the NAAC 7.1 export.
+- Admin: MOU registry with a stats strip, an **expiry-alert banner** (≤60/≤30 days + expired), status filters, and `MOUCard`s with an urgency badge + activity/students counts; a separate activity-log page (internships, workshops, guest lectures, drives, students benefited); one-click NAAC 7.1 CSV download. Sidebar link; dataRetention entry; `ssrRegistry` 7.1 (MOUs) flipped to live.
+- **Cross-module note:** the Guest Lecture (2H) and Placement (5F) modules already capture their own records; activities here are logged where an MOU context is wanted, avoiding forced duplication.
+
+#### What was built:
+- [x] `supabase/migrations/20260627000000_phase6h_industry_connect.sql` — mou_partners + industry_interactions + RLS + mou-documents bucket
+- [x] `src/app/institutions/[id]/industry-connect/page.tsx` — MOU registry with expiry status badges + alerts
+- [x] `src/app/institutions/[id]/industry-connect/interactions/page.tsx` — activity log per MOU
+- [x] `src/actions/industryConnect.ts` — getMOUs, saveMOU, logInteraction, toggle/delete, getNaacMouCsv
+- [x] `src/components/industry-connect/MOUCard.tsx` — partner, type, expiry-date badge, activity/students counts
+- [x] NAAC Criterion 7.1 export — MOUs with activity log + students benefited (CSV)
 
 #### Database:
 ```sql
