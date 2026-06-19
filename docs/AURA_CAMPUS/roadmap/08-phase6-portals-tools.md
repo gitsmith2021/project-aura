@@ -164,22 +164,28 @@ CREATE TABLE transport_allocations (
 
 **Route:** `/institutions/[id]/online-exams`
 
+> **Status:** ✅ **Complete** (migration `20260623000000_phase6d_online_exams`, commit `6153c1a`).
+
 > Internal assessments and unit tests conducted digitally. Auto-graded MCQ. Results feed directly into the marks module (Step 2C).
 
-#### What to build:
-- [ ] `supabase/migrations/..._online_exams.sql` — `question_banks`, `online_exam_sessions`, `exam_submissions`
-- [ ] `src/app/institutions/[id]/online-exams/page.tsx` — Exam session manager
-- [ ] `src/app/institutions/[id]/online-exams/[examId]/questions/page.tsx` — Question bank editor (MCQ + short answer)
-- [ ] `src/actions/onlineExams.ts` — createExam, startSession, submitAnswers, autoGrade
-- [ ] `src/components/online-exams/ExamPlayer.tsx` — Timed exam interface (countdown, question navigation, auto-submit on timeout)
-- [ ] Anti-cheating measures:
-  * Tab-switch detection — log event and warn student; 3 violations = auto-submit with flag
-  * Full-screen enforcement — exit full-screen triggers warning modal requiring re-entry
-  * Copy-paste disabled on question text areas
-  * Unique session token per student per exam (prevents URL sharing / duplicate sessions)
-  * `exam_violations` log table: stores tab-switch events per student for admin review
-- [ ] Student portal: `src/app/student-portal/exams/online/page.tsx` — Upcoming exams, take exam, view results
-- [ ] Results auto-pushed to `exam_results` table (Step 2C integration)
+#### ✅ COMPLETE — commit `6153c1a`
+- 5 tables — `online_exams`, `online_exam_questions`, `online_exam_sessions`, `online_exam_answers`, `online_exam_violations` — with RLS. **Security cornerstone:** answer keys (`correct_keys`) must never reach a student's browser, so students have **no RLS read** on the questions/answers tables; the whole exam-player flow (fetch questions, submit, grade, log violations) runs in **service-role server actions** that strip the keys on the way out and grade tamper-proof on the server. Admins manage everything; a student reads only their own session and the published exams targeted to them (dept match or institution-wide).
+- `src/lib/onlineExams.ts` — auto-grading (single-MCQ, multi-select exact-set, short-answer normalized match; no partial credit), exam-window state, countdown/timer maths — **18 Vitest tests** on the security-sensitive scoring logic.
+- `src/actions/onlineExams.ts` — exam + question CRUD, publish (recomputes total marks from the bank), `startExam` (one session per student, returns stripped questions + remaining time), `submitExam` (server-graded, idempotent), `logViolation` (3 → auto-submit + flag), admin results and student review readers.
+- **ExamPlayer** — full-screen timed interface: live countdown, question palette, single/multi/short inputs, and anti-cheating: tab-switch detection, full-screen-exit detection with a re-enter modal, copy/paste/cut/context-menu blocking, and a per-student unique `session_token`; 3 violations auto-submit with a flag. Pre-exam **ExamLauncher** shows the rules and enters full-screen on the Start gesture.
+- Admin question-bank editor (MCQ single/multi + short, mark-correct UI), exam manager (draft → published → closed) and a results dashboard (average %, flagged count, ranked attempts). Student list + launcher + player + answer-review. Nav added to both sidebars; dataRetention entry.
+- **Deferred:** auto-push of scores into the CIA gradebook — the spec's `exam_results` table doesn't exist (Step 2C results live in `cia_results`, which models weighted CIA components, not a one-off quiz). Online-exam scores stay self-contained and are surfaced in the module; a later mapping into `cia_results` can be added deliberately.
+
+#### What was built:
+- [x] `supabase/migrations/20260623000000_phase6d_online_exams.sql` — exams, questions, sessions, answers, violations
+- [x] `src/app/institutions/[id]/online-exams/page.tsx` — Exam manager
+- [x] `src/app/institutions/[id]/online-exams/[examId]/questions/page.tsx` — Question bank editor (MCQ + short answer)
+- [x] `src/app/institutions/[id]/online-exams/[examId]/results/page.tsx` — Results dashboard
+- [x] `src/actions/onlineExams.ts` — createExam, startExam, submitExam, autoGrade (+ logViolation, review)
+- [x] `src/components/online-exams/ExamPlayer.tsx` — Timed interface (countdown, navigation, auto-submit)
+- [x] Anti-cheating: tab-switch (3 = auto-submit + flag), full-screen enforce + re-enter modal, copy-paste disabled, unique session token, `online_exam_violations` log
+- [x] Student portal: `src/app/student-portal/exams/online/page.tsx` — upcoming, take, review
+- [~] Results auto-pushed to `exam_results` (Step 2C) — deferred (table doesn't exist; results self-contained, see note above)
 
 ---
 
