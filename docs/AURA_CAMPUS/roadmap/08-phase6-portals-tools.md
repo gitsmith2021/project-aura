@@ -193,16 +193,25 @@ CREATE TABLE transport_allocations (
 
 **Route:** `/institutions/[id]/feedback`
 
+> **Status:** ✅ **Complete** (migration `20260624000000_phase6e_feedback`, commit `e937daf`).
+
 > Anonymous end-of-semester feedback forms. Staff see their own aggregated ratings. Aggregated reviews help institutions improve instruction.
 
-#### What to build:
-- [ ] `supabase/migrations/..._feedback.sql` — `feedback_forms`, `feedback_responses` (anonymous, no student_id stored)
-- [ ] `src/app/institutions/[id]/feedback/page.tsx` — Admin: create feedback forms, view aggregate reports
-- [ ] `src/app/institutions/[id]/feedback/[formId]/report/page.tsx` — Analytics: average ratings, word cloud, response rate
-- [ ] `src/actions/feedback.ts` — createFeedbackForm, submitFeedback, getFeedbackReport
-- [ ] `src/components/feedback/FeedbackForm.tsx` — Star ratings + open-text questions
-- [ ] Student portal: `src/app/student-portal/feedback/page.tsx` — Active feedback forms to fill
-- [ ] Staff portal: `src/app/staff-portal/feedback/page.tsx` — View own anonymised ratings + feedback comments
+#### ✅ COMPLETE — commit `e937daf`
+- **Anonymity model (the core design):** `feedback_responses` stores **no `student_id`** — only the answers. Double-submission is prevented by a **separate, deliberately unjoinable** `feedback_submissions` ledger that records just `(form_id, student_id)` and none of the answers. So neither admins nor faculty can ever trace a response to a student, yet a student can't submit twice (the ledger's `unique(form_id, student_id)` guards it, written first in the submit action).
+- RLS: admins manage their institution's forms; the **rated faculty** read their own forms + aggregated responses (matched by `staff.email = auth.email()`); eligible students read active forms and **insert** responses (anonymous) but can never **read** responses; the ledger is student-own + admin-read.
+- `src/lib/feedback.ts` — per-question aggregation (averages + 1–5★ distributions), overall rating, response-rate, and a stopword-filtered **word-frequency (word cloud)** helper — **12 Vitest tests**.
+- `src/actions/feedback.ts` — form CRUD (details-only edit **preserves** the question set), `submitFeedback` (ledger-guarded), report builder (aggregate + word cloud + response rate, with the eligible-student count taken via service-role head-count so faculty reports work without students-table RLS), staff overview.
+- Admin form manager with a star/comment **question builder** and a report page (overall stars, per-question distribution bars, word cloud, comment stream). Student form list + star/comment fill page. Staff own-ratings overview + report. Nav added to all three sidebars; dataRetention entry.
+
+#### What was built:
+- [x] `supabase/migrations/20260624000000_phase6e_feedback.sql` — `feedback_forms`, `feedback_responses` (anonymous, no student_id) + `feedback_submissions` ledger
+- [x] `src/app/institutions/[id]/feedback/page.tsx` — Admin: create forms, view reports
+- [x] `src/app/institutions/[id]/feedback/[formId]/report/page.tsx` — Analytics: average ratings, word cloud, response rate
+- [x] `src/actions/feedback.ts` — saveFeedbackForm, submitFeedback, getFeedbackReport (+ staff overview)
+- [x] `src/components/feedback/FeedbackForm.tsx` — Star ratings + open-text questions
+- [x] Student portal: `src/app/student-portal/feedback/page.tsx` — active forms to fill
+- [x] Staff portal: `src/app/staff-portal/feedback/page.tsx` — own anonymised ratings + comments
 
 ### Step 6F — Grievance Redressal System
 
