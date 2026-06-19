@@ -288,7 +288,26 @@ CREATE TABLE grievances (
 
 **Route:** `/institutions/[id]/lms`
 
+> **Status:** ✅ **Complete** (migration `20260626000000_phase6g_lms`, commit `4c8513f`).
+
 > Post-COVID necessity. Every college needs teachers to upload notes, slides, and lecture recordings. Students access materials any time. Linked to syllabus units (Step 2F) for organized delivery. **Scope expanded** to include assignment submissions and a gradebook — making this a full lightweight LMS (not just a file repository).
+
+#### ✅ COMPLETE — commit `4c8513f`
+- 3 tables — `study_materials`, `lms_assignments`, `lms_submissions` — with RLS. **Access model:** admins manage; the **teaching staff** of a subject (via `teaching_assignments`, matched by `staff.email`) manage its materials/assignments and grade its submissions; **students of the subject's department** read published materials/assignments and submit/read only their own work. Two public storage buckets (`study-materials`, `lms-submissions`) following the existing `receipts`/`research-docs` convention.
+- `src/lib/lms.ts` — material typing, deadline status + late detection, **gradebook aggregation** (student × assignment matrix, per-student & per-assignment averages, missing/submitted/graded cell states) and YouTube-embed parsing — **28 Vitest tests**.
+- `src/actions/studyMaterials.ts` + `src/actions/lmsAssignments.ts` — material CRUD + publish toggle, assignment CRUD, submission grading, gradebook builder, student submit (deadline-enforced, auto late-flag, resubmission via upsert), and the staff/student portal subject lists.
+- Admin: LMS overview (subject grid + quick links), per-subject materials manager (upload by syllabus unit, file **or** external/YouTube link, draft/publish), institution-wide assignment manager, submissions grader (per-student marks + feedback, missing roster shown), and a colour-coded gradebook.
+- Staff portal: own-subjects workspace (materials + assignments + grading). Student portal: subject materials browser (lazy-loaded accordion) + assignments submit/grade view.
+- `ScormPlayer` embeds SCORM packages via iframe + `postMessage` completion. Nav added to admin/staff/student sidebars; dataRetention entry.
+
+#### What was built:
+- [x] `supabase/migrations/20260626000000_phase6g_lms.sql` — study_materials + lms_assignments + lms_submissions + RLS
+- [x] Storage buckets `study-materials` + `lms-submissions` (created in-migration, public per convention)
+- [x] `src/app/institutions/[id]/lms/page.tsx` — overview · `[subjectId]/` materials · `assignments/` · `assignments/[id]/submissions/` · `gradebook/`
+- [x] `src/actions/studyMaterials.ts` + `src/actions/lmsAssignments.ts`
+- [x] `MaterialCard` · `AssignmentsManager` (+card) · `GradebookTable` · `ScormPlayer`
+- [x] Student portal: `lms/page.tsx` (materials) + `lms/assignments/page.tsx` (submit + grade view)
+- [x] Staff portal: `staff-portal/lms/` (upload materials + manage/grade assignments for own subjects)
 
 #### Database:
 ```sql
