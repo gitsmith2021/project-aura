@@ -174,6 +174,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "UGC anti-ragging regulations (2009) & NAAC Criterion 6.2 grievance/disciplinary evidence; anonymous reports never store the reporter's identity",
   },
   {
+    key: "grievances",
+    category: "Grievance redressal records (complaints & resolutions)",
+    tables: ["grievances"],
+    period: "7 years after resolution; anonymous grievances store no complainant identity",
+    years: 7,
+    basis: "NAAC Criterion 6.2 (grievance redressal mechanism evidence) & UGC norms; anonymous submissions (harassment/ragging) never store the complainant's identity",
+  },
+  {
     key: "scholarships",
     category: "Scholarship records (schemes, applications & proof documents)",
     tables: ["scholarship_schemes", "scholarship_applications"],

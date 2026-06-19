@@ -115,6 +115,7 @@ export const SSR_CRITERIA: SSRCriterion[] = [
       { key: "salary", label: "Payroll & financial governance (6.4)", status: "live", table: "salary_disbursements", column: "institution_id" },
       { key: "iqac_meetings", label: "IQAC meetings, minutes & action items (6.5)", status: "pending", phase: "Phase 7F-sub2 — IQAC Meeting & Action Tracker" },
       { key: "budgets", label: "Department budget planning (6.4)", status: "live", table: "department_budgets", column: "institution_id" },
+      { key: "grievances", label: "Grievance redressal mechanism (6.2)", status: "live", table: "grievances", column: "institution_id" },
       { key: "appraisals", label: "Staff appraisals & workload reports (6.3)", status: "pending", phase: "Phase 5E — Staff Appraisal" },
     ],
   },
@@ -127,7 +128,6 @@ export const SSR_CRITERIA: SSRCriterion[] = [
       { key: "privacy", label: "DPDP data-privacy compliance — best practice (7.2)", status: "live", table: "data_consent_logs", column: "institution_id" },
       { key: "mous", label: "MOUs & industry collaborations (7.1)", status: "pending", phase: "Phase 6H — Industry Connect & MOU Management" },
       { key: "clubs", label: "NSS / NCC / cultural activity records (7.1)", status: "pending", phase: "Phase 4H — Student Clubs & Organizations" },
-      { key: "grievances", label: "Grievance redressal records (7.1)", status: "pending", phase: "Phase 6F — Grievance Redressal System" },
     ],
   },
 ];

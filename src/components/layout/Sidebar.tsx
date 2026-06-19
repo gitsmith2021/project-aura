@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart, Scale,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -56,6 +56,7 @@ const STAFF_NAV = [
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
   { key: "appraisal",  href: "/staff-portal/appraisal",  label: "Appraisal",   Icon: ClipboardCheck },
   { key: "feedback",   href: "/staff-portal/feedback",   label: "My Feedback", Icon: MessageSquareHeart },
+  { key: "grievance",  href: "/staff-portal/grievance",  label: "Grievance",   Icon: Scale },
   { key: "research",   href: "/staff-portal/research",   label: "My Research", Icon: Microscope },
   { key: "my-attendance", href: "/staff-portal/my-attendance", label: "My Attendance", Icon: CalendarCheck },
   { key: "salary",          href: "/staff-portal/salary",           label: "Salary",          Icon: Wallet },
@@ -391,6 +392,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const placementsHref     = slug ? `/institutions/${slug}/placements`        : "/institutions";
   const scholarshipsHref   = slug ? `/institutions/${slug}/scholarships`      : "/institutions";
   const disciplinaryHref   = slug ? `/institutions/${slug}/disciplinary`      : "/institutions";
+  const grievancesHref     = slug ? `/institutions/${slug}/grievances`        : "/institutions";
   const researchHref       = slug ? `/institutions/${slug}/research`          : "/institutions";
   const staffAttendanceHref = slug ? `/institutions/${slug}/staff-attendance`  : "/institutions";
   const parentsHref        = slug ? `/institutions/${slug}/parents`           : "/institutions";
@@ -534,6 +536,8 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                   active={isItemActive("notices", noticesHref)} />
                 <SubLink href={disciplinaryHref} icon={<ShieldAlert size={14} />} label="Disciplinary"
                   active={pathname.includes("/disciplinary")} />
+                <SubLink href={grievancesHref} icon={<Scale size={14} />} label="Grievances"
+                  active={pathname.includes("/grievances")} />
               </NavGroup>
             )}
 

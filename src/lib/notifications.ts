@@ -15,6 +15,7 @@ export type NotificationType =
   | "salary_disbursed"
   | "schedule_published"
   | "notice"
+  | "grievance_status"
   | "system";
 
 export type NotificationItem = {
@@ -42,6 +43,7 @@ export const NOTIFICATION_META: Record<
   salary_disbursed:   { label: "Salary disbursed",   tone: "emerald" },
   schedule_published: { label: "Timetable",          tone: "blue" },
   notice:             { label: "Notice",             tone: "violet" },
+  grievance_status:   { label: "Grievance update",  tone: "amber" },
   system:             { label: "System",             tone: "slate" },
 };
 
@@ -174,6 +176,15 @@ export function buildLowAttendanceMessage(pct: number, threshold = 75): BuiltNot
     type: "attendance_low",
     title: "Low attendance alert",
     body: `Your attendance is ${pct}%, below the ${threshold}% requirement. Please attend classes regularly.`,
+  };
+}
+
+/** Grievance status change → notify the (named) complainant. */
+export function buildGrievanceStatusMessage(subject: string, statusLabel: string): BuiltNotification {
+  return {
+    type: "grievance_status",
+    title: `Grievance ${statusLabel.toLowerCase()}`,
+    body: `Your grievance "${subject}" is now ${statusLabel}.`,
   };
 }
 
