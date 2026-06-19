@@ -126,6 +126,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "NAAC Criterion 2.6 (student satisfaction) & teaching-quality evidence. Responses store NO student identity; the participation ledger (feedback_submissions) records only that a student submitted, never linked to their answers",
   },
   {
+    key: "subscription-billing",
+    category: "SaaS subscription & billing records (plans, subscriptions, invoices)",
+    tables: ["subscription_plans", "institution_subscriptions", "subscription_invoices"],
+    period: "7 years after the financial year they belong to",
+    years: 7,
+    basis: "Income Tax Act 1961 & GST record-keeping for the platform's own SaaS revenue (plans hold no personal data; invoices link to the institution, not an individual)",
+  },
+  {
     key: "industry-connect",
     category: "Industry MOUs & partnership activity records",
     tables: ["mou_partners", "industry_interactions"],

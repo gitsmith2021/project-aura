@@ -8,7 +8,7 @@ const TABS = [
   { href: "/admin/institutions", label: "Institutions", ready: true }, // Phase 7C
   { href: "/admin/health", label: "Health", ready: true },             // Phase 7D
   { href: "/admin/security", label: "Security", ready: true },         // Phase 7D
-  { href: "/admin/billing", label: "Billing", ready: false },          // Phase 7E
+  { href: "/admin/billing", label: "Billing", ready: true },           // Phase 7E
 ];
 
 export function AdminNav() {
