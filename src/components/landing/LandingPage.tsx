@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { SmoothScrollProvider } from "./SmoothScrollProvider";
 import { Navbar } from "./Navbar";
 import { HeroSection } from "./Hero/HeroSection";
@@ -18,14 +17,12 @@ import { CTASection } from "./CTA/CTASection";
 import { Footer } from "./Footer";
 
 export function LandingPage() {
-  // Page-local theme toggle — defaults to light, independent of the
-  // dashboard's ThemeContext. The hero and features stay permanently dark;
-  // the toggle affects the sections below.
-  const [isDark, setIsDark] = useState(false);
-
+  // No theme toggle — the page uses a fixed light/dark rhythm. The hero and the
+  // top of the page are light; two sections deeper are wrapped in `.dark` to
+  // create deliberate visual breaks while scrolling (see <main> below).
   return (
     <SmoothScrollProvider>
-      <div className={isDark ? "dark" : ""}>
+      <div>
         <style>{`
           @keyframes marquee {
             0%   { transform: translateX(0); }
@@ -57,26 +54,44 @@ export function LandingPage() {
           }
         `}</style>
 
-        <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white overflow-x-hidden transition-colors duration-300">
-          <Navbar isDark={isDark} onToggleDark={() => setIsDark(d => !d)} />
+        <div className="min-h-screen bg-white text-slate-900 overflow-x-hidden">
+          <Navbar />
           <main>
             {/* Storytelling flow: Hero → Trust → AI Timetable → Accreditation →
                 Why Switch → Roles (every stakeholder) → Core Features →
-                Institution Types → Pricing → Tech Stack → Final CTA */}
+                Institution Types → Pricing → Tech Stack → Final CTA.
+
+                Fixed light/dark rhythm (no toggle): light intro, a dark band,
+                light again, then a dark close-out — each `.dark` wrapper flips
+                the section's built-in dark variants for a clean visual break. */}
+
+            {/* ── Light: the introduction ── */}
             <HeroSection />
             <StatsSection />
             <TimetableSpotlight />
             <AccreditationSection />
-            <ComparisonSection />
-            <RolesSection />
-            <FeaturesSection />
+
+            {/* ── Dark band: the pitch ── */}
+            <div className="dark bg-slate-950 text-white">
+              <ComparisonSection />
+              <RolesSection />
+              <FeaturesSection />
+            </div>
+
+            {/* ── Light: who it's for & pricing ── */}
             <InstitutionTypesSection />
             <PricingSection />
-            <TechStackSection />
-            <BuiltWithSection />
-            <CTASection />
+
+            {/* ── Dark close-out: tech + final CTA ── */}
+            <div className="dark bg-slate-950 text-white">
+              <TechStackSection />
+              <BuiltWithSection />
+              <CTASection />
+            </div>
           </main>
-          <Footer />
+          <div className="dark bg-slate-950 text-white">
+            <Footer />
+          </div>
         </div>
       </div>
     </SmoothScrollProvider>
