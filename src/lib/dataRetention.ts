@@ -126,6 +126,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "NAAC Criterion 2.6 (student satisfaction) & teaching-quality evidence. Responses store NO student identity; the participation ledger (feedback_submissions) records only that a student submitted, never linked to their answers",
   },
   {
+    key: "industry-connect",
+    category: "Industry MOUs & partnership activity records",
+    tables: ["mou_partners", "industry_interactions"],
+    period: "Retained permanently as part of the institutional partnership record",
+    years: null,
+    basis: "NAAC Criterion 7.1 (Institutional Values & Social Responsibility) evidence and ongoing/renewable partnership history; contact details retained while the MOU is on record",
+  },
+  {
     key: "lms",
     category: "E-learning records (study materials, assignments & submissions)",
     tables: ["study_materials", "lms_assignments", "lms_submissions"],

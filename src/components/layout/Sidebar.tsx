@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart, FileStack, Scale,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart, FileStack, Handshake, Scale,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -378,6 +378,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const onlineExamsHref    = slug ? `/institutions/${slug}/online-exams`      : "/institutions";
   const lmsHref            = slug ? `/institutions/${slug}/lms`               : "/institutions";
   const feedbackHref       = slug ? `/institutions/${slug}/feedback`          : "/institutions";
+  const industryConnectHref = slug ? `/institutions/${slug}/industry-connect`  : "/institutions";
   const assetsHref         = slug ? `/institutions/${slug}/assets`           : "/institutions";
   const vendorsHref        = slug ? `/institutions/${slug}/vendors`          : "/institutions";
   const idCardsHref        = slug ? `/institutions/${slug}/id-cards`         : "/institutions";
@@ -609,6 +610,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               <SubLink href={transportHref}      icon={<Bus size={14} />}          label="Transport"      active={pathname.includes("/transport")} />
               <SubLink href={certificatesHref}   icon={<FileText size={14} />}     label="Certificates"   active={pathname.includes("/certificates")} />
               <SubLink href={feedbackHref}       icon={<MessageSquareHeart size={14} />} label="Feedback"  active={pathname.includes("/feedback")} />
+              <SubLink href={industryConnectHref} icon={<Handshake size={14} />}    label="Industry Connect" active={pathname.includes("/industry-connect")} />
               <SubLink href={assetsHref}         icon={<Package size={14} />}      label="Assets"         active={pathname.includes("/assets")} />
               <SubLink href={vendorsHref}        icon={<Truck size={14} />}        label="Vendors"        active={pathname.includes("/vendors")} />
               <SubLink href={idCardsHref}        icon={<Nfc size={14} />}          label="ID Cards"       active={pathname.includes("/id-cards")} />

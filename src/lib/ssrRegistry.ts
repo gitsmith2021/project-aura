@@ -126,7 +126,7 @@ export const SSR_CRITERIA: SSRCriterion[] = [
     sources: [
       { key: "guest_lectures_c7", label: "Value-education events & talks (7.1)", status: "live", table: "guest_lectures", column: "institution_id" },
       { key: "privacy", label: "DPDP data-privacy compliance — best practice (7.2)", status: "live", table: "data_consent_logs", column: "institution_id" },
-      { key: "mous", label: "MOUs & industry collaborations (7.1)", status: "pending", phase: "Phase 6H — Industry Connect & MOU Management" },
+      { key: "mous", label: "MOUs & industry collaborations (7.1)", status: "live", table: "mou_partners", column: "institution_id" },
       { key: "clubs", label: "NSS / NCC / cultural activity records (7.1)", status: "pending", phase: "Phase 4H — Student Clubs & Organizations" },
     ],
   },
