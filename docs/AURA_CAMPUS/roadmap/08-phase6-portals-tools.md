@@ -217,7 +217,29 @@ CREATE TABLE transport_allocations (
 
 **Routes:** `/institutions/[id]/grievances` (admin) · `/student-portal/grievance` (student) · `/staff-portal/grievance` (staff)
 
+> **Status:** ✅ **Complete** (migration `20260625000000_phase6f_grievances`, commit `51a8422`).
+
 > NAAC Criterion 6.2 mandates a formal, documented grievance mechanism. Without this, NAAC auditors will flag it as a critical gap. Includes anonymous submission option for harassment/ragging cases.
+
+#### ✅ COMPLETE — commit `51a8422`
+- Single `grievances` table (complainant_type student/staff/anonymous, 7 categories, the `submitted → acknowledged → under_review → resolved / escalated / closed` lifecycle, `assigned_to` staff, `deadline`, `resolution_notes`). **Confidentiality model:** an anonymous grievance stores NO complainant identity (`submitted_by` NULL, enforced by a `CHECK`), so it can never be traced — but is consequently untrackable. RLS: admins manage their institution's cases; any member files a new one (status forced to `submitted`, submitter = self or NULL); a named complainant reads ONLY their own rows.
+- `src/lib/grievances.ts` — category/status labels + colours, sensitive-category anonymity defaulting, SLA/overdue maths (30-day NAAC target), stats (resolution rate, within-SLA rate, avg days-to-resolve, overdue count) and the NAAC 6.2 CSV — **15 Vitest tests**.
+- `src/actions/grievances.ts` — `submitGrievance` (portal, anonymous-aware), `getMyGrievances` (complainant tracking), admin `getGrievances`/`getGrievance`, `acknowledgeGrievance` (sets default SLA deadline), `assignGrievance`, `setGrievanceDeadline`, `updateGrievanceStatus`, `deleteGrievance`. Every status change notifies the named complainant (`grievance_status` notification type + builder added to `notifications.ts`); anonymous cases have nobody to notify.
+- Admin dashboard (6 KPI cards, category/status/search filters, overdue banner, NAAC 6.2 CSV export) + case-detail workflow (acknowledge, assign to staff, set deadline, status + resolution notes). Student & staff portal pages share one `GrievancePortalView` (submission form with sensitive-category anonymity auto-select + own-case tracking list).
+- Nav links: admin Governance group, student-portal and staff-portal sidebars; `dataRetention` `grievances` entry (7 years, anonymous reports store no identity); `ssrRegistry` grievance source flipped **live** under Criterion 6.2 (corrected from a mislabelled 7.1 slot).
+- **Note:** SLA is tracked via the admin-set `deadline` + overdue badges; auto-escalation after the deadline is surfaced as an overdue alert for manual escalation rather than a background cron job.
+
+#### What was built:
+- [x] `supabase/migrations/20260625000000_phase6f_grievances.sql`
+- [x] `src/app/institutions/[id]/grievances/page.tsx` — Admin dashboard: open cases, SLA tracking, overdue alerts
+- [x] `src/app/institutions/[id]/grievances/[grievanceId]/page.tsx` — Case detail + resolution workflow
+- [x] `src/actions/grievances.ts` — submitGrievance, updateGrievanceStatus, assignGrievance, acknowledge/resolve (via status), setDeadline
+- [x] `src/components/grievances/` — GrievanceManager (queue + stats), GrievanceDetail (workflow), GrievancePortalView (submit + track)
+- [x] Student portal: `src/app/student-portal/grievance/page.tsx` — submit, anonymous option, track status
+- [x] Staff portal: `src/app/staff-portal/grievance/page.tsx` — submit, track status
+- [x] Auto-notify complainant on every status change (Phase 3B notification)
+- [x] NAAC Criterion 6.2: cases filed, resolution rate, % within 30 days, avg days to resolve (stats + CSV)
+- [~] Auto-escalation after deadline — surfaced as overdue alerts for manual escalation (no background cron)
 
 #### Database:
 ```sql
