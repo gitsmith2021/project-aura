@@ -126,6 +126,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "NAAC Criterion 2.6 (student satisfaction) & teaching-quality evidence. Responses store NO student identity; the participation ledger (feedback_submissions) records only that a student submitted, never linked to their answers",
   },
   {
+    key: "lms",
+    category: "E-learning records (study materials, assignments & submissions)",
+    tables: ["study_materials", "lms_assignments", "lms_submissions"],
+    period: "Duration of enrolment + 3 years after the academic year",
+    years: 3,
+    basis: "Internal-assessment evidence (NAAC Criterion 2.5) and re-evaluation window; uploaded student submission files are a record of assessed work",
+  },
+  {
     key: "online-exams",
     category: "Online examination records (attempts, answers & integrity logs)",
     tables: ["online_exams", "online_exam_questions", "online_exam_sessions", "online_exam_answers", "online_exam_violations"],

@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart, Scale,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart, FileStack, Scale,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -55,6 +55,7 @@ const STAFF_NAV = [
   { key: "cia",        href: "/staff-portal/cia",        label: "CIA Marks",   Icon: ClipboardList },
   { key: "leave",      href: "/staff-portal/leave",      label: "Leave",       Icon: CalendarOff },
   { key: "appraisal",  href: "/staff-portal/appraisal",  label: "Appraisal",   Icon: ClipboardCheck },
+  { key: "lms",        href: "/staff-portal/lms",        label: "E-Learning",  Icon: FileStack },
   { key: "feedback",   href: "/staff-portal/feedback",   label: "My Feedback", Icon: MessageSquareHeart },
   { key: "grievance",  href: "/staff-portal/grievance",  label: "Grievance",   Icon: Scale },
   { key: "research",   href: "/staff-portal/research",   label: "My Research", Icon: Microscope },
@@ -375,6 +376,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const transportHref      = slug ? `/institutions/${slug}/transport`        : "/institutions";
   const certificatesHref   = slug ? `/institutions/${slug}/certificates`     : "/institutions";
   const onlineExamsHref    = slug ? `/institutions/${slug}/online-exams`      : "/institutions";
+  const lmsHref            = slug ? `/institutions/${slug}/lms`               : "/institutions";
   const feedbackHref       = slug ? `/institutions/${slug}/feedback`          : "/institutions";
   const assetsHref         = slug ? `/institutions/${slug}/assets`           : "/institutions";
   const vendorsHref        = slug ? `/institutions/${slug}/vendors`          : "/institutions";
@@ -411,6 +413,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
     { key: "internships",     href: internshipsHref,     label: "Internships",    Icon: Briefcase },
     { key: "exams",           href: examsHref,           label: "Exams",          Icon: ClipboardList },
     { key: "online-exams",    href: onlineExamsHref,     label: "Online Exams",   Icon: MonitorCheck },
+    { key: "lms",             href: lmsHref,             label: "E-Learning",     Icon: FileStack },
     { key: "cia",          href: ciaHref,          label: "CIA",           Icon: BadgePercent },
     { key: "results",      href: resultsHref,      label: "Results",       Icon: Award },
     { key: "promotion",    href: promotionHref,    label: "Promotion",     Icon: BadgeCheck },
