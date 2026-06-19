@@ -69,16 +69,32 @@
 
 ---
 
-### Step 7D — Platform Health, Audit & Security
+### Step 7D — Platform Health, Audit & Security ✅ (commit `d3ec04e`)
 
-**Route:** `/admin/health/page.tsx`
+**Routes:** `/admin/health` · `/admin/security`
+
+> **Status:** ✅ **Complete** (migration `20260628000000_phase7d_platform_table_stats`, commit `d3ec04e`).
+> SUPER_ADMIN-gated operator dashboards (service-role reads, Dev Rule 16). A
+> `public.platform_table_stats()` SECURITY DEFINER function (EXECUTE revoked from
+> anon/authenticated, granted to service_role only) feeds live per-table row
+> estimates + RLS flags without exposing pg_catalog to clients. `src/lib/platformHealth.ts`
+> (error-rate, RLS-coverage, compact-number helpers) has 7 Vitest tests.
 
 #### What to build:
-- [ ] Audit log table (all admin actions with timestamp + user)
-- [ ] Failed payments tracker across all institutions
-- [ ] Scheduler engine health check (ping FastAPI /health endpoint)
-- [ ] Database size and row counts per table
-- [ ] Error rate monitoring (failed logins, failed payments)
+- [x] Audit log table (all admin actions with timestamp + user) — recent cross-institution trail on `/admin/health`
+- [x] Failed payments tracker across all institutions — failure rate + 7d/30d counts + recent-failures list
+- [x] Scheduler engine health check (ping FastAPI /health endpoint) — reuses `checkSchedulerHealth()`
+- [x] Database size and row counts per table — `platform_table_stats()` (catalog estimates), largest-15 table panel
+- [x] Error rate monitoring (failed payments) — *(failed-login logging not yet captured; noted in plan)*
+
+#### ISO 27001 checklist — addressed this step:
+- [x] `docs/rls-policy-map.md` (incl. intentional deny-all tables rationale)
+- [x] `docs/security-audit-plan.md` (scope, methodology, annual pen-test cadence)
+- [x] `docs/query-performance.md` (indexing strategy + EXPLAIN ANALYZE guidance)
+- [x] Security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `frame-ancestors` CSP) in `next.config.ts` — *full resource-restricting CSP deferred (report-only rollout) to avoid breaking Razorpay/Realtime/YouTube/SCORM*
+- [x] `src/app/admin/security/page.tsx` — Security dashboard (live RLS coverage %, findings list, deny-all tables)
+- [x] Data-retention documented — `src/lib/dataRetention.ts` (every PII table)
+- [~] **Enable leaked-password protection** — deferred (requires Supabase **Pro plan**)
 
 #### ISO 27001 Security Audit Checklist (resolve during this step):
 - [ ] `docs/rls-policy-map.md` — document every table, its RLS policy, and which roles can read/write/delete
