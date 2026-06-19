@@ -118,6 +118,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Parent/guardian contact for academic communication and fee notices; DPDP right to erasure applies",
   },
   {
+    key: "feedback",
+    category: "Student feedback & faculty ratings (anonymous)",
+    tables: ["feedback_forms", "feedback_responses", "feedback_submissions"],
+    period: "5 years after the academic year",
+    years: 5,
+    basis: "NAAC Criterion 2.6 (student satisfaction) & teaching-quality evidence. Responses store NO student identity; the participation ledger (feedback_submissions) records only that a student submitted, never linked to their answers",
+  },
+  {
     key: "online-exams",
     category: "Online examination records (attempts, answers & integrity logs)",
     tables: ["online_exams", "online_exam_questions", "online_exam_sessions", "online_exam_answers", "online_exam_violations"],
