@@ -118,6 +118,14 @@ export const RETENTION_POLICIES: RetentionPolicy[] = [
     basis: "Parent/guardian contact for academic communication and fee notices; DPDP right to erasure applies",
   },
   {
+    key: "online-exams",
+    category: "Online examination records (attempts, answers & integrity logs)",
+    tables: ["online_exams", "online_exam_questions", "online_exam_sessions", "online_exam_answers", "online_exam_violations"],
+    period: "Duration of enrolment + 3 years after the academic year",
+    years: 3,
+    basis: "Internal-assessment evidence (NAAC Criterion 2.5) and re-evaluation/integrity-dispute window; anti-cheating violation logs support fair-conduct audits",
+  },
+  {
     key: "certificates",
     category: "Certificate & document requests (bonafide, TC, experience letters, etc.)",
     tables: ["certificate_requests"],

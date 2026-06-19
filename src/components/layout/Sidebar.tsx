@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -372,6 +372,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const laboratoriesHref   = slug ? `/institutions/${slug}/laboratories`     : "/institutions";
   const transportHref      = slug ? `/institutions/${slug}/transport`        : "/institutions";
   const certificatesHref   = slug ? `/institutions/${slug}/certificates`     : "/institutions";
+  const onlineExamsHref    = slug ? `/institutions/${slug}/online-exams`      : "/institutions";
   const assetsHref         = slug ? `/institutions/${slug}/assets`           : "/institutions";
   const vendorsHref        = slug ? `/institutions/${slug}/vendors`          : "/institutions";
   const idCardsHref        = slug ? `/institutions/${slug}/id-cards`         : "/institutions";
@@ -405,6 +406,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
     { key: "guest-lectures",  href: guestLecturesHref,  label: "Guest Lectures", Icon: Mic2 },
     { key: "internships",     href: internshipsHref,     label: "Internships",    Icon: Briefcase },
     { key: "exams",           href: examsHref,           label: "Exams",          Icon: ClipboardList },
+    { key: "online-exams",    href: onlineExamsHref,     label: "Online Exams",   Icon: MonitorCheck },
     { key: "cia",          href: ciaHref,          label: "CIA",           Icon: BadgePercent },
     { key: "results",      href: resultsHref,      label: "Results",       Icon: Award },
     { key: "promotion",    href: promotionHref,    label: "Promotion",     Icon: BadgeCheck },

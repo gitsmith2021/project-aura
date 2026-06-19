@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   GraduationCap, LayoutDashboard, Calendar, ClipboardCheck,
-  CreditCard, Menu, Sun, Moon, ChevronDown, LogOut, ClipboardList, CalendarDays, Award, BadgePercent, BookOpen, Briefcase, ShieldCheck, Megaphone, BedDouble, FlaskConical, DoorOpen, Stethoscope, Trophy, Star, Bus, FileText,
+  CreditCard, Menu, Sun, Moon, ChevronDown, LogOut, ClipboardList, CalendarDays, Award, BadgePercent, BookOpen, Briefcase, ShieldCheck, Megaphone, BedDouble, FlaskConical, DoorOpen, Stethoscope, Trophy, Star, Bus, FileText, MonitorCheck,
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { createClient } from "@/utils/supabase/client";
@@ -71,6 +71,7 @@ export function StudentPortalShell({
     { key: "dashboard",  href: "/student-portal",            label: "Dashboard",  Icon: LayoutDashboard, exact: true },
     { key: "timetable",  href: "/student-portal/timetable",  label: "Timetable",  Icon: Calendar },
     { key: "exams",      href: "/student-portal/exams",      label: "Exams",      Icon: ClipboardList },
+    { key: "online-exams", href: "/student-portal/exams/online", label: "Online Exams", Icon: MonitorCheck },
     { key: "cia",        href: "/student-portal/cia",        label: "CIA",        Icon: BadgePercent },
     { key: "curriculum", href: "/student-portal/curriculum", label: "Syllabus",   Icon: BookOpen },
     { key: "results",    href: "/student-portal/results",    label: "Results",    Icon: Award },
