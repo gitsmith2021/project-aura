@@ -17,5 +17,11 @@ export default defineConfig({
     environment: "node",
     include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"],
     reporters: "default",
+    // Use the forks pool. The default `threads` pool intermittently crashes at
+    // transform time on Windows under vitest v4 + @vitejs/plugin-react ("Cannot
+    // read properties of undefined (reading 'config')"), failing all files at
+    // import before any test runs. Forks isolate per-process and are reliable
+    // here; the suite is fast enough (~1.5s) that the overhead is negligible.
+    pool: "forks",
   },
 });
