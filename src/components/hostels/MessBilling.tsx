@@ -24,7 +24,7 @@ export function MessBilling({ institutionId, hostels }: { institutionId: string;
     setLoading(true);
     getMessBills(hostelId, month).then((res) => { setBills(res.success ? res.data : []); setLoading(false); });
   };
-  useEffect(load, [hostelId, month]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(load, [hostelId, month]);  
 
   const generate = async () => {
     setBusy(true); setError(null); setMsg(null);

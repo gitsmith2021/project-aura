@@ -29,7 +29,7 @@ export default function StaffClubsConsole({ clubs }: StaffClubsConsoleProps) {
         getSecretaryOptions(club.institution_id),
       ]);
       
-      let errors: string[] = [];
+      const errors: string[] = [];
       if (!mRes.success) errors.push(mRes.error);
       if (!aRes.success) errors.push(aRes.error);
       if (!sRes.success) errors.push(sRes.error);

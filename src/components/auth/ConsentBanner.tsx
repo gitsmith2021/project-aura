@@ -39,7 +39,7 @@ export function ConsentBanner() {
     });
     return () => { cancelled = true; };
     // Re-check on path change only while hidden — once visible it stays until resolved
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [pathname, visible]);
 
   if (!visible) return null;

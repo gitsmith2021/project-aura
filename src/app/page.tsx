@@ -69,7 +69,7 @@ function Dashboard() {
       .on("postgres_changes", { event: "*", schema: "public", table: "institutions" }, fetchColleges)
       .subscribe();
     return () => { supabase.removeChannel(sub); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   const activeTabId  = activeTab || (colleges.length > 0 ? colleges[0].id : "");

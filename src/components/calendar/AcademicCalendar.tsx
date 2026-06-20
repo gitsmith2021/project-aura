@@ -161,7 +161,7 @@ export function AcademicCalendar({
       const start = new Date(event.start_date);
       const end = new Date(event.end_date);
 
-      let curr = new Date(start);
+      const curr = new Date(start);
       while (curr <= end) {
         const dateKey = toISODateString(curr);
         if (!mapping[dateKey]) {
