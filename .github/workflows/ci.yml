@@ -1,0 +1,85 @@
+# Arch A5 — Continuous Integration
+#
+# Runs on every push to main and every pull request. Two independent jobs:
+#
+#   quality     — type-check, lint, and the Vitest unit suite (the same gates
+#                 enforced locally; vitest uses the forks pool pinned in
+#                 vitest.config.ts so it's reliable on CI runners).
+#   migrations  — boots a throwaway local Postgres via the Supabase CLI and
+#                 applies every migration from scratch, then lints the schema.
+#                 This catches a broken or out-of-order migration before it can
+#                 reach the remote database — no credentials required (the local
+#                 stack is ephemeral and self-contained).
+#
+# Make both jobs "required status checks" in the branch-protection rule for
+# `main` so a red build blocks merge. See docs/ci-cd.md.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same ref cancels the in-flight run — saves runner minutes.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Type-check, lint & unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      # Advisory, not blocking. The codebase carries ~190 pre-existing ESLint
+      # errors (set-state-in-effect, no-explicit-any, unescaped-entities, …);
+      # making lint a hard gate now would block every PR for unrelated reasons.
+      # It runs for visibility and is annotated on the PR; promote it to a hard
+      # gate once the existing debt is cleared (tracked in docs/ci-cd.md).
+      - name: Lint (advisory)
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Unit tests
+        run: npm test
+
+  migrations:
+    name: Validate migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Boot local Postgres
+        run: supabase db start
+
+      - name: Apply every migration from scratch
+        # --include-all applies all local migration files even with no remote
+        # history table — a clean from-zero replay. A failure here means a
+        # migration is malformed or depends on something not yet created.
+        run: supabase migration up --local --include-all
+
+      - name: Lint schema for typing errors
+        run: supabase db lint --local --schema public --level error --fail-on error
+
+      - name: Stop local stack
+        if: always()
+        run: supabase stop --no-backup

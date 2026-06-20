@@ -96,34 +96,27 @@
 
 ---
 
-### A5 — CI/CD Pipeline (Resolve by: Phase 5)
-> Manual git push to Vercel is implied. No automated migration runner, type check, or preview deployment strategy.
+### A5 — CI/CD Pipeline ✅ Complete (commit pending)
 
-#### What to build:
-```yaml
-# .github/workflows/ci.yml
-name: CI
-on: [push, pull_request]
-jobs:
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: npm ci
-      - run: npx tsc --noEmit
+> **Status:** ✅ Resolved (2026-06-20). GitHub Actions CI runs on every push to
+> `main` and every PR: a **quality** job (type-check · lint · unit tests) and a
+> **migrations** job that replays all 137 migrations from scratch against a
+> throwaway local Postgres and lints the schema — catching a broken/out-of-order
+> migration before it can reach the remote DB, credential-free. Pipeline + the
+> two dashboard-only steps documented in [`docs/ci-cd.md`](../../ci-cd.md).
 
-  migrations:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: supabase/setup-cli@v1
-      - run: supabase db push --dry-run  # validate migrations without applying
-```
-- [ ] `.github/workflows/ci.yml` — TypeScript check + migration dry-run on every PR
-- [ ] `.github/workflows/db-backup.yml` — Weekly backup (see Phase 2.5C)
-- [ ] Configure Vercel preview deployments for every PR branch
-- [ ] Add branch protection rule: PRs require CI green before merge
+> **Original concern:** Manual git push to Vercel is implied. No automated migration runner, type check, or preview deployment strategy.
+
+#### ✅ What was done (Arch A5, 2026-06-20)
+- [x] `.github/workflows/ci.yml` — **quality** job: `npm ci` (Node 22) → `npm run typecheck` → `npm run lint` (advisory) → `npm test`; **migrations** job: `supabase db start` → `supabase migration up --local --include-all` (clean from-zero replay) → `supabase db lint --local --schema public --fail-on error`. Concurrency-cancel on new pushes.
+- [x] `.github/workflows/db-backup.yml` — already shipped in **Phase 2.5C** (weekly AES-256-encrypted `pg_dump` artifact, 4 rolling snapshots). Referenced here for completeness.
+- [x] `docs/ci-cd.md` — full pipeline reference + the **manual, dashboard-only** steps that can't be committed: GitHub branch protection (require both CI jobs), Vercel preview/production deployments + env vars, and the required Actions secrets for backups.
+
+> **Deliberate scope notes:**
+> - **Lint is advisory** (`continue-on-error: true`) — the codebase carries ~190 pre-existing ESLint errors; making it a hard gate now would block every PR. Follow-up: burn down the debt, then promote lint to a required check. New code stays lint-clean.
+> - **Branch protection + Vercel** are GitHub/Vercel dashboard settings, not committable files — documented as one-time manual setup in `docs/ci-cd.md`.
+> - **Migrations are validated, not auto-applied** to prod (schema changes stay an intentional, reviewed action via `supabase db push` / MCP `execute_sql`).
+> - The migrations job's first real run is on the GitHub runner (local Docker unavailable here); if any historical migration doesn't replay cleanly from zero, CI will surface it — which is precisely its purpose.
 
 ---
 
