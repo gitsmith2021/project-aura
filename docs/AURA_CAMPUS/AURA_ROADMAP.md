@@ -236,7 +236,7 @@ Arch       ██████████████████████░
 | 🟡 Arch A2 | Testing Strategy — Vitest + Playwright infra, assessment-engine unit tests (CIA/CO-PO/role), public-route smoke crawl, `docs/testing-guide.md` (retroactive action coverage + authed e2e flows progressive) | Foundation | `ea779f2`+ |
 | ✅ Arch A3 | Database Index Strategy — idempotent migration covers every foreign key with `ix_<table>_<fk_cols>`; advisor `unindexed_foreign_keys` **136 → 0**; strategy + deferred RLS-perf backlog in `docs/query-performance.md` | Complete | `20260702000000` |
 | ✅ Arch A4 | Institution Onboarding Wizard — `/onboarding/[id]` multi-step wizard (Departments → Academic Year → Fees → Staff CSV), `is_onboarded` flag + first-login redirect, admin-gated actions, 14 unit tests | Complete | `20260703000000` |
-| ✅ Arch A5 | CI/CD Pipeline — GitHub Actions `ci.yml`: quality job (typecheck/lint/tests) + migrations job (from-scratch replay of all migrations + schema lint); weekly encrypted DB backup (2.5C); `docs/ci-cd.md` covers branch-protection + Vercel manual setup | Complete | _pending_ |
+| ✅ Arch A5 | CI/CD Pipeline — GitHub Actions `ci.yml`: quality job (typecheck/lint/tests) + migrations job (from-scratch replay of all migrations + schema lint); weekly encrypted DB backup (2.5C); `docs/ci-cd.md` covers branch-protection + Vercel manual setup | Complete | `287f280` |
 | 🔲 Arch A6 | Multi-currency & Multi-timezone Support | Pending | — |
 | ✅ Arch A7 | SaaS Billing — delivered via Phase 7E (plans/subscriptions/invoices + MRR/ARR + feature gating); middleware enforcement + Razorpay recurring deferred | Complete | `d70babd` |
 | ✅ Arch A8 | Platform-Wide Audit Log — `audit_logs` table + `logAudit()` helper | Complete | `b3c2ed0` |

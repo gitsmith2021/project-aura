@@ -96,7 +96,7 @@
 
 ---
 
-### A5 — CI/CD Pipeline ✅ Complete (commit pending)
+### A5 — CI/CD Pipeline ✅ Complete (commit `287f280`)
 
 > **Status:** ✅ Resolved (2026-06-20). GitHub Actions CI runs on every push to
 > `main` and every PR: a **quality** job (type-check · lint · unit tests) and a
