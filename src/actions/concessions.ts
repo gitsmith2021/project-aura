@@ -90,8 +90,8 @@ export async function grantConcession(payload: {
 
     revalidatePath(`/institutions/${payload.institution_id}/finance/concessions`);
     return { success: true as const, data: data as FeeConcession };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to grant concession" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to grant concession" };
   }
 }
 
@@ -135,8 +135,8 @@ export async function approveConcession(id: string, institutionId: string) {
 
     revalidatePath(`/institutions/${institutionId}/finance/concessions`);
     return { success: true as const, data: data as FeeConcession };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to approve concession" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to approve concession" };
   }
 }
 
@@ -180,8 +180,8 @@ export async function rejectConcession(id: string, institutionId: string) {
 
     revalidatePath(`/institutions/${institutionId}/finance/concessions`);
     return { success: true as const, data: data as FeeConcession };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to reject concession" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to reject concession" };
   }
 }
 
@@ -201,8 +201,8 @@ export async function getConcessionsByStudent(studentId: string) {
 
     if (error) throw error;
     return { success: true as const, data };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to fetch concessions for student" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to fetch concessions for student" };
   }
 }
 
@@ -223,7 +223,7 @@ export async function getConcessionsByInstitution(institutionId: string) {
 
     if (error) throw error;
     return { success: true as const, data };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to fetch concessions" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to fetch concessions" };
   }
 }

@@ -207,7 +207,7 @@ export async function setStaffMembershipRole(payload: {
   return { success: true };
 }
 
-export async function registerUser(prevState: any, formData: FormData) {
+export async function registerUser(prevState: unknown, formData: FormData) {
   const fullName = formData.get("fullName") as string;
   const email = formData.get("email") as string;
   const role = formData.get("role") as string;
@@ -287,7 +287,7 @@ export async function registerUser(prevState: any, formData: FormData) {
     revalidatePath("/users/students");
     
     return { success: true, error: null };
-  } catch (error: any) {
-    return { error: error.message || "An unexpected error occurred", success: false };
+  } catch (error) {
+    return { error: (error instanceof Error ? error.message : "") || "An unexpected error occurred", success: false };
   }
 }

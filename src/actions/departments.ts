@@ -114,8 +114,8 @@ export async function setHOD(departmentId: string, staffId: string, institutionI
     revalidatePath(`/institutions/${institutionId}`);
     revalidatePath(`/institutions/${institutionId}/department/${departmentId}`);
     return { success: true as const };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to set HOD" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to set HOD" };
   }
 }
 
@@ -186,7 +186,7 @@ export async function removeHOD(departmentId: string, institutionId: string) {
     revalidatePath(`/institutions/${institutionId}`);
     revalidatePath(`/institutions/${institutionId}/department/${departmentId}`);
     return { success: true as const };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to remove HOD" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to remove HOD" };
   }
 }

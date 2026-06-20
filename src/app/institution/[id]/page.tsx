@@ -284,7 +284,7 @@ async function FacultyDirectoryLoader({ institutionId, activeShift }: { institut
 
   return (
     <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-800">
-      {staff.map((s: any) => (
+      {staff.map((s) => (
          <div key={s.id} className="flex items-center gap-3 bg-gray-800/40 p-3 rounded-lg border border-gray-800/60 hover:bg-gray-800/80 transition-colors">
             <div className="w-10 h-10 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-semibold border border-indigo-500/30 shrink-0">
                {s.full_name?.charAt(0) || '?'}

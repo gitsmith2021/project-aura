@@ -50,7 +50,7 @@ function Dashboard() {
 
     if (error) { setLoading(false); return; }
 
-    const enriched = (tenants ?? []).map((t: any) => ({
+    const enriched = (tenants ?? []).map((t) => ({
       ...t,
       studentsCount:    t.students?.[0]?.count    || 0,
       staffCount:       t.staff?.[0]?.count        || 0,

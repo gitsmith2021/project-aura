@@ -260,6 +260,7 @@ export function LogExpenseDrawer({ isOpen, institutionId, onClose, onSuccess }: 
               {receiptFile ? (
                 receiptPreview ? (
                   <div className="flex items-center gap-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview of a just-selected file; next/image adds no value */}
                     <img src={receiptPreview} alt="Receipt" className="w-12 h-12 object-cover rounded-md border border-slate-200 dark:border-slate-700 shrink-0" />
                     <div className="text-left min-w-0">
                       <p className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{receiptFile.name}</p>

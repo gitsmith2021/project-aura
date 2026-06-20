@@ -7,8 +7,17 @@ import Link from "next/link";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+type ActiveClass = {
+  id: string;
+  subject_name: string | null;
+  start_time: string;
+  end_time: string;
+  staff_id: string | null;
+  staffName: string | null;
+};
+
 export function CurrentClassWidget({ tenantId }: { tenantId?: string }) {
-  const [activeClasses, setActiveClasses] = useState<any[]>([]);
+  const [activeClasses, setActiveClasses] = useState<ActiveClass[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -114,7 +114,7 @@ export default function SchedulesPage() {
     const seen = new Map<string, string>();
     institutionClasses.forEach(c => {
       if (c.staff_id && !seen.has(c.staff_id))
-        seen.set(c.staff_id, (c.staff as any)?.full_name ?? "Unknown");
+        seen.set(c.staff_id, (c.staff as { full_name?: string } | null)?.full_name ?? "Unknown");
     });
     return Array.from(seen, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
   }, [institutionClasses]);
@@ -154,7 +154,7 @@ export default function SchedulesPage() {
       for (let i = 0; i < entries.length - 1; i++) {
         if (entries[i].end_time > entries[i + 1].start_time) {
           const id = entries[i].staff_id;
-          const name = (entries[i].staff as any)?.full_name ?? "Unknown";
+          const name = (entries[i].staff as { full_name?: string } | null)?.full_name ?? "Unknown";
           affectedStaff.set(id, name);
         }
       }

@@ -86,12 +86,12 @@ function KPICard({ icon: Icon, label, value, sub, color }: {
 }
 
 // ── Custom Tooltip ────────────────────────────────────────────────────────────
-function DarkTooltip({ active, payload, label }: any) {
+function DarkTooltip({ active, payload, label }: { active?: boolean; payload?: { name?: string; value?: number | string; fill?: string; color?: string }[]; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-slate-900 text-white rounded-lg px-3 py-2 text-xs shadow-xl border border-slate-700">
       <p className="font-semibold text-slate-300 mb-1">{label}</p>
-      {payload.map((p: any, i: number) => (
+      {payload.map((p, i) => (
         <p key={i} className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full" style={{ background: p.fill || p.color }} />
           {p.name}: <span className="font-bold">{p.value}</span>
@@ -129,7 +129,7 @@ function StaffAttendanceCard({ tenantId }: { tenantId: string }) {
       .eq("date", dateStr);
 
     const map: Record<string, "present" | "absent" | "on_leave"> = {};
-    (attendanceRecords ?? []).forEach((r: any) => { map[r.staff_id] = r.status; });
+    (attendanceRecords ?? []).forEach((r) => { map[r.staff_id] = r.status; });
 
     const merged: StaffRecord[] = staffList.map(s => ({
       id: s.id,
@@ -389,7 +389,7 @@ export function CollegeDashboard({
       ]);
 
       if (depts) {
-        setDepartments(depts.map((d: any) => ({
+        setDepartments(depts.map((d) => ({
           id: d.id,
           name: d.name,
           color: d.color ?? 'violet',

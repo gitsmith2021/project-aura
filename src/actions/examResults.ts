@@ -114,7 +114,7 @@ export async function getArrearStudents(
   const { data, error } = await query;
   if (error) return { success: false as const, error: error.message };
 
-  let results = data as any[];
+  let results = (data ?? []) as unknown as Array<ExamResult & { students?: { department_id?: string | null } | null }>;
   if (filters?.departmentId) {
     results = results.filter(r => r.students?.department_id === filters.departmentId);
   }

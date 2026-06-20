@@ -13,7 +13,7 @@ interface DepartmentHeatmapProps {
   }[];
 }
 
-function HeatmapTooltip({ active, payload }: any) {
+function HeatmapTooltip({ active, payload }: { active?: boolean; payload?: { value?: number; payload: { fullName: string; fundingLabel: string } }[] }) {
   if (!active || !payload?.length) return null;
   const row = payload[0].payload as { fullName: string; fundingLabel: string };
   return (

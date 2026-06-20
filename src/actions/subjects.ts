@@ -48,8 +48,8 @@ export async function getSubjects(departmentId: string, semester?: number) {
 
     if (error) throw error;
     return { success: true as const, data: data as Subject[] };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to fetch subjects" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to fetch subjects" };
   }
 }
 
@@ -68,8 +68,8 @@ export async function addSubject(payload: Omit<Subject, "id" | "created_at" | "i
 
     revalidatePath(`/institutions/${payload.institution_id}/subjects`);
     return { success: true as const, data: data as Subject };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to add subject" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to add subject" };
   }
 }
 
@@ -93,8 +93,8 @@ export async function updateSubject(
 
     revalidatePath(`/institutions/${institutionId}/subjects`);
     return { success: true as const, data: data as Subject };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to update subject" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to update subject" };
   }
 }
 
@@ -129,8 +129,8 @@ export async function assignTeacher(payload: {
 
     revalidatePath(`/institutions/${payload.institution_id}/subjects`);
     return { success: true as const, data: data as TeachingAssignment };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to assign teacher" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to assign teacher" };
   }
 }
 
@@ -152,11 +152,11 @@ export async function getTeachingAssignments(departmentId: string) {
     if (error) throw error;
     
     // Filter out assignments where the subject filter didn't match (since inner join isn't default in PostgREST select unless specified)
-    const filteredData = (data || []).filter((assignment: any) => assignment.subject !== null);
+    const filteredData = (data || []).filter((assignment) => assignment.subject !== null);
 
     return { success: true as const, data: filteredData };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to fetch teaching assignments" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to fetch teaching assignments" };
   }
 }
 
@@ -187,11 +187,11 @@ export async function getMySubjects(profileId: string) {
     if (error) throw error;
 
     const subjects = (data || [])
-      .map((assignment: any) => assignment.subject)
-      .filter((subj: any) => subj !== null && subj.is_active);
+      .map((assignment) => assignment.subject)
+      .filter((subj) => subj !== null && subj.is_active);
 
     return { success: true as const, data: subjects as Subject[] };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to fetch my subjects" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to fetch my subjects" };
   }
 }

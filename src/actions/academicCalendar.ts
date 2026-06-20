@@ -52,8 +52,8 @@ export async function getAcademicYears(institutionId: string) {
 
     if (error) throw error;
     return { success: true as const, data: data as AcademicYear[] };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to fetch academic years" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to fetch academic years" };
   }
 }
 
@@ -96,8 +96,8 @@ export async function createAcademicYear(payload: {
     revalidatePath(`/institutions/${payload.institution_id}/calendar`);
     revalidatePath(`/institutions/${payload.institution_id}/calendar/years`);
     return { success: true as const, data: data as AcademicYear };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to create academic year" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to create academic year" };
   }
 }
 
@@ -125,8 +125,8 @@ export async function setYearAsCurrent(institutionId: string, yearId: string) {
     revalidatePath(`/institutions/${institutionId}/calendar`);
     revalidatePath(`/institutions/${institutionId}/calendar/years`);
     return { success: true as const, data: data as AcademicYear };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to set active academic year" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to set active academic year" };
   }
 }
 
@@ -157,8 +157,8 @@ export async function getCalendarEvents(
 
     if (error) throw error;
     return { success: true as const, data: data as AcademicEvent[] };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to fetch calendar events" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to fetch calendar events" };
   }
 }
 
@@ -199,8 +199,8 @@ export async function createCalendarEvent(payload: {
     revalidatePath(`/student-portal/calendar`);
     revalidatePath(`/staff-portal/calendar`);
     return { success: true as const, data: data as AcademicEvent };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to create calendar event" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to create calendar event" };
   }
 }
 
@@ -234,8 +234,8 @@ export async function updateCalendarEvent(
     revalidatePath(`/student-portal/calendar`);
     revalidatePath(`/staff-portal/calendar`);
     return { success: true as const, data: data as AcademicEvent };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to update calendar event" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to update calendar event" };
   }
 }
 
@@ -252,7 +252,7 @@ export async function deleteCalendarEvent(id: string, institutionId: string) {
     revalidatePath(`/student-portal/calendar`);
     revalidatePath(`/staff-portal/calendar`);
     return { success: true as const };
-  } catch (err: any) {
-    return { success: false as const, error: err.message || "Failed to delete calendar event" };
+  } catch (err) {
+    return { success: false as const, error: (err instanceof Error ? err.message : "") || "Failed to delete calendar event" };
   }
 }

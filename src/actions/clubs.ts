@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { logAudit } from "@/lib/auditLog";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   Club,
   ClubMember,
@@ -22,7 +23,7 @@ const MEMBER_SELECT = "id, club_id, student_id, role, joined_at, created_at, stu
 const ACTIVITY_SELECT = "id, club_id, title, activity_type, activity_date, venue, participants_count, description, photo_urls, created_at, club:clubs(name, club_type)";
 
 /** Resolve the current authenticated user's ID. */
-async function getAuthUserId(supabase: any): Promise<string | null> {
+async function getAuthUserId(supabase: SupabaseClient): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser();
   return user?.id ?? null;
 }
@@ -45,14 +46,14 @@ export async function getClubs(institutionId: string): Promise<Result<Club[]>> {
     const { data: memberCounts } = await supabase.from("club_members").select("club_id");
     const { data: activityCounts } = await supabase.from("club_activities").select("club_id");
 
-    const mapped = clubs.map((c: any) => {
+    const mapped = clubs.map((c) => {
       const mCount = memberCounts?.filter((m) => m.club_id === c.id).length ?? 0;
       const aCount = activityCounts?.filter((a) => a.club_id === c.id).length ?? 0;
       return {
         ...c,
         members_count: mCount,
         activities_count: aCount,
-      } as Club;
+      } as unknown as Club;
     });
 
     return { success: true, data: mapped };
@@ -441,7 +442,7 @@ export async function getMyClubMemberships(): Promise<Result<ClubMember[]>> {
       .eq("student_id", student.id);
 
     if (error) return { success: false, error: error.message };
-    return { success: true, data: (data ?? []) as any as ClubMember[] };
+    return { success: true, data: (data ?? []) as unknown as ClubMember[] };
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : "Failed to load memberships." };
   }
@@ -468,14 +469,14 @@ export async function getAssignedCoordinatorClubs(): Promise<Result<Club[]>> {
     const { data: memberCounts } = await supabase.from("club_members").select("club_id");
     const { data: activityCounts } = await supabase.from("club_activities").select("club_id");
 
-    const mapped = clubs.map((c: any) => {
+    const mapped = clubs.map((c) => {
       const mCount = memberCounts?.filter((m) => m.club_id === c.id).length ?? 0;
       const aCount = activityCounts?.filter((a) => a.club_id === c.id).length ?? 0;
       return {
         ...c,
         members_count: mCount,
         activities_count: aCount,
-      } as Club;
+      } as unknown as Club;
     });
 
     return { success: true, data: mapped };

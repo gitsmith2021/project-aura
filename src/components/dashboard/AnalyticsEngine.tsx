@@ -42,7 +42,7 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 }
 
 // ─── Dark Tooltips ────────────────────────────────────────────────────────────
-function BarTooltipContent({ active, payload, label }: any) {
+function BarTooltipContent({ active, payload, label }: { active?: boolean; payload?: { value?: number }[]; label?: string }) {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
@@ -59,7 +59,7 @@ function BarTooltipContent({ active, payload, label }: any) {
   );
 }
 
-function DonutTooltipContent({ active, payload }: any) {
+function DonutTooltipContent({ active, payload }: { active?: boolean; payload?: { name?: string; value?: number }[] }) {
   if (!active || !payload?.length) return null;
   const colorMap: Record<string, string> = { Students: "#C4B5FD", Staff: "#5EEAD4" };
   return (

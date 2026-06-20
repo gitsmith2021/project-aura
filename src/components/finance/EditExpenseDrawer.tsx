@@ -256,6 +256,7 @@ export function EditExpenseDrawer({ isOpen, expense, institutionId, onClose, onS
               {receiptFile ? (
                 <div className="flex items-center gap-2">
                   {receiptPreview
+                    // eslint-disable-next-line @next/next/no-img-element -- local blob preview of a just-selected file; next/image adds no value
                     ? <img src={receiptPreview} alt="" className="w-10 h-10 object-cover rounded shrink-0" />
                     : <Paperclip size={16} className="text-slate-400 shrink-0" />
                   }

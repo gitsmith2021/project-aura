@@ -99,7 +99,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
       
     if (!deptError && deptData) {
       const studentCountByDepartment = new Map<string, number>();
-      const filteredDepartments = deptData.filter((d: any) => (d.session_type ?? 'NORMAL') === activeShift);
+      const filteredDepartments = deptData.filter((d) => (d.session_type ?? 'NORMAL') === activeShift);
 
       if (!studentError && studentRows) {
         for (const row of studentRows) {
@@ -109,7 +109,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
         }
       }
 
-      const enrichedDepts = filteredDepartments.map((d: any) => ({
+      const enrichedDepts = filteredDepartments.map((d) => ({
         id: d.id,
         name: d.name,
         institution_id: d.institution_id,
