@@ -202,11 +202,24 @@ CREATE TABLE subscription_invoices (
 
 ---
 
-### Step 7F — IQAC & Government Compliance Reports (NAAC / NIRF / AISHE)
+### Step 7F — IQAC & Government Compliance Reports (NAAC / NIRF / AISHE) ✅ (commit `3cc2876`)
 
 **Routes:** `/institutions/[id]/iqac` (institution admin) · `/admin/iqac` (super admin overview)
 
+> **Status:** ✅ **Complete** (migration `20260630000000_phase7f_iqac_meetings`, commit `3cc2876`).
+> Delivered as the **IQAC dashboard + AQAR + IQAC Meeting & Action tracker (NAAC 6.1)**.
+> **NAAC criterion completeness, NIRF and AISHE exports are delivered by the existing
+> SSR Builder (7F-sub)** — the IQAC dashboard reuses its `aggregateSSRData` aggregator and
+> links to it rather than duplicating those pages. `src/lib/iqac.ts` has 8 Vitest tests.
+
 > The crown jewel of AURA for Indian colleges. Aggregates data from ALL modules into NAAC, NIRF, AISHE, and UGC report formats. A real-time data completeness meter tells admin which criterion needs more data before the NAAC visit.
+
+#### ✅ What was built — commit `3cc2876`
+- **IQAC dashboard** (`/institutions/[id]/iqac`) — overall NAAC readiness %, per-criterion completeness rings (from the SSR aggregator), IQAC meeting/action health (6.1 compliance), and links to the SSR Builder (NIRF/AISHE/criterion exports), Meetings and AQAR.
+- **IQAC Meeting & Action Tracker** (NAAC 6.1) — `iqac_meetings` + `iqac_action_items` + RLS; register + create, meeting detail with **agenda, minutes editor and action-taken items** (inline status, assignee, due date + overdue flag), `getIqacStats` (meetings ≥2/year compliance + resolved-%).
+- **AQAR compilation** (`/iqac/aqar`) — year-scoped, printable Annual Quality Assurance Report: headline counts (students/staff), NAAC criterion table, meeting/action stats.
+- `src/lib/iqac.ts` (status metadata, compliance & banding maths) + `src/actions/iqac.ts` (overview + AQAR) + `src/actions/iqacMeetings.ts` (full CRUD). Sidebar: **IQAC Dashboard** + **NAAC SSR Builder** links; dataRetention entry.
+- **Consolidation note:** the spec's separate `/iqac/naac`, `/iqac/nirf`, `/iqac/aishe` pages and the AISHE `students.category`/`is_pwd` migration were already delivered by **7F-sub (SSR Builder)** — reused here, not rebuilt (DRY).
 
 #### NAAC Criterion → Module Mapping:
 | NAAC Criterion | Primary Data Source |
