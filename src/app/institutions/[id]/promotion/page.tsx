@@ -228,7 +228,7 @@ export default function PromotionPage({ params }: { params: Promise<{ id: string
             {!preview && !loadingPrev && !runResult && (
               <div className="py-20 text-center border border-dashed border-slate-200 dark:border-slate-700 rounded-2xl bg-white/50 dark:bg-slate-800/30">
                 <BadgeCheck size={36} className="mx-auto text-slate-300 mb-3" />
-                <p className="text-sm font-semibold text-slate-500">Click "Preview Students" to see the promotion plan</p>
+                <p className="text-sm font-semibold text-slate-500">Click &#34;Preview Students&#34; to see the promotion plan</p>
                 <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
                   Students with no arrears will be promoted. Students with active arrears will be held.
                 </p>

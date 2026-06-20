@@ -40,7 +40,7 @@ export function MySportsView({ teams, achievements }: Props) {
         </div>
         <div>
           <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No sports activity yet</p>
-          <p className="text-xs text-slate-400 mt-1">You haven't been added to any team or achievement record.</p>
+          <p className="text-xs text-slate-400 mt-1">You haven&#39;t been added to any team or achievement record.</p>
         </div>
       </div>
     );

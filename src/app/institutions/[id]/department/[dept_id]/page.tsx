@@ -363,7 +363,7 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
                   {/* Today's schedule — grows to fill remaining column height */}
                   <div className="bg-white/75 backdrop-blur-sm rounded-xl border border-slate-100/90 shadow-[0_1px_8px_rgba(0,0,0,0.04)] flex flex-col flex-1 min-h-[200px] lg:min-h-0 overflow-hidden">
                     <h2 className="text-sm font-semibold text-slate-900 shrink-0 px-5 pt-5 pb-3 flex items-center gap-2 border-b border-slate-100/80">
-                      <Clock className="w-4 h-4 text-purple-600" /> Today's Schedule
+                      <Clock className="w-4 h-4 text-purple-600" /> Today&#39;s Schedule
                     </h2>
 
                     <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-5 py-4 space-y-3">

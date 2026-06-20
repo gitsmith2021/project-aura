@@ -204,7 +204,7 @@ export default function ConcessionsPage({ params }: { params: Promise<{ id: stri
                           Roll No: {c.student?.roll_no || "N/A"} · Year: {c.academic_year?.label || "N/A"}
                         </p>
                         <p className="text-[10px] text-slate-500 font-semibold mt-1">
-                          Reason: <span className="font-normal italic">"{c.reason}"</span>
+                          Reason: <span className="font-normal italic">&#34;{c.reason}&#34;</span>
                         </p>
                       </div>
                     </div>

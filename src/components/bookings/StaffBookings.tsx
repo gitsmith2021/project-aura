@@ -79,7 +79,7 @@ export function StaffBookings({
       {venues.length === 0 && <p className="text-[11px] text-amber-700 dark:text-amber-400 mb-3">No bookable venues have been set up yet.</p>}
 
       {bookings.length === 0 ? (
-        <p className="text-center text-xs text-slate-400 py-16">You haven't requested any bookings yet.</p>
+        <p className="text-center text-xs text-slate-400 py-16">You haven&#39;t requested any bookings yet.</p>
       ) : (
         <div className="space-y-2.5 max-w-3xl">
           {bookings.map((b) => (

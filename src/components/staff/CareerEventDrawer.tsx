@@ -135,7 +135,7 @@ export function CareerEventDrawer({
 
           {(eventType === "resignation" || eventType === "retirement" || eventType === "termination") && (
             <p className="text-[12px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-lg">
-              This will deactivate the staff member's account (is_active = false) effective immediately.
+              This will deactivate the staff member&#39;s account (is_active = false) effective immediately.
             </p>
           )}
 

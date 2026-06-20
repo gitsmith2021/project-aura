@@ -14,7 +14,7 @@ export default async function StaffLibraryPage() {
         <BookOpen size={18} className="text-violet-500" />
         <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">My Library</h1>
       </div>
-      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 mb-4">Books you've borrowed, due dates and any fines.</p>
+      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 mb-4">Books you&#39;ve borrowed, due dates and any fines.</p>
       <div className="max-w-3xl"><MyLibraryList lendings={lendings} /></div>
     </div>
   );

@@ -122,7 +122,7 @@ export default function AdminLeavePage({ params }: { params: Promise<{ id: strin
                             </button>
                           )}
                           {l.review_note && l.status !== "pending" && (
-                            <p className="text-[10px] text-slate-400 italic max-w-[120px] truncate" title={l.review_note}>"{l.review_note}"</p>
+                            <p className="text-[10px] text-slate-400 italic max-w-[120px] truncate" title={l.review_note}>&#34;{l.review_note}&#34;</p>
                           )}
                         </td>
                       </tr>

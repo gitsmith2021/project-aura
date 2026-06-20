@@ -167,7 +167,7 @@ async function StatsCards({ institutionId, activeShift }: { institutionId: strin
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div className="bg-gray-800/40 border border-gray-800/60 rounded-xl p-5 space-y-3 shadow-sm">
-        <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">Today's Sessions</span>
+        <span className="text-xs text-gray-500 font-medium uppercase tracking-wider">Today&#39;s Sessions</span>
         <div className="text-3xl font-bold text-gray-100">{schedules?.length || 0}</div>
       </div>
       <div className="bg-gray-800/40 border border-gray-800/60 rounded-xl p-5 space-y-3 shadow-sm">

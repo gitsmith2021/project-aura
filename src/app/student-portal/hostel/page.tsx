@@ -21,7 +21,7 @@ export default async function StudentHostelPage() {
       <div className="px-6 pt-6 pb-6 w-full">
         <div className="flex items-center gap-2"><BedDouble size={18} className="text-violet-500" /><h1 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-tight">My Hostel</h1></div>
         <div className="flex flex-col items-center justify-center gap-2 py-16 text-slate-400 dark:text-slate-500">
-          <BedDouble size={28} className="opacity-30" /><p className="text-xs">You don't have a hostel room allocated.</p>
+          <BedDouble size={28} className="opacity-30" /><p className="text-xs">You don&#39;t have a hostel room allocated.</p>
         </div>
       </div>
     );

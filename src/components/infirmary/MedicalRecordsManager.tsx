@@ -77,7 +77,7 @@ export function MedicalRecordsManager({ institutionId, initialRecords }: Props) 
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             {records.length === 0 ? "No medical profiles yet." : "No results match your search."}
           </p>
-          <p className="text-xs text-slate-400 mt-1">Profiles are created when a student's first visit is recorded, or via the Edit button.</p>
+          <p className="text-xs text-slate-400 mt-1">Profiles are created when a student&#39;s first visit is recorded, or via the Edit button.</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">

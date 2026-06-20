@@ -191,7 +191,7 @@ export function SportsManager({
       {tab === "teams" && (
         <div>
           {teams.length === 0 ? (
-            <div className="text-center py-16 text-slate-400 text-xs">No teams yet. Click "Add Team" to get started.</div>
+            <div className="text-center py-16 text-slate-400 text-xs">No teams yet. Click &#34;Add Team&#34; to get started.</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {teams.map((t) => (

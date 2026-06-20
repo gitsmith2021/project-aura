@@ -56,7 +56,7 @@ export default async function AdminStaffDashboard({ params }: { params: Promise<
       {/* KPIs */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         <div className={`${cardCls} border-violet-200/60 dark:border-violet-800/40`}>
-          <div className="flex items-center gap-2 mb-1"><Calendar size={13} className="text-violet-500" /><p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Today's Classes</p></div>
+          <div className="flex items-center gap-2 mb-1"><Calendar size={13} className="text-violet-500" /><p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Today&#39;s Classes</p></div>
           <p className="text-2xl font-black text-violet-700 dark:text-violet-400">{stats?.todaysClasses.length ?? 0}</p>
         </div>
         <div className={`${cardCls} border-blue-200/60 dark:border-blue-800/40`}>
@@ -76,7 +76,7 @@ export default async function AdminStaffDashboard({ params }: { params: Promise<
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-xl bg-white/70 dark:bg-slate-800/60 border border-white/40 dark:border-slate-700/50 backdrop-blur-sm shadow-sm">
           <div className="px-4 py-3 border-b border-slate-100/60 dark:border-slate-700/40 flex items-center justify-between">
-            <h2 className="text-xs font-semibold text-slate-700 dark:text-slate-200">Today's Schedule</h2>
+            <h2 className="text-xs font-semibold text-slate-700 dark:text-slate-200">Today&#39;s Schedule</h2>
             <span className="text-[10px] text-slate-400">{new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" })}</span>
           </div>
           {!stats?.todaysClasses.length ? (

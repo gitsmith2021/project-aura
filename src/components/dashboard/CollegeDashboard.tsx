@@ -479,7 +479,7 @@ export function CollegeDashboard({
           <div className="bg-white border border-slate-100 rounded-xl shadow-sm flex flex-col">
             <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <Clock size={14} className="text-amber-500" /> Today's Sessions
+                <Clock size={14} className="text-amber-500" /> Today&#39;s Sessions
               </h3>
               <span className="text-[10px] text-slate-400">{sessions.length} total</span>
             </div>

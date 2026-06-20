@@ -183,7 +183,7 @@ export function ExpensesClient({
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 shrink-0">
             <div className={`${cardCls} border-rose-200/60 dark:border-rose-800/40`}>
               <p className="text-base font-bold text-rose-600 dark:text-rose-400 leading-tight">{fmtINR(summary.totalExpenses)}</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">This Month's Spend</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">This Month&#39;s Spend</p>
             </div>
             <div className={`${cardCls} border-violet-200/60 dark:border-violet-800/40`}>
               <p className="text-base font-bold text-violet-700 dark:text-violet-400">{total}</p>

@@ -55,9 +55,6 @@ export function ShiftGateway({ allowedShifts }: { allowedShifts?: string[] }) {
     ? SHIFT_OPTIONS.filter((o) => allowedShifts.includes(o.key))
     : SHIFT_OPTIONS;
 
-  // Single-shift institution — no switcher needed
-  if (visibleOptions.length <= 1) return null;
-
   const currentShift = (searchParams?.get("shift") as ShiftKey) || "NORMAL";
   const activeIndex = visibleOptions.findIndex((o) => o.key === currentShift);
   const activeOption = visibleOptions[activeIndex >= 0 ? activeIndex : 0];
@@ -102,6 +99,10 @@ export function ShiftGateway({ allowedShifts }: { allowedShifts?: string[] }) {
     },
     [router, pathname, searchParams]
   );
+
+  // Single-shift institution — no switcher needed. This guard MUST come after
+  // every hook above so hook order stays stable across renders (Rules of Hooks).
+  if (visibleOptions.length <= 1) return null;
 
   return (
     <div className="shift-gateway-wrapper" id="shift-gateway">

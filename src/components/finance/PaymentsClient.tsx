@@ -445,7 +445,7 @@ export function PaymentsClient({
         <div className="shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50/70 dark:bg-blue-900/20 border border-blue-200/60 dark:border-blue-800/40 backdrop-blur-sm">
           <CreditCard className="w-4 h-4 text-blue-500 shrink-0" />
           <p className="text-xs text-blue-700 dark:text-blue-300 flex-1">
-            <strong>Accept online payments via Razorpay.</strong> Select a student and fee structure from the "Record Payment" drawer, or use the Pay Online button on a pending row.
+            <strong>Accept online payments via Razorpay.</strong> Select a student and fee structure from the &#34;Record Payment&#34; drawer, or use the Pay Online button on a pending row.
           </p>
         </div>
       )}

@@ -122,7 +122,7 @@ export function StatutoryConfigPanel({ institutionId, config }: Props) {
               </div>
               <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 px-3 py-2">
                 <p className="text-[10px] text-amber-700 dark:text-amber-300 leading-snug">
-                  TDS is computed automatically from each staff member's declared tax regime (old/new) and 80C/80D investments. Staff submit declarations from their portal.
+                  TDS is computed automatically from each staff member&#39;s declared tax regime (old/new) and 80C/80D investments. Staff submit declarations from their portal.
                 </p>
               </div>
             </div>

@@ -397,7 +397,7 @@ export function SalaryClient({
               </div>
               <div className="text-center">
                 <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No disbursements for {month}</p>
-                <p className="text-xs text-slate-400 mt-1">Click "Generate Disbursements" to create pending rows for all active staff.</p>
+                <p className="text-xs text-slate-400 mt-1">Click &#34;Generate Disbursements&#34; to create pending rows for all active staff.</p>
               </div>
             </div>
           ) : (

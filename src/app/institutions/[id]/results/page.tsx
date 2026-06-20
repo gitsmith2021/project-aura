@@ -275,7 +275,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
             <Award size={36} className="mx-auto text-slate-300 mb-3" />
             <p className="text-sm font-semibold text-slate-500">Select filters above to begin</p>
             <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
-              Choose a department, semester, and subject, then click "Load Students".
+              Choose a department, semester, and subject, then click &#34;Load Students&#34;.
             </p>
           </div>
         )}

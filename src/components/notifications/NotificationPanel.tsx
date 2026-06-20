@@ -105,7 +105,7 @@ export function NotificationPanel({
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-20 text-slate-400 dark:text-slate-500">
               <Bell size={28} className="opacity-30" />
-              <p className="text-xs">You're all caught up</p>
+              <p className="text-xs">You&#39;re all caught up</p>
             </div>
           ) : (
             groups.map((group) => (
