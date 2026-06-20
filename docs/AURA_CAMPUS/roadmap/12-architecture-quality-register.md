@@ -132,15 +132,27 @@
 
 ---
 
-### A6 — Multi-currency & Multi-timezone Support (Resolve by: Phase 7)
-> Aura is hardcoded to INR + Asia/Kolkata. As a multi-tenant SaaS, even one institution outside India breaks finance and scheduling.
+### A6 — Multi-currency & Multi-timezone Support ✅ Foundation complete (migration `20260704000000`)
 
-#### What to build:
-- [ ] Add `locale TEXT DEFAULT 'en-IN'`, `currency TEXT DEFAULT 'INR'`, `timezone TEXT DEFAULT 'Asia/Kolkata'` columns to `institutions` table
-- [ ] `src/lib/locale.ts` — `formatCurrency(amount, currency, locale)` and `formatDate(date, timezone)` helpers
-- [ ] Replace all hardcoded `en-IN` / `INR` / `Asia/Kolkata` references with calls to these helpers
-- [ ] Institution settings page: allow admin to configure locale, currency, timezone
-- [ ] All `TIMESTAMPTZ` storage stays UTC; display layer converts using institution timezone
+> **Status:** ✅ Mechanism, config UI, and plumbing shipped (2026-06-20). Each
+> institution now carries `currency` / `locale` / `timezone`; a canonical
+> `src/lib/locale.ts` formats money & dates accordingly; admins configure it in
+> the Settings → Institution Settings tab (live preview). Storage is untouched
+> (raw amounts, UTC timestamps) — only presentation localizes. **The exhaustive
+> sweep of ~128 files still using hardcoded `en-IN`/`₹`/`Asia/Kolkata` is a
+> progressive follow-up** (same model as A2 retroactive coverage) — adopt the
+> helpers per surface as each is touched.
+
+> **Original concern:** Aura is hardcoded to INR + Asia/Kolkata. As a multi-tenant SaaS, even one institution outside India breaks finance and scheduling.
+
+#### ✅ What was done (Arch A6, 2026-06-20)
+- [x] Migration `20260704000000` — `currency`/`locale`/`timezone` columns on `institutions` (India defaults; backward-compatible). Applied to remote + replays on the baseline in CI.
+- [x] `src/lib/locale.ts` — pure helpers `formatCurrency`, `formatDate`, `formatDateTime`, `currencySymbol`, `isValidTimezone`, `withLocalizationDefaults`, plus supported currency/locale/timezone lists. **14 Vitest unit tests** (`tests/unit/locale.test.ts`).
+- [x] `src/actions/institutionSettings.ts` — `getInstitutionLocalization` / `updateInstitutionLocalization`, admin-gated + validated, writes an `audit_logs` entry.
+- [x] `src/components/settings/LocalizationSettings.tsx` — currency/locale/timezone selects with a live preview, embedded in the existing **Settings → Institution Settings** tab (replaced its non-functional static timezone dropdown with a real one).
+- [x] `InstitutionContext` exposes localization + a `useInstitutionLocalization()` hook so any client component can format tenant-aware going forward.
+- [x] **TIMESTAMPTZ stays UTC** — `formatDate`/`formatDateTime` convert at display time via `Intl` + the institution timezone.
+- [ ] **Progressive:** migrate the ~128 hardcoded call sites (finance money displays, date formatting) to the helpers as each surface is touched.
 
 ---
 
