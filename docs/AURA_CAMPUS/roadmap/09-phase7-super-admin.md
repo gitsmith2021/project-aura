@@ -112,11 +112,35 @@
 
 ---
 
-### Step 7E — SaaS Subscription & Billing Management
+### Step 7E — SaaS Subscription & Billing Management ✅ (commit `d70babd`)
 
 **Route:** `/admin/billing`
 
+> **Status:** ✅ **Complete** (migration `20260629000000_phase7e_subscriptions`, commit `d70babd`).
+> Plans/subscriptions/invoices + MRR/ARR + feature gating shipped. **Razorpay
+> recurring auto-charge is deferred** (manual invoicing now) — `razorpay_sub_id` /
+> `razorpay_payment_id` are the integration point. `src/lib/subscriptions.ts` has 12
+> Vitest tests.
+
 > Manage institution subscription plans, billing cycles, and invoice generation for the Aura SaaS business. This is the revenue backbone of the platform. Without this, Aura has no monetization layer.
+
+#### ✅ What was built — commit `d70babd`
+- `subscription_plans` + `institution_subscriptions` + `subscription_invoices` with RLS (SUPER_ADMIN manages; an institution admin reads its own subscription/invoices); seeded **Starter / Pro / Enterprise**.
+- `src/lib/subscriptions.ts` — feature catalog (10 module keys, premium flags), **MRR/ARR** (paying subs only; annual amortised over 12), trial/expiry countdown, plan-limit checks, INR + invoice-number formatting.
+- `src/actions/subscriptions.ts` — SUPER_ADMIN-gated plan CRUD, assign/renew/cancel subscription, invoice generate + mark paid/failed, `getBilling` (MRR/ARR summary + per-institution usage-vs-caps), and **`isFeatureEnabled`** (default-allow so un-subscribed tenants are grandfathered until plans are assigned).
+- `/admin/billing` (MRR/ARR strip + `SubscriptionCard`s with trial countdown + assign/renew/cancel/invoice), `/admin/billing/plans` (tier + feature-gate manager), `/admin/billing/invoices` (generate + mark). AdminNav **Billing** tab live.
+- [~] **Razorpay recurring** + **middleware-level** feature enforcement — deferred (manual invoicing; page-level `isFeatureEnabled` available). MRR/ARR shown on the billing page; wiring an MRR card into the 7B overview is a small follow-up.
+
+#### Original build checklist:
+- [x] `supabase/migrations/..._subscriptions.sql`
+- [x] `src/app/admin/billing/page.tsx` — subscriptions: plan, status, next billing date, MRR contribution
+- [x] `src/app/admin/billing/plans/page.tsx` — plan manager (tiers + feature gates)
+- [x] `src/app/admin/billing/invoices/page.tsx` — invoice history (paid/pending/failed)
+- [x] `src/actions/subscriptions.ts` — assignPlan, renew/cancel, generateInvoice (+ getBilling, isFeatureEnabled)
+- [x] `src/components/billing/SubscriptionCard.tsx` — status card with trial countdown
+- [~] Feature gating in **middleware** — page-level `isFeatureEnabled` shipped; middleware enforcement deferred (avoid hard lock-outs pre-assignment)
+- [~] MRR/ARR fed into the Phase 7B dashboard — shown on `/admin/billing`; 7B card wiring is a follow-up
+- [~] Razorpay recurring subscription integration — deferred
 
 #### Database:
 ```sql
