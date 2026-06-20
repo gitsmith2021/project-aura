@@ -14,7 +14,7 @@ interface DepartmentGridProps {
   activeShift: string;
 }
 
-export function DepartmentGrid({ departments, activeShift }: DepartmentGridProps) {
+export function DepartmentGrid({ departments }: DepartmentGridProps) {
   if (!departments || departments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 border border-gray-800 border-dashed rounded-xl bg-gray-900/20">

@@ -22,12 +22,6 @@ function todayName(): string {
   return DAY_NAMES[new Date().getDay()];
 }
 
-function daysBetween(from: string, to: string): number {
-  const a = new Date(from);
-  const b = new Date(to);
-  return Math.round((b.getTime() - a.getTime()) / 86_400_000) + 1;
-}
-
 // ── getStaffProfile ───────────────────────────────────────────────────────────
 // Cached per request so layout + pages don't duplicate the DB call
 

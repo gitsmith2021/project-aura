@@ -67,17 +67,6 @@ export type UsersManagementPerson = {
 
 const PAGE_SIZE = 10;
 
-/** DB enum / text variants */
-function normalizeProfileRole(r: unknown): "STAFF" | "STUDENT" | null {
-  const s = String(r ?? "").toUpperCase();
-  if (s === "STAFF" || s === "STUDENT") return s;
-  return null;
-}
-
-function profileMatchesRole(p: UsersManagementPerson, expected: "STAFF" | "STUDENT"): boolean {
-  return normalizeProfileRole(p.role) === expected;
-}
-
 export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
   const [people, setPeople] = useState<UsersManagementPerson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,7 +99,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
   const [blockingEmail, setBlockingEmail] = useState<string | null>(null);
   /** Student portal credentials */
   const [studentAuthStatuses, setStudentAuthStatuses] = useState<Record<string, StaffAuthStatus>>({});
-  const [studentAuthLoading, setStudentAuthLoading] = useState(false);
+  const [, setStudentAuthLoading] = useState(false);
   const [studentCredModalPerson, setStudentCredModalPerson] = useState<{ id: string; full_name: string; email: string } | null>(null);
   const [studentBlockingEmail, setStudentBlockingEmail] = useState<string | null>(null);
 
@@ -1181,7 +1170,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filtered.length > 0 ? (
-                    filtered.map((person, i) => (
+                    filtered.map((person) => (
                       <tr key={person.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-3 text-xs text-slate-400 font-mono">{person.roll_no}</td>
                         <td className="px-4 py-3 text-xs">

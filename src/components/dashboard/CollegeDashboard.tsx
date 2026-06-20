@@ -66,8 +66,6 @@ function formatTime(t: string) {
   return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${ampm}`;
 }
 
-const AURA_COLORS = ["#7c3aed", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
-
 // ── KPI Card ─────────────────────────────────────────────────────────────────
 function KPICard({ icon: Icon, label, value, sub, color }: {
   icon: LucideIcon; label: string; value: number | string;

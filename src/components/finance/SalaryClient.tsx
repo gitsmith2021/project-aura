@@ -87,7 +87,7 @@ export function SalaryClient({
   const [structures,  setStructures]  = useState(initialStructures);
   const [staffWithout, setStaffWithout] = useState(initialStaffWithout);
   const [drawerState, setDrawerState] = useState<DrawerState>(null);
-  const [summary,     setSummary]     = useState(initialSummary);
+  const [summary] = useState(initialSummary);
 
   // ── Disbursements tab ──────────────────────────────────────────────────
   const [month,        setMonth]        = useState(currentMonth);

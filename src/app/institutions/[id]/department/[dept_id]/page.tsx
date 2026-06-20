@@ -187,7 +187,7 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
   const [currentTime, setCurrentTime] = useState(new Date());
   
   const [checkedInIds, setCheckedInIds] = useState<Set<string>>(new Set());
-  const [justScannedId, setJustScannedId] = useState<string | null>(null);
+  const [, setJustScannedId] = useState<string | null>(null);
   
   // Summary Modal State
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);

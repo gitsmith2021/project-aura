@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { nextStage, isTerminalStage, checkEligibility, formatLPA, driveStageCounts, placementStats, deptWiseBreakdown, nirfPlacementCSV, STAGE_PIPELINE, type StageStatus, type PlacementStatRow } from "@/lib/placements";
+import { nextStage, isTerminalStage, checkEligibility, formatLPA, driveStageCounts, placementStats, deptWiseBreakdown, nirfPlacementCSV, STAGE_PIPELINE, type PlacementStatRow } from "@/lib/placements";
 
 describe("nextStage / pipeline", () => {
   it("advances through the funnel and stops", () => {

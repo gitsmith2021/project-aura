@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Tag, CreditCard, Users, Receipt, BarChart2 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { key: "overview",  label: "Overview",       Icon: LayoutDashboard, href: (id: string) => `/finance` },
+  { key: "overview",  label: "Overview",       Icon: LayoutDashboard, href: (_id: string) => `/finance` },
   { key: "fees",      label: "Fee Structures",  Icon: Tag,             href: (id: string) => `/institutions/${id}/finance/fees` },
   { key: "payments",  label: "Payments",        Icon: CreditCard,      href: (id: string) => `/institutions/${id}/finance/fees/payments` },
   { key: "salary",    label: "Salary",          Icon: Users,           href: (id: string) => `/institutions/${id}/finance/salary` },

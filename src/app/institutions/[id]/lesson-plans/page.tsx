@@ -15,11 +15,6 @@ type Subject      = { id: string; name: string; code: string | null };
 type AcademicYear = { id: string; label: string };
 type Department   = { id: string; name: string };
 
-const METHODS = [
-  "Lecture", "Demonstration", "Group Discussion", "Case Study",
-  "Problem Solving", "Lab / Practical", "Seminar", "Project Work", "Other",
-];
-
 export default function LessonPlansAdminPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: institutionId } = use(params);
 

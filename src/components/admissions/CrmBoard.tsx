@@ -11,7 +11,7 @@ import { EnquiryDrawer } from "./EnquiryDrawer";
 type DeptOption = { id: string; name: string };
 
 export function CrmBoard({
-  institutionId, instSlug, departments, initial, today,
+  institutionId, departments, initial, today,
 }: {
   institutionId: string;
   instSlug: string;

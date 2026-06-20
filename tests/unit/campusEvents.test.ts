@@ -197,8 +197,6 @@ describe("computeEventStats", () => {
 // ── sortEvents ────────────────────────────────────────────────────────────────
 
 describe("sortEvents", () => {
-  const TODAY = new Date().toISOString().slice(0, 10);
-  // Use dates relative to today for test robustness
   const future1 = "2099-01-01";
   const future2 = "2099-06-15";
   const past1   = "2000-01-01";

@@ -92,8 +92,6 @@ export async function getCurriculumOverview(
     if (se) return { success: false, error: se.message };
     if (!subjects?.length) return { success: true, data: [] };
 
-    const subjectIds = subjects.map(s => s.id);
-
     // Fetch completion records for these subjects
     let cq = supabase
       .from("syllabus_completion")

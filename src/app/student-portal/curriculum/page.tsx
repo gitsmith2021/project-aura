@@ -12,7 +12,7 @@ type AcademicYear = { id: string; label: string };
 
 export default function StudentCurriculumPage() {
   const [institutionId, setInstitutionId] = useState("");
-  const [semester,      setSemester]      = useState("");
+  const [,              setSemester]      = useState("");
   const [subjects,      setSubjects]      = useState<Subject[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [ayId,          setAyId]          = useState("");

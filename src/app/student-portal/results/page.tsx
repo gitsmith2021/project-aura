@@ -19,7 +19,7 @@ const GRADE_COLORS: Record<string, string> = {
 export default function StudentResultsPage() {
   const [results,  setResults]  = useState<ExamResult[]>([]);
   const [loading,  setLoading]  = useState(true);
-  const [instId,   setInstId]   = useState("");
+  const [,         setInstId]   = useState("");
 
   useEffect(() => {
     const supabase = createClient();

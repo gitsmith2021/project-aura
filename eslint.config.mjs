@@ -21,6 +21,17 @@ const eslintConfig = defineConfig([
     "test-*.js",
     "inject-live-class.js",
   ]),
+  {
+    rules: {
+      // Honor the conventional "intentionally unused" markers: a leading
+      // underscore (e.g. `_inst`, `_pfNumber`) and rest-sibling omits
+      // (`const { omit, ...rest } = obj`). These are deliberate, not debt.
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", ignoreRestSiblings: true },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

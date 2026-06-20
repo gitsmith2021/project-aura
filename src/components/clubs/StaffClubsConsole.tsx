@@ -44,7 +44,7 @@ export default function StaffClubsConsole({ clubs }: StaffClubsConsoleProps) {
       } else {
         alert("Failed to load details: " + errors.join(", "));
       }
-    } catch (err) {
+    } catch {
       alert("An unexpected error occurred.");
     } finally {
       setLoading(false);

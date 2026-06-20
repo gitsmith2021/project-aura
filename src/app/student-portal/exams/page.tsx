@@ -33,7 +33,7 @@ function daysUntil(d: string) {
 export default function StudentExamsPage() {
   const [exams, setExams]     = useState<ExamSchedule[]>([]);
   const [loading, setLoading] = useState(true);
-  const [studentName, setStudentName] = useState("");
+  const [, setStudentName] = useState("");
 
   useEffect(() => {
     const supabase = createClient();

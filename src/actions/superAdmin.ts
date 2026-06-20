@@ -329,7 +329,6 @@ export async function getInstitutionAnalytics(institutionId: string): Promise<
   const months6 = lastMonths(6);
 
   // Month boundaries as UTC ISO, oldest→newest, plus one trailing edge ("now")
-  const boundaries12 = months12.map((_, i) => istMonthStartISO(11 - i));
   const boundaries6 = months6.map((_, i) => istMonthStartISO(5 - i));
   const nowISO = new Date().toISOString();
 

@@ -7,11 +7,6 @@ import type { StaffScheduleSlot } from "@/types/staffPortal";
 const DAYS  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const HOURS = Array.from({ length: 10 }, (_, i) => i + 8);
 
-function fmtTime(t: string) {
-  const [h, m] = t.split(":").map(Number);
-  return `${h % 12 || 12}:${String(m).padStart(2,"0")} ${h >= 12 ? "PM" : "AM"}`;
-}
-
 function slotForCell(slots: StaffScheduleSlot[], day: string, hour: number): StaffScheduleSlot | null {
   return slots.find(s => {
     const start = parseInt(s.start_time.split(":")[0], 10);

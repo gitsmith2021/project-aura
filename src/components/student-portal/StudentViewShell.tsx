@@ -19,7 +19,7 @@ type StudentViewShellProps = {
 };
 
 function NavItem({
-  href, label, icon, active, isCollapsed, exact,
+  href, label, icon, active, isCollapsed,
 }: {
   href: string; label: string; icon: React.ReactNode;
   active: boolean; isCollapsed: boolean; exact?: boolean;
@@ -49,7 +49,7 @@ function NavItem({
 }
 
 export function StudentViewShell({
-  studentId, displayName, rollNo, program, studentYear, department, institution, children,
+  studentId, displayName, rollNo, program, studentYear, department, children,
 }: StudentViewShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);

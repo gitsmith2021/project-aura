@@ -185,8 +185,6 @@ export default function GuestLecturesPage({ params }: { params: Promise<{ id: st
     });
   }
 
-  const f = (v: string) => <span className="font-medium text-slate-700 dark:text-slate-300">{v}</span>;
-
   // Summary stats
   const totalStudents = lectures.reduce((s, l) => s + (l.student_count ?? 0), 0);
   const uniqueSpeakers = new Set(lectures.map(l => l.speaker_name.toLowerCase())).size;

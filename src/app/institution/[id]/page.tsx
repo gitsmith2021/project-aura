@@ -122,15 +122,6 @@ export default async function InstitutionDashboardPage({ params, searchParams }:
 // Data Loaders
 // ----------------------------------------------------------------------
 
-async function getShiftObj(supabase: any, institutionId: string, activeShift: string) {
-  const { data } = await supabase
-    .from('shifts')
-    .select('id')
-    .eq('tenant_id', institutionId)
-    .ilike('name', `%${activeShift}%`)
-    .maybeSingle();
-  return data;
-}
 
 async function StatsCards({ institutionId, activeShift }: { institutionId: string; activeShift: string }) {
   const cookieStore = await cookies();

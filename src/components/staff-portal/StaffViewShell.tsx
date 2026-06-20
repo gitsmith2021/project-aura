@@ -17,7 +17,7 @@ type StaffViewShellProps = {
 };
 
 function NavItem({
-  href, label, icon, active, isCollapsed, exact,
+  href, label, icon, active, isCollapsed,
 }: {
   href: string; label: string; icon: React.ReactNode;
   active: boolean; isCollapsed: boolean; exact?: boolean;
@@ -47,7 +47,7 @@ function NavItem({
 }
 
 export function StaffViewShell({
-  staffId, displayName, designation, department, institution, children,
+  staffId, displayName, department, children,
 }: StaffViewShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);

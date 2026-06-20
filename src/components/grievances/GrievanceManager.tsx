@@ -10,7 +10,7 @@ function fmtDate(d: string) {
 }
 
 export function GrievanceManager({
-  institutionId, instSlug, initial,
+  instSlug, initial,
 }: {
   institutionId: string;
   instSlug: string;

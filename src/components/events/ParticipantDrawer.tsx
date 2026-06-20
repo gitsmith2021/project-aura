@@ -12,7 +12,7 @@ type Props = {
   onSaved: () => void;
 };
 
-export function ParticipantDrawer({ eventId, institutionId, onClose, onSaved }: Props) {
+export function ParticipantDrawer({ eventId, institutionId, onClose }: Props) {
   const [role, setRole] = useState<ParticipantRole>("participant");
   const [query, setQuery] = useState("");
   const [options, setOptions] = useState<StudentSearchResult[]>([]);

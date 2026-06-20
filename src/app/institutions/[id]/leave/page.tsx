@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect } from "react";
 import { CheckCircle2, Clock, XCircle, ChevronDown } from "lucide-react";
 import { getInstitutionLeaveRequests, reviewLeaveRequest } from "@/actions/staffPortal";
 import type { AdminLeaveRequest } from "@/types/staffPortal";
@@ -26,7 +26,6 @@ export default function AdminLeavePage({ params }: { params: Promise<{ id: strin
   const [loading,    setLoading]    = useState(true);
   const [reviewId,   setReviewId]   = useState<string | null>(null);
   const [reviewNote, setReviewNote] = useState("");
-  const [, startTransition] = useTransition();
 
   useEffect(() => {
     params.then(p => setInstitutionId(p.id));

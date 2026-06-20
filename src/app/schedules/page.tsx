@@ -53,7 +53,7 @@ export default function SchedulesPage() {
   const [isLivePanelOpen, setIsLivePanelOpen] = useState(false);
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
   const [modalDefaults, setModalDefaults] = useState<{ day?: string; startTime?: string }>({});
-  const [editingClass, setEditingClass] = useState<ClassEntry | null>(null);
+  const [, setEditingClass] = useState<ClassEntry | null>(null);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchAll = useCallback(async () => {
