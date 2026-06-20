@@ -2,21 +2,8 @@
 
 import { useState } from "react";
 import { CalendarDays, Plus, Download, RefreshCw } from "lucide-react";
-import {
-  getCampusEvents,
-  getStaffOptions,
-  getAcademicYearOptions,
-  type CampusEvent,
-  type StaffOption,
-} from "@/actions/campusEvents";
-import {
-  computeEventStats,
-  computeNaacEventsReport,
-  sortEvents,
-  formatBudget,
-  EVENT_TYPE_LABEL,
-  type CampusEventType,
-} from "@/lib/campusEvents";
+import { getCampusEvents, type CampusEvent, type StaffOption } from "@/actions/campusEvents";
+import { computeEventStats, computeNaacEventsReport, sortEvents, formatBudget, type CampusEventType } from "@/lib/campusEvents";
 import { EventCard } from "./EventCard";
 import { EventDrawer } from "./EventDrawer";
 

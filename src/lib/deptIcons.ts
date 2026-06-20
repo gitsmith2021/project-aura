@@ -1,7 +1,6 @@
 import {
   Building2,
   Plane,
-  Microscope,
   FlaskConical,
   Monitor,
   Atom,

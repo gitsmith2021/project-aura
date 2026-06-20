@@ -2,17 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Phone, Mail, Briefcase, FileText, CalendarClock,
-  CheckCircle, XCircle, ChevronRight, UserCheck,
-} from "lucide-react";
+import { Phone, Mail, Briefcase, FileText, CalendarClock, CheckCircle, XCircle, ChevronRight, UserCheck } from "lucide-react";
 import { HireDrawer } from "./HireDrawer";
-import {
-  nextApplicationStatus, canHire, canReject,
-  APPLICATION_STATUS_LABELS, APPLICATION_STATUS_COLORS,
-  RECRUITMENT_PIPELINE,
-  type JobApplication, type ApplicationStatus,
-} from "@/lib/recruitment";
+import { nextApplicationStatus, canHire, canReject, APPLICATION_STATUS_LABELS, RECRUITMENT_PIPELINE, type JobApplication, type ApplicationStatus } from "@/lib/recruitment";
 import { updateApplicationStatus, scheduleInterview, makeOffer } from "@/actions/recruitment";
 
 type Dept = { id: string; name: string };

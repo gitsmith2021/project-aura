@@ -2,11 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { X, Search, Upload } from "lucide-react";
-import {
-  addParticipant,
-  searchStudentsForEvent,
-  type StudentSearchResult,
-} from "@/actions/campusEvents";
+import { addParticipant, searchStudentsForEvent, type StudentSearchResult } from "@/actions/campusEvents";
 import { PARTICIPANT_ROLES, PARTICIPANT_ROLE_LABEL, type ParticipantRole } from "@/lib/campusEvents";
 
 type Props = {

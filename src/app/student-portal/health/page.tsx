@@ -1,4 +1,3 @@
-import { Heart } from "lucide-react";
 import { getMyMedicalRecord, getMyVisitHistory } from "@/actions/infirmary";
 import { MyHealthView } from "@/components/infirmary/MyHealthView";
 

@@ -3,11 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  GraduationCap, LayoutDashboard, Calendar, ClipboardCheck,
-  CreditCard, Menu, Bell, Sun, Moon, ChevronDown,
-  LogOut, ArrowLeft, ShieldAlert,
-} from "lucide-react";
+import { GraduationCap, LayoutDashboard, Calendar, ClipboardCheck, CreditCard, Menu, Bell, Sun, Moon, ChevronDown, LogOut, ArrowLeft, ShieldAlert } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { createClient } from "@/utils/supabase/client";
 

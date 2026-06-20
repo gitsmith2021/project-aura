@@ -1,23 +1,13 @@
 "use client";
 
-import { useState, useTransition, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import {
-  TrendingUp, TrendingDown, Wallet, Users, CheckCircle2, Clock,
-  ChevronLeft, ChevronRight,
-} from "lucide-react";
+import { useState, useTransition } from "react";
+import { Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { PLChart }       from "@/components/finance/PLChart";
-import { ExportButton }  from "@/components/finance/ExportButton";
+import { PLChart } from "@/components/finance/PLChart";
+import { ExportButton } from "@/components/finance/ExportButton";
 import { ReportFilters } from "@/components/finance/ReportFilters";
-import {
-  getMonthlyPLReport, getStudentFeeReport,
-  getSalaryDisbursementReport,
-  getFinancialSummaryReport,
-} from "@/actions/reports";
-import type {
-  MonthlyPLData, StudentFeeReportRow, SalaryReportRow, FinancialSummary,
-} from "@/types/finance";
+import { getMonthlyPLReport, getStudentFeeReport, getSalaryDisbursementReport, getFinancialSummaryReport } from "@/actions/reports";
+import type { MonthlyPLData, StudentFeeReportRow, SalaryReportRow, FinancialSummary } from "@/types/finance";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

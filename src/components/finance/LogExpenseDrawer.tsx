@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { X, Receipt, Paperclip, Upload, ImageIcon } from "lucide-react";
+import { X, Receipt, Paperclip, Upload } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { createExpense } from "@/actions/expenses";
 import type { ExpenseCategory, ExpensePaymentMode } from "@/types/finance";

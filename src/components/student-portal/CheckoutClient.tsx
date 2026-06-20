@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ShieldCheck, Sparkles, CreditCard, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Sparkles, CheckCircle2 } from "lucide-react";
 import { RazorpayCheckout } from "@/components/finance/RazorpayCheckout";
 import type { StudentProfile, StudentFeeStructure } from "@/types/studentPortal";
 

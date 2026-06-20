@@ -6,15 +6,13 @@ import {
   getTeams,
   getFacilities,
   getAchievements,
-  getCoachOptions,
-  getAcademicYearOptions,
   setFacilityActive,
   addFacility,
   type SportsTeam,
   type SportsFacility,
   type SportsAchievement,
 } from "@/actions/sports";
-import { computeSportsStats, TEAM_CATEGORY_LABEL, levelBadgeClass, ACHIEVEMENT_LEVEL_LABEL } from "@/lib/sports";
+import { computeSportsStats, TEAM_CATEGORY_LABEL } from "@/lib/sports";
 import { AchievementCard } from "./AchievementCard";
 import { AchievementDrawer } from "./AchievementDrawer";
 import { TeamDrawer } from "./TeamDrawer";

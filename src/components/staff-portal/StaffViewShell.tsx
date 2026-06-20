@@ -3,11 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Building2, LayoutDashboard, Calendar, ClipboardCheck,
-  CalendarOff, Wallet, Menu, Bell, Sun, Moon, ChevronDown,
-  LogOut, ArrowLeft, ShieldAlert,
-} from "lucide-react";
+import { Building2, LayoutDashboard, Calendar, ClipboardCheck, CalendarOff, Wallet, Menu, Bell, Sun, Moon, ChevronDown, LogOut, ArrowLeft, ShieldAlert } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { createClient } from "@/utils/supabase/client";
 

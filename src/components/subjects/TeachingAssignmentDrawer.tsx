@@ -19,7 +19,6 @@ export function TeachingAssignmentDrawer({
   isOpen,
   onClose,
   institutionId,
-  departmentId,
   subject,
   staffList,
   academicYears,

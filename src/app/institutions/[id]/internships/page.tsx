@@ -3,19 +3,8 @@
 import { useEffect, useState, useCallback, use } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import {
-  getInternships,
-  deleteInternship,
-  createInternship,
-  updateInternship,
-  type Internship,
-  type InternshipPayload,
-} from "@/actions/internships";
-import {
-  Briefcase, Plus, Trash2, Pencil, Loader2,
-  ChevronDown, ChevronUp, X, Building2, MapPin,
-  Calendar, CheckCircle2, BadgeIndianRupee,
-} from "lucide-react";
+import { getInternships, deleteInternship, createInternship, updateInternship, type Internship, type InternshipPayload } from "@/actions/internships";
+import { Briefcase, Plus, Trash2, Pencil, Loader2, ChevronDown, ChevronUp, X } from "lucide-react";
 
 type Department   = { id: string; name: string };
 type AcademicYear = { id: string; label: string };

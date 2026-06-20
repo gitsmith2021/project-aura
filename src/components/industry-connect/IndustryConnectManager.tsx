@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Handshake, Plus, X, Download, Activity, AlertTriangle, Loader2, FileText, Users, Building2 } from "lucide-react";
+import { Handshake, Plus, X, Download, Activity, AlertTriangle, Loader2, FileText, Building2 } from "lucide-react";
 import { uploadDocument } from "@/lib/storage";
 import { getNaacMouCsv, saveMOU, toggleMOUActive, deleteMOU, type MouRow } from "@/actions/industryConnect";
 import { PARTNER_TYPES, PARTNER_TYPE_LABELS, computeExpiry, expiryUrgency, mouStats, type PartnerType } from "@/lib/industryConnect";

@@ -6,7 +6,6 @@ import { useSidebar } from "@/context/SidebarContext";
 
 export function DashboardLayout({
   children,
-  breadcrumb,
 }: {
   children: React.ReactNode;
   breadcrumb?: React.ReactNode;

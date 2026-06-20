@@ -2,7 +2,7 @@ import { cookies }  from "next/headers";
 import { redirect } from "next/navigation";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import { createClient }          from "@/utils/supabase/server";
-import { getLeaveRequests, reviewLeaveRequest } from "@/actions/staffPortal";
+import { getLeaveRequests } from "@/actions/staffPortal";
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });

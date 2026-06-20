@@ -6,7 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { getCurriculumOverview, type SubjectWithProgress } from "@/actions/curriculum";
 import { CompletionProgressBar } from "@/components/curriculum/CompletionProgressBar";
 import Link from "next/link";
-import { BookOpen, ChevronRight, Loader2, AlertCircle, GraduationCap } from "lucide-react";
+import { BookOpen, ChevronRight, Loader2, AlertCircle } from "lucide-react";
 
 type Department   = { id: string; name: string };
 type AcademicYear = { id: string; label: string };

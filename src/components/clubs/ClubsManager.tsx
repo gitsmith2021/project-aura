@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Plus, Search, Award, FileText, Check, AlertCircle, X, Sparkles } from "lucide-react";
+import { Plus, Search, Award, FileText, AlertCircle, X, Sparkles } from "lucide-react";
 import type { Club, ClubType, NAACReportData } from "@/lib/clubs";
-import { CLUB_TYPE_LABELS, CLUB_TYPE_COLORS, formatClubType, formatClubActivityType } from "@/lib/clubs";
+import { CLUB_TYPE_LABELS } from "@/lib/clubs";
 import ClubCard from "./ClubCard";
 import { addClub } from "@/actions/clubs";
 

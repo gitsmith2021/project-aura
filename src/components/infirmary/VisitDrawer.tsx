@@ -7,7 +7,6 @@ import {
   logVisit,
   type InfirmaryPatientOption,
 } from "@/actions/infirmary";
-import { BLOOD_GROUPS } from "@/lib/infirmary";
 
 type MedicineRow = { name: string; dosage: string; quantity: string };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Mail, Phone, MoreVertical, ShieldAlert } from "lucide-react";
+import { Search, Mail, Phone, MoreVertical } from "lucide-react";
 import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundingBadge";
 import { setHOD, removeHOD } from "@/actions/departments";
 

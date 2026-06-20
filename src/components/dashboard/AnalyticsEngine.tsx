@@ -6,7 +6,6 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
-import type { TooltipProps } from "recharts";
 import { College } from "./CollegeCard";
 
 // ─── Sparkline ───────────────────────────────────────────────────────────────

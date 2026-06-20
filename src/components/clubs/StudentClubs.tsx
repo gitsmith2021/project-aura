@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Award, Shield, User, FileText, X, Printer, Calendar } from "lucide-react";
+import { Award, Shield, FileText, X, Printer, Calendar } from "lucide-react";
 import type { ClubMember, ClubType } from "@/lib/clubs";
 import { formatClubType, formatClubMemberRole, CLUB_TYPE_COLORS } from "@/lib/clubs";
 

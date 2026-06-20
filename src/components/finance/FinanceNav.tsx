@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard, Tag, CreditCard, Users, Receipt, BarChart2,
-} from "lucide-react";
+import { LayoutDashboard, Tag, CreditCard, Users, Receipt, BarChart2 } from "lucide-react";
 
 const NAV_ITEMS = [
   { key: "overview",  label: "Overview",       Icon: LayoutDashboard, href: (id: string) => `/finance` },

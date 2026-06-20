@@ -7,11 +7,7 @@ import { createClient } from "@/utils/supabase/server";
 import { logAudit } from "@/lib/auditLog";
 import { eachDateInRange } from "@/lib/staffAttendance";
 import { notifyLeaveRequested, notifyLeaveReviewed } from "@/actions/notificationTriggers";
-import type {
-  StaffProfile, StaffScheduleSlot, AttendanceSummaryRow,
-  LeaveRequest, SalarySlip, StaffDashboardStats, AdminLeaveRequest,
-  LeaveType,
-} from "@/types/staffPortal";
+import type { StaffProfile, StaffScheduleSlot, AttendanceSummaryRow, LeaveRequest, SalarySlip, StaffDashboardStats, AdminLeaveRequest, LeaveType } from "@/types/staffPortal";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -5,10 +5,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ScrollableTabBar } from "@/components/layout/ScrollableTabBar";
 import { useInstitution } from "@/context/InstitutionContext";
 import { createClient } from "@/utils/supabase/client";
-import {
-  Plus, BookOpen,
-  Building2, Clock, Users, BookMarked, AlertTriangle, Printer, ChevronDown, X, Wand2,
-} from "lucide-react";
+import { Plus, BookOpen, Clock, Users, BookMarked, AlertTriangle, Printer, ChevronDown, X, Wand2 } from "lucide-react";
 import { AddClassModal } from "@/components/programs/AddClassModal";
 import { ScheduleCalendar, type ClassEntry } from "@/components/programs/ScheduleCalendar";
 import { CurrentClassWidget } from "@/components/dashboard/CurrentClassWidget";

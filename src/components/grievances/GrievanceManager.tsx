@@ -3,12 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Scale, Download, ChevronRight, AlertTriangle, Search } from "lucide-react";
-import {
-  CATEGORY_LABELS, CATEGORY_COLORS, STATUS_LABELS, STATUS_COLORS,
-  GRIEVANCE_CATEGORIES, GRIEVANCE_STATUSES,
-  filterGrievances, grievanceStats, grievancesCSV, isOverdue,
-  type Grievance, type GrievanceCategory, type GrievanceStatus,
-} from "@/lib/grievances";
+import { CATEGORY_LABELS, CATEGORY_COLORS, STATUS_LABELS, STATUS_COLORS, GRIEVANCE_CATEGORIES, GRIEVANCE_STATUSES, filterGrievances, grievanceStats, grievancesCSV, isOverdue, type Grievance, type GrievanceCategory, type GrievanceStatus } from "@/lib/grievances";
 
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });

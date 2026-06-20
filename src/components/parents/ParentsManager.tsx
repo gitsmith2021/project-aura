@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Users, Plus, X, Link2, Trash2, Copy, Check, Mail } from "lucide-react";
+import { Users, Plus, X, Link2, Copy, Check, Mail } from "lucide-react";
 import { createParent, linkStudent, unlinkStudent, type AdminParentRow } from "@/actions/parentPortal";
 import { RELATIONSHIPS, RELATIONSHIP_LABELS, type Relationship } from "@/lib/parentPortal";
 

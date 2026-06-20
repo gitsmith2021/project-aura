@@ -6,7 +6,6 @@ import Link from "next/link";
 import { ChevronRight, X, CalendarClock, UserCheck } from "lucide-react";
 import {
   APPLICATION_STATUS_LABELS, APPLICATION_STATUS_COLORS,
-  RECRUITMENT_PIPELINE,
   nextApplicationStatus, canHire, canReject, pipelineGroups,
   type JobApplication, type ApplicationStatus,
 } from "@/lib/recruitment";

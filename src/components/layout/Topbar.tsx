@@ -12,7 +12,6 @@ import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 
 export function Topbar({
-  isSidebarCollapsed,
   toggleSidebar,
 }: {
   isSidebarCollapsed: boolean;

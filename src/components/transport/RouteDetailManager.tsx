@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Bus, MapPin, Clock, Users, Plus, X, UserPlus, Trash2, Phone, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Bus, MapPin, Clock, Users, X, UserPlus, Trash2, Phone, AlertTriangle } from "lucide-react";
 import { assignStudent, unassignStudent, type RouteDetail } from "@/actions/transport";
 import { VEHICLE_TYPE_LABELS, formatTime, expiryState } from "@/lib/transport";
 

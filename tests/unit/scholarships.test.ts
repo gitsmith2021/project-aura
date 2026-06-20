@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  nextStatus, checkEligibility, concessionTypeForScheme, formatINR, isDeadlinePassed,
-  scholarshipStats, applicationsCSV, STATUS_PIPELINE, SCHEME_TYPES,
-  type ScholarshipApplication, type ScholarshipStatus,
-} from "@/lib/scholarships";
+import { nextStatus, checkEligibility, concessionTypeForScheme, formatINR, isDeadlinePassed, scholarshipStats, applicationsCSV, STATUS_PIPELINE, SCHEME_TYPES, type ScholarshipApplication, type ScholarshipStatus } from "@/lib/scholarships";
 
 describe("nextStatus / pipeline", () => {
   it("advances applied → verified → approved → disbursed", () => {

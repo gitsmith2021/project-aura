@@ -2,20 +2,12 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
-import {
-  Users, BookOpen, GraduationCap, CalendarCheck, Clock, CheckCircle2,
-  XCircle, AlertCircle, ChevronLeft, ChevronRight, FileText, Building2,
-  ThumbsUp, ThumbsDown, User,
-  type LucideIcon,
-} from "lucide-react";
+import { Users, BookOpen, GraduationCap, CalendarCheck, Clock, CheckCircle2, AlertCircle, ChevronLeft, ChevronRight, FileText, Building2, ThumbsUp, ThumbsDown, User, type LucideIcon } from "lucide-react";
 import { getDeptColor } from "@/lib/deptColors";
 import { fundingTypeShortLabel } from "@/lib/deptFunding";
 import { reviewLeaveRequest } from "@/actions/staffPortal";
 import Link from "next/link";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type CollegeProps = {

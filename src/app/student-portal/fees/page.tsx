@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getStudentProfile, getStudentFeeHistory, getStudentFeeStructures } from "@/actions/studentPortal";
 import { getMyDemands } from "@/actions/feeDemands";
 import { MyDues } from "@/components/finance/MyDues";
-import { CheckCircle2, Clock, XCircle, AlertCircle, CreditCard, ChevronRight, type LucideIcon } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, AlertCircle, CreditCard, type LucideIcon } from "lucide-react";
 
 const FEE_TYPE_LABEL: Record<string, string> = {
   tuition: "Tuition Fee",

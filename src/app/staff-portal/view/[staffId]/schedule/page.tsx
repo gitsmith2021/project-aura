@@ -1,6 +1,6 @@
-import { cookies }  from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createClient }     from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/server";
 import { getStaffSchedule } from "@/actions/staffPortal";
 import type { StaffScheduleSlot } from "@/types/staffPortal";
 

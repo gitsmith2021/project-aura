@@ -1,11 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  STAFF_TYPES, STAFF_TYPE_LABELS, STAFF_TYPE_COLORS,
-  staffTypeLabel, staffTypeColor, staffTypeGroup,
-  isNonTeaching, isDailyWage, isWarden,
-  computeDailyWageAmount,
-  type StaffType,
-} from "@/lib/staffTypes";
+import { STAFF_TYPES, STAFF_TYPE_COLORS, staffTypeLabel, staffTypeColor, staffTypeGroup, isNonTeaching, isDailyWage, isWarden, computeDailyWageAmount, type StaffType } from "@/lib/staffTypes";
 
 describe("STAFF_TYPES", () => {
   it("contains all 5 types", () => {
