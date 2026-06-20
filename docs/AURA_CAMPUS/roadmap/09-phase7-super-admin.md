@@ -87,16 +87,7 @@
 - [x] Database size and row counts per table — `platform_table_stats()` (catalog estimates), largest-15 table panel
 - [x] Error rate monitoring (failed payments) — *(failed-login logging not yet captured; noted in plan)*
 
-#### ISO 27001 checklist — addressed this step:
-- [x] `docs/rls-policy-map.md` (incl. intentional deny-all tables rationale)
-- [x] `docs/security-audit-plan.md` (scope, methodology, annual pen-test cadence)
-- [x] `docs/query-performance.md` (indexing strategy + EXPLAIN ANALYZE guidance)
-- [x] Security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `frame-ancestors` CSP) in `next.config.ts` — *full resource-restricting CSP deferred (report-only rollout) to avoid breaking Razorpay/Realtime/YouTube/SCORM*
-- [x] `src/app/admin/security/page.tsx` — Security dashboard (live RLS coverage %, findings list, deny-all tables)
-- [x] Data-retention documented — `src/lib/dataRetention.ts` (every PII table)
-- [~] **Enable leaked-password protection** — deferred (requires Supabase **Pro plan**)
-
-#### ISO 27001 Security Audit Checklist (detail — addressed in 7D):
+#### ISO 27001 checklist (addressed in 7D):
 - [x] `docs/rls-policy-map.md` — every table category, its RLS policy, and the **intentional deny-all tables** (`razorpay_webhook_events`, `scheduler_error_logs`) rationale.
 - [~] **Enable leaked-password protection** (HaveIBeenPwned) — deferred: requires the Supabase **Pro plan**; flip on upgrade.
 - [x] Verify `createAdminClient()` used only in server-only files — confirmed (surfaced as a Security-dashboard finding).
@@ -130,18 +121,7 @@
 - `/admin/billing` (MRR/ARR strip + `SubscriptionCard`s with trial countdown + assign/renew/cancel/invoice), `/admin/billing/plans` (tier + feature-gate manager), `/admin/billing/invoices` (generate + mark). AdminNav **Billing** tab live.
 - [~] **Razorpay recurring** + **middleware-level** feature enforcement — deferred (manual invoicing; page-level `isFeatureEnabled` available). MRR/ARR shown on the billing page; wiring an MRR card into the 7B overview is a small follow-up.
 
-#### Original build checklist:
-- [x] `supabase/migrations/..._subscriptions.sql`
-- [x] `src/app/admin/billing/page.tsx` — subscriptions: plan, status, next billing date, MRR contribution
-- [x] `src/app/admin/billing/plans/page.tsx` — plan manager (tiers + feature gates)
-- [x] `src/app/admin/billing/invoices/page.tsx` — invoice history (paid/pending/failed)
-- [x] `src/actions/subscriptions.ts` — assignPlan, renew/cancel, generateInvoice (+ getBilling, isFeatureEnabled)
-- [x] `src/components/billing/SubscriptionCard.tsx` — status card with trial countdown
-- [~] Feature gating in **middleware** — page-level `isFeatureEnabled` shipped; middleware enforcement deferred (avoid hard lock-outs pre-assignment)
-- [~] MRR/ARR fed into the Phase 7B dashboard — shown on `/admin/billing`; 7B card wiring is a follow-up
-- [~] Razorpay recurring subscription integration — deferred
-
-#### Database:
+#### Database (design reference):
 ```sql
 CREATE TABLE subscription_plans (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -182,23 +162,6 @@ CREATE TABLE subscription_invoices (
 );
 ```
 
-#### What to build:  *(see the "✅ What was built" block above — these are done)*
-- [x] `supabase/migrations/..._subscriptions.sql`
-- [x] `src/app/admin/billing/page.tsx` — subscriptions: plan, status, next billing date, MRR contribution
-- [x] `src/app/admin/billing/plans/page.tsx` — Plan manager: tiers + feature gates
-- [x] `src/app/admin/billing/invoices/page.tsx` — Invoice history: paid/pending/failed
-- [x] `src/actions/subscriptions.ts` — assignPlan, renew/cancel, generateInvoice (+ getBilling, isFeatureEnabled)
-- [x] `src/components/billing/SubscriptionCard.tsx` — status card with trial countdown
-- [~] Feature gating: **middleware** checks plan before premium modules — page-level `isFeatureEnabled` shipped; middleware enforcement deferred (avoid hard lock-outs pre-assignment)
-- [~] MRR / ARR fed into the Phase 7B dashboard — shown on `/admin/billing`; 7B card wiring is a follow-up
-
-#### Key features:
-- Trial → Paid conversion tracking — ✅ status lifecycle (trial/active/expired/cancelled)
-- MRR / ARR calculations — ✅ (paying subs only, annual amortised)
-- Automatic invoice generation on billing cycle — [~] manual invoice generation now; auto-on-cycle pairs with Razorpay recurring (deferred)
-- Feature gating: restrict modules by plan tier — ✅ `isFeatureEnabled` (page-level)
-- Razorpay recurring subscription integration — [~] deferred (integration point in place)
-
 ---
 
 ### Step 7F — IQAC & Government Compliance Reports (NAAC / NIRF / AISHE) ✅ (commit `3cc2876`)
@@ -231,25 +194,6 @@ CREATE TABLE subscription_invoices (
 | 6. Governance | Grievances (6F), Disciplinary (5H), Appraisals (5E) |
 | 7. Institutional Values | MOUs (6H), Sports (4J), Guest Lectures (2H) |
 
-#### What to build:
-- [x] `src/app/institutions/[id]/iqac/page.tsx` — IQAC dashboard: criterion-wise data completeness meter (0–100%)
-- [x] `src/app/institutions/[id]/iqac/aqar/page.tsx` — AQAR data compilation view per academic year
-- [~] `src/app/institutions/[id]/iqac/naac/page.tsx` — NAAC criterion-wise evidence view → delivered by the **SSR Builder** (`/iqac/ssr`, 7F-sub) + the IQAC dashboard's criterion rings; not a separate page (DRY)
-- [~] `src/app/institutions/[id]/iqac/nirf/page.tsx` — NIRF export → delivered by the **SSR Builder** (`getNIRFData`); linked from the IQAC dashboard
-- [~] `src/app/institutions/[id]/iqac/aishe/page.tsx` — AISHE auto-population → delivered by the **SSR Builder** (`getAISHEData`); linked from the IQAC dashboard
-- [x] `src/app/institutions/[id]/iqac/meetings/page.tsx` — **IQAC Meeting & Action Tracker**
-- [x] `src/actions/iqac.ts` — getIqacOverview + getAqar (aggregateNAACData / NIRF / AISHE live in `ssrBuilder.ts`, reused)
-- [x] `src/components/iqac/CriterionDataCard.tsx` — Per-criterion completeness card with progress ring and data count
-- [~] `src/components/iqac/NIRFExportButton.tsx` — one-click NIRF export provided by the SSR Builder export hub (reused)
-
-#### Key features:
-- Real-time NAAC data completeness: "Criterion 3: Research — 70% data filled" with drill-down to missing data
-- AQAR PDF auto-generation (pre-fills from all modules)
-- NIRF data export: auto-populates all 5 NIRF parameters from live database
-- AISHE annual report: student headcount, staff count, program-wise enrollment
-- Best practices documentation editor (NAAC Criterion 7 evidence)
-- Super admin can see NAAC readiness score across all institutions
-
 ---
 
 #### AISHE Field-Level Schema Mapping
@@ -276,10 +220,7 @@ ALTER TABLE students
   ADD COLUMN IF NOT EXISTS is_pwd   BOOLEAN NOT NULL DEFAULT FALSE;  -- Persons with Disability flag
 ```
 
-- [x] `supabase/migrations/..._students_aishe_fields.sql` — Add `category` + `is_pwd` to students (`20260613010000_phase7f_aishe_fields.sql`)
-- [~] Update student admission form (Phase 5A) and bulk import CSV template to include these fields — columns live; form/CSV wiring is a small carry-over
-- [~] `src/app/institutions/[id]/iqac/aishe/page.tsx` — AISHE auto-population delivered by the SSR Builder (`getAISHEData`)
-- [~] Validate: warn admin on null/zero AISHE fields before export — surfaced via SSR Builder data-gap warnings
+> Shipped: the `students.category` / `is_pwd` migration (`20260613000000` series) and AISHE auto-population via the SSR Builder (`getAISHEData`). Carry-over: surfacing these fields in the Phase 5A admission form + bulk-import CSV template.
 
 ---
 
@@ -330,14 +271,7 @@ CREATE POLICY "iqac_action_items: institution members can manage"
   ));
 ```
 
-**What to build:**
-- [x] `supabase/migrations/..._iqac_meetings.sql` — iqac_meetings + iqac_action_items + RLS (`20260630000000_phase7f_iqac_meetings.sql`)
-- [x] `src/app/institutions/[id]/iqac/meetings/page.tsx` — Meeting register: status badges, NAAC 6.1 compliance banner
-- [x] `src/app/institutions/[id]/iqac/meetings/[meetingId]/page.tsx` — Meeting detail: agenda, minutes editor, action items table
-- [x] `src/actions/iqacMeetings.ts` — createMeeting, updateMeeting (minutes), addActionItem, updateActionStatus, getIqacStats
-- [x] `src/components/iqac/MeetingCard.tsx` — Card: date, meeting number, status badge, open action items count
-- [x] `src/components/iqac/ActionItemRow.tsx` — Row: description, assigned staff, due date, inline status dropdown
-- [x] NAAC evidence: meeting count + % action items resolved — `getIqacStats`, surfaced on the dashboard & AQAR
+> ✅ Built in 7F (commit `3cc2876`) — see the "What was built" summary above. Migration `20260630000000_phase7f_iqac_meetings`. The SQL above is the original design reference.
 
 ---
 
@@ -349,23 +283,7 @@ CREATE POLICY "iqac_action_items: institution members can manage"
 
 > The NAAC SSR is submitted once every 5–7 years. Aggregating data across all modules manually takes months and is error-prone. This module auto-generates the SSR data package by pulling from every NAAC-mapped module across all 7 Criteria, produces criterion-wise Excel sheets in NAAC-prescribed format, and generates the AISHE annual return and NIRF data extract in one click.
 
-#### What to build:
-- [x] `src/app/institutions/[id]/iqac/ssr/page.tsx` — SSR dashboard: criterion-wise completeness rings + academic-year selector
-- [x] `src/app/institutions/[id]/iqac/ssr/[criterion]/page.tsx` — Per-criterion review: evidence counts, data gaps, source drill-down
-- [x] `src/app/institutions/[id]/iqac/ssr/export/page.tsx` — Export hub: criterion Excel, AISHE return, NIRF extract
-- [x] `src/actions/ssrBuilder.ts` — aggregateSSRData, getCriterionCompleteness, exports + `getAISHEData` + `getNIRFData`
-- [x] `src/components/iqac/SSRCriterionCard.tsx` — Card per criterion: completeness %, evidence count, missing-data warnings
-- [x] `src/components/iqac/SSRExportButton.tsx` — Excel/export trigger with loading + download state
-- [x] AISHE annual return — maps Aura fields to the AISHE portal schema (`students.category`/`is_pwd` migration shipped)
-- [x] NIRF extract — student progression / placement / research / outreach, per academic year
-
-#### Key features:
-- Central SSR aggregation: pulls evidence counts from all NAAC-mapped modules (CIA, lesson plans, guest lectures, internships, research papers, placements, grievances, etc.)
-- Criterion-wise completeness meter: shows % of required data fields populated — tells admin exactly what to fill before submission
-- Export: criterion-wise Excel sheets structured in NAAC-prescribed column headers
-- AISHE annual return: auto-populates all AISHE portal fields from Aura database in one export
-- NIRF data extract: five-parameter NIRF submission (Teaching, Research, Graduation, Outreach, Perception) with year-on-year comparison
-- Data gap warnings: highlights missing evidence (e.g., "Criterion 3 — 0 publications logged for 2024-25")
+> **What shipped:** SSR dashboard (criterion completeness rings + AY selector), per-criterion review (evidence counts + data-gap warnings), export hub (criterion Excel, AISHE return, NIRF extract); `ssrBuilder.ts` (`aggregateSSRData`, `getAISHEData`, `getNIRFData`) + `ssrRegistry.ts` (the 7-criteria → table evidence map); `SSRCriterionCard` + `SSRExportButton`.
 
 ---
 
