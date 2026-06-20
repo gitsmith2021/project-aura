@@ -213,7 +213,7 @@ CREATE POLICY "fee_concessions: institution members can manage"
 - [x] `fee_concessions` table live with RLS enabled
 - [x] `npm run build` passes with zero TypeScript errors
 - [x] `git commit -m "feat: Foundation Migrations — subjects, academic_years FK, HOD role, fee concessions"`
-- [ ] `git push origin main`
+- [x] `git push origin main`
 
 ---
 

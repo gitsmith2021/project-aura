@@ -120,21 +120,18 @@ jobs:
 
 ---
 
-### A7 — SaaS Billing (Minimal viable — Resolve by: Phase 3)
-> Platform subscription billing (Phase 7E) is planned too late. You need a revenue mechanism before onboarding real institutions. A minimal billing setup should exist by Phase 3.
-
-#### Minimal viable billing (Phase 3 addition):
-- [ ] Add `subscription_plan TEXT DEFAULT 'trial'`, `trial_ends_at TIMESTAMPTZ`, `is_active BOOLEAN DEFAULT TRUE` to `institutions` table
-- [ ] `src/middleware.ts` — Check `is_active` and `trial_ends_at`; redirect inactive institutions to `/subscription-expired`
-- [ ] `src/app/subscription-expired/page.tsx` — Expired plan page with upgrade CTA
-- [ ] Wire up Razorpay Subscriptions API or a simple manual invoice flow for initial clients
-- [ ] Full subscription management portal deferred to Phase 7E as planned
+### A7 — SaaS Billing ✅ Delivered via Phase 7E (commit `d70babd`)
+> The full subscription billing system shipped in **Phase 7E** — `subscription_plans` + `institution_subscriptions` + `subscription_invoices`, MRR/ARR, plan tiers + feature gating (`isFeatureEnabled`), seeded Starter/Pro/Enterprise, and manual invoicing. This supersedes the "minimal viable" interim design (columns on `institutions`), which was skipped in favour of the full module.
+>
+> **Remaining (small follow-ups):** middleware-level enforcement of expired/inactive plans (page-level `isFeatureEnabled` ships; a `/subscription-expired` redirect is not wired) and Razorpay *recurring* auto-charge (manual invoicing now; `razorpay_sub_id` is the integration point).
 
 ---
 
-### A8 — Platform-Wide Audit Log (Resolve by: Phase 2.5 / before Phase 3)
+### A8 — Platform-Wide Audit Log ✅ Complete (commit `b3c2ed0`)
 
-> **Critical for NAAC, UGC, and ISO 27001.** Marks edits, fee adjustments, salary disbursements, and year promotions all mutate high-stakes records — but there is currently no centralized, tamper-evident trail. Individual modules have partial logs (`promotion_logs`, etc.) but there is no unified view. A single `audit_logs` table and `logAudit()` helper closes this entirely.
+> **Status:** ✅ Shipped — central `audit_logs` table (append-only, immutable per Dev Rule 17) + `logAudit()` helper in `src/lib/auditLog.ts`, wired into every high-stakes mutation (marks, fees, salary, promotions, budgets, staff lifecycle, …). A cross-institution viewer is surfaced on `/admin/health` (Phase 7D).
+
+> **Critical for NAAC, UGC, and ISO 27001.** Marks edits, fee adjustments, salary disbursements, and year promotions all mutate high-stakes records. The single `audit_logs` table + `logAudit()` helper provides the centralized, tamper-evident trail (the design below).
 >
 > **Resolve by Phase 2.5** — this is a cross-cutting concern. Every sensitive Server Action written from this point forward must call `logAudit()` before returning.
 

@@ -240,7 +240,7 @@ CREATE TABLE cia_marks (
 - [x] `src/components/cia/CIAReportCard.tsx` — Per-student CIA summary per semester with color-coded % and pass/fail counts
 - [x] Student portal: `src/app/student-portal/cia/page.tsx` — Personal CIA marks breakdown per component, grouped by semester
 - [x] Sidebar: CIA link added for admin/HOD nav; StudentPortalShell CIA nav item added
-- [ ] Results integration: CIA total auto-included in marksheet grand total (Step 2C)
+- [~] Results integration: CIA total auto-included in marksheet grand total (Step 2C)
 
 #### Key features:
 - Configurable CIA components per department and semester
@@ -329,11 +329,11 @@ CREATE TABLE lesson_plans (
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._lesson_plans.sql`
-- [ ] `src/app/institutions/[id]/lesson-plans/page.tsx` — Admin view: all teachers' lesson plans with date/dept filter
-- [ ] `src/actions/lessonPlans.ts` — getMyPlans, submitPlan, getStaffPlans, getCompletionReport
-- [ ] `src/components/lesson-plans/LessonPlanForm.tsx` — Daily plan entry: curriculum unit selector, teaching method, objectives
-- [ ] Staff portal: `src/app/staff-portal/lesson-plan/page.tsx` — Staff logs today's lesson plan (pre-filled from timetable)
+- [x] `supabase/migrations/..._lesson_plans.sql`
+- [x] `src/app/institutions/[id]/lesson-plans/page.tsx` — Admin view: all teachers' lesson plans with date/dept filter
+- [x] `src/actions/lessonPlans.ts` — getMyPlans, submitPlan, getStaffPlans, getCompletionReport
+- [x] `src/components/lesson-plans/LessonPlanForm.tsx` — Daily plan entry: curriculum unit selector, teaching method, objectives
+- [x] Staff portal: `src/app/staff-portal/lesson-plan/page.tsx` — Staff logs today's lesson plan (pre-filled from timetable)
 
 #### Key features:
 - Links to curriculum units (Step 2F) — marks which syllabus unit was covered today
@@ -373,11 +373,11 @@ CREATE TABLE guest_lectures (
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._guest_lectures.sql`
-- [ ] `src/app/institutions/[id]/guest-lectures/page.tsx` — Guest lecture log with dept/date filter + NAAC export
-- [ ] `src/actions/guestLectures.ts` — getGuestLectures, addGuestLecture, exportForNAAC
-- [ ] `src/components/guest-lectures/GuestLectureCard.tsx` — Card: speaker, topic, date, attendance, curriculum unit tag
-- [ ] Student portal: `src/app/student-portal/guest-lectures/page.tsx` — Upcoming and past guest lectures in their dept
+- [x] `supabase/migrations/..._guest_lectures.sql`
+- [x] `src/app/institutions/[id]/guest-lectures/page.tsx` — Guest lecture log with dept/date filter + NAAC export
+- [x] `src/actions/guestLectures.ts` — getGuestLectures, addGuestLecture, exportForNAAC
+- [x] `src/components/guest-lectures/GuestLectureCard.tsx` — Card: speaker, topic, date, attendance, curriculum unit tag
+- [x] Student portal: `src/app/student-portal/guest-lectures/page.tsx` — Upcoming and past guest lectures in their dept
 
 #### Key features:
 - Links to curriculum units — NAAC evidence of curriculum enrichment activities
@@ -433,15 +433,15 @@ CREATE POLICY "internships: institution members can manage"
 ```
 
 #### What to build:
-- [ ] `supabase/migrations/..._internships.sql`
-- [ ] Supabase Storage bucket: `internship-documents` (student write, admin read, RLS by institution)
-- [ ] `src/app/institutions/[id]/internships/page.tsx` — Admin: all internships filtered by year/dept/status, verify or reject submissions, NAAC export
-- [ ] `src/app/institutions/[id]/internships/verify/page.tsx` — Admin reviews uploaded report and company certificate before approving
-- [ ] `src/actions/internships.ts` — registerInternship, submitReport, verifyInternship, rejectInternship, getInternshipStats
-- [ ] `src/components/internships/InternshipCard.tsx` — Card: student name, company, role, date range, status badge, report/certificate links
-- [ ] Student portal: `src/app/student-portal/internship/page.tsx` — Register internship details, upload report and company certificate, track verification status
-- [ ] Year promotion integration (Step 2D): `previewPromotion` must check `is_mandatory=true` internships are `status=verified` before marking a student eligible for promotion
-- [ ] NAAC Criterion 1.2 export: students who completed industrial training per academic year, company-wise listing
+- [x] `supabase/migrations/..._internships.sql`
+- [x] Supabase Storage bucket: `internship-documents` (student write, admin read, RLS by institution)
+- [x] `src/app/institutions/[id]/internships/page.tsx` — Admin: all internships filtered by year/dept/status, verify or reject submissions, NAAC export
+- [x] `src/app/institutions/[id]/internships/verify/page.tsx` — Admin reviews uploaded report and company certificate before approving
+- [x] `src/actions/internships.ts` — registerInternship, submitReport, verifyInternship, rejectInternship, getInternshipStats
+- [x] `src/components/internships/InternshipCard.tsx` — Card: student name, company, role, date range, status badge, report/certificate links
+- [x] Student portal: `src/app/student-portal/internship/page.tsx` — Register internship details, upload report and company certificate, track verification status
+- [x] Year promotion integration (Step 2D): `previewPromotion` must check `is_mandatory=true` internships are `status=verified` before marking a student eligible for promotion
+- [x] NAAC Criterion 1.2 export: students who completed industrial training per academic year, company-wise listing
 
 #### Key features:
 - Students self-register company details, then upload report and certificate on completion

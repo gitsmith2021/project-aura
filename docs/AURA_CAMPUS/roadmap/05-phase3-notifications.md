@@ -167,16 +167,16 @@ CREATE TABLE notices (
 ---
 
 ### Phase 3 Completion Checklist
-- [ ] Notifications table created and RLS locked down
-- [ ] Bell icon shows live unread count in all nav bars
-- [ ] All 7 trigger events fire correctly
-- [ ] Email sending works for at least fee and payment events
+- [x] Notifications table created and RLS locked down
+- [x] Bell icon shows live unread count in all nav bars
+- [x] All 7 trigger events fire correctly
+- [x] Email sending works for at least fee and payment events
 - [ ] SMS sending works for at least attendance alert
 - [ ] WhatsApp template sending works for fee receipt
-- [ ] Digital Notice Board live on all portals with audience targeting and auto-expiry
-- [ ] `npx tsc --noEmit` passes
-- [ ] `git commit -m "feat: Phase 3 — Notifications System complete"`
-- [ ] `git push origin main`
+- [x] Digital Notice Board live on all portals with audience targeting and auto-expiry
+- [x] `npx tsc --noEmit` passes
+- [x] `git commit -m "feat: Phase 3 — Notifications System complete"`
+- [x] `git push origin main`
 
 ---
 

@@ -27,16 +27,7 @@
 - `src/lib/parentPortal.ts` pure helpers + 8 Vitest tests; dataRetention entry.
 - **Deferred:** parent-initiated Razorpay "pay on behalf" — `createRazorpayOrder` is RLS-bound to the student/admin and a secure parent payment path needs its own RLS work; the fees page shows the ledger with a clear note. Tracked for a follow-up.
 
-#### What was built:
-- [x] `supabase/migrations/20260620000000_phase6a_parents.sql`
-- [x] `src/app/parent-portal/layout.tsx` → `ParentPortalShell` (amber, child-switcher)
-- [x] `src/app/parent-portal/page.tsx` (dashboard) · `attendance/` · `results/` · `fees/`
-- [x] `src/actions/parentPortal.ts` — getLinkedStudents, getSelectedChild, getChild{Attendance,Results,Fees,UpcomingExams}, admin getParents/createParent/linkStudent/unlinkStudent
-- [x] Login + middleware parent-role routing
-- [x] Admin: `src/app/institutions/[id]/parents/page.tsx` → `ParentsManager`; Sidebar link (People group)
-- [~] Razorpay payment on behalf — deferred (see note above)
-
-#### Database:
+#### Database (design reference):
 ```sql
 -- Parent account — one parent, potentially many linked children
 CREATE TABLE parents (
@@ -120,17 +111,6 @@ CREATE TABLE transport_allocations (
 - `fee_structures.fee_type` CHECK extended with `'transport'` so bus fees can be raised; dataRetention `transport` policy entry (driver/student PII).
 - Nav links added to both the admin Sidebar (Campus group) and the student-portal sidebar.
 
-#### What was built:
-- [x] `supabase/migrations/20260621000000_phase6b_transport.sql` — vehicles, bus_routes, transport_allocations
-- [x] `src/app/institutions/[id]/transport/vehicles/page.tsx` — Vehicle & driver registry (insurance/fitness expiry alerts)
-- [x] `src/app/institutions/[id]/transport/page.tsx` — Route list with vehicle + student count per route
-- [x] `src/app/institutions/[id]/transport/[routeId]/page.tsx` — Route detail: stops, timing, vehicle, allocated students
-- [x] `src/actions/transport.ts` — getVehicles, getRoutes, assignStudent, getStudentRoute, getExpiryAlerts (+ CRUD)
-- [x] Student portal: `src/app/student-portal/transport/page.tsx` — My bus route, boarding stop, pickup time
-- [x] Transport fee linked to `fee_structures` (added `transport` fee type)
-- [x] Vehicle compliance alerts: insurance/fitness certificates expiring within 30 days
-- [~] Python VRP route-optimization solver — deferred (stretch; `stops` store optional lat/lng for it)
-
 ---
 
 ### Step 6C — Certificate & Document Generator
@@ -148,15 +128,6 @@ CREATE TABLE transport_allocations (
 - **Printable** `CertificateDocument` — letterhead, ref no + date, underlined title, justified body, signature block and a browser print-to-PDF button — shared by the admin and student print routes.
 - Admin queue with status filters and inline issue/reject + "issue staff document" drawer; student portal request/track/download page. Nav links added to both sidebars; dataRetention `certificates` entry.
 - **Note:** PDF is produced via the browser's print-to-PDF on the styled document (consistent with the 5H warning-letter / 5C Form-16 precedent) rather than a server-side PDF lib.
-
-#### What was built:
-- [x] `supabase/migrations/20260622000000_phase6c_certificates.sql` — `certificate_requests` (holder, type, status, cert no, issued_at)
-- [x] **Student certificate types:** Bonafide, Transfer Certificate, Character Certificate, NOC, Course Completion
-- [x] **Staff certificate types:** Offer Letter, Experience Certificate, Relieving Letter, Salary Certificate, Service Certificate
-- [x] `src/app/institutions/[id]/certificates/page.tsx` — Admin: requests queue + issue/reject + print
-- [x] `src/actions/certificates.ts` — requestCertificate, approve/reject/issueCertificate, issueStaffCertificate, getCertificateForPrint
-- [x] `src/components/certificates/` — printable `CertificateDocument` + admin/student managers (auto-filled holder data)
-- [x] Student portal: `src/app/student-portal/certificates/page.tsx` — request, track status, download when issued
 
 ---
 
@@ -176,17 +147,6 @@ CREATE TABLE transport_allocations (
 - Admin question-bank editor (MCQ single/multi + short, mark-correct UI), exam manager (draft → published → closed) and a results dashboard (average %, flagged count, ranked attempts). Student list + launcher + player + answer-review. Nav added to both sidebars; dataRetention entry.
 - **Deferred:** auto-push of scores into the CIA gradebook — the spec's `exam_results` table doesn't exist (Step 2C results live in `cia_results`, which models weighted CIA components, not a one-off quiz). Online-exam scores stay self-contained and are surfaced in the module; a later mapping into `cia_results` can be added deliberately.
 
-#### What was built:
-- [x] `supabase/migrations/20260623000000_phase6d_online_exams.sql` — exams, questions, sessions, answers, violations
-- [x] `src/app/institutions/[id]/online-exams/page.tsx` — Exam manager
-- [x] `src/app/institutions/[id]/online-exams/[examId]/questions/page.tsx` — Question bank editor (MCQ + short answer)
-- [x] `src/app/institutions/[id]/online-exams/[examId]/results/page.tsx` — Results dashboard
-- [x] `src/actions/onlineExams.ts` — createExam, startExam, submitExam, autoGrade (+ logViolation, review)
-- [x] `src/components/online-exams/ExamPlayer.tsx` — Timed interface (countdown, navigation, auto-submit)
-- [x] Anti-cheating: tab-switch (3 = auto-submit + flag), full-screen enforce + re-enter modal, copy-paste disabled, unique session token, `online_exam_violations` log
-- [x] Student portal: `src/app/student-portal/exams/online/page.tsx` — upcoming, take, review
-- [~] Results auto-pushed to `exam_results` (Step 2C) — deferred (table doesn't exist; results self-contained, see note above)
-
 ---
 
 ### Step 6E — Student Feedback & Faculty Ratings
@@ -204,15 +164,6 @@ CREATE TABLE transport_allocations (
 - `src/actions/feedback.ts` — form CRUD (details-only edit **preserves** the question set), `submitFeedback` (ledger-guarded), report builder (aggregate + word cloud + response rate, with the eligible-student count taken via service-role head-count so faculty reports work without students-table RLS), staff overview.
 - Admin form manager with a star/comment **question builder** and a report page (overall stars, per-question distribution bars, word cloud, comment stream). Student form list + star/comment fill page. Staff own-ratings overview + report. Nav added to all three sidebars; dataRetention entry.
 
-#### What was built:
-- [x] `supabase/migrations/20260624000000_phase6e_feedback.sql` — `feedback_forms`, `feedback_responses` (anonymous, no student_id) + `feedback_submissions` ledger
-- [x] `src/app/institutions/[id]/feedback/page.tsx` — Admin: create forms, view reports
-- [x] `src/app/institutions/[id]/feedback/[formId]/report/page.tsx` — Analytics: average ratings, word cloud, response rate
-- [x] `src/actions/feedback.ts` — saveFeedbackForm, submitFeedback, getFeedbackReport (+ staff overview)
-- [x] `src/components/feedback/FeedbackForm.tsx` — Star ratings + open-text questions
-- [x] Student portal: `src/app/student-portal/feedback/page.tsx` — active forms to fill
-- [x] Staff portal: `src/app/staff-portal/feedback/page.tsx` — own anonymised ratings + comments
-
 ### Step 6F — Grievance Redressal System
 
 **Routes:** `/institutions/[id]/grievances` (admin) · `/student-portal/grievance` (student) · `/staff-portal/grievance` (staff)
@@ -229,19 +180,7 @@ CREATE TABLE transport_allocations (
 - Nav links: admin Governance group, student-portal and staff-portal sidebars; `dataRetention` `grievances` entry (7 years, anonymous reports store no identity); `ssrRegistry` grievance source flipped **live** under Criterion 6.2 (corrected from a mislabelled 7.1 slot).
 - **Note:** SLA is tracked via the admin-set `deadline` + overdue badges; auto-escalation after the deadline is surfaced as an overdue alert for manual escalation rather than a background cron job.
 
-#### What was built:
-- [x] `supabase/migrations/20260625000000_phase6f_grievances.sql`
-- [x] `src/app/institutions/[id]/grievances/page.tsx` — Admin dashboard: open cases, SLA tracking, overdue alerts
-- [x] `src/app/institutions/[id]/grievances/[grievanceId]/page.tsx` — Case detail + resolution workflow
-- [x] `src/actions/grievances.ts` — submitGrievance, updateGrievanceStatus, assignGrievance, acknowledge/resolve (via status), setDeadline
-- [x] `src/components/grievances/` — GrievanceManager (queue + stats), GrievanceDetail (workflow), GrievancePortalView (submit + track)
-- [x] Student portal: `src/app/student-portal/grievance/page.tsx` — submit, anonymous option, track status
-- [x] Staff portal: `src/app/staff-portal/grievance/page.tsx` — submit, track status
-- [x] Auto-notify complainant on every status change (Phase 3B notification)
-- [x] NAAC Criterion 6.2: cases filed, resolution rate, % within 30 days, avg days to resolve (stats + CSV)
-- [~] Auto-escalation after deadline — surfaced as overdue alerts for manual escalation (no background cron)
-
-#### Database:
+#### Database (design reference):
 ```sql
 CREATE TABLE grievances (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -264,24 +203,6 @@ CREATE TABLE grievances (
 );
 ```
 
-#### What to build:
-- [ ] `supabase/migrations/..._grievances.sql`
-- [ ] `src/app/institutions/[id]/grievances/page.tsx` — Admin dashboard: open cases, SLA tracking, overdue alerts
-- [ ] `src/app/institutions/[id]/grievances/[grievanceId]/page.tsx` — Case detail + resolution workflow
-- [ ] `src/actions/grievances.ts` — submitGrievance, updateStatus, assignGrievance, resolveGrievance
-- [ ] `src/components/grievances/GrievancePipeline.tsx` — Kanban: Submitted → Acknowledged → Under Review → Resolved
-- [ ] Student portal: `src/app/student-portal/grievance/page.tsx` — Submit grievance, anonymous option, track status
-- [ ] Staff portal: `src/app/staff-portal/grievance/page.tsx` — Submit grievance, track status
-- [ ] Auto-notify complainant on every status change (Phase 3B trigger)
-- [ ] NAAC Criterion 6.2 report: cases filed, resolution rate, avg days to resolve
-
-#### Key features:
-- Anonymous submission: no complainant identity stored
-- SLA tracking: resolution deadline with overdue alerts to admin
-- Auto-notification on every status change
-- NAAC compliance report: % resolved within 30 days (Criterion 6.2)
-- Escalation workflow: unresolved cases auto-escalated after deadline
-
 ---
 
 ### Step 6G — E-Learning & Study Materials (LMS)
@@ -300,16 +221,7 @@ CREATE TABLE grievances (
 - Staff portal: own-subjects workspace (materials + assignments + grading). Student portal: subject materials browser (lazy-loaded accordion) + assignments submit/grade view.
 - `ScormPlayer` embeds SCORM packages via iframe + `postMessage` completion. Nav added to admin/staff/student sidebars; dataRetention entry.
 
-#### What was built:
-- [x] `supabase/migrations/20260626000000_phase6g_lms.sql` — study_materials + lms_assignments + lms_submissions + RLS
-- [x] Storage buckets `study-materials` + `lms-submissions` (created in-migration, public per convention)
-- [x] `src/app/institutions/[id]/lms/page.tsx` — overview · `[subjectId]/` materials · `assignments/` · `assignments/[id]/submissions/` · `gradebook/`
-- [x] `src/actions/studyMaterials.ts` + `src/actions/lmsAssignments.ts`
-- [x] `MaterialCard` · `AssignmentsManager` (+card) · `GradebookTable` · `ScormPlayer`
-- [x] Student portal: `lms/page.tsx` (materials) + `lms/assignments/page.tsx` (submit + grade view)
-- [x] Staff portal: `staff-portal/lms/` (upload materials + manage/grade assignments for own subjects)
-
-#### Database:
+#### Database (design reference):
 ```sql
 CREATE TABLE study_materials (
   id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -373,36 +285,6 @@ CREATE POLICY "lms_submissions: institution members can manage"
   ));
 ```
 
-#### What to build:
-- [ ] `supabase/migrations/..._study_materials.sql`
-- [ ] `supabase/migrations/..._lms_assignments.sql` — assignments + submissions tables + RLS
-- [ ] Supabase Storage bucket: `study-materials` (authenticated read for enrolled students, staff write)
-- [ ] Supabase Storage bucket: `lms-submissions` (student write own files, staff/admin read)
-- [ ] `src/app/institutions/[id]/lms/page.tsx` — LMS overview: subjects with material count, recent uploads
-- [ ] `src/app/institutions/[id]/lms/[subjectId]/page.tsx` — Subject materials management by unit
-- [ ] `src/app/institutions/[id]/lms/assignments/page.tsx` — Assignment manager: create, set deadline, view submissions
-- [ ] `src/app/institutions/[id]/lms/assignments/[assignmentId]/submissions/page.tsx` — Grade submissions: marks + feedback per student
-- [ ] `src/app/institutions/[id]/lms/gradebook/page.tsx` — **Gradebook**: student × assignment matrix with marks, average per student, average per assignment
-- [ ] `src/actions/studyMaterials.ts` — uploadMaterial, getMaterials, deleteMaterial, publishMaterial
-- [ ] `src/actions/lmsAssignments.ts` — createAssignment, getAssignments, submitAssignment, gradeSubmission, getGradebook
-- [ ] `src/components/lms/MaterialCard.tsx` — Card: type icon (PDF/video/slides), unit tag, download/view link
-- [ ] `src/components/lms/AssignmentCard.tsx` — Card: deadline countdown, submission count, graded/pending badges
-- [ ] `src/components/lms/GradebookTable.tsx` — Student × assignment grid with marks, colour-coded (pass/fail/missing)
-- [ ] Student portal: `src/app/student-portal/lms/page.tsx` — My subjects → materials + assignments organized per syllabus unit
-- [ ] Student portal: `src/app/student-portal/lms/assignments/page.tsx` — View assignments, upload submission, view grade + feedback
-- [ ] Staff portal: `src/app/staff-portal/lms/page.tsx` — Upload materials and manage assignments for own subjects
-- [ ] SCORM: `src/components/lms/ScormPlayer.tsx` — Embed SCORM 1.2/2004 packages via iframe + `postMessage` completion tracking
-
-#### Key features:
-- Materials organized by curriculum units (Step 2F) — students know which unit each material covers
-- Supports PDF upload, PPT, video links (YouTube embed), external URLs, SCORM packages
-- **Assignment workflow:** staff creates → students submit file before deadline → staff grades + adds feedback → student sees mark
-- **Late submission flag:** auto-set if submitted after `due_date`; staff configures `allow_late` per assignment
-- **Gradebook:** subject-wise marks matrix per academic year; average scores; identifies students with missing submissions
-- Supabase Storage RLS: only students of the relevant department can access materials
-- Staff draft/publish control per material
-- Student portal: type-filtered tabs (notes, videos, assignments, question papers)
-
 ---
 
 ### Step 6H — Industry Connect & MOU Management
@@ -420,15 +302,7 @@ CREATE POLICY "lms_submissions: institution members can manage"
 - Admin: MOU registry with a stats strip, an **expiry-alert banner** (≤60/≤30 days + expired), status filters, and `MOUCard`s with an urgency badge + activity/students counts; a separate activity-log page (internships, workshops, guest lectures, drives, students benefited); one-click NAAC 7.1 CSV download. Sidebar link; dataRetention entry; `ssrRegistry` 7.1 (MOUs) flipped to live.
 - **Cross-module note:** the Guest Lecture (2H) and Placement (5F) modules already capture their own records; activities here are logged where an MOU context is wanted, avoiding forced duplication.
 
-#### What was built:
-- [x] `supabase/migrations/20260627000000_phase6h_industry_connect.sql` — mou_partners + industry_interactions + RLS + mou-documents bucket
-- [x] `src/app/institutions/[id]/industry-connect/page.tsx` — MOU registry with expiry status badges + alerts
-- [x] `src/app/institutions/[id]/industry-connect/interactions/page.tsx` — activity log per MOU
-- [x] `src/actions/industryConnect.ts` — getMOUs, saveMOU, logInteraction, toggle/delete, getNaacMouCsv
-- [x] `src/components/industry-connect/MOUCard.tsx` — partner, type, expiry-date badge, activity/students counts
-- [x] NAAC Criterion 7.1 export — MOUs with activity log + students benefited (CSV)
-
-#### Database:
+#### Database (design reference):
 ```sql
 CREATE TABLE mou_partners (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -461,34 +335,19 @@ CREATE TABLE industry_interactions (
 );
 ```
 
-#### What to build:
-- [ ] `supabase/migrations/..._industry_connect.sql`
-- [ ] `src/app/institutions/[id]/industry-connect/page.tsx` — MOU registry with expiry status badges + upcoming expiry alerts
-- [ ] `src/app/institutions/[id]/industry-connect/interactions/page.tsx` — Log activities under each MOU
-- [ ] `src/actions/industryConnect.ts` — getMOUs, addMOU, logInteraction, getExpiryAlerts, getNAACReport
-- [ ] `src/components/industry-connect/MOUCard.tsx` — Card: partner name, type, expiry date badge, activities count
-- [ ] NAAC Criterion 7.1 export: list of MOUs with activity log and students benefited
-
-#### Key features:
-- MOU expiry alerts: 30 and 60 days before expiry (notification + dashboard badge)
-- Activity log per MOU (internships, workshops, guest lectures, placement drives)
-- Links to Guest Lecture module (2H) and Placement module (5F) to avoid duplicate entry
-- NAAC Criterion 7.1 export
-
 ---
 
-### Phase 6 Completion Checklist
-- [ ] Parent portal logins working (new `aura-role=parent` cookie)
-- [ ] Parent portal: multiple children per parent supported via `parent_student_links` junction table; child-switcher UI working
-- [ ] Transport routes configured, vehicle registry complete, fee ledger linked
-- [ ] Certificate generation engine produces printable PDFs (student + staff types)
-- [ ] Online MCQ exam sessions complete with anti-cheating and auto-grade to results
-- [ ] Student feedback forms protect anonymity and compile analytics correctly
-- [ ] Grievance redressal: anonymous submission, SLA tracking, NAAC report working
-- [ ] LMS: study materials uploaded, Supabase Storage RLS working, student access confirmed
-- [ ] Industry connect: MOU registry with expiry alerts and NAAC export working
-- [ ] `git commit -m "feat: Phase 6 — Extended Portal Features complete"`
-- [ ] `git push origin main`
+### Phase 6 Completion Checklist ✅ COMPLETE (8/8)
+- [x] Parent portal logins working (`aura-role=parent` cookie) — `a85f205`
+- [x] Parent portal: multiple children via `parent_student_links` + child-switcher
+- [x] Transport routes + vehicle registry + fee ledger linked — `eb1756c`
+- [x] Certificate generator: printable docs (student + staff types) — `048e0cc`
+- [x] Online MCQ exams: anti-cheating + auto-grade — `6153c1a`
+- [x] Student feedback: anonymity-preserving + analytics — `e937daf`
+- [x] Grievance redressal: anonymous submission, SLA tracking, NAAC report — `51a8422`
+- [x] LMS: study materials + Storage RLS + student access — `4c8513f`
+- [x] Industry connect: MOU registry + expiry alerts + NAAC 7.1 export — `5018171`
+- [x] Committed + pushed across 6A–6H
 
 ---
 

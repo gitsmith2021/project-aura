@@ -949,8 +949,8 @@ CREATE TABLE event_participants (
 - [x] Sports: teams, facilities, and achievements logged with NIRF export (commit `dc8d836`, 28 unit tests)
 - [x] Campus Events: event registry with committee assignment, participant rosters, budget tracking, and NAAC export (commit `dca2243`, 48 unit tests)
 - [x] All campus infrastructure modules integrated with student and staff portals
-- [ ] `git commit -m "feat: Phase 4 — Campus Infrastructure & Laboratories complete"`
-- [ ] `git push origin main`
+- [x] `git commit -m "feat: Phase 4 — Campus Infrastructure & Laboratories complete"`
+- [x] `git push origin main`
 
 ---
 
