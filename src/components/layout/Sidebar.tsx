@@ -368,6 +368,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const complianceHref     = slug ? `/institutions/${slug}/compliance`       : "/institutions";
   const auditLogHref       = slug ? `/institutions/${slug}/audit-log`        : "/institutions";
   const iqacSsrHref        = slug ? `/institutions/${slug}/iqac/ssr`         : "/institutions";
+  const iqacHref           = slug ? `/institutions/${slug}/iqac`             : "/institutions";
   const noticesHref        = slug ? `/institutions/${slug}/notices`          : "/institutions";
   const libraryHref        = slug ? `/institutions/${slug}/library`          : "/institutions";
   const bookingsHref       = slug ? `/institutions/${slug}/bookings`         : "/institutions";
@@ -534,8 +535,10 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                   active={isItemActive("compliance", complianceHref)} />
                 <SubLink href={auditLogHref} icon={<ScrollText size={14} />} label="Audit Log"
                   active={isItemActive("audit-log", auditLogHref)} />
-                <SubLink href={iqacSsrHref} icon={<Landmark size={14} />} label="IQAC / NAAC SSR"
-                  active={isItemActive("iqac", iqacSsrHref)} />
+                <SubLink href={iqacHref} icon={<ClipboardCheck size={14} />} label="IQAC Dashboard"
+                  active={pathname.endsWith("/iqac") || pathname.includes("/iqac/meetings") || pathname.includes("/iqac/aqar")} />
+                <SubLink href={iqacSsrHref} icon={<Landmark size={14} />} label="NAAC SSR Builder"
+                  active={pathname.includes("/iqac/ssr")} />
                 <SubLink href={noticesHref} icon={<Megaphone size={14} />} label="Notices"
                   active={isItemActive("notices", noticesHref)} />
                 <SubLink href={disciplinaryHref} icon={<ShieldAlert size={14} />} label="Disciplinary"
