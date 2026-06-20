@@ -43,3 +43,44 @@ group by payment_status;
 
 Record regressions here when a hot path exceeds ~50ms on production-scale data, and
 promote the relevant aggregate to an RPC/materialized view under Architecture item A3.
+
+---
+
+## Arch A3 — Index Strategy (2026-06-20)
+
+### Foreign-key indexes (done — migration `20260702000000`)
+
+Postgres auto-indexes PK/UNIQUE columns but **not** foreign keys. The Supabase
+performance advisor flagged **136** FK columns in `public` with no covering index —
+hurting joins, cascade deletes (a parent delete seq-scans children), and lock contention.
+
+A single idempotent migration adds an `ix_<table>_<fk_cols>` btree for every FK whose
+columns aren't already the **leftmost prefix** of an existing index. It's **re-runnable**:
+re-run it whenever the advisor reports new unindexed FKs (e.g. after adding tables).
+
+```sql
+-- count remaining unindexed FKs (expect 0)
+with fk as (select con.conrelid, con.conkey from pg_constraint con
+  join pg_class c on c.oid=con.conrelid join pg_namespace n on n.oid=c.relnamespace
+  where con.contype='f' and n.nspname='public')
+select count(*) from fk where not exists (select 1 from pg_index i
+  where i.indrelid=fk.conrelid
+    and (string_to_array(i.indkey::text,' ')::int2[])[1:array_length(fk.conkey,1)]=fk.conkey);
+```
+
+### Known performance backlog (NOT indexing — deferred)
+
+The advisor also reports two RLS-shaped items that are **out of A3's index scope** and are
+tracked as a separate performance pass:
+
+- **`auth_rls_initplan` (~152 policies):** policies call `auth.uid()` / `auth.email()` per
+  row instead of once. Fix is mechanical — wrap as `(select auth.uid())` so the planner
+  caches it — but it touches every policy and needs careful semantic-preserving review;
+  high value only on large sequential scans.
+- **`multiple_permissive_policies` (~264):** several tables have multiple permissive
+  policies for the same role+action (e.g. `admins manage` + `staff read own`). Each is
+  OR-evaluated. Consolidating trades readability/correctness for marginal speed; deferred
+  until profiling shows it matters.
+- **`unused_index` (~160):** expected on a low-traffic environment (queries haven't
+  exercised them yet, plus the new FK indexes). Re-evaluate against production
+  `pg_stat_user_indexes` before dropping anything.

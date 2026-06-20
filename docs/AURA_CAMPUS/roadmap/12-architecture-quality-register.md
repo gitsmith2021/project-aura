@@ -47,27 +47,28 @@
 
 ---
 
-### A3 — Database Index Strategy (Resolve by: Phase 4)
-> Tables like `attendance_sessions`, `fee_payments`, and `marks` will grow to millions of rows. No composite indexes or query plan documentation beyond basic PKs.
+### A3 — Database Index Strategy ✅ Complete (commit `20260702000000`)
 
-#### Indexes to add:
-```sql
--- attendance_sessions: most queries filter by institution + date range
-CREATE INDEX idx_att_sessions_inst_date ON attendance_sessions(institution_id, session_date DESC);
+> **Status:** ✅ Resolved (2026-06-20). Postgres does **not** auto-index foreign-key
+> columns — the Supabase performance advisor flagged **136** unindexed FKs across `public`,
+> which hurt joins, cascade deletes (a parent delete seq-scans children), and lock
+> contention. A single idempotent migration now covers every FK with an
+> `ix_<table>_<fk_cols>` btree. Verified: advisor `unindexed_foreign_keys` dropped
+> **136 → 0**. Hot-path composite indexes (attendance/fees/marks, the original concern
+> below) were already added across Phases 3–7 alongside each module.
 
--- fee_payments: filter by institution + student + academic year
-CREATE INDEX idx_fee_payments_student ON fee_payments(institution_id, student_id, academic_year_id);
+> **Original concern:** Tables like `attendance_sessions`, `fee_payments`, and `marks` will grow to millions of rows. No composite indexes or query plan documentation beyond basic PKs.
 
--- marks: filter by subject + exam type + academic year
-CREATE INDEX idx_marks_subject_exam ON marks(subject_id, exam_type, academic_year_id);
+#### ✅ What was done (Arch A3, 2026-06-20)
+- [x] `supabase/migrations/20260702000000_arch_a3_fk_index_strategy.sql` — self-contained **idempotent + re-runnable** DO block: finds every FK column that isn't the leftmost prefix of an existing index and creates `ix_<table>_<fk_cols>`; self-heals as new tables are added. Applied via MCP; FK-coverage check confirms **0** unindexed FKs remain.
+- [x] Strategy + re-run query + the deferred RLS-perf backlog documented in [`docs/query-performance.md`](../../query-performance.md) (Arch A3 section).
+- [x] Hot-path composite indexes (attendance by inst+date, fees by student, marks by subject+exam, etc.) — shipped per-module across Phases 3–7; documented in `docs/query-performance.md`.
 
--- notifications: already indexed (recipient_id, is_read) — covered in Phase 3A
-
--- lesson_plans: filter by staff + date
-CREATE INDEX idx_lesson_plans_staff_date ON lesson_plans(staff_id, plan_date DESC);
-```
-- [ ] `supabase/migrations/..._performance_indexes.sql`
-- [ ] Run `EXPLAIN ANALYZE` on the top 5 slowest queries after Phase 4 and document results
+> **Deferred (NOT indexing — separate perf pass):** advisor still reports
+> `auth_rls_initplan` (~152, wrap `auth.uid()` as `(select auth.uid())`),
+> `multiple_permissive_policies` (~264), and `unused_index` (~296, expected on a
+> low-traffic env). Tracked in `docs/query-performance.md`; revisit against production
+> `pg_stat_user_indexes` before acting.
 
 ---
 
