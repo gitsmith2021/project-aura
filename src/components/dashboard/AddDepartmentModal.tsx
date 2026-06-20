@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, createElement } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { getDeptColor, DEPT_COLOR_PALETTE, randomDeptColorKey } from "@/lib/deptColors";
 import { getDeptIcon } from "@/lib/deptIcons";
@@ -76,6 +76,7 @@ export function AddDepartmentModal({
     return () => {
       document.body.style.overflow = "unset";
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- (re)initialise the form only when the modal opens or its target changes
   }, [isOpen, departmentToEdit]);
 
   if (!mounted) return null;
@@ -162,7 +163,7 @@ export function AddDepartmentModal({
                   }}
                   title="Dynamic icon based on department name"
                 >
-                  <Icon size={20} strokeWidth={2.5} />
+                  {createElement(Icon, { size: 20, strokeWidth: 2.5 })}
                 </div>
                 <input 
                   type="text" 

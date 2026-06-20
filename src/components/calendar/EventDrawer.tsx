@@ -80,6 +80,7 @@ export function EventDrawer({
     return () => {
       document.body.style.overflow = "unset";
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- (re)initialise the form only when the drawer opens or its event changes
   }, [isOpen, event, academicYears]);
 
   const handleSubmit = async (e: React.FormEvent) => {

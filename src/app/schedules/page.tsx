@@ -89,6 +89,7 @@ export default function SchedulesPage() {
   // Reset selected dept when institution changes
   useEffect(() => {
     setSelectedDeptId(departments[0]?.id || "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset selection only when the institution changes
   }, [selectedTenantId]);
 
   // Classes for the selected institution

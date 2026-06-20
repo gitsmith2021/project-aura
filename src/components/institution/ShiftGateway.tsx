@@ -66,25 +66,21 @@ export function ShiftGateway({ allowedShifts }: { allowedShifts?: string[] }) {
   // Sliding indicator position
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
 
-  const measureIndicator = useCallback(() => {
-    const idx = activeIndex >= 0 ? activeIndex : 0;
-    const btn = buttonRefs.current[idx];
-    const container = containerRef.current;
-    if (btn && container) {
-      const cRect = container.getBoundingClientRect();
-      const bRect = btn.getBoundingClientRect();
-      setIndicator({
-        left: bRect.left - cRect.left,
-        width: bRect.width,
-      });
-    }
-  }, [activeIndex]);
-
   useEffect(() => {
-    measureIndicator();
-    window.addEventListener("resize", measureIndicator);
-    return () => window.removeEventListener("resize", measureIndicator);
-  }, [measureIndicator]);
+    const measure = () => {
+      const idx = activeIndex >= 0 ? activeIndex : 0;
+      const btn = buttonRefs.current[idx];
+      const container = containerRef.current;
+      if (btn && container) {
+        const cRect = container.getBoundingClientRect();
+        const bRect = btn.getBoundingClientRect();
+        setIndicator({ left: bRect.left - cRect.left, width: bRect.width });
+      }
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [activeIndex]);
 
   const setShift = useCallback(
     (key: ShiftKey) => {

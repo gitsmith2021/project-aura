@@ -12,6 +12,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
+// Matches a bare UUID (vs a human slug) in a URL segment. Module-scope so it's a
+// stable reference and not an effect dependency.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // ── Finance sub-items ─────────────────────────────────────────────────────────
 const FINANCE_SUB = [
   { key: "overview",    label: "Command Center", Icon: LayoutDashboard, href: () => `/finance` },
@@ -226,7 +230,6 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   // ── Slug resolution ───────────────────────────────────────────────────────
   const [financeInstSlug, setFinanceInstSlug] = useState<string | null>(null);
   const [activeInstSlug,  setActiveInstSlug]  = useState<string | null>(null);
-  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   useEffect(() => {
     const slugFromCookie = document.cookie.split("; ")
@@ -237,7 +240,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
     const storedFinance = localStorage.getItem("aura_finance_inst_slug");
     const financeSlug = (storedFinance && !UUID_RE.test(storedFinance)) ? storedFinance : null;
     if (financeSlug) setFinanceInstSlug(financeSlug);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   useEffect(() => {

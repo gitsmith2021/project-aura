@@ -137,6 +137,7 @@ export default function InstitutionPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-fetch only when the institution or shift changes
   }, [collegeId, activeShift]);
 
   const breadcrumb = (

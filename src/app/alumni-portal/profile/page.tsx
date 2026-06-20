@@ -4,17 +4,20 @@ import { getAlumniProfile } from "@/actions/alumni";
 import { graduationYearToBatch, programLabel } from "@/lib/alumni";
 import { AlumniProfileForm } from "@/components/alumni-portal/AlumniProfileForm";
 
-export default async function AlumniProfilePage() {
-  const profileRes = await getAlumniProfile();
-  if (!profileRes.success || !profileRes.data) redirect("/login");
-  const me = profileRes.data;
-
-  const Row = ({ label, value }: { label: string; value: string }) => (
+// Module-scope so the component identity is stable across renders.
+function Row({ label, value }: { label: string; value: string }) {
+  return (
     <div className="flex justify-between gap-4 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
       <span className="text-[12px] text-slate-500">{label}</span>
       <span className="text-[13px] font-medium text-slate-800 dark:text-slate-200 text-right">{value}</span>
     </div>
   );
+}
+
+export default async function AlumniProfilePage() {
+  const profileRes = await getAlumniProfile();
+  if (!profileRes.success || !profileRes.data) redirect("/login");
+  const me = profileRes.data;
 
   return (
     <div className="w-full max-w-3xl mx-auto p-6 space-y-6">

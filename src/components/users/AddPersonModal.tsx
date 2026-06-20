@@ -52,16 +52,16 @@ export function AddPersonModal({
   // Holds the dept id to restore after async dept fetch completes
   const pendingDeptRef = useRef<string>("");
 
-  useEffect(() => {
-    setMounted(true);
-    fetchTenants();
-  }, []);
-
   const fetchTenants = async () => {
     const supabase = createClient();
     const { data } = await supabase.from('institutions').select('id, name, email_domain').order('name');
     if (data) setTenants(data);
   };
+
+  useEffect(() => {
+    setMounted(true);
+    fetchTenants();
+  }, []);
 
   function buildEmailLocal(name: string): string {
     const words = name.trim().toLowerCase().split(/\s+/).filter(Boolean);

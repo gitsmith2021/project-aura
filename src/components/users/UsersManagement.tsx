@@ -147,6 +147,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- (re)subscribe only when the role changes; fetchPeople is stable
   }, [role]);
 
   useEffect(() => {
@@ -311,7 +312,7 @@ export function UsersManagement({ role }: { role: "STAFF" | "STUDENT" }) {
         (role === "STUDENT" && formatStudentTrack(p.student_program as StudentProgram | null, p.student_year ?? null).toLowerCase().includes(q))
       );
     });
-  }, [people, role, filterDeptId, filterProgram, filterYearNum, search, selectedTenantId]);
+  }, [peopleWithRollNos, role, filterDeptId, filterProgram, filterYearNum, search, selectedTenantId]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);

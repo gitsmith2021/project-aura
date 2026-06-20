@@ -69,6 +69,7 @@ export function AddClassModal({ isOpen, onClose, onSuccess, defaultDepartmentId,
     });
 
     return () => { document.body.style.overflow = "unset"; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- (re)initialise the form only when the modal opens or its scope changes
   }, [isOpen, defaultDepartmentId, tenantId]);
 
   if (!mounted) return null;

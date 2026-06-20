@@ -22,9 +22,12 @@ export function ExamPlayer({ examId, sessionId, title, questions, initialRemaini
   const [result, setResult] = useState<{ score: number; totalMarks: number } | null>(null);
 
   const responsesRef = useRef(responses);
-  responsesRef.current = responses;
   const phaseRef = useRef<Phase>(phase);
-  phaseRef.current = phase;
+  // Mirror latest state into refs after commit (read inside async callbacks).
+  useEffect(() => {
+    responsesRef.current = responses;
+    phaseRef.current = phase;
+  }, [responses, phase]);
 
   const doSubmit = useCallback(async (auto: boolean) => {
     if (phaseRef.current !== "taking") return;

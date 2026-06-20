@@ -30,6 +30,12 @@ const eslintConfig = defineConfig([
         "warn",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_", ignoreRestSiblings: true },
       ],
+      // The React-Compiler rule fires on the standard client-side data-fetch
+      // pattern (a loader that calls `setLoading(true)` before awaiting), which
+      // is correct, intentional code — not a bug. Keep it as an advisory `warn`
+      // rather than contorting ~70 working components or disabling per-line.
+      // Every other react-hooks rule stays an error.
+      "react-hooks/set-state-in-effect": "warn",
     },
   },
 ]);

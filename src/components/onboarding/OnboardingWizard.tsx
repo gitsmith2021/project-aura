@@ -42,6 +42,7 @@ export function OnboardingWizard({ institutionId, institutionName, initial }: Pr
     const s = new Set<OnboardingStepId>();
     for (const st of ONBOARDING_STEPS) if (st.actionable && isStepComplete(st.id, state)) s.add(st.id);
     return s;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `state` is rebuilt each render from these primitives
   }, [snap.departments, snap.hasAcademicYear, snap.feeStructures, snap.staff]);
 
   const stepIndex = ONBOARDING_STEPS.findIndex((s) => s.id === step);
