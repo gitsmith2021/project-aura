@@ -96,27 +96,39 @@
 
 ---
 
-### A5 — CI/CD Pipeline ✅ Complete (commit `287f280`)
+### A5 — CI/CD Pipeline ✅ Complete & PR-validated (commits `287f280`, `be1b9e4`)
 
-> **Status:** ✅ Resolved (2026-06-20). GitHub Actions CI runs on every push to
-> `main` and every PR: a **quality** job (type-check · lint · unit tests) and a
-> **migrations** job that replays all 137 migrations from scratch against a
-> throwaway local Postgres and lints the schema — catching a broken/out-of-order
-> migration before it can reach the remote DB, credential-free. Pipeline + the
-> two dashboard-only steps documented in [`docs/ci-cd.md`](../../ci-cd.md).
+> **Status:** ✅ Resolved & proven (2026-06-20). GitHub Actions CI runs on every
+> push to `main` and every PR: a **quality** job (type-check · lint · unit tests)
+> and a **migrations** job that replays the schema from zero on a throwaway local
+> Postgres and lints it. **Validated end-to-end through real PR #1** — type-check,
+> lint, unit tests, migration validation, and the Vercel preview deploy all green.
+> **Branch protection is live on `main`** (require PR + both CI checks, strict).
+> Pipeline documented in [`docs/ci-cd.md`](../../ci-cd.md).
+
+> **Migration drift found & fixed (the migrations job did its job).** The first
+> CI runs failed: the 133 incremental migrations could **not** replay from zero
+> (`relation "public.departments" does not exist`) — foundational tables were
+> bootstrapped outside the chain via manual SQL. Fixed by squashing into a single
+> `pg_dump`-generated **schema baseline** (`supabase/migrations/00000000000000_baseline.sql`);
+> originals archived under `supabase/migrations_archive/`. The schema is now
+> reproducible from git.
 
 > **Original concern:** Manual git push to Vercel is implied. No automated migration runner, type check, or preview deployment strategy.
 
 #### ✅ What was done (Arch A5, 2026-06-20)
-- [x] `.github/workflows/ci.yml` — **quality** job: `npm ci` (Node 22) → `npm run typecheck` → `npm run lint` (advisory) → `npm test`; **migrations** job: `supabase db start` → `supabase migration up --local --include-all` (clean from-zero replay) → `supabase db lint --local --schema public --fail-on error`. Concurrency-cancel on new pushes.
+- [x] `.github/workflows/ci.yml` — **quality** job: `npm ci` (Node 22) → `npm run typecheck` → `npm run lint` (hard gate) → `npm test`; **migrations** job: `supabase db start` → `supabase migration up --local --include-all` (clean from-zero replay) → `supabase db lint --local --schema public --fail-on error`. Concurrency-cancel on new pushes.
 - [x] `.github/workflows/db-backup.yml` — already shipped in **Phase 2.5C** (weekly AES-256-encrypted `pg_dump` artifact, 4 rolling snapshots). Referenced here for completeness.
-- [x] `docs/ci-cd.md` — full pipeline reference + the **manual, dashboard-only** steps that can't be committed: GitHub branch protection (require both CI jobs), Vercel preview/production deployments + env vars, and the required Actions secrets for backups.
+- [x] **Schema baseline** — `supabase/migrations/00000000000000_baseline.sql` (full `public`+`private` schema: 128 tables, 303 RLS policies, 359 indexes, 498 constraints; `pg_dump --schema-only`, platform-managed default-privileges + psql meta-commands stripped). 137 original migration/seed files archived under `supabase/migrations_archive/`.
+- [x] **Branch protection** on `main` (configured via API 2026-06-20): require a PR before merging, require status checks **Type-check, lint & unit tests** + **Validate migrations**, strict (branch up to date), no force-push/deletion. `enforce_admins=false` so the owner isn't locked out.
+- [x] **PR #1** — first real pull request; exercised the full pipeline (pull_request CI + Vercel preview) and merged green (`be1b9e4`).
+- [x] `docs/ci-cd.md` — full pipeline reference + the dashboard-only Vercel setup and backup secrets.
 
 > **Deliberate scope notes:**
 > - **Lint is a hard gate** (as of 2026-06-20) — the ~325 pre-existing ESLint problems were burned down to **0 errors** (real fixes, not suppression: unused-imports/vars removed, `no-explicit-any` typed, JSX entities escaped, a real `rules-of-hooks` bug in `ShiftGateway` fixed, plus static-components/refs/immutability/memo/exhaustive-deps). `continue-on-error` was removed. Sole exception: `react-hooks/set-state-in-effect` (~93) is scoped to `warn` — it fires on the standard client data-fetch pattern (correct code, not a bug). New code must be error-clean. See [`docs/ci-cd.md`](../../ci-cd.md).
-> - **Branch protection + Vercel** are GitHub/Vercel dashboard settings, not committable files — documented as one-time manual setup in `docs/ci-cd.md`.
-> - **Migrations are validated, not auto-applied** to prod (schema changes stay an intentional, reviewed action via `supabase db push` / MCP `execute_sql`).
-> - The migrations job's first real run is on the GitHub runner (local Docker unavailable here); if any historical migration doesn't replay cleanly from zero, CI will surface it — which is precisely its purpose.
+> - **Migrations are validated, not auto-applied** to prod (schema changes stay an intentional, reviewed action via `supabase db push` / MCP `execute_sql`). New schema changes go in NEW timestamped migrations after the baseline.
+> - **The migrations job earned its keep:** its first runs surfaced real, pre-existing migration drift (foundational tables never captured in the chain). That's exactly what a from-zero replay gate is for — fixed via the baseline above.
+> - **Future work:** the `set-state-in-effect` warnings (~93) and the deferred RLS-perf items (auth_rls_initplan, multiple_permissive_policies) remain as non-blocking backlog.
 
 ---
 
