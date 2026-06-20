@@ -45,14 +45,12 @@ jobs:
       - name: Type-check
         run: npm run typecheck
 
-      # Advisory, not blocking. The codebase carries ~190 pre-existing ESLint
-      # errors (set-state-in-effect, no-explicit-any, unescaped-entities, …);
-      # making lint a hard gate now would block every PR for unrelated reasons.
-      # It runs for visibility and is annotated on the PR; promote it to a hard
-      # gate once the existing debt is cleared (tracked in docs/ci-cd.md).
-      - name: Lint (advisory)
+      # Hard gate: the lint debt was cleared, so any ESLint *error* fails the
+      # build. `react-hooks/set-state-in-effect` is intentionally a non-blocking
+      # `warn` (fires on the standard data-fetch pattern); warnings don't fail
+      # eslint. See docs/ci-cd.md.
+      - name: Lint
         run: npm run lint
-        continue-on-error: true
 
       - name: Unit tests
         run: npm test

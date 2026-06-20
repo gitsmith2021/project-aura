@@ -18,19 +18,20 @@ Triggers on every push to `main` and every pull request. Two independent jobs:
 ### `quality`
 - `npm ci` on Node 22 (npm cache enabled)
 - `npm run typecheck` → `tsc --noEmit`
-- `npm run lint` → `eslint` — **advisory (non-blocking)**, see note below
+- `npm run lint` → `eslint` — **hard gate** (any error fails the build)
 - `npm test` → Vitest (forks pool, pinned in [`vitest.config.ts`](../vitest.config.ts) so it's reliable on runners)
 
-The hard gates (type-check, tests) mirror the local Definition of Done (Dev Rule
-18), so "green locally" means "green in CI".
+The hard gates (type-check, lint, tests) mirror the local Definition of Done (Dev
+Rule 18), so "green locally" means "green in CI".
 
-> **Lint is advisory for now.** The codebase carries ~190 pre-existing ESLint
-> errors (`react-hooks/set-state-in-effect`, `@typescript-eslint/no-explicit-any`,
-> `react/no-unescaped-entities`, …). Making lint a hard gate today would block
-> every PR for reasons unrelated to the change at hand, so the step runs with
-> `continue-on-error: true` — it annotates the PR but doesn't fail the build.
-> **Follow-up:** burn down the existing errors, then drop `continue-on-error` to
-> promote lint to a required check. New code should still be lint-clean.
+> **Lint debt cleared (2026-06-20).** The codebase's ~325 pre-existing ESLint
+> problems were burned down to **0 errors**; `continue-on-error` was removed so
+> lint is now a required check. The one exception is
+> `react-hooks/set-state-in-effect` (~93 sites), deliberately scoped to `warn` in
+> `eslint.config.mjs`: it fires on the standard client data-fetch pattern (a
+> loader that calls `setLoading(true)` before awaiting), which is correct code,
+> not a bug. ESLint doesn't fail on warnings, so these stay visible without
+> blocking. **New code must be error-clean.**
 
 ### `migrations`
 Boots a throwaway local Postgres with the Supabase CLI and **replays every

@@ -132,7 +132,7 @@ Arch       ██████████████████████░
 
 **80 / 87 modules shipped (92%).** Phases **1, 2, 2.5, 4, 5, 6, 7 are complete**; Phase 3 is **core-complete** (in-app + email live; SMS/WhatsApp deferred). AURA is a working multi-tenant academic ERP (admissions → academics → finance → campus ops → portals) plus a SaaS operator console (`/admin`) with health, security, billing and IQAC/NAAC tooling. **Arch A1 (fine-grained RLS) audited & hardened** — every table RLS-protected, one cross-tenant leak found & fixed. **Arch A3 (index strategy)** — every foreign key now indexed (advisor: 136 → 0 unindexed FKs). **Arch A4 (onboarding wizard)** — new tenants are walked through Departments → Academic Year → Fees → Staff setup, gated behind `is_onboarded`. **Arch A5 (CI/CD)** — GitHub Actions runs typecheck/tests + a from-scratch migration replay on every push & PR.
 
-- **Quality gates:** 603 Vitest unit tests green · `npx tsc --noEmit` clean · Supabase security advisors show only the accepted baseline (intentional deny-all tables + public document-URL buckets, both documented in [roadmap/12](roadmap/12-architecture-quality-register.md) / `docs/rls-policy-map.md`) · perf advisor: **0 unindexed foreign keys** (Arch A3).
+- **Quality gates:** 603 Vitest unit tests green · `npx tsc --noEmit` clean · `npm run lint` **0 errors** (lint debt burned down 325→0; now a hard CI gate) · Supabase security advisors show only the accepted baseline (intentional deny-all tables + public document-URL buckets, both documented in [roadmap/12](roadmap/12-architecture-quality-register.md) / `docs/rls-policy-map.md`) · perf advisor: **0 unindexed foreign keys** (Arch A3).
 
 ### ▶️ Next up — Phase 8: React Native Mobile & CCTV
 
