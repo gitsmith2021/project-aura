@@ -72,17 +72,27 @@
 
 ---
 
-### A4 — Institution Onboarding Wizard (Resolve by: Phase 5)
-> A new institution signs up with no guidance. There is no setup wizard for departments, academic year, fee structures, or staff import. This is a critical SaaS adoption blocker.
+### A4 — Institution Onboarding Wizard ✅ Complete (commit `20260703000000`)
+
+> **Status:** ✅ Resolved (2026-06-20). A fresh tenant is now walked through setup
+> instead of landing on an empty dashboard. Standalone full-screen wizard at
+> `/onboarding/[institutionId]` (no `DashboardLayout` — nothing to render in the
+> sidebar yet), gated to the admin tier, with a first-login redirect.
+
+> **Original concern:** A new institution signs up with no guidance. There is no setup wizard for departments, academic year, fee structures, or staff import. This is a critical SaaS adoption blocker.
 
 **Route:** `/onboarding/[institutionId]`
 
-#### What to build:
-- [ ] `src/app/onboarding/[institutionId]/page.tsx` — Multi-step wizard: Welcome → Add Departments → Set Academic Year → Configure Fee Structures → Import Staff (CSV) → Done
-- [ ] `src/components/onboarding/OnboardingProgress.tsx` — Step indicator showing completion %
-- [ ] Auto-redirect new institutions to `/onboarding/[id]` on first login if `institutions.is_onboarded = false`
-- [ ] `src/actions/onboarding.ts` — completeOnboardingStep, markOnboardingComplete
-- [ ] Add `is_onboarded BOOLEAN DEFAULT FALSE` column to `institutions` table
+#### ✅ What was done (Arch A4, 2026-06-20)
+- [x] `supabase/migrations/20260703000000_arch_a4_onboarding.sql` — adds `is_onboarded BOOLEAN NOT NULL DEFAULT FALSE` to `institutions`; **backfills existing tenants to TRUE** so they're never trapped in the wizard. Applied via MCP.
+- [x] `src/app/onboarding/[institutionId]/page.tsx` — server component: auth + admin-of-this-institution guard, redirects to `/` if already onboarded, hydrates the wizard with a live snapshot.
+- [x] `src/components/onboarding/OnboardingWizard.tsx` — multi-step flow: **Welcome → Departments → Academic Year → Fee Structures → Staff (CSV) → Done**. Every actionable step is skippable; live snapshot updates as data is added; Finish opens the dashboard.
+- [x] `src/components/onboarding/OnboardingProgress.tsx` — step indicator + completion % (0–100 over the four actionable steps); clickable to jump between visited steps.
+- [x] `src/actions/onboarding.ts` — `getOnboardingState`, `addOnboardingDepartment`, `setOnboardingAcademicYear`, `addOnboardingFeeStructure`, `importOnboardingStaff`, `markOnboardingComplete`. Every mutation behind a `requireAdmin()` guard (SUPER_ADMIN / INST_ADMIN / PRINCIPAL of the target tenant); completion writes an `audit_logs` entry (Dev Rule 17).
+- [x] First-login redirect — `src/app/login/actions.ts` routes an admin to `/onboarding/[id]` when `is_onboarded = false` (HODs/others fall through to their home).
+- [x] `src/lib/onboarding.ts` — pure logic (step model, `onboardingProgress`, `parseStaffCsv` with header aliases + quoted-field + email validation), **14 Vitest unit tests** (`tests/unit/onboarding.test.ts`) per Dev Rule 18.
+
+> **Follow-ups (small):** the authenticated route-crawl smoke test will pick up `/onboarding/[id]` once the seeded-login fixture lands (Arch A2 backlog); staff CSV import creates `staff` rows only — portal credentials are still provisioned separately via the existing staff-credentials flow.
 
 ---
 

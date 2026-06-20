@@ -125,14 +125,14 @@ Phase 6    ███████████████████████
 Phase 7    ████████████████████████████████  100% (8/8  — 7A · 7B · 7C · 7D Health/Security · 7E Billing · 7F IQAC · 7F-sub SSR Builder · 7F-sub2 IQAC Meeting Tracker ✅. The Knowledge Hub is a separate phase → Phase 7X, strategically deferred)
 Phase 7X   ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  🗓️ Strategic Deferred  (Knowledge Hub KH-1→KH-5 · Vision 📐 approved · implementation after Phase 8)
 Phase 8    █████░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%  (1/6  — 8A ✅ · 8B/8C screens built · NFC/push/CCTV/Parent pending)
-Arch       ███████████████░░░░░░░░░░░░░░░  50%  (4/8 + A2 🟡 — A8 Audit Log ✅ · A7 SaaS Billing ✅ (via 7E) · A1 Fine-grained RLS ✅ (audit + 1 leak fixed) · A3 FK Index Strategy ✅ (136→0 unindexed FKs) · A2 Test infra foundation · A4 Onboarding / A5 CI-CD / A6 Multi-currency pending)
+Arch       ███████████████████░░░░░░░░░░░  63%  (5/8 + A2 🟡 — A8 Audit Log ✅ · A7 SaaS Billing ✅ (via 7E) · A1 Fine-grained RLS ✅ (audit + 1 leak fixed) · A3 FK Index Strategy ✅ (136→0 unindexed FKs) · A4 Onboarding Wizard ✅ · A2 Test infra foundation · A5 CI-CD / A6 Multi-currency pending)
 ```
 
 ### 📍 Where we are — 2026-06-20
 
-**80 / 87 modules shipped (92%).** Phases **1, 2, 2.5, 4, 5, 6, 7 are complete**; Phase 3 is **core-complete** (in-app + email live; SMS/WhatsApp deferred). AURA is a working multi-tenant academic ERP (admissions → academics → finance → campus ops → portals) plus a SaaS operator console (`/admin`) with health, security, billing and IQAC/NAAC tooling. **Arch A1 (fine-grained RLS) audited & hardened** — every table RLS-protected, one cross-tenant leak found & fixed. **Arch A3 (index strategy)** — every foreign key now indexed (advisor: 136 → 0 unindexed FKs).
+**80 / 87 modules shipped (92%).** Phases **1, 2, 2.5, 4, 5, 6, 7 are complete**; Phase 3 is **core-complete** (in-app + email live; SMS/WhatsApp deferred). AURA is a working multi-tenant academic ERP (admissions → academics → finance → campus ops → portals) plus a SaaS operator console (`/admin`) with health, security, billing and IQAC/NAAC tooling. **Arch A1 (fine-grained RLS) audited & hardened** — every table RLS-protected, one cross-tenant leak found & fixed. **Arch A3 (index strategy)** — every foreign key now indexed (advisor: 136 → 0 unindexed FKs). **Arch A4 (onboarding wizard)** — new tenants are walked through Departments → Academic Year → Fees → Staff setup, gated behind `is_onboarded`.
 
-- **Quality gates:** 589 Vitest unit tests green · `npx tsc --noEmit` clean · Supabase security advisors show only the accepted baseline (intentional deny-all tables + public document-URL buckets, both documented in [roadmap/12](roadmap/12-architecture-quality-register.md) / `docs/rls-policy-map.md`) · perf advisor: **0 unindexed foreign keys** (Arch A3).
+- **Quality gates:** 603 Vitest unit tests green · `npx tsc --noEmit` clean · Supabase security advisors show only the accepted baseline (intentional deny-all tables + public document-URL buckets, both documented in [roadmap/12](roadmap/12-architecture-quality-register.md) / `docs/rls-policy-map.md`) · perf advisor: **0 unindexed foreign keys** (Arch A3).
 
 ### ▶️ Next up — Phase 8: React Native Mobile & CCTV
 
@@ -235,7 +235,7 @@ Arch       ███████████████░░░░░░░░
 | ✅ Arch A1 | Fine-grained RLS Policies — full audit of every `public` policy: all tables RLS-on, fine-grained SUPER_ADMIN/INST_ADMIN/HOD/owner scoping verified; found & fixed 1 cross-tenant leak (`staff_appraisal_activities: read` → owner-scoped); detector queries + findings in `docs/rls-policy-map.md` | Complete | `20260701000000` |
 | 🟡 Arch A2 | Testing Strategy — Vitest + Playwright infra, assessment-engine unit tests (CIA/CO-PO/role), public-route smoke crawl, `docs/testing-guide.md` (retroactive action coverage + authed e2e flows progressive) | Foundation | `ea779f2`+ |
 | ✅ Arch A3 | Database Index Strategy — idempotent migration covers every foreign key with `ix_<table>_<fk_cols>`; advisor `unindexed_foreign_keys` **136 → 0**; strategy + deferred RLS-perf backlog in `docs/query-performance.md` | Complete | `20260702000000` |
-| 🔲 Arch A4 | Institution Onboarding Wizard | Pending | — |
+| ✅ Arch A4 | Institution Onboarding Wizard — `/onboarding/[id]` multi-step wizard (Departments → Academic Year → Fees → Staff CSV), `is_onboarded` flag + first-login redirect, admin-gated actions, 14 unit tests | Complete | `20260703000000` |
 | 🔲 Arch A5 | CI/CD Pipeline (GitHub Actions) | Pending | — |
 | 🔲 Arch A6 | Multi-currency & Multi-timezone Support | Pending | — |
 | ✅ Arch A7 | SaaS Billing — delivered via Phase 7E (plans/subscriptions/invoices + MRR/ARR + feature gating); middleware enforcement + Razorpay recurring deferred | Complete | `d70babd` |

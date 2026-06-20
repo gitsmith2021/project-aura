@@ -163,6 +163,25 @@ export async function login(formData: FormData) {
     }
   }
 
+  // ── First-login onboarding redirect (Arch A4) ────────────────────────────
+  // A fresh institution (is_onboarded = false) sends its admin to the setup
+  // wizard instead of an empty dashboard. Only the admin tier is routed here;
+  // HODs and others fall through to their normal home.
+  if (role === "admin") {
+    const adminInstId = (memberRow as { institution_id?: string } | null)?.institution_id ?? null;
+    if (adminInstId) {
+      const { data: inst } = await supabase
+        .from("institutions")
+        .select("is_onboarded")
+        .eq("id", adminInstId)
+        .maybeSingle();
+      if (inst && inst.is_onboarded === false) {
+        revalidatePath("/", "layout");
+        redirect(`/onboarding/${adminInstId}`);
+      }
+    }
+  }
+
   revalidatePath("/", "layout");
   redirect(role === "staff" ? "/staff-portal" : role === "student" ? "/student-portal" : "/");
 }
