@@ -56,3 +56,51 @@ accepted. Sensitive identity documents are not placed in listable buckets.
 When adding a table: enable RLS, add policies matching the category above (or document a
 new category here), confirm `get_advisors` shows no new "RLS Enabled No Policy" unless it
 is an intentional deny-all table added to the list above.
+
+---
+
+## Arch A1 — Fine-grained RLS audit (2026-06-20)
+
+A full sweep of every `public` policy. Result: **strong baseline** — every table has RLS
+enabled, fine-grained `SUPER_ADMIN` / `INST_ADMIN` / `HOD` (dept-scoped) / staff-own /
+student-own scoping is in place, and **one** cross-tenant leak was found and fixed.
+
+### Findings
+- **0** tables with RLS disabled.
+- **2** zero-policy tables — both the intentional deny-all tables above.
+- **1** intentional unconditional read — `subscription_plans` (`using (true)`): the SaaS
+  plan price catalog, deliberately readable by any signed-in user; holds no tenant data.
+- **1 leak (FIXED, `20260701000000`):** `staff_appraisal_activities: read` granted SELECT
+  to every authenticated user — its `USING` only checked the parent appraisal *exists*, with
+  no institution/owner predicate. Replaced with an owner-scoped read
+  (`appraisal_activities: staff read own`); admins/INST_ADMIN/HOD keep SELECT via the
+  existing `admins manage` ALL policy.
+- **0** unconditional `INSERT` policies; **0** trivially-true auth checks
+  (`auth.uid() is not null`, `auth.role() = 'authenticated'`).
+
+### Detector queries (re-run when auditing)
+
+```sql
+-- (1) Tables with RLS off, or RLS-on-but-no-policy (only the deny-all tables should appear):
+select c.relname, c.relrowsecurity,
+       (select count(*) from pg_policies p where p.schemaname='public' and p.tablename=c.relname) as policies
+from pg_class c join pg_namespace n on n.oid=c.relnamespace
+where n.nspname='public' and c.relkind='r' and (not c.relrowsecurity
+   or 0=(select count(*) from pg_policies p where p.schemaname='public' and p.tablename=c.relname));
+
+-- (2) THE sharp one — any read/write policy that never references the current user
+--     (every legit policy must reference auth.uid / auth.email / get_user_authorizations):
+select tablename, policyname, cmd from pg_policies
+where schemaname='public' and cmd in ('SELECT','UPDATE','DELETE','ALL')
+  and qual is not null and btrim(qual) not in ('true','(true)')
+  and qual !~* 'auth\.uid|auth\.email|get_user_authorizations';   -- expect 0 rows
+
+-- (3) Unconditional inserts + trivially-true auth:
+select tablename, policyname from pg_policies
+where schemaname='public' and (
+  (cmd='INSERT' and btrim(coalesce(with_check,'')) in ('true','(true)'))
+  or qual ~* 'auth\.uid\(\)\s+is\s+not\s+null|auth\.role\(\)\s*=\s*''authenticated''');  -- expect 0
+```
+
+A clean run is **query (2) and (3) return 0 rows**, and query (1) returns only the
+documented deny-all tables.

@@ -111,10 +111,10 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 ## 📋 Overall Progress Tracker
 
 > **Last updated:** 2026-06-20  
-> **79 of 87 modules complete — 91% of full platform built**
+> **80 of 87 modules complete — 92% of full platform built**
 
 ```
-Overall  ████████████████████████████░░  91%  (79/87)
+Overall  █████████████████████████████░  92%  (80/87)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
@@ -125,12 +125,12 @@ Phase 6    ███████████████████████
 Phase 7    ████████████████████████████████  100% (8/8  — 7A · 7B · 7C · 7D Health/Security · 7E Billing · 7F IQAC · 7F-sub SSR Builder · 7F-sub2 IQAC Meeting Tracker ✅. The Knowledge Hub is a separate phase → Phase 7X, strategically deferred)
 Phase 7X   ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  🗓️ Strategic Deferred  (Knowledge Hub KH-1→KH-5 · Vision 📐 approved · implementation after Phase 8)
 Phase 8    █████░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%  (1/6  — 8A ✅ · 8B/8C screens built · NFC/push/CCTV/Parent pending)
-Arch       ████████░░░░░░░░░░░░░░░░░░░░░░░░  25%  (2/8 + A2 🟡 — A8 Audit Log ✅ · A7 SaaS Billing ✅ (via 7E) · A2 Test infra foundation · A1 RLS / A3 Indexes / A4 Onboarding / A5 CI-CD / A6 Multi-currency pending)
+Arch       ████████████░░░░░░░░░░░░░░░░░░  38%  (3/8 + A2 🟡 — A8 Audit Log ✅ · A7 SaaS Billing ✅ (via 7E) · A1 Fine-grained RLS ✅ (audit + 1 leak fixed) · A2 Test infra foundation · A3 Indexes / A4 Onboarding / A5 CI-CD / A6 Multi-currency pending)
 ```
 
 ### 📍 Where we are — 2026-06-20
 
-**79 / 87 modules shipped (91%).** Phases **1, 2, 2.5, 4, 5, 6, 7 are complete**; Phase 3 is **core-complete** (in-app + email live; SMS/WhatsApp deferred). AURA is a working multi-tenant academic ERP (admissions → academics → finance → campus ops → portals) plus a SaaS operator console (`/admin`) with health, security, billing and IQAC/NAAC tooling.
+**80 / 87 modules shipped (92%).** Phases **1, 2, 2.5, 4, 5, 6, 7 are complete**; Phase 3 is **core-complete** (in-app + email live; SMS/WhatsApp deferred). AURA is a working multi-tenant academic ERP (admissions → academics → finance → campus ops → portals) plus a SaaS operator console (`/admin`) with health, security, billing and IQAC/NAAC tooling. **Arch A1 (fine-grained RLS) audited & hardened** — every table RLS-protected, one cross-tenant leak found & fixed.
 
 - **Quality gates:** 589 Vitest unit tests green · `npx tsc --noEmit` clean · Supabase security advisors show only the accepted baseline (intentional deny-all tables + public document-URL buckets, both documented in [roadmap/12](roadmap/12-architecture-quality-register.md) / `docs/rls-policy-map.md`).
 
@@ -232,7 +232,7 @@ Arch       ████████░░░░░░░░░░░░░░░
 | ✅ Phase 7F | IQAC & Govt Compliance — IQAC dashboard (criterion completeness rings via reused SSR aggregator + meeting/action health) + printable AQAR; NAAC/NIRF/AISHE delivered via the SSR Builder (reused, not duplicated); Sidebar IQAC links; 8 unit tests | Complete | `3cc2876` |
 | ✅ Phase 7F-sub | NAAC SSR Builder — registry, readiness dashboard, Excel workbook + AISHE return + NIRF extract + print-PDF report | Complete | `3944ed7` |
 | ✅ Phase 7F-sub2 | IQAC Meeting & Action Tracker (NAAC 6.1) — iqac_meetings + iqac_action_items + RLS; register + meeting detail (agenda, minutes editor, action items with inline status/overdue); ≥2-meetings/year compliance + resolved-% (built within 7F) | Complete | `3cc2876` |
-| 🔲 Arch A1 | Fine-grained RLS Policies (HOD/STAFF/ADMIN) | Pending | — |
+| ✅ Arch A1 | Fine-grained RLS Policies — full audit of every `public` policy: all tables RLS-on, fine-grained SUPER_ADMIN/INST_ADMIN/HOD/owner scoping verified; found & fixed 1 cross-tenant leak (`staff_appraisal_activities: read` → owner-scoped); detector queries + findings in `docs/rls-policy-map.md` | Complete | `20260701000000` |
 | 🟡 Arch A2 | Testing Strategy — Vitest + Playwright infra, assessment-engine unit tests (CIA/CO-PO/role), public-route smoke crawl, `docs/testing-guide.md` (retroactive action coverage + authed e2e flows progressive) | Foundation | `ea779f2`+ |
 | 🔲 Arch A3 | Database Index Strategy | Pending | — |
 | 🔲 Arch A4 | Institution Onboarding Wizard | Pending | — |

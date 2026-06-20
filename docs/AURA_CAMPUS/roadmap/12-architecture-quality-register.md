@@ -9,15 +9,23 @@
 
 > These are non-feature improvements that must be addressed progressively. Each item is tagged with the phase by which it should be resolved.
 
-### A1 — Fine-grained Supabase RLS Policies (Resolve by: Phase 3)
-> Current RLS policies check `institution_members` membership only. There is no DB-level enforcement of HOD vs STAFF vs ADMIN permissions — this is handled entirely at the app layer, which is fragile.
+### A1 — Fine-grained Supabase RLS Policies ✅ Complete (commit `20260701000000`)
 
-#### What to build:
-- [ ] Define `get_my_role(institution_id UUID)` PostgreSQL function that returns the caller's role within an institution
-- [ ] Add role-restricted RLS policies to sensitive tables: `marks`, `salary_disbursements`, `cia_marks`, `lesson_plans`
-  - Example: only HOD or ADMIN can read all department marks; staff can only read marks they entered
-- [ ] `supabase/migrations/..._role_based_rls.sql`
-- [ ] Audit all existing RLS policies and document which tables need role-gating in `docs/rls-policy-map.md`
+> **Status:** ✅ Resolved. Originally flagged because early policies checked only
+> `institution_members` membership. Over Phases 2-Pre-C → 7 this was superseded by the
+> **`private.get_user_authorizations()`** pattern — a `SECURITY DEFINER` function returning
+> the caller's `(role, tenant_id, department_id)` grants — used across the schema for
+> fine-grained `SUPER_ADMIN` / `INST_ADMIN` / `HOD` (dept-scoped) / staff-own / student-own
+> enforcement at the DB layer. A1 closed it out with a full audit (below).
+
+> **Original concern:** Current RLS policies check `institution_members` membership only; no DB-level enforcement of HOD vs STAFF vs ADMIN — handled at the app layer, which is fragile.
+
+#### ✅ What was done (Arch A1 audit, 2026-06-20)
+- [x] Caller-role resolution function — `private.get_user_authorizations()` (role + tenant + department), used in `using`/`with check` clauses platform-wide (avoids `institution_members` recursion).
+- [x] Role-restricted policies on sensitive tables — marks/CIA, salary, appraisals, budgets, grievances, etc. already enforce HOD-dept / owner / admin scoping at the DB.
+- [x] Full audit of **every** `public` policy: 0 tables with RLS off, only the 2 documented deny-all tables policy-less, 0 unconditional inserts, 0 trivially-true auth checks.
+- [x] **Found & fixed 1 cross-tenant leak** — `staff_appraisal_activities: read` granted SELECT to all authenticated users (parent-exists check, no scoping); replaced with an owner-scoped read (`20260701000000`). Admins/HOD keep access via the existing ALL policy.
+- [x] Methodology + detector queries + findings documented in [`docs/rls-policy-map.md`](../../rls-policy-map.md) (re-runnable on every new table).
 
 ---
 
