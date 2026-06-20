@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { useInstitution } from "@/context/InstitutionContext";
 import { createClient } from "@/utils/supabase/client";
+import { LocalizationSettings } from "@/components/settings/LocalizationSettings";
 import {
   Building2,
   Bell,
@@ -26,6 +27,9 @@ type Institution = {
   college_type: string | null;
   subdomain: string | null;
   session_types: string[] | null;
+  currency: string | null;
+  locale: string | null;
+  timezone: string | null;
 };
 
 export default function SettingsPage() {
@@ -43,7 +47,7 @@ export default function SettingsPage() {
     const supabase = createClient();
     supabase
       .from("institutions")
-      .select("id, name, college_type, subdomain, session_types")
+      .select("id, name, college_type, subdomain, session_types, currency, locale, timezone")
       .order("name")
       .then(({ data }) => {
         if (data) setInstitutions(data);
@@ -295,6 +299,15 @@ export default function SettingsPage() {
                           </div>
                         </div>
                       </div>
+
+                      <LocalizationSettings
+                        institutionId={activeInst.id}
+                        initial={{
+                          currency: activeInst.currency ?? undefined,
+                          locale: activeInst.locale ?? undefined,
+                          timezone: activeInst.timezone ?? undefined,
+                        }}
+                      />
 
                       <div>
                         <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider mb-2.5">
