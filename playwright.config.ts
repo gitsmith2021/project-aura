@@ -1,10 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// Playwright — e2e + route-crawl smoke tests.
-// Reuses an already-running `npm run dev` on :3000 if present, otherwise starts
-// one. Authenticated route-crawl + flows use a saved storageState (see
-// docs/testing-guide.md) — the committed smoke suite only covers public routes
-// so it runs without seeded credentials in CI.
+// Playwright — e2e + route-crawl tests, split into three projects:
+//   • public  — credential-free smoke (public routes). Safe to run in CI today.
+//   • setup   — drives /login per seeded role, writes storageState (Arch A2 §1).
+//   • authed  — authenticated specs; depend on `setup` for the saved sessions.
+// The authed/setup projects need `npm run seed:e2e` (credentials) + a dev server.
+// Run everything: `playwright test`; public only: `playwright test --project=public`.
 export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 30_000,
@@ -18,7 +19,14 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "public", testMatch: /smoke\.spec\.ts$/, use: { ...devices["Desktop Chrome"] } },
+    { name: "setup", testMatch: /auth\.setup\.ts$/, use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "authed",
+      testMatch: /authed[\\/].*\.spec\.ts$/,
+      dependencies: ["setup"],
+      use: { ...devices["Desktop Chrome"] },
+    },
   ],
   webServer: {
     command: "npm run dev",

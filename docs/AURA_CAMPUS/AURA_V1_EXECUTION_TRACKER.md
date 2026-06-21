@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-21 · **Execution start:** baseline (Track work not yet begun)
+> **Last updated:** 2026-06-21 · **Execution start:** Track 2 (Arch A2) underway — **Step 1 complete**
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -54,7 +54,7 @@ P6 Parent self-link OTP (blocked on 3C SMS) · P7 CCTV (hardware/infra add-on).
 
 | Step | Description | Status | Dependencies | Progress % | Est. Completion |
 |------|-------------|--------|--------------|-----------|-----------------|
-| **Step 1** | Seed test tenant (2 institutions) + role login fixtures (`storageState` × 6 roles) | 🔲 | — | 0% | +3–4 days |
+| **Step 1** | Seed test tenant (2 institutions) + role login fixtures (`storageState` × 6 roles) | ✅ | — | **100%** | **Done (2026-06-21)** |
 | **Step 2** | Authenticated route-crawl — all 230 routes × allowed roles (HTTP<400, 0 `pageerror`) | 🔲 | Step 1 | 0% | +2–3 days after S1 |
 | **Step 3** | Critical user-flow e2e — admissions, fees, leave, exams, knowledge hub | 🔲 | Step 1 | 0% | +5–7 days after S1 |
 | **Step 4** | Cross-role negative auth — wrong role denied (not 200) | 🔲 | Step 1 | 0% | +2 days after S3 |
@@ -66,7 +66,16 @@ P6 Parent self-link OTP (blocked on 3C SMS) · P7 CCTV (hardware/infra add-on).
 pass · cross-role + isolation green · e2e is a required CI check → **Arch A2 = 100%,
 Arch register 88% → 100%.**
 
-**Track 2 completion: ~15%** (unit foundation ✅; authenticated e2e 0%)
+**Step 1 delivered (2026-06-21):** `tests/e2e/seed.mjs` (idempotent, service-role)
+seeds **2 isolated institutions + 8 users** (6 roles in A + admin/student in B for
+isolation/cross-role); `tests/e2e/auth.setup.ts` drives `/login` to produce
+`storageState` per role; Playwright split into `public`/`setup`/`authed` projects;
+`session.spec.ts` verifies each role lands correctly. **Verified: 8/8 credentials
+authenticate · 14/14 fixture+session checks green.** Found & fixed a seed-level bug
+en route — the `students` SELECT RLS keys self-read on `id = auth.uid()`, so the
+seed sets `students.id = uid` (not just `profile_id`). **Steps 2–7 now unblocked.**
+
+**Track 2 completion: ~25%** (unit foundation ✅; auth fixtures ✅; route-crawl/flows/isolation pending)
 
 ---
 
@@ -95,12 +104,12 @@ Arch register 88% → 100%.**
 
 > Update this block every week. Percentages are toward the **v1.0 line**, not raw feature counts.
 
-### Completion snapshot — Week 0 (2026-06-21, baseline)
+### Completion snapshot — Week 0 (2026-06-21) · A2 Step 1 ✅
 
 ```
-Overall v1.0   ███░░░░░░░░░░░░░░░░░░░░░░░░░░░  ~10%
+Overall v1.0   ████░░░░░░░░░░░░░░░░░░░░░░░░░░  ~14%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
-  Track 2  Arch A2 (gate)    ████░░░░░░░░░░░░░░░░░░░  ~15%
+  Track 2  Arch A2 (gate)    ███████░░░░░░░░░░░░░░░░  ~25%  (Step 1/7 ✅)
   Track 3  Phase 9 (P1 focus) █░░░░░░░░░░░░░░░░░░░░░░  ~3%
 ```
 
@@ -122,7 +131,7 @@ Overall v1.0   ███░░░░░░░░░░░░░░░░░░�
 |---|---------|---------|-------|--------|
 | B1 | Dev accounts (Apple/Google/EAS) not purchased | Phase 8 P0→all | Unassigned | Purchase to unblock all mobile natives |
 | B2 | Anthropic account has $0 credit | KH-5 AI live, 9B demo polish | Account owner | Add credit (console.anthropic.com → Billing) |
-| B3 | No seeded test tenant / role fixtures | A2 Steps 2–7, 9B demo | Unassigned | A2 Step 1 (week 1) |
+| ~~B3~~ | ~~No seeded test tenant / role fixtures~~ | ~~A2 Steps 2–7, 9B demo~~ | — | ✅ **Resolved 2026-06-21** — `npm run seed:e2e` + `storageState` fixtures landed (A2 Step 1) |
 
 ### Risk Register
 
