@@ -245,7 +245,7 @@ Arch       ███████████████████████
 | 🟡 Phase 8C | Student Mobile — Home, Timetable, Attendance, Fees; in-app Razorpay pay + notification inbox pending | Screens built | `64246fd` |
 | 🔲 Phase 8D | Push Notifications (Staff + Student + Parent) | Pending | — |
 | 🔲 Phase 8E | CCTV Integration | Pending | — |
-| 🔲 Phase 8F | Parent Mobile App | Pending | — |
+| 🟡 Phase 8F | Parent Mobile App — parent tier + read-only child Home/Attendance/Results/Fees via authed `/api/parent` (JWT + link-verified service-role reads); Pay deep-links to web portal; runs in Expo Go. Push inbox/alerts + self-link OTP + native pay deferred (8D/EAS) | Foundation | `046f8a6` |
 | 🗓️ Phase 7X | Knowledge Hub — Vision & Architecture approved (see [AURA_CAMPUS_KNOWLEDGE_HUB.md](AURA_CAMPUS_KNOWLEDGE_HUB.md)) · **Strategic Deferred — begins after Phase 8** | Strategic Deferred | — |
 | 🗓️ Phase 7X-KH1 | Knowledge Hub — Basic Repository (upload, categorize, three-tier permissions, Storage bucket) | Deferred — Future | — |
 | 🗓️ Phase 7X-KH2 | Knowledge Hub — Search & Discovery (PG full-text, faceted filters, browse mode, smart discovery widgets) | Deferred — Future | — |
