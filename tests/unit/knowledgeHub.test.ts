@@ -3,6 +3,7 @@ import {
   KH_CATEGORIES, CONTENT_TYPES_BY_CATEGORY, contentTypesFor, categoryLabel,
   contentTypeLabel, visibilityLabel, criterionLabel, isLinkResource,
   resourceKindLabel, parseTags, validateResource, matchesFilters,
+  hasActiveFacets, tagCloud, topDownloaded, recentlyAdded, distinctAcademicYears,
 } from "@/lib/knowledgeHub";
 
 describe("taxonomy", () => {
@@ -82,5 +83,48 @@ describe("matchesFilters", () => {
     expect(matchesFilters(r, { search: "neural" })).toBe(true);
     expect(matchesFilters(r, { search: "ML" })).toBe(true);
     expect(matchesFilters(r, { search: "physics" })).toBe(false);
+  });
+  it("filters by academic year and tag (KH-2)", () => {
+    const r2 = { ...r, academic_year: "2025-26" };
+    expect(matchesFilters(r2, { academicYear: "2025-26" })).toBe(true);
+    expect(matchesFilters(r2, { academicYear: "2024-25" })).toBe(false);
+    expect(matchesFilters(r2, { tag: "ai" })).toBe(true);
+    expect(matchesFilters(r2, { tag: "physics" })).toBe(false);
+  });
+});
+
+describe("KH-2 discovery helpers", () => {
+  const rs = [
+    { tags: ["ai", "ml"], download_count: 5, created_at: "2026-06-01", academic_year: "2025-26" },
+    { tags: ["ai"], download_count: 0, created_at: "2026-06-10", academic_year: "2024-25" },
+    { tags: ["physics"], download_count: 12, created_at: "2026-05-20", academic_year: "2025-26" },
+  ];
+
+  it("hasActiveFacets ignores free-text search", () => {
+    expect(hasActiveFacets({ search: "x" })).toBe(false);
+    expect(hasActiveFacets({ category: "academic" })).toBe(true);
+    expect(hasActiveFacets({ tag: "ai" })).toBe(true);
+    expect(hasActiveFacets({})).toBe(false);
+  });
+
+  it("tagCloud counts and sorts by frequency", () => {
+    expect(tagCloud(rs)).toEqual([
+      { tag: "ai", count: 2 },
+      { tag: "ml", count: 1 },
+      { tag: "physics", count: 1 },
+    ]);
+  });
+
+  it("topDownloaded excludes zero and ranks desc", () => {
+    const top = topDownloaded(rs, 5);
+    expect(top.map((r) => r.download_count)).toEqual([12, 5]);
+  });
+
+  it("recentlyAdded sorts newest first", () => {
+    expect(recentlyAdded(rs, 2).map((r) => r.created_at)).toEqual(["2026-06-10", "2026-06-01"]);
+  });
+
+  it("distinctAcademicYears dedupes and sorts desc", () => {
+    expect(distinctAcademicYears(rs)).toEqual(["2025-26", "2024-25"]);
   });
 });

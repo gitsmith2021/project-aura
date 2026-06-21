@@ -17,12 +17,14 @@ export default async function KnowledgeHubPage({ params }: PageProps) {
 
   const [{ data: depts }, { data: member }, { data: staffRow }] = await Promise.all([
     supabase.from("departments").select("id, name").eq("institution_id", id).order("name"),
-    supabase.from("institution_members").select("role").eq("profile_id", user.id).maybeSingle(),
-    supabase.from("staff").select("id").eq("email", user.email ?? "").maybeSingle(),
+    supabase.from("institution_members").select("role, department_id").eq("profile_id", user.id).maybeSingle(),
+    supabase.from("staff").select("id, department_id").eq("email", user.email ?? "").maybeSingle(),
   ]);
 
   const isAdmin = ["SUPER_ADMIN", "INST_ADMIN"].includes((member?.role as string) ?? "");
   const canUpload = isAdmin || !!staffRow; // staff (faculty) and admins may upload
+  const currentDepartmentId =
+    (staffRow?.department_id as string | undefined) ?? (member?.department_id as string | undefined) ?? null;
 
   if (!res.success) {
     return (
@@ -43,6 +45,7 @@ export default async function KnowledgeHubPage({ params }: PageProps) {
         isAdmin={isAdmin}
         canUpload={canUpload}
         currentStaffId={(staffRow?.id as string | undefined) ?? null}
+        currentDepartmentId={currentDepartmentId}
       />
     </DashboardLayout>
   );
