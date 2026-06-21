@@ -100,6 +100,25 @@ export async function searchResources(institutionId: string, query: string): Pro
   }
 }
 
+/** KH-4 — data for the analytics dashboard: the RLS-scoped resources + the
+ *  active teaching-faculty count (for the participation metric). */
+export async function getKnowledgeAnalytics(institutionId: string): Promise<Result<{ resources: KnowledgeResource[]; facultyCount: number }>> {
+  const res = await getResources(institutionId);
+  if (!res.success) return res;
+  try {
+    const supabase = await getSupabase();
+    const { count } = await supabase
+      .from("staff")
+      .select("id", { count: "exact", head: true })
+      .eq("institution_id", institutionId)
+      .eq("is_active", true)
+      .eq("staff_type", "teaching");
+    return { success: true, data: { resources: res.data, facultyCount: count ?? 0 } };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
+  }
+}
+
 export type CreateResourceInput = {
   institutionId: string;
   title: string;

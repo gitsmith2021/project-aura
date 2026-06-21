@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   BrainCircuit, Plus, Search, Download, ExternalLink, Trash2, Eye, EyeOff, Archive,
-  TrendingUp, Building2, X, Loader2, Bookmark, BookmarkCheck, FolderPlus, Folder,
+  TrendingUp, Building2, X, Loader2, Bookmark, BookmarkCheck, FolderPlus, Folder, BarChart3,
 } from "lucide-react";
 import {
   KH_CATEGORIES, contentTypesFor, matchesFilters, hasActiveFacets, categoryLabel,
@@ -216,7 +217,12 @@ export function KnowledgeHubManager({ institutionId, initial, departments, isAdm
             <p className="text-sm text-slate-500 dark:text-slate-400">Search, save & curate the institution&apos;s shared knowledge — {resources.length} resource{resources.length === 1 ? "" : "s"}.</p>
           </div>
         </div>
-        {canUpload && <button onClick={() => setDrawerOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-violet-700 transition-colors"><Plus size={16} /> Upload</button>}
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Link href={`/institutions/${institutionId}/knowledge-hub/analytics`} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"><BarChart3 size={15} /> Analytics</Link>
+          )}
+          {canUpload && <button onClick={() => setDrawerOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-violet-700 transition-colors"><Plus size={16} /> Upload</button>}
+        </div>
       </div>
 
       {/* Search */}
