@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { useAuth } from "@/context/AuthContext";
 import { Loading, ErrorNote, Screen } from "@/components/ui";
 import { StudentHome, StaffHome, HodHome, AdminHome } from "@/screens/dashboards";
+import { ParentHome } from "@/screens/parent/ParentHome";
 
 // Role-adaptive home: one app, six roles. The access tier (derived from the
 // user's institution_members role, same mapping as the web) decides which
@@ -20,6 +21,8 @@ export default function Home() {
       return <HodHome identity={identity} />;
     case "admin":
       return <AdminHome identity={identity} />;
+    case "parent":
+      return <ParentHome />;
     default:
       return (
         <Screen>

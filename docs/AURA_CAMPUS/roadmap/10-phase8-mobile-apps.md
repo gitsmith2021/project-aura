@@ -98,19 +98,30 @@
 
 ---
 
-### Step 8F — Parent Mobile App
+### Step 8F — Parent Mobile App  🟡 Foundation built — read-only screens (Expo-Go-runnable); push + self-link deferred
 
-> Parent portal exists on web (Phase 6A). A mobile companion delivers real-time push notifications — the primary reason parents will install the app. Attendance drops, fee reminders, and exam results reach parents instantly.
+> Built under Expo Router as `aura-mobile/app/(app)/*` (role-adaptive, not the
+> literal paths below). The web parent portal reads child data with the service
+> role (parents have no RLS path — Dev Rule 16), so the app calls a new
+> **authenticated parent API** (`src/app/api/parent`, JWT-gated + link-verified)
+> rather than supabase-js directly. Runs in **Expo Go** — no native module / no
+> EAS build needed for these screens.
 
 #### Screens to build:
-- [ ] `screens/home/ParentHomeScreen.tsx` — Dashboard: child's attendance %, upcoming exams, fees due summary
-- [ ] `screens/attendance/ChildAttendanceScreen.tsx` — Subject-wise attendance with ring charts
-- [ ] `screens/results/ChildResultsScreen.tsx` — Marks, grades, arrear status per semester
-- [ ] `screens/fees/ChildFeesScreen.tsx` — Fee ledger + Razorpay payment on behalf of child
-- [ ] `screens/notifications/ParentNotificationsScreen.tsx` — Push notification inbox
-- [ ] `screens/profile/LinkChildScreen.tsx` — Link parent account to child via roll number + OTP verification
+- [x] **Parent Home** (`screens/parent/ParentHome.tsx`) — selected child's attendance % + fees-due summary, with a child switcher
+- [x] **Child Attendance** (`screens/parent/ParentAttendance.tsx`) — subject-wise attendance %
+- [x] **Child Results** (`screens/parent/ParentResults.tsx`) — published results + pass/arrear per semester
+- [x] **Child Fees** (`screens/parent/ParentFees.tsx`) — fee demands + total due; **Pay** opens the web parent portal (`Linking.openURL`) — native in-app Razorpay deferred to an EAS build
+- [ ] `ParentNotificationsScreen` — push inbox *(deferred — needs Phase 3 + 8D + EAS device token)*
+- [ ] `LinkChildScreen` — parent self-links via roll number + OTP *(deferred — needs an OTP channel; SMS is Phase 3C-deferred. For now children come from admin-created links via the web Parents admin)*
 
-#### Parent-specific push notifications:
+#### Plumbing (done)
+- [x] **Parent access tier** — resolved from the `parents` table in `aura-mobile` AuthContext (`tier: "parent"`); role-adaptive Home/Attendance/Fees + a parent-only Results tab.
+- [x] **`ParentChildContext`** — shared selected-child state (persisted via AsyncStorage), child switcher when >1 child.
+- [x] **`/api/parent`** (web) — JWT-authenticated, link-verified, service-role reads (children / attendance / results / fees); exempted from the cookie middleware.
+- [x] `EXPO_PUBLIC_API_BASE_URL` documented in `aura-mobile/.env.example`.
+
+#### Parent-specific push notifications:  *(all deferred to 8D — need Expo push + EAS device token)*
 - [ ] Attendance drops below 75% → instant push to linked parent
 - [ ] Fee payment due → 7-day and 1-day advance reminder push
 - [ ] Exam results published → push with grade summary

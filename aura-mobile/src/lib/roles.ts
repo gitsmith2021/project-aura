@@ -12,8 +12,9 @@ export type MemberRole =
   | "STAFF"
   | "STUDENT";
 
-// Access tier drives which mobile experience a user sees.
-export type AccessTier = "admin" | "hod" | "staff" | "student";
+// Access tier drives which mobile experience a user sees. "parent" is resolved
+// from the `parents` table (not institution_members) — see AuthContext.
+export type AccessTier = "admin" | "hod" | "staff" | "student" | "parent";
 
 export function tierForRole(role: MemberRole | null | undefined): AccessTier {
   switch (role) {

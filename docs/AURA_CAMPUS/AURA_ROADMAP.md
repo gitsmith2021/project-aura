@@ -124,7 +124,7 @@ Phase 5    ███████████████████████
 Phase 6    ████████████████████████████████  100% (8/8  — 6A Parent Portal ✅ · 6B Transport ✅ · 6C Certificates ✅ · 6D Online Exams ✅ · 6E Feedback ✅ · 6F Grievances ✅ · 6G E-Learning/LMS ✅ · 6H Industry Connect/MOU ✅)
 Phase 7    ████████████████████████████████  100% (8/8  — 7A · 7B · 7C · 7D Health/Security · 7E Billing · 7F IQAC · 7F-sub SSR Builder · 7F-sub2 IQAC Meeting Tracker ✅. The Knowledge Hub is a separate phase → Phase 7X, strategically deferred)
 Phase 7X   ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  🗓️ Strategic Deferred  (Knowledge Hub KH-1→KH-5 · Vision 📐 approved · implementation after Phase 8)
-Phase 8    █████░░░░░░░░░░░░░░░░░░░░░░░░░░░  17%  (1/6  — 8A ✅ · 8B/8C screens built · NFC/push/CCTV/Parent pending)
+Phase 8    █████████░░░░░░░░░░░░░░░░░░░░░░  ~30% (8A ✅ · 8B/8C/8F screens built (Expo-Go) · 8F parent app: authed /api/parent + read-only child screens · NFC/push/CCTV + in-app pay need EAS/device)
 Arch       ██████████████████████████░░░░  88%  (7/8 + A2 🟡 — A8 Audit Log ✅ · A7 SaaS Billing ✅ (via 7E) · A1 Fine-grained RLS ✅ (audit + 1 leak fixed) · A3 FK Index Strategy ✅ (136→0 unindexed FKs) · A4 Onboarding Wizard ✅ · A5 CI/CD Pipeline ✅ · A6 Multi-currency/timezone ✅ (foundation; call-site sweep progressive) · A2 Test infra foundation)
 ```
 
@@ -136,7 +136,7 @@ Arch       ███████████████████████
 
 ### ▶️ Next up — Phase 8: React Native Mobile & CCTV
 
-8A complete (Expo SDK 54, role-adaptive shell for all 6 roles, Supabase auth, read-only portal screens); 8B/8C screens built. **Remaining:** 8B NFC attendance (needs Phase 4F card UIDs + an EAS dev build), 8C in-app Razorpay pay + notification inbox, 8D push notifications, 8E CCTV, 8F dedicated Parent app. After Phase 8 → **Phase 7X Knowledge Hub** (strategically deferred).
+8A complete (Expo SDK 54, role-adaptive shell for all 6 roles, Supabase auth, read-only portal screens); 8B/8C screens built; **8F parent app foundation built** — parent tier in the mobile shell, read-only child Home/Attendance/Results/Fees screens via a new authenticated `/api/parent` (JWT + link-verified service-role reads), pay deep-links to the web portal. All run in **Expo Go** (no EAS needed). **Remaining (need an EAS dev build + device/hardware):** 8B NFC attendance (Phase 4F cards + EAS), 8C/8F in-app Razorpay pay, 8D push notifications (+ parent push inbox & alerts), 8E CCTV, and parent self-link OTP. After Phase 8 → **Phase 7X Knowledge Hub** (strategically deferred).
 
 ### ⏸️ Tracked deferrals (intentional — not blocking)
 
