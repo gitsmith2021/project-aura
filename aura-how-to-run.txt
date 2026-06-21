@@ -1,30 +1,175 @@
-I used npm run dev and it ran inside vs code's terminal.. As you know, we have built a python engine for schedules.. So should I need to add a new terminal and run python too.. if so, can you give me the command in terminal?
+==================================================================
+ AURA CAMPUS — HOW TO RUN THE PROJECT (Simple Guide)
+==================================================================
 
-1. Open a Second Terminal
-In your VS Code terminal panel (where Next.js is currently running), look at the top right corner of that panel and click the + icon. This opens a fresh, parallel terminal tab.
+Aura has THREE parts. You can run them in three terminals:
 
-2. Navigate and Activate
-In this new terminal, you need to step into the Python folder and wake up your isolated virtual environment. Run these two commands one after the other:
+   1. The Website   (Next.js)      -> http://localhost:3000
+   2. The Engine    (Python)       -> http://127.0.0.1:8000   (does the timetable maths)
+   3. The Mobile App (Expo Go)     -> opens on your phone
 
-Bash
+You do NOT always need all three. For most work, just the Website (Part 1)
+is enough. Add the Engine (Part 2) only when generating/auto-scheduling
+timetables. Add the Mobile App (Part 3) only when testing the phone app.
 
-cd aura-scheduler-engine
-
-.\venv\Scripts\activate
-
-
-(You will know it worked when you see (venv) appear at the very beginning of your command line prompt).
-
-3. Fire the Engine
-Now, command the FastAPI server to start listening for requests from Next.js:
-
-Bash
-
-uvicorn main:app --reload
+Tip: In VS Code, open a new terminal with the "+" icon (top-right of the
+terminal panel). Each part below gets its own terminal tab.
 
 
-The "All Systems Go" Check
+------------------------------------------------------------------
+ BEFORE YOU START — install these once
+------------------------------------------------------------------
+  - Node.js 20 or newer        (for the Website + Mobile App)
+  - Python 3.10 or newer        (for the Engine)
+  - A phone with the "Expo Go" app  (only for the Mobile App)
+       Android: Play Store -> "Expo Go"
+       iPhone:  App Store  -> "Expo Go"
 
-When you hit enter, you should see a message saying INFO: Application startup complete and that it's running on http://127.0.0.1:8000.
+Check they're installed (any terminal):
+       node -v
+       python --version
 
-Now you have Next.js running on Port 3000 handling your beautiful UI, and Python running on Port 8000 ready to crunch the scheduling math. You are fully locked, loaded, and ready to test!
+
+==================================================================
+ PART 1 — THE WEBSITE  (Next.js)   ** the main app **
+==================================================================
+
+1) Open a terminal in the project folder (this folder).
+
+2) FIRST TIME ONLY — install the packages:
+       npm install
+
+3) FIRST TIME ONLY — create the secrets file:
+   Make a file named  .env.local  in this folder with these lines
+   (ask your admin for the real values; never share this file):
+
+       NEXT_PUBLIC_SUPABASE_URL=...
+       NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+       SUPABASE_SERVICE_ROLE_KEY=...
+       RAZORPAY_KEY_ID=...
+       RAZORPAY_KEY_SECRET=...
+       RESEND_API_KEY=...
+       EMAIL_FROM=...
+
+4) Start the website:
+       npm run dev
+
+5) Open your browser at:
+       http://localhost:3000
+
+   You'll know it worked when the terminal shows "Ready" and the page loads.
+   To stop it later: click the terminal and press  Ctrl + C.
+
+
+==================================================================
+ PART 2 — THE ENGINE  (Python scheduler)
+==================================================================
+ Only needed when you generate or auto-arrange timetables. The website
+ talks to this on port 8000.
+
+1) Open a SECOND terminal (the "+" icon).
+
+2) Go into the engine folder:
+       cd aura-scheduler-engine
+
+3) FIRST TIME ONLY — create the isolated Python environment:
+       python -m venv venv
+
+4) Turn the environment ON (do this every time):
+       Windows:      .\venv\Scripts\activate
+       Mac / Linux:  source venv/bin/activate
+
+   It worked when you see  (venv)  at the start of the line.
+
+5) FIRST TIME ONLY — install the engine's packages:
+       pip install -r requirements.txt
+
+6) Start the engine:
+       uvicorn main:app --reload
+
+   It worked when you see:
+       INFO: Application startup complete
+       Uvicorn running on http://127.0.0.1:8000
+
+   To stop it later: Ctrl + C.
+
+Now the Website (port 3000) and the Engine (port 8000) are running together
+and ready to crunch the scheduling math.
+
+
+==================================================================
+ PART 3 — THE MOBILE APP  (Expo Go on your phone)
+==================================================================
+ Lets you open Aura on a phone (staff / student / parent screens).
+
+IMPORTANT: Your phone and your computer must be on the SAME Wi-Fi network.
+
+1) Open a THIRD terminal (the "+" icon).
+
+2) Go into the mobile folder:
+       cd aura-mobile
+
+3) FIRST TIME ONLY — install the packages:
+       npm install
+
+4) FIRST TIME ONLY — create the mobile secrets file:
+   Copy  .env.example  to a new file named  .env  and fill it in:
+
+       EXPO_PUBLIC_SUPABASE_URL=...           (same as the website)
+       EXPO_PUBLIC_SUPABASE_ANON_KEY=...      (same as the website)
+       EXPO_PUBLIC_API_BASE_URL=http://YOUR-COMPUTER-IP:3000
+
+   - Use the SAME Supabase values as the website.
+   - For EXPO_PUBLIC_API_BASE_URL, use your computer's local network IP
+     (NOT "localhost" — the phone can't reach your laptop's localhost).
+     Find your IP:
+         Windows:      ipconfig      (look for "IPv4 Address", e.g. 192.168.1.20)
+         Mac / Linux:  ifconfig      (or: ipconfig getifaddr en0)
+     Example:  EXPO_PUBLIC_API_BASE_URL=http://192.168.1.20:3000
+   (This is what the Parent app uses to fetch a child's data.)
+
+5) Start Expo:
+       npx expo start
+
+6) A big QR code appears in the terminal.
+       Android: open the "Expo Go" app -> "Scan QR code".
+       iPhone:  open the Camera app, point at the QR, tap the banner.
+
+   The app loads on your phone. Log in with the same email/password as the
+   website — your role decides which screens you see.
+
+   To stop it later: Ctrl + C in this terminal.
+
+   Note: NFC attendance, push notifications, in-app payment, and CCTV are
+   NOT available in Expo Go — they need a separate "EAS development build".
+   Everything else (dashboards, attendance, fees, results, parent screens)
+   works in Expo Go.
+
+
+==================================================================
+ QUICK REFERENCE (after the one-time setup is done)
+==================================================================
+   Terminal 1:  npm run dev
+   Terminal 2:  cd aura-scheduler-engine  ->  .\venv\Scripts\activate  ->  uvicorn main:app --reload
+   Terminal 3:  cd aura-mobile  ->  npx expo start
+
+
+==================================================================
+ IF SOMETHING DOESN'T WORK
+==================================================================
+ - "command not found: npm"      -> Node.js isn't installed (see top).
+ - Website loads but data is blank -> check .env.local values are correct.
+ - "Port 3000 already in use"     -> another copy is running; close it, or
+                                     the terminal will offer port 3001.
+ - Engine: "uvicorn not found"    -> the (venv) isn't ON, or step 5 (pip
+                                     install) wasn't run.
+ - Phone app can't load / blank   -> phone and computer on the same Wi-Fi?
+                                     Is EXPO_PUBLIC_API_BASE_URL your real
+                                     computer IP (not localhost)?
+ - Parent app shows an error      -> the website (Part 1) must be running,
+                                     and EXPO_PUBLIC_API_BASE_URL must point
+                                     to it.
+
+==================================================================
+ That's it. Happy building!  🚀
+==================================================================
