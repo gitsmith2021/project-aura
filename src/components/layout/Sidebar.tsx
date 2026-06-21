@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, Settings, Building2, Calendar, GraduationCap,
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
-  ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase,
+  ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase, BrainCircuit,
   ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart, FileStack, Handshake, Scale,
 } from "lucide-react";
 import Link from "next/link";
@@ -372,6 +372,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const auditLogHref       = slug ? `/institutions/${slug}/audit-log`        : "/institutions";
   const iqacSsrHref        = slug ? `/institutions/${slug}/iqac/ssr`         : "/institutions";
   const iqacHref           = slug ? `/institutions/${slug}/iqac`             : "/institutions";
+  const knowledgeHubHref   = slug ? `/institutions/${slug}/knowledge-hub`    : "/institutions";
   const noticesHref        = slug ? `/institutions/${slug}/notices`          : "/institutions";
   const libraryHref        = slug ? `/institutions/${slug}/library`          : "/institutions";
   const bookingsHref       = slug ? `/institutions/${slug}/bookings`         : "/institutions";
@@ -542,6 +543,8 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
                   active={pathname.endsWith("/iqac") || pathname.includes("/iqac/meetings") || pathname.includes("/iqac/aqar")} />
                 <SubLink href={iqacSsrHref} icon={<Landmark size={14} />} label="NAAC SSR Builder"
                   active={pathname.includes("/iqac/ssr")} />
+                <SubLink href={knowledgeHubHref} icon={<BrainCircuit size={14} />} label="Knowledge Hub"
+                  active={pathname.includes("/knowledge-hub")} />
                 <SubLink href={noticesHref} icon={<Megaphone size={14} />} label="Notices"
                   active={isItemActive("notices", noticesHref)} />
                 <SubLink href={disciplinaryHref} icon={<ShieldAlert size={14} />} label="Disciplinary"
