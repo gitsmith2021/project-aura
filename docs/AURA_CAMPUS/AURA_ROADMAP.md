@@ -105,6 +105,8 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 12 | [roadmap/12-architecture-quality-register.md](roadmap/12-architecture-quality-register.md) | Architecture & Quality Improvement Register (A1–A8) | ⚙️ Ongoing |
 | 13 | [roadmap/13-how-to-run.md](roadmap/13-how-to-run.md) | How to Run Full Stack Locally | 📖 Reference |
 | 14 | [DEFERRED_REGISTER.md](DEFERRED_REGISTER.md) | Deferred Items Register — consolidated rollup of all intentionally deferred work | 🗂️ Register |
+| 15 | [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md) | Final Completion Plan — Phase 8 + Arch A2 + Phase 9 (Business Readiness) + Aura Core extraction analysis + v1.0 Go/No-Go | 🎯 Plan |
+| 16 | [AURA_V1_EXECUTION_TRACKER.md](AURA_V1_EXECUTION_TRACKER.md) | **v1.0 Execution Tracker — single source of truth to release** (Track 1 Phase 8 · Track 2 Arch A2 · Track 3 Phase 9 · Weekly Dashboard) | 📊 Live |
 
 ---
 
