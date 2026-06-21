@@ -1123,7 +1123,7 @@ Phase 7X  ░░░░░░░░░░░░░░░░░░░░░░░�
 
 | Stage | Description | Status |
 |---|---|---|
-| KH-1 | Basic Repository (Upload, Categorize, Permissions) | 🔲 Planned |
+| KH-1 | Basic Repository (Upload, Categorize, Permissions) | ✅ Complete — `20260705000000` (`knowledge_resources` + 3-tier RLS + `knowledge-hub` bucket; lib+12 tests; upload drawer + filtered list + download/publish/archive/delete; admin/HOD surface) |
 | KH-2 | Search & Discovery (Full-text, Filters, Browse) | 🔲 Planned |
 | KH-3 | Collaboration (Ratings, Bookmarks, Collections) | 🔲 Planned |
 | KH-4 | Analytics (Usage metrics, Dept insights, KH score) | 🔲 Planned |
