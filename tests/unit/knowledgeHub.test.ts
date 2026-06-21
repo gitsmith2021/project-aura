@@ -4,6 +4,7 @@ import {
   contentTypeLabel, visibilityLabel, criterionLabel, isLinkResource,
   resourceKindLabel, parseTags, validateResource, matchesFilters,
   hasActiveFacets, tagCloud, topDownloaded, recentlyAdded, distinctAcademicYears,
+  averageRating, relatedResources,
 } from "@/lib/knowledgeHub";
 
 describe("taxonomy", () => {
@@ -126,5 +127,28 @@ describe("KH-2 discovery helpers", () => {
 
   it("distinctAcademicYears dedupes and sorts desc", () => {
     expect(distinctAcademicYears(rs)).toEqual(["2025-26", "2024-25"]);
+  });
+});
+
+describe("KH-3 collaboration helpers", () => {
+  it("averageRating rounds to one decimal, null when unrated", () => {
+    expect(averageRating(0, 0)).toBeNull();
+    expect(averageRating(9, 2)).toBe(4.5);
+    expect(averageRating(10, 3)).toBe(3.3);
+  });
+
+  it("relatedResources ranks by shared tags then category, excludes self", () => {
+    const target = { id: "t", category: "academic", tags: ["ai", "ml"] };
+    const all = [
+      target,
+      { id: "a", category: "academic", tags: ["ai", "ml", "dl"] }, // 2 shared + cat = 5
+      { id: "b", category: "research", tags: ["ai"] },             // 1 shared = 2
+      { id: "c", category: "academic", tags: ["physics"] },        // cat only = 1
+      { id: "d", category: "research", tags: ["bio"] },            // 0 -> excluded
+    ];
+    const out = relatedResources(target, all, 5).map((r) => r.id);
+    expect(out).toEqual(["a", "b", "c"]);
+    expect(out).not.toContain("t");
+    expect(out).not.toContain("d");
   });
 });

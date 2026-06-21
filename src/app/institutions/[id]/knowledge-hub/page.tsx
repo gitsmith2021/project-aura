@@ -46,6 +46,7 @@ export default async function KnowledgeHubPage({ params }: PageProps) {
         canUpload={canUpload}
         currentStaffId={(staffRow?.id as string | undefined) ?? null}
         currentDepartmentId={currentDepartmentId}
+        currentUserId={user.id}
       />
     </DashboardLayout>
   );
