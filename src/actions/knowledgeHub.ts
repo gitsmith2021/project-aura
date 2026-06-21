@@ -34,9 +34,21 @@ export type KnowledgeResource = {
   uploaded_by: string | null;
   uploader_name: string | null;
   download_count: number;
+  rating_count: number;
+  rating_sum: number;
   created_at: string;
   updated_at: string;
   departments?: { name: string } | null;
+};
+
+export type Collection = {
+  id: string;
+  name: string;
+  description: string | null;
+  is_public: boolean;
+  owner_id: string;
+  created_at: string;
+  resourceIds: string[];
 };
 
 async function getSupabase() {
@@ -219,5 +231,130 @@ export async function incrementDownload(id: string): Promise<void> {
     await admin.from("knowledge_resources").update({ download_count: next }).eq("id", id);
   } catch {
     // non-critical
+  }
+}
+
+// ── KH-3 — collaboration (ratings / bookmarks / collections) ──────────────────
+
+/** The caller's own ratings + bookmarked resource ids. */
+export async function getMyEngagement(): Promise<Result<{ ratings: Record<string, number>; bookmarkedIds: string[] }>> {
+  try {
+    const supabase = await getSupabase();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return { success: false, error: "Unauthorized." };
+    const [rRes, bRes] = await Promise.all([
+      supabase.from("knowledge_ratings").select("resource_id, rating").eq("user_id", user.id),
+      supabase.from("knowledge_bookmarks").select("resource_id").eq("user_id", user.id),
+    ]);
+    const ratings: Record<string, number> = {};
+    for (const r of rRes.data ?? []) ratings[r.resource_id as string] = r.rating as number;
+    const bookmarkedIds = (bRes.data ?? []).map((b) => b.resource_id as string);
+    return { success: true, data: { ratings, bookmarkedIds } };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
+  }
+}
+
+/** Set or update the caller's 1–5 rating; returns the resource's new aggregate. */
+export async function rateResource(resourceId: string, rating: number): Promise<Result<{ rating_count: number; rating_sum: number }>> {
+  if (rating < 1 || rating > 5) return { success: false, error: "Rating must be 1–5." };
+  try {
+    const supabase = await getSupabase();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return { success: false, error: "Unauthorized." };
+    const { error: upErr } = await supabase
+      .from("knowledge_ratings")
+      .upsert({ resource_id: resourceId, user_id: user.id, rating, updated_at: new Date().toISOString() }, { onConflict: "resource_id,user_id" });
+    if (upErr) return { success: false, error: upErr.message };
+    const { data: kr } = await supabase.from("knowledge_resources").select("rating_count, rating_sum").eq("id", resourceId).maybeSingle();
+    return { success: true, data: { rating_count: (kr?.rating_count as number) ?? 0, rating_sum: (kr?.rating_sum as number) ?? 0 } };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
+  }
+}
+
+export async function toggleBookmark(resourceId: string, on: boolean): Promise<Result> {
+  try {
+    const supabase = await getSupabase();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return { success: false, error: "Unauthorized." };
+    if (on) {
+      const { error: e } = await supabase.from("knowledge_bookmarks").upsert({ resource_id: resourceId, user_id: user.id }, { onConflict: "resource_id,user_id" });
+      if (e) return { success: false, error: e.message };
+    } else {
+      const { error: e } = await supabase.from("knowledge_bookmarks").delete().eq("resource_id", resourceId).eq("user_id", user.id);
+      if (e) return { success: false, error: e.message };
+    }
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
+  }
+}
+
+export async function getCollections(institutionId: string): Promise<Result<Collection[]>> {
+  try {
+    const supabase = await getSupabase();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return { success: false, error: "Unauthorized." };
+    const { data, error } = await supabase
+      .from("knowledge_collections")
+      .select("id, name, description, is_public, owner_id, created_at, knowledge_collection_items(resource_id)")
+      .eq("institution_id", institutionId)
+      .order("created_at", { ascending: false });
+    if (error) return { success: false, error: error.message };
+    const collections: Collection[] = (data ?? []).map((c) => ({
+      id: c.id as string, name: c.name as string, description: (c.description as string | null) ?? null,
+      is_public: !!c.is_public, owner_id: c.owner_id as string, created_at: c.created_at as string,
+      resourceIds: (Array.isArray(c.knowledge_collection_items) ? c.knowledge_collection_items : []).map((i) => i.resource_id as string),
+    }));
+    return { success: true, data: collections };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
+  }
+}
+
+export async function createCollection(institutionId: string, input: { name: string; description?: string; isPublic?: boolean }): Promise<Result<{ id: string }>> {
+  if (!input.name?.trim()) return { success: false, error: "Collection name is required." };
+  try {
+    const supabase = await getSupabase();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return { success: false, error: "Unauthorized." };
+    const { data, error } = await supabase.from("knowledge_collections").insert({
+      institution_id: institutionId, owner_id: user.id, name: input.name.trim(),
+      description: input.description?.trim() || null, is_public: input.isPublic ?? true,
+    }).select("id").single();
+    if (error) return { success: false, error: error.message };
+    revalidatePath(`/institutions/${institutionId}/knowledge-hub`);
+    return { success: true, data: { id: data.id as string } };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
+  }
+}
+
+export async function deleteCollection(institutionId: string, id: string): Promise<Result> {
+  try {
+    const supabase = await getSupabase();
+    const { error } = await supabase.from("knowledge_collections").delete().eq("id", id);
+    if (error) return { success: false, error: error.message };
+    revalidatePath(`/institutions/${institutionId}/knowledge-hub`);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
+  }
+}
+
+export async function setCollectionItem(collectionId: string, resourceId: string, present: boolean): Promise<Result> {
+  try {
+    const supabase = await getSupabase();
+    if (present) {
+      const { error } = await supabase.from("knowledge_collection_items").upsert({ collection_id: collectionId, resource_id: resourceId }, { onConflict: "collection_id,resource_id" });
+      if (error) return { success: false, error: error.message };
+    } else {
+      const { error } = await supabase.from("knowledge_collection_items").delete().eq("collection_id", collectionId).eq("resource_id", resourceId);
+      if (error) return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
   }
 }

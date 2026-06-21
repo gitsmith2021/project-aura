@@ -217,3 +217,30 @@ export function distinctAcademicYears<T extends { academic_year?: string | null 
   for (const r of resources) if (r.academic_year) set.add(r.academic_year);
   return Array.from(set).sort((a, b) => b.localeCompare(a));
 }
+
+// ── KH-3 collaboration helpers (pure) ─────────────────────────────────────────
+
+/** Average rating to one decimal, or null when unrated. */
+export function averageRating(sum: number, count: number): number | null {
+  return count > 0 ? Math.round((sum / count) * 10) / 10 : null;
+}
+
+/**
+ * Resources related to `target` by shared tags (weighted) then same category,
+ * excluding the target itself. Returns the top `n` with a positive score.
+ */
+export function relatedResources<T extends { id: string; category: string; tags?: string[] | null }>(
+  target: T, all: T[], n = 5,
+): T[] {
+  const targetTags = new Set(target.tags ?? []);
+  return all
+    .filter((r) => r.id !== target.id)
+    .map((r) => {
+      const shared = (r.tags ?? []).filter((t) => targetTags.has(t)).length;
+      return { r, score: shared * 2 + (r.category === target.category ? 1 : 0) };
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, n)
+    .map((x) => x.r);
+}
