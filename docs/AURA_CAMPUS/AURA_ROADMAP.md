@@ -110,11 +110,11 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 
 ## 📋 Overall Progress Tracker
 
-> **Last updated:** 2026-06-20  
-> **80 of 87 modules complete — 92% of full platform built**
+> **Last updated:** 2026-06-21  
+> **85 of 92 modules complete — 92% of full platform built**
 
 ```
-Overall  █████████████████████████████░  92%  (80/87)
+Overall  █████████████████████████████░  92%  (85/92)
 Phase 1  ████████████████████████████████  100% (7/7   — Staff & Student Portals ✅)
 Phase 2    ████████████████████████████████  100% (13/13 — All foundations + Academic Ops ✅)
 Phase 2.5  ████████████████████████████████  100% (3/3  — Critical Security & Compliance Fixes ✅)
@@ -122,21 +122,21 @@ Phase 3    ███████████████████████
 Phase 4    ████████████████████████████████  100% (12/12 — 4A ✅ · 4B ✅ · 4C ✅ · 4D ✅ · 4E ✅ · 4E-sub ✅ · 4F ✅ · 4G ✅ · 4H ✅ · 4I ✅ · 4J ✅ · 4K ✅)
 Phase 5    ████████████████████████████████  100% (14/14 — 5A Admissions ✅ · 5A-sub CRM + Merit List ✅ · 5B Recruitment ✅ · 5C Non-Teaching Staff + Daily-Wage Payroll ✅ · 5C-sub Indian Statutory Payroll ✅ · 5D Alumni System ✅ · 5E Staff Appraisal + Workload ✅ · 5F Placement Cell ✅ · 5G Scholarship Management ✅ · 5H Disciplinary & Anti-Ragging ✅ · 5I Research & Publications ✅ · 5J Staff Attendance + LOP ✅ · 5K Career Lifecycle ✅ · 5L Department Budgets ✅)
 Phase 6    ████████████████████████████████  100% (8/8  — 6A Parent Portal ✅ · 6B Transport ✅ · 6C Certificates ✅ · 6D Online Exams ✅ · 6E Feedback ✅ · 6F Grievances ✅ · 6G E-Learning/LMS ✅ · 6H Industry Connect/MOU ✅)
-Phase 7    ████████████████████████████████  100% (8/8  — 7A · 7B · 7C · 7D Health/Security · 7E Billing · 7F IQAC · 7F-sub SSR Builder · 7F-sub2 IQAC Meeting Tracker ✅. The Knowledge Hub is a separate phase → Phase 7X, strategically deferred)
+Phase 7    ████████████████████████████████  100% (8/8  — 7A · 7B · 7C · 7D Health/Security · 7E Billing · 7F IQAC · 7F-sub SSR Builder · 7F-sub2 IQAC Meeting Tracker ✅. The Knowledge Hub is a separate phase → Phase 7X, now complete ✅)
 Phase 7X   ██████████████████████████████  100% (5/5 — KH-1 Repository ✅ · KH-2 Search ✅ · KH-3 Collaboration ✅ · KH-4 Analytics ✅ · KH-5 AI ✅ (AI summaries + RAG Knowledge Assistant; semantic-search/pgvector deferred pending an embedding provider))
 Phase 8    █████████░░░░░░░░░░░░░░░░░░░░░░  ~30% (8A ✅ · 8B/8C/8F screens built (Expo-Go) · 8F parent app: authed /api/parent + read-only child screens · NFC/push/CCTV + in-app pay need EAS/device)
 Arch       ██████████████████████████░░░░  88%  (7/8 + A2 🟡 — A8 Audit Log ✅ · A7 SaaS Billing ✅ (via 7E) · A1 Fine-grained RLS ✅ (audit + 1 leak fixed) · A3 FK Index Strategy ✅ (136→0 unindexed FKs) · A4 Onboarding Wizard ✅ · A5 CI/CD Pipeline ✅ · A6 Multi-currency/timezone ✅ (foundation; call-site sweep progressive) · A2 Test infra foundation)
 ```
 
-### 📍 Where we are — 2026-06-20
+### 📍 Where we are — 2026-06-21
 
-**80 / 87 modules shipped (92%).** Phases **1, 2, 2.5, 4, 5, 6, 7 are complete**; Phase 3 is **core-complete** (in-app + email live; SMS/WhatsApp deferred). AURA is a working multi-tenant academic ERP (admissions → academics → finance → campus ops → portals) plus a SaaS operator console (`/admin`) with health, security, billing and IQAC/NAAC tooling. **Arch A1 (fine-grained RLS) audited & hardened** — every table RLS-protected, one cross-tenant leak found & fixed. **Arch A3 (index strategy)** — every foreign key now indexed (advisor: 136 → 0 unindexed FKs). **Arch A4 (onboarding wizard)** — new tenants are walked through Departments → Academic Year → Fees → Staff setup, gated behind `is_onboarded`. **Arch A5 (CI/CD)** — GitHub Actions runs typecheck/lint/tests + a from-zero migration replay on every push & PR; **validated end-to-end via PR #1**, schema made reproducible via a `pg_dump` baseline, and **branch protection** enforces PR + both checks on `main`. **Arch A6 (multi-currency/timezone)** — per-institution `currency`/`locale`/`timezone` + `src/lib/locale.ts` formatters + a Settings UI (call-site sweep progressive).
+**85 / 92 modules shipped (92%).** Phases **1, 2, 2.5, 4, 5, 6, 7, and 7X (Knowledge Hub) are complete**; Phase 3 is **core-complete** (in-app + email live; SMS/WhatsApp deferred). AURA is a working multi-tenant academic ERP (admissions → academics → finance → campus ops → portals) plus a SaaS operator console (`/admin`) with health, security, billing and IQAC/NAAC tooling. **Arch A1 (fine-grained RLS) audited & hardened** — every table RLS-protected, one cross-tenant leak found & fixed. **Arch A3 (index strategy)** — every foreign key now indexed (advisor: 136 → 0 unindexed FKs). **Arch A4 (onboarding wizard)** — new tenants are walked through Departments → Academic Year → Fees → Staff setup, gated behind `is_onboarded`. **Arch A5 (CI/CD)** — GitHub Actions runs typecheck/lint/tests + a from-zero migration replay on every push & PR; **validated end-to-end via PR #1**, schema made reproducible via a `pg_dump` baseline, and **branch protection** enforces PR + both checks on `main`. **Arch A6 (multi-currency/timezone)** — per-institution `currency`/`locale`/`timezone` + `src/lib/locale.ts` formatters + a Settings UI (call-site sweep progressive). **Phase 7X (Aura Knowledge Hub) is fully shipped** — KH-1 Repository → KH-2 Search → KH-3 Collaboration → KH-4 Analytics → KH-5 AI Layer (Claude AI summaries + RAG Knowledge Assistant), all merged via green PRs; pure-vector semantic search deferred pending an embedding provider (pgvector 0.8.0 enabled and ready).
 
 - **Quality gates:** 653 Vitest unit tests green · `npx tsc --noEmit` clean · `npm run lint` **0 errors** (lint debt burned down 325→0; now a hard CI gate) · **CI green on PR #1** incl. from-zero migration replay (schema reproducible from git via the baseline) · **branch protection on `main`** (PR + both CI checks required) · Supabase security advisors show only the accepted baseline (intentional deny-all tables + public document-URL buckets, both documented in [roadmap/12](roadmap/12-architecture-quality-register.md) / `docs/rls-policy-map.md`) · perf advisor: **0 unindexed foreign keys** (Arch A3).
 
 ### ▶️ Next up — Phase 8: React Native Mobile & CCTV
 
-8A complete (Expo SDK 54, role-adaptive shell for all 6 roles, Supabase auth, read-only portal screens); 8B/8C screens built; **8F parent app foundation built** — parent tier in the mobile shell, read-only child Home/Attendance/Results/Fees screens via a new authenticated `/api/parent` (JWT + link-verified service-role reads), pay deep-links to the web portal. All run in **Expo Go** (no EAS needed). **Remaining (need an EAS dev build + device/hardware):** 8B NFC attendance (Phase 4F cards + EAS), 8C/8F in-app Razorpay pay, 8D push notifications (+ parent push inbox & alerts), 8E CCTV, and parent self-link OTP. After Phase 8 → **Phase 7X Knowledge Hub** (strategically deferred).
+8A complete (Expo SDK 54, role-adaptive shell for all 6 roles, Supabase auth, read-only portal screens); 8B/8C screens built; **8F parent app foundation built** — parent tier in the mobile shell, read-only child Home/Attendance/Results/Fees screens via a new authenticated `/api/parent` (JWT + link-verified service-role reads), pay deep-links to the web portal. All run in **Expo Go** (no EAS needed). **Remaining (need an EAS dev build + device/hardware):** 8B NFC attendance (Phase 4F cards + EAS), 8C/8F in-app Razorpay pay, 8D push notifications (+ parent push inbox & alerts), 8E CCTV, and parent self-link OTP. **Phase 7X (Knowledge Hub) is now complete** — Phase 8 (mobile/CCTV, EAS-gated) is the remaining frontier of the platform.
 
 ### ⏸️ Tracked deferrals (intentional — not blocking)
 
