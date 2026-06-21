@@ -1,16 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BrainCircuit, Plus, Search, Download, ExternalLink, Trash2, Eye, EyeOff, Archive,
+  TrendingUp, Building2, X, Loader2,
 } from "lucide-react";
 import {
-  KH_CATEGORIES, contentTypesFor, matchesFilters, categoryLabel, contentTypeLabel,
-  visibilityLabel, criterionLabel, resourceKindLabel, isLinkResource,
-  type KnowledgeCategory,
+  KH_CATEGORIES, contentTypesFor, matchesFilters, hasActiveFacets, categoryLabel,
+  contentTypeLabel, visibilityLabel, criterionLabel, resourceKindLabel, isLinkResource,
+  tagCloud, topDownloaded, distinctAcademicYears, NAAC_CRITERIA,
+  type KnowledgeCategory, type ResourceFilters,
 } from "@/lib/knowledgeHub";
 import {
-  getResources, setResourceStatus, deleteResource, incrementDownload,
+  getResources, searchResources, setResourceStatus, deleteResource, incrementDownload,
   type KnowledgeResource,
 } from "@/actions/knowledgeHub";
 import { UploadResourceDrawer } from "./UploadResourceDrawer";
@@ -22,56 +24,74 @@ type Props = {
   isAdmin: boolean;
   canUpload: boolean;
   currentStaffId: string | null;
+  currentDepartmentId: string | null;
 };
 
 const selectCls =
   "px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-violet-500";
 
-export function KnowledgeHubManager({ institutionId, initial, departments, isAdmin, canUpload, currentStaffId }: Props) {
+export function KnowledgeHubManager({ institutionId, initial, departments, isAdmin, canUpload, currentStaffId, currentDepartmentId }: Props) {
   const [resources, setResources] = useState<KnowledgeResource[]>(initial);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [search, setSearch] = useState("");
+
+  // Search (server-side FTS, debounced) — null searchResults means "not searching".
+  const [query, setQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<KnowledgeResource[] | null>(null);
+  const [searching, setSearching] = useState(false);
+
+  // Facets
   const [category, setCategory] = useState("");
   const [contentType, setContentType] = useState("");
   const [departmentId, setDepartmentId] = useState("");
+  const [academicYear, setAcademicYear] = useState("");
+  const [naacCriterion, setNaacCriterion] = useState("");
+  const [tag, setTag] = useState("");
+
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) { setSearchResults(null); setSearching(false); return; }
+    setSearching(true);
+    const h = setTimeout(async () => {
+      const res = await searchResources(institutionId, q);
+      if (res.success) setSearchResults(res.data);
+      setSearching(false);
+    }, 350);
+    return () => clearTimeout(h);
+  }, [query, institutionId]);
+
+  // Keep both the browse list and any active search results in sync after edits.
+  const applyLocal = (fn: (list: KnowledgeResource[]) => KnowledgeResource[]) => {
+    setResources(fn);
+    setSearchResults((prev) => (prev ? fn(prev) : prev));
+  };
 
   const refresh = async () => {
     const res = await getResources(institutionId);
     if (res.success) setResources(res.data);
+    if (query.trim()) {
+      const s = await searchResources(institutionId, query);
+      if (s.success) setSearchResults(s.data);
+    }
   };
 
+  const facets: ResourceFilters = { category, contentType, departmentId, naacCriterion, academicYear, tag };
+  const facetsActive = hasActiveFacets(facets);
+  const isPristine = !query.trim() && !facetsActive;
+
+  const baseList = searchResults ?? resources;
   const filtered = useMemo(
-    () => resources.filter((r) => matchesFilters(r, { search, category, contentType, departmentId })),
-    [resources, search, category, contentType, departmentId],
+    () => baseList.filter((r) => matchesFilters(r, facets)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `facets` is rebuilt each render; depend on its primitives
+    [baseList, category, contentType, departmentId, naacCriterion, academicYear, tag],
   );
 
-  const canManage = (r: KnowledgeResource) => isAdmin || (!!currentStaffId && r.uploaded_by === currentStaffId);
-
-  const open = (r: KnowledgeResource) => {
-    const url = isLinkResource(r) ? r.external_url : r.file_url;
-    if (!url) return;
-    incrementDownload(r.id);
-    setResources((prev) => prev.map((x) => (x.id === r.id ? { ...x, download_count: x.download_count + 1 } : x)));
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
-  const toggleStatus = async (r: KnowledgeResource) => {
-    const next = r.status === "published" ? "draft" : "published";
-    const res = await setResourceStatus(institutionId, r.id, next);
-    if (res.success) setResources((prev) => prev.map((x) => (x.id === r.id ? { ...x, status: next } : x)));
-  };
-
-  const archive = async (r: KnowledgeResource) => {
-    const res = await setResourceStatus(institutionId, r.id, "archived");
-    if (res.success) setResources((prev) => prev.map((x) => (x.id === r.id ? { ...x, status: "archived" } : x)));
-  };
-
-  const remove = async (r: KnowledgeResource) => {
-    if (!confirm(`Delete "${r.title}"? This cannot be undone.`)) return;
-    const res = await deleteResource(institutionId, r.id);
-    if (res.success) setResources((prev) => prev.filter((x) => x.id !== r.id));
-    else alert(res.error);
-  };
+  const years = useMemo(() => distinctAcademicYears(resources), [resources]);
+  const cloud = useMemo(() => tagCloud(resources).slice(0, 14), [resources]);
+  const mostDownloaded = useMemo(() => topDownloaded(resources, 5), [resources]);
+  const fromMyDept = useMemo(
+    () => (currentDepartmentId ? resources.filter((r) => r.department_id === currentDepartmentId).slice(0, 5) : []),
+    [resources, currentDepartmentId],
+  );
 
   const counts = useMemo(() => {
     const by: Record<string, number> = {};
@@ -79,25 +99,95 @@ export function KnowledgeHubManager({ institutionId, initial, departments, isAdm
     return by;
   }, [resources]);
 
+  const canManage = (r: KnowledgeResource) => isAdmin || (!!currentStaffId && r.uploaded_by === currentStaffId);
+
+  const open = (r: KnowledgeResource) => {
+    const url = isLinkResource(r) ? r.external_url : r.file_url;
+    if (!url) return;
+    incrementDownload(r.id);
+    applyLocal((list) => list.map((x) => (x.id === r.id ? { ...x, download_count: x.download_count + 1 } : x)));
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+  const toggleStatus = async (r: KnowledgeResource) => {
+    const next = r.status === "published" ? "draft" : "published";
+    const res = await setResourceStatus(institutionId, r.id, next);
+    if (res.success) applyLocal((list) => list.map((x) => (x.id === r.id ? { ...x, status: next } : x)));
+  };
+  const archive = async (r: KnowledgeResource) => {
+    const res = await setResourceStatus(institutionId, r.id, "archived");
+    if (res.success) applyLocal((list) => list.map((x) => (x.id === r.id ? { ...x, status: "archived" } : x)));
+  };
+  const remove = async (r: KnowledgeResource) => {
+    if (!confirm(`Delete "${r.title}"? This cannot be undone.`)) return;
+    const res = await deleteResource(institutionId, r.id);
+    if (res.success) applyLocal((list) => list.filter((x) => x.id !== r.id));
+    else alert(res.error);
+  };
+
+  const clearFacets = () => {
+    setCategory(""); setContentType(""); setDepartmentId(""); setAcademicYear(""); setNaacCriterion(""); setTag("");
+  };
+
+  const Card = ({ r }: { r: KnowledgeResource }) => (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 flex flex-col">
+      <div className="flex items-start justify-between gap-2">
+        <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-slate-500">{resourceKindLabel(r)}</span>
+        <div className="flex items-center gap-1.5">
+          {r.status !== "published" && <span className={`text-[10px] font-semibold rounded px-1.5 py-0.5 ${r.status === "draft" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"}`}>{r.status}</span>}
+          {r.naac_criterion && <span className="text-[10px] font-semibold rounded bg-indigo-50 text-indigo-600 px-1.5 py-0.5">{criterionLabel(r.naac_criterion)}</span>}
+        </div>
+      </div>
+      <h3 className="mt-2 text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2">{r.title}</h3>
+      {r.description && <p className="mt-1 text-xs text-slate-500 line-clamp-2">{r.description}</p>}
+      <div className="mt-2 flex flex-wrap gap-1">
+        <span className="text-[10px] text-slate-500 bg-slate-50 dark:bg-slate-800 rounded px-1.5 py-0.5">{categoryLabel(r.category)} · {contentTypeLabel(r.content_type)}</span>
+        <span className="text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-800 rounded px-1.5 py-0.5">{visibilityLabel(r.visibility)}</span>
+        {r.academic_year && <span className="text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-800 rounded px-1.5 py-0.5">{r.academic_year}</span>}
+      </div>
+      {(r.tags?.length ?? 0) > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {r.tags.slice(0, 4).map((t) => (
+            <button key={t} onClick={() => setTag(t)} className="text-[10px] text-violet-600 hover:underline">#{t}</button>
+          ))}
+        </div>
+      )}
+      <div className="mt-2 text-[11px] text-slate-400">{[r.departments?.name, r.uploader_name, new Date(r.created_at).toLocaleDateString("en-IN")].filter(Boolean).join(" · ")}</div>
+      <div className="mt-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-2">
+        <button onClick={() => open(r)} className="inline-flex items-center gap-1 text-xs font-semibold text-violet-600 hover:text-violet-700">
+          {isLinkResource(r) ? <ExternalLink size={13} /> : <Download size={13} />} {isLinkResource(r) ? "Open" : "Download"}
+          <span className="text-slate-400 font-normal ml-1">· {r.download_count}</span>
+        </button>
+        {canManage(r) && (
+          <div className="flex items-center gap-1">
+            <button onClick={() => toggleStatus(r)} title={r.status === "published" ? "Unpublish" : "Publish"} className="p-1 text-slate-400 hover:text-slate-700">{r.status === "published" ? <EyeOff size={14} /> : <Eye size={14} />}</button>
+            {r.status !== "archived" && <button onClick={() => archive(r)} title="Archive" className="p-1 text-slate-400 hover:text-slate-700"><Archive size={14} /></button>}
+            <button onClick={() => remove(r)} title="Delete" className="p-1 text-slate-400 hover:text-rose-600"><Trash2 size={14} /></button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="w-full p-6 space-y-5">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border border-violet-100 dark:border-violet-900/60">
-            <BrainCircuit size={22} />
-          </div>
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border border-violet-100 dark:border-violet-900/60"><BrainCircuit size={22} /></div>
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Knowledge Hub</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">The institution&apos;s shared, searchable knowledge repository — {resources.length} resource{resources.length === 1 ? "" : "s"}.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Search & discover the institution&apos;s shared knowledge — {resources.length} resource{resources.length === 1 ? "" : "s"}.</p>
           </div>
         </div>
-        {canUpload && (
-          <button onClick={() => setDrawerOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-violet-700 transition-colors">
-            <Plus size={16} /> Upload
-          </button>
-        )}
+        {canUpload && <button onClick={() => setDrawerOpen(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-violet-700 transition-colors"><Plus size={16} /> Upload</button>}
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        {searching ? <Loader2 size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-violet-500 animate-spin" /> : <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />}
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search the knowledge base…"
+          className="w-full pl-9 pr-9 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-violet-500" />
+        {query && <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"><X size={15} /></button>}
       </div>
 
       {/* Category chips */}
@@ -110,86 +200,91 @@ export function KnowledgeHubManager({ institutionId, initial, departments, isAdm
         ))}
       </div>
 
-      {/* Filter bar */}
+      {/* Facet selects */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search title, description, tags…"
-            className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-violet-500" />
-        </div>
         <select value={contentType} onChange={(e) => setContentType(e.target.value)} className={selectCls}>
           <option value="">All types</option>
-          {(category ? contentTypesFor(category as KnowledgeCategory) : KH_CATEGORIES.flatMap((c) => contentTypesFor(c.value))).map((t) => (
-            <option key={t.value} value={t.value}>{t.label}</option>
-          ))}
+          {(category ? contentTypesFor(category as KnowledgeCategory) : KH_CATEGORIES.flatMap((c) => contentTypesFor(c.value))).map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
         <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} className={selectCls}>
           <option value="">All departments</option>
           {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
+        {years.length > 0 && (
+          <select value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} className={selectCls}>
+            <option value="">All years</option>
+            {years.map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+        )}
+        <select value={naacCriterion} onChange={(e) => setNaacCriterion(e.target.value)} className={selectCls}>
+          <option value="">All NAAC criteria</option>
+          {NAAC_CRITERIA.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+        </select>
+        {(facetsActive || query) && <button onClick={() => { clearFacets(); setQuery(""); }} className="text-xs text-slate-500 hover:text-slate-800 inline-flex items-center gap-1"><X size={12} /> Clear</button>}
       </div>
 
-      {/* Results */}
-      {filtered.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 p-10 text-center">
-          <p className="text-sm text-slate-500">{resources.length === 0 ? "No resources yet. Be the first to share knowledge." : "No resources match these filters."}</p>
-        </div>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((r) => (
-            <div key={r.id} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 flex flex-col">
-              <div className="flex items-start justify-between gap-2">
-                <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-bold text-slate-500">{resourceKindLabel(r)}</span>
-                <div className="flex items-center gap-1.5">
-                  {r.status !== "published" && (
-                    <span className={`text-[10px] font-semibold rounded px-1.5 py-0.5 ${r.status === "draft" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"}`}>{r.status}</span>
-                  )}
-                  {r.naac_criterion && <span className="text-[10px] font-semibold rounded bg-indigo-50 text-indigo-600 px-1.5 py-0.5">{criterionLabel(r.naac_criterion)}</span>}
-                </div>
-              </div>
-
-              <h3 className="mt-2 text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2">{r.title}</h3>
-              {r.description && <p className="mt-1 text-xs text-slate-500 line-clamp-2">{r.description}</p>}
-
-              <div className="mt-2 flex flex-wrap gap-1">
-                <span className="text-[10px] text-slate-500 bg-slate-50 dark:bg-slate-800 rounded px-1.5 py-0.5">{categoryLabel(r.category)} · {contentTypeLabel(r.content_type)}</span>
-                <span className="text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-800 rounded px-1.5 py-0.5">{visibilityLabel(r.visibility)}</span>
-              </div>
-
-              <div className="mt-2 text-[11px] text-slate-400">
-                {[r.departments?.name, r.uploader_name, new Date(r.created_at).toLocaleDateString("en-IN")].filter(Boolean).join(" · ")}
-              </div>
-
-              <div className="mt-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-2">
-                <button onClick={() => open(r)} className="inline-flex items-center gap-1 text-xs font-semibold text-violet-600 hover:text-violet-700">
-                  {isLinkResource(r) ? <ExternalLink size={13} /> : <Download size={13} />}
-                  {isLinkResource(r) ? "Open" : "Download"}
-                  <span className="text-slate-400 font-normal ml-1">· {r.download_count}</span>
-                </button>
-                {canManage(r) && (
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => toggleStatus(r)} title={r.status === "published" ? "Unpublish" : "Publish"} className="p-1 text-slate-400 hover:text-slate-700">
-                      {r.status === "published" ? <EyeOff size={14} /> : <Eye size={14} />}
-                    </button>
-                    {r.status !== "archived" && (
-                      <button onClick={() => archive(r)} title="Archive" className="p-1 text-slate-400 hover:text-slate-700"><Archive size={14} /></button>
-                    )}
-                    <button onClick={() => remove(r)} title="Delete" className="p-1 text-slate-400 hover:text-rose-600"><Trash2 size={14} /></button>
-                  </div>
-                )}
-              </div>
-            </div>
+      {/* Tag cloud */}
+      {cloud.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {cloud.map(({ tag: t, count }) => (
+            <button key={t} onClick={() => setTag(tag === t ? "" : t)}
+              className={`text-[11px] rounded-full px-2 py-0.5 border transition-colors ${tag === t ? "border-violet-300 bg-violet-50 text-violet-700" : "border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+              #{t} <span className="text-slate-400">{count}</span>
+            </button>
           ))}
         </div>
       )}
 
-      <UploadResourceDrawer
-        institutionId={institutionId}
-        departments={departments}
-        isOpen={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        onCreated={refresh}
-      />
+      {/* Discovery widgets — pristine view only */}
+      {isPristine && (mostDownloaded.length > 0 || fromMyDept.length > 0) && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {mostDownloaded.length > 0 && (
+            <DiscoveryList title="Most downloaded" icon={<TrendingUp size={14} />} items={mostDownloaded} onOpen={open} />
+          )}
+          {fromMyDept.length > 0 && (
+            <DiscoveryList title="From your department" icon={<Building2 size={14} />} items={fromMyDept} onOpen={open} />
+          )}
+        </div>
+      )}
+
+      {/* Results */}
+      <div>
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
+          {query.trim() ? `Search results (${filtered.length})` : facetsActive ? `Filtered (${filtered.length})` : `All resources (${filtered.length})`}
+        </p>
+        {filtered.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 p-10 text-center">
+            <p className="text-sm text-slate-500">
+              {resources.length === 0 ? "No resources yet. Be the first to share knowledge." : "Nothing matched. Try a broader search or clear filters."}
+            </p>
+            {(facetsActive || query) && <button onClick={() => { clearFacets(); setQuery(""); }} className="mt-2 text-xs font-semibold text-violet-600">Clear all filters</button>}
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((r) => <Card key={r.id} r={r} />)}
+          </div>
+        )}
+      </div>
+
+      <UploadResourceDrawer institutionId={institutionId} departments={departments} isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} onCreated={refresh} />
+    </div>
+  );
+}
+
+function DiscoveryList({ title, icon, items, onOpen }: { title: string; icon: React.ReactNode; items: KnowledgeResource[]; onOpen: (r: KnowledgeResource) => void }) {
+  return (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+      <h3 className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">{icon} {title}</h3>
+      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+        {items.map((r) => (
+          <li key={r.id}>
+            <button onClick={() => onOpen(r)} className="w-full flex items-center justify-between gap-3 py-2 text-left hover:opacity-80">
+              <span className="text-sm text-slate-700 dark:text-slate-200 truncate">{r.title}</span>
+              <span className="text-[11px] text-slate-400 shrink-0">{r.download_count} ↓</span>
+            </button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

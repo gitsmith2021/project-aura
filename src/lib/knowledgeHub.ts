@@ -163,14 +163,20 @@ export type ResourceFilters = {
   contentType?: string;
   departmentId?: string;
   naacCriterion?: string;
+  academicYear?: string;
+  tag?: string;
 };
 
+type FilterableResource = ResourceLike & { naac_criterion?: string | null; academic_year?: string | null };
+
 /** Client-side filtering for an already-RLS-scoped result set. */
-export function matchesFilters(r: ResourceLike & { naac_criterion?: string | null }, f: ResourceFilters): boolean {
+export function matchesFilters(r: FilterableResource, f: ResourceFilters): boolean {
   if (f.category && r.category !== f.category) return false;
   if (f.contentType && r.content_type !== f.contentType) return false;
   if (f.departmentId && r.department_id !== f.departmentId) return false;
   if (f.naacCriterion && r.naac_criterion !== f.naacCriterion) return false;
+  if (f.academicYear && r.academic_year !== f.academicYear) return false;
+  if (f.tag && !(r.tags ?? []).includes(f.tag)) return false;
   if (f.search) {
     const q = f.search.trim().toLowerCase();
     if (q) {
@@ -179,4 +185,35 @@ export function matchesFilters(r: ResourceLike & { naac_criterion?: string | nul
     }
   }
   return true;
+}
+
+/** Whether any facet (besides free-text search) is active. */
+export function hasActiveFacets(f: ResourceFilters): boolean {
+  return Boolean(f.category || f.contentType || f.departmentId || f.naacCriterion || f.academicYear || f.tag);
+}
+
+// ── KH-2 discovery helpers (pure) ─────────────────────────────────────────────
+
+/** Tag → count, most frequent first. */
+export function tagCloud<T extends { tags?: string[] | null }>(resources: T[]): { tag: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const r of resources) for (const t of r.tags ?? []) counts.set(t, (counts.get(t) ?? 0) + 1);
+  return Array.from(counts, ([tag, count]) => ({ tag, count })).sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+}
+
+/** Top resources by download count (only those with at least one download). */
+export function topDownloaded<T extends { download_count: number }>(resources: T[], n = 5): T[] {
+  return [...resources].filter((r) => r.download_count > 0).sort((a, b) => b.download_count - a.download_count).slice(0, n);
+}
+
+/** Most recently added, newest first. */
+export function recentlyAdded<T extends { created_at: string }>(resources: T[], n = 5): T[] {
+  return [...resources].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, n);
+}
+
+/** Distinct academic years present, newest first. */
+export function distinctAcademicYears<T extends { academic_year?: string | null }>(resources: T[]): string[] {
+  const set = new Set<string>();
+  for (const r of resources) if (r.academic_year) set.add(r.academic_year);
+  return Array.from(set).sort((a, b) => b.localeCompare(a));
 }

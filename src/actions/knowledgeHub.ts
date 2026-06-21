@@ -64,6 +64,30 @@ export async function getResources(institutionId: string): Promise<Result<Knowle
   }
 }
 
+/** KH-2 — server-side full-text search (RLS-scoped). Empty query → recent list. */
+export async function searchResources(institutionId: string, query: string): Promise<Result<KnowledgeResource[]>> {
+  if (!institutionId) return { success: false, error: "Institution ID required." };
+  const q = query.trim();
+  if (!q) return getResources(institutionId);
+  try {
+    const supabase = await getSupabase();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return { success: false, error: "Unauthorized." };
+
+    const { data, error } = await supabase
+      .from("knowledge_resources")
+      .select("*, departments(name)")
+      .eq("institution_id", institutionId)
+      .textSearch("search_vector", q, { type: "websearch", config: "english" })
+      .order("created_at", { ascending: false });
+
+    if (error) return { success: false, error: error.message };
+    return { success: true, data: (data ?? []) as KnowledgeResource[] };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
+  }
+}
+
 export type CreateResourceInput = {
   institutionId: string;
   title: string;
