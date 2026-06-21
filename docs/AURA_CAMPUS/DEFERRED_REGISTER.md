@@ -91,6 +91,14 @@ Legend — **Status:** 🔲 open · 🟡 partial · ✅ done. **Priority:** 🔴
 | 8-4 | In-app Razorpay pay (student mobile) | [roadmap/10](roadmap/10-phase8-mobile-apps.md) | Native checkout integration | Phase 8C cont. | 🟡 | 🔲 |
 | 8-5 | Parent mobile app | [roadmap/10](roadmap/10-phase8-mobile-apps.md) | Depends on Phase 6A parent portal | Phase 8F | 🟢 | 🔲 |
 
+### Phase 7X — Knowledge Hub (KH-5 AI Layer follow-ups)
+| # | Deferred item | Source | Blocker / reason | Pickup phase | Priority | Status |
+|---|---------------|--------|------------------|--------------|----------|--------|
+| KH5-1 | Semantic search (pgvector embeddings + cosine ranking + hybrid keyword/semantic) — Assistant retrieves over full-text search until then | [AURA_CAMPUS_KNOWLEDGE_HUB.md](AURA_CAMPUS_KNOWLEDGE_HUB.md) §11 | Needs an **embedding provider** (Voyage AI / OpenAI) — Anthropic's API is generative-only; pgvector v0.8.0 already enabled | When embedding key added | 🟡 | 🔲 |
+| KH5-2 | AI NAAC criterion-tag suggestions for untagged accreditation content | [AURA_CAMPUS_KNOWLEDGE_HUB.md](AURA_CAMPUS_KNOWLEDGE_HUB.md) §15 (KH-5) | Claude-buildable; descoped from KH-5 v1 to keep PR focused | Future KH iteration | 🟢 | 🔲 |
+| KH5-3 | AI content-quality scoring (flag thin descriptions / no tags with suggestions) | [AURA_CAMPUS_KNOWLEDGE_HUB.md](AURA_CAMPUS_KNOWLEDGE_HUB.md) §15 (KH-5) | Claude-buildable; descoped from KH-5 v1 | Future KH iteration | 🟢 | 🔲 |
+| KH5-4 | Full-document summarization (extract PDF/DOCX text → summarize) — KH-5 v1 summarizes from metadata | [AURA_CAMPUS_KNOWLEDGE_HUB.md](AURA_CAMPUS_KNOWLEDGE_HUB.md) §11 | Needs a text-extraction pipeline (pdf/docx parsing) | Future KH iteration | 🟢 | 🔲 |
+
 ---
 
 ## ✅ Cleared items

@@ -36,6 +36,8 @@ export type KnowledgeResource = {
   download_count: number;
   rating_count: number;
   rating_sum: number;
+  ai_summary: string | null;
+  ai_summary_generated_at: string | null;
   created_at: string;
   updated_at: string;
   departments?: { name: string } | null;

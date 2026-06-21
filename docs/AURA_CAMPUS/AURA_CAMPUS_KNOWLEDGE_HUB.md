@@ -955,16 +955,16 @@ Phase 6 completes ──► Phase 7 completes ──► Phase 7X (Knowledge Hub)
 
 **In the Progress Tracker:**
 ```
-Phase 7X  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  0%  (0/5 — KH-1 through KH-5 Planned)
+Phase 7X  ██████████████████████████████  100% (5/5 — KH-1 through KH-5 ✅; semantic-search/pgvector deferred)
 ```
 
 **In the Feature Table:**
 ```
-| 🔲 Phase 7X-KH1 | Knowledge Hub — Basic Repository (Upload, Categorize, Permissions) | Planned | — |
-| 🔲 Phase 7X-KH2 | Knowledge Hub — Search & Discovery (Full-text, Filters, Browse) | Planned | — |
-| 🔲 Phase 7X-KH3 | Knowledge Hub — Collaboration (Ratings, Bookmarks, Collections) | Planned | — |
-| 🔲 Phase 7X-KH4 | Knowledge Hub — Analytics (Usage metrics, Dept insights, Gaps) | Planned | — |
-| 🔲 Phase 7X-KH5 | Knowledge Hub — AI Layer (Semantic search, AI summaries, Knowledge Assistant) | Planned | — |
+| ✅ Phase 7X-KH1 | Knowledge Hub — Basic Repository (Upload, Categorize, Permissions) | Complete | 20260705000000 |
+| ✅ Phase 7X-KH2 | Knowledge Hub — Search & Discovery (Full-text, Filters, Browse) | Complete | 20260706000000 |
+| ✅ Phase 7X-KH3 | Knowledge Hub — Collaboration (Ratings, Bookmarks, Collections) | Complete | 20260707000000 |
+| ✅ Phase 7X-KH4 | Knowledge Hub — Analytics (Usage metrics, Dept insights, Gaps) | Complete | 1987c4c |
+| ✅ Phase 7X-KH5 | Knowledge Hub — AI Layer (AI summaries + RAG Knowledge Assistant; semantic search deferred) | Complete | 20260708000000 |
 ```
 
 ---
@@ -1116,8 +1116,9 @@ Phase 7X  ░░░░░░░░░░░░░░░░░░░░░░░�
 | Super Admin / SaaS Platform (Phase 7) | 🔲 Pending | Multi-tenancy maturity; per-institution feature gating |
 | IQAC / NAAC Compliance (7F) | 🔲 Pending | NAAC criterion taxonomy needed before organizing accreditation content |
 | Mobile Ecosystem (Phase 8) | 🔲 Pending | Mobile-accessible knowledge access patterns |
-| pgvector on Supabase | 🔲 Pending | Required for KH-5 semantic search only |
-| Claude API key | 🔲 Pending | Required for KH-5 AI summaries and Knowledge Assistant |
+| pgvector on Supabase | ✅ Enabled (v0.8.0, `extensions` schema) | Ready for semantic-search embeddings once an embedding provider (e.g. Voyage AI) is configured |
+| Claude API key | ✅ Configured (`ANTHROPIC_API_KEY`) | Powers KH-5 AI summaries + Knowledge Assistant. **Account must hold credit** — the key authenticates but live calls 400 with "credit balance too low" until credits are purchased |
+| Embedding provider (semantic search) | 🔲 Pending | Claude is generative-only; pure pgvector semantic search needs a separate embedding model (Voyage AI / OpenAI). KH-5 Assistant retrieves over full-text search until then |
 
 ### Implementation Stages
 
@@ -1127,7 +1128,7 @@ Phase 7X  ░░░░░░░░░░░░░░░░░░░░░░░�
 | KH-2 | Search & Discovery (Full-text, Filters, Browse) | ✅ Complete — `20260706000000` (trigger-maintained `tsvector` + GIN; server-side `searchResources`; facets type/dept/year/NAAC/tag; tag cloud; discovery widgets Most-Downloaded + From-Your-Department; zero-results) |
 | KH-3 | Collaboration (Ratings, Bookmarks, Collections) | ✅ Complete — `20260707000000` (1–5 star ratings w/ trigger-maintained aggregate; personal bookmarks + Saved filter; curated collections create/add/remove/delete + filter; averageRating/relatedResources helpers). Comments, share-links, download-milestone alerts deferred |
 | KH-4 | Analytics (Usage metrics, Dept insights, KH score) | ✅ Complete — analytics dashboard (admin/HOD): upload trend, by category/department, top contributors, Knowledge Health Score (volume/diversity/currency/participation), faculty participation, NAAC coverage + gap alerts, CSV export; pure `knowledgeAnalytics.ts` (+8 tests). No schema change |
-| KH-5 | AI Layer (Semantic search, AI summaries, Knowledge Assistant) | 🔲 Planned |
+| KH-5 | AI Layer (Semantic search, AI summaries, Knowledge Assistant) | ✅ Complete — `20260708000000` (AI Summaries: Claude-generated abstracts, owner/admin-triggered; Knowledge Assistant: admin/HOD RAG over the KH-2 full-text index, Claude answers grounded in & citing documents, `knowledge_assistant_logs` audit; pure `knowledgeAI.ts` +8 tests). **Semantic search (pgvector embeddings) deferred** — needs an embedding provider (Anthropic's API is generative-only); pgvector 0.8.0 is enabled and ready. Live AI requires Anthropic account credit |
 
 ### Strategic Notes
 
