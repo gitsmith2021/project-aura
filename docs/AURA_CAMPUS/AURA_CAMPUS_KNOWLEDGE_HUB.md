@@ -1126,7 +1126,7 @@ Phase 7X  ░░░░░░░░░░░░░░░░░░░░░░░�
 | KH-1 | Basic Repository (Upload, Categorize, Permissions) | ✅ Complete — `20260705000000` (`knowledge_resources` + 3-tier RLS + `knowledge-hub` bucket; lib+12 tests; upload drawer + filtered list + download/publish/archive/delete; admin/HOD surface) |
 | KH-2 | Search & Discovery (Full-text, Filters, Browse) | ✅ Complete — `20260706000000` (trigger-maintained `tsvector` + GIN; server-side `searchResources`; facets type/dept/year/NAAC/tag; tag cloud; discovery widgets Most-Downloaded + From-Your-Department; zero-results) |
 | KH-3 | Collaboration (Ratings, Bookmarks, Collections) | ✅ Complete — `20260707000000` (1–5 star ratings w/ trigger-maintained aggregate; personal bookmarks + Saved filter; curated collections create/add/remove/delete + filter; averageRating/relatedResources helpers). Comments, share-links, download-milestone alerts deferred |
-| KH-4 | Analytics (Usage metrics, Dept insights, KH score) | 🔲 Planned |
+| KH-4 | Analytics (Usage metrics, Dept insights, KH score) | ✅ Complete — analytics dashboard (admin/HOD): upload trend, by category/department, top contributors, Knowledge Health Score (volume/diversity/currency/participation), faculty participation, NAAC coverage + gap alerts, CSV export; pure `knowledgeAnalytics.ts` (+8 tests). No schema change |
 | KH-5 | AI Layer (Semantic search, AI summaries, Knowledge Assistant) | 🔲 Planned |
 
 ### Strategic Notes
