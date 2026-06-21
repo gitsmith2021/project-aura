@@ -3,6 +3,7 @@ import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { Card, Loading, ErrorNote, StatCard } from "@/components/ui";
+import { ParentFees } from "@/screens/parent/ParentFees";
 import { colors, spacing, inr } from "@/lib/theme";
 
 type Payment = {
@@ -19,9 +20,15 @@ const STATUS_COLOR: Record<string, string> = {
   completed: colors.emerald, pending: colors.amber, failed: colors.rose, refunded: colors.textMuted,
 };
 
-// Student fees — own payments (RLS scopes to the student).
+// Role-adaptive: parents see their child's fee demands; students see own payments.
 export default function Fees() {
   const { identity } = useAuth();
+  if (identity?.tier === "parent") return <ParentFees />;
+  return <StudentFees studentId={identity?.studentId ?? ""} />;
+}
+
+// Student fees — own payments (RLS scopes to the student).
+function StudentFees({ studentId }: { studentId: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -32,7 +39,7 @@ export default function Fees() {
         const { data, error } = await supabase
           .from("fee_payments")
           .select("id, amount_paid, payment_status, payment_mode, paid_at, created_at, receipt_number")
-          .eq("student_id", identity?.studentId ?? "")
+          .eq("student_id", studentId)
           .order("created_at", { ascending: false });
         if (error) throw error;
         setPayments((data ?? []) as Payment[]);
@@ -42,7 +49,7 @@ export default function Fees() {
         setLoading(false);
       }
     })();
-  }, [identity?.studentId]);
+  }, [studentId]);
 
   if (loading) return <Loading />;
 

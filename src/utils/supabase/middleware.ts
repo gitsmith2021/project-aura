@@ -33,6 +33,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Parent mobile API (Phase 8F) authenticates via a Bearer token, not cookies,
+  // so it must skip the cookie-session redirect to /login.
+  if (pathname.startsWith("/api/parent")) {
+    return NextResponse.next();
+  }
+
   // Forward pathname so server layouts can read it via headers()
   const forwardedHeaders = new Headers(request.headers);
   forwardedHeaders.set("x-pathname", pathname);

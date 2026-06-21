@@ -2,6 +2,7 @@ import { Tabs, Redirect } from "expo-router";
 import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/context/AuthContext";
+import { ParentChildProvider } from "@/context/ParentChildContext";
 import { colors } from "@/lib/theme";
 
 // Authed group as role-adaptive bottom tabs. Every role gets Home + Account;
@@ -30,13 +31,17 @@ export default function AppLayout() {
   const isStudent = tier === "student";
   const isStaff = tier === "staff";
   const isAdminOrHod = tier === "admin" || tier === "hod";
+  const isParent = tier === "parent";
 
   // `href: null` removes a tab from the bar for roles that shouldn't see it.
-  const studentOnly = isStudent ? undefined : null;
   const staffOnly = isStaff ? undefined : null;
   const adminOnly = isAdminOrHod ? undefined : null;
+  const parentOnly = isParent ? undefined : null;
+  // Attendance + Fees are shared by students (own data) and parents (child data).
+  const studentOrParent = isStudent || isParent ? undefined : null;
 
   return (
+    <ParentChildProvider>
     <Tabs
       screenOptions={{
         headerStyle: { backgroundColor: colors.violet },
@@ -60,7 +65,7 @@ export default function AppLayout() {
         name="attendance"
         options={{
           title: "Attendance",
-          href: studentOnly,
+          href: studentOrParent,
           tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-done-outline" color={color} size={size} />,
         }}
       />
@@ -68,8 +73,16 @@ export default function AppLayout() {
         name="fees"
         options={{
           title: "Fees",
-          href: studentOnly,
+          href: studentOrParent,
           tabBarIcon: ({ color, size }) => <Ionicons name="wallet-outline" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="results"
+        options={{
+          title: "Results",
+          href: parentOnly,
+          tabBarIcon: ({ color, size }) => <Ionicons name="school-outline" color={color} size={size} />,
         }}
       />
       <Tabs.Screen
@@ -112,6 +125,7 @@ export default function AppLayout() {
         }}
       />
     </Tabs>
+    </ParentChildProvider>
   );
 }
 

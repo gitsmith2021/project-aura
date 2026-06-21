@@ -1,52 +1,45 @@
 import { useEffect, useState } from "react";
 import { ScrollView, View, Text, StyleSheet } from "react-native";
-import { supabase } from "@/lib/supabase";
-import { useAuth } from "@/context/AuthContext";
-import { Card, Loading, ErrorNote, StatCard } from "@/components/ui";
-import { ParentAttendance } from "@/screens/parent/ParentAttendance";
+import { Card, StatCard, Loading, ErrorNote } from "@/components/ui";
+import { ChildSwitcher } from "@/components/ChildSwitcher";
+import { useParentChild } from "@/context/ParentChildContext";
+import { parentApi, type ChildAttendanceRow } from "@/lib/parentApi";
 import { colors, spacing } from "@/lib/theme";
 
-type Row = { status: string; class_schedules: { subject_name: string | null } | null };
-
-// Role-adaptive: parents see their child's attendance; students see their own.
-export default function Attendance() {
-  const { identity } = useAuth();
-  if (identity?.tier === "parent") return <ParentAttendance />;
-  return <StudentAttendance studentId={identity?.studentId ?? ""} />;
-}
-
-// Student attendance — reads own rows (RLS: attendance.student_id = auth.uid()).
-function StudentAttendance({ studentId }: { studentId: string }) {
+// Phase 8F — child attendance, subject-wise (parent view).
+export function ParentAttendance() {
+  const { selected } = useParentChild();
+  const studentId = selected?.studentId;
+  const [rows, setRows] = useState<ChildAttendanceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [rows, setRows] = useState<Row[]>([]);
 
   useEffect(() => {
+    if (!studentId) { setLoading(false); return; }
+    let active = true;
+    setLoading(true);
     (async () => {
       try {
-        const { data, error } = await supabase
-          .from("attendance")
-          .select("status, class_schedules(subject_name)")
-          .eq("student_id", studentId);
-        if (error) throw error;
-        setRows((data ?? []) as unknown as Row[]);
+        const data = await parentApi.attendance(studentId);
+        if (active) setRows(data);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Could not load attendance.");
+        if (active) setError(e instanceof Error ? e.message : "Could not load attendance.");
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     })();
+    return () => { active = false; };
   }, [studentId]);
 
   if (loading) return <Loading />;
+  if (!selected) return <ScrollView contentContainerStyle={styles.scroll}><Card><Text style={styles.empty}>No child linked.</Text></Card></ScrollView>;
 
   const present = rows.filter((r) => r.status === "present" || r.status === "late").length;
   const total = rows.length;
   const pct = total > 0 ? Math.round((present / total) * 100) : null;
 
-  // Subject-wise rollup
   const bySubject = rows.reduce<Record<string, { present: number; total: number }>>((acc, r) => {
-    const name = r.class_schedules?.subject_name ?? "General";
+    const name = r.subject ?? "General";
     acc[name] = acc[name] ?? { present: 0, total: 0 };
     acc[name].total += 1;
     if (r.status === "present" || r.status === "late") acc[name].present += 1;
@@ -55,9 +48,10 @@ function StudentAttendance({ studentId }: { studentId: string }) {
 
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
+      <ChildSwitcher />
       {error ? <ErrorNote message={error} /> : null}
       <View style={{ flexDirection: "row", marginBottom: spacing.md }}>
-        <StatCard label="Overall" value={pct == null ? "—" : `${pct}%`} accent={colors.emerald} />
+        <StatCard label="Overall" value={pct == null ? "—" : `${pct}%`} accent={pct != null && pct < 75 ? colors.rose : colors.emerald} />
         <View style={{ width: spacing.md }} />
         <StatCard label="Sessions" value={String(total)} />
       </View>

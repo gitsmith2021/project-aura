@@ -18,6 +18,8 @@ export type Identity = {
   staffId: string | null;
   /** students.id (== auth uid) when the user is a student, else null. */
   studentId: string | null;
+  /** parents.id when the user is a parent (resolved from `parents`), else null. */
+  parentId: string | null;
 };
 
 type AuthState = {
@@ -32,23 +34,28 @@ type AuthState = {
 const AuthCtx = createContext<AuthState | undefined>(undefined);
 
 async function resolveIdentity(userId: string, email: string | undefined): Promise<Identity> {
-  const [{ data: member }, { data: staffRow }, { data: studentRow }] = await Promise.all([
+  const [{ data: member }, { data: staffRow }, { data: studentRow }, { data: parentRow }] = await Promise.all([
     supabase.from("institution_members").select("role, institution_id, department_id").eq("profile_id", userId).maybeSingle(),
     supabase.from("staff").select("id, institution_id, department_id, full_name").eq("profile_id", userId).eq("is_active", true).maybeSingle(),
     supabase.from("students").select("id, institution_id, department_id, full_name").eq("id", userId).maybeSingle(),
+    supabase.from("parents").select("id, institution_id, name").eq("user_id", userId).maybeSingle(),
   ]);
 
   const role = (member?.role as MemberRole | undefined)
     ?? (staffRow ? "STAFF" : studentRow ? "STUDENT" : null);
 
+  // A parent has no institution_members/staff/student row — resolve them last.
+  const isParent = !role && !!parentRow;
+
   return {
     role,
-    tier: tierForRole(role),
-    institutionId: member?.institution_id ?? staffRow?.institution_id ?? studentRow?.institution_id ?? null,
+    tier: isParent ? "parent" : tierForRole(role),
+    institutionId: member?.institution_id ?? staffRow?.institution_id ?? studentRow?.institution_id ?? parentRow?.institution_id ?? null,
     departmentId: member?.department_id ?? staffRow?.department_id ?? studentRow?.department_id ?? null,
-    fullName: staffRow?.full_name ?? studentRow?.full_name ?? email ?? null,
+    fullName: staffRow?.full_name ?? studentRow?.full_name ?? parentRow?.name ?? email ?? null,
     staffId: staffRow?.id ?? null,
     studentId: studentRow?.id ?? null,
+    parentId: parentRow?.id ?? null,
   };
 }
 
@@ -67,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       setIdentity({
         role: null, tier: "student", institutionId: null, departmentId: null,
-        fullName: s.user.email ?? null, staffId: null, studentId: null,
+        fullName: s.user.email ?? null, staffId: null, studentId: null, parentId: null,
       });
     }
   }, []);
