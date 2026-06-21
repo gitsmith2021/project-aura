@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   BrainCircuit, Plus, Search, Download, ExternalLink, Trash2, Eye, EyeOff, Archive,
-  TrendingUp, Building2, X, Loader2, Bookmark, BookmarkCheck, FolderPlus, Folder, BarChart3,
+  TrendingUp, Building2, X, Loader2, Bookmark, BookmarkCheck, FolderPlus, Folder, BarChart3, Sparkles,
 } from "lucide-react";
 import {
   KH_CATEGORIES, contentTypesFor, matchesFilters, hasActiveFacets, categoryLabel,
@@ -18,8 +18,10 @@ import {
   deleteCollection, setCollectionItem,
   type KnowledgeResource, type Collection,
 } from "@/actions/knowledgeHub";
+import { generateResourceSummary } from "@/actions/knowledgeAI";
 import { UploadResourceDrawer } from "./UploadResourceDrawer";
 import { AddToCollectionDrawer } from "./AddToCollectionDrawer";
+import { KnowledgeAssistantDrawer } from "./KnowledgeAssistantDrawer";
 import { StarRating } from "./StarRating";
 
 type Props = {
@@ -47,6 +49,7 @@ export function KnowledgeHubManager({ institutionId, initial, departments, isAdm
   const [savedOnly, setSavedOnly] = useState(false);
   const [activeCollection, setActiveCollection] = useState<string | null>(null);
   const [pickerResource, setPickerResource] = useState<KnowledgeResource | null>(null);
+  const [summarizing, setSummarizing] = useState<string | null>(null);
 
   // Search + facets
   const [query, setQuery] = useState("");
@@ -110,6 +113,14 @@ export function KnowledgeHubManager({ institutionId, initial, departments, isAdm
   const myCollections = useMemo(() => collections.filter((c) => c.owner_id === currentUserId), [collections, currentUserId]);
 
   const canManage = (r: KnowledgeResource) => isAdmin || (!!currentStaffId && r.uploaded_by === currentStaffId);
+
+  const summarize = async (r: KnowledgeResource) => {
+    setSummarizing(r.id);
+    const res = await generateResourceSummary(r.id);
+    setSummarizing(null);
+    if (res.success) applyLocal((list) => list.map((x) => (x.id === r.id ? { ...x, ai_summary: res.data.summary } : x)));
+    else alert(res.error);
+  };
 
   const open = (r: KnowledgeResource) => {
     const url = isLinkResource(r) ? r.external_url : r.file_url;
@@ -181,6 +192,16 @@ export function KnowledgeHubManager({ institutionId, initial, departments, isAdm
       </div>
       <h3 className="mt-2 text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug line-clamp-2">{r.title}</h3>
       {r.description && <p className="mt-1 text-xs text-slate-500 line-clamp-2">{r.description}</p>}
+      {r.ai_summary ? (
+        <div className="mt-1.5 rounded-lg bg-violet-50/60 dark:bg-violet-950/20 border border-violet-100 dark:border-violet-900/40 p-2">
+          <p className="flex items-center gap-1 text-[10px] font-bold text-violet-600 uppercase tracking-wide"><Sparkles size={11} /> AI Summary</p>
+          <p className="mt-0.5 text-[11px] text-slate-600 dark:text-slate-300 line-clamp-3">{r.ai_summary}</p>
+        </div>
+      ) : canManage(r) ? (
+        <button onClick={() => summarize(r)} disabled={summarizing === r.id} className="mt-1.5 inline-flex items-center gap-1 self-start text-[11px] font-semibold text-violet-600 hover:text-violet-700 disabled:opacity-50">
+          {summarizing === r.id ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />} {summarizing === r.id ? "Generating…" : "Generate AI summary"}
+        </button>
+      ) : null}
       <div className="mt-2 flex flex-wrap gap-1">
         <span className="text-[10px] text-slate-500 bg-slate-50 dark:bg-slate-800 rounded px-1.5 py-0.5">{categoryLabel(r.category)} · {contentTypeLabel(r.content_type)}</span>
         <span className="text-[10px] text-slate-400 bg-slate-50 dark:bg-slate-800 rounded px-1.5 py-0.5">{visibilityLabel(r.visibility)}</span>
@@ -313,6 +334,7 @@ export function KnowledgeHubManager({ institutionId, initial, departments, isAdm
         onCreate={newCollection}
         onClose={() => setPickerResource(null)}
       />
+      {isAdmin && <KnowledgeAssistantDrawer institutionId={institutionId} />}
     </div>
   );
 }
