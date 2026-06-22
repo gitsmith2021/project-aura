@@ -13,7 +13,7 @@ How code reaches production for AURA Campus, and the gates it passes on the way.
 
 ## CI — `ci.yml`
 
-Triggers on every push to `main` and every pull request. Two independent jobs:
+Triggers on every push to `main` and every pull request. Three jobs:
 
 ### `quality`
 - `npm ci` on Node 22 (npm cache enabled)
@@ -56,6 +56,28 @@ the safety net that stops a broken migration from ever reaching the remote DB.
 > `pg_dump --schema-only --no-owner --schema=public --schema=private "<db-url>"`
 > and re-apply that stripping.
 
+### `e2e` (Arch A2 — authenticated Playwright suite)
+Seeds the namespaced e2e tenants and runs the `authed` Playwright project against
+the **built** app (`npm run start`):
+- `npm run seed:e2e` — idempotent, service-role seeder → `.auth/seed-manifest.json`
+- `npx playwright test --project=authed` → **setup** (per-role `storageState`) →
+  **route-crawl** (all 230 routes × owner role) → **critical flows** (5) →
+  **cross-role denial** (27) → **institution isolation** (RLS/IDOR)
+- On failure the Playwright HTML report is uploaded as an artifact.
+
+**Secret-gated.** The first step checks for the Supabase secrets; if any are
+missing the job exits **green (skipped)** so it never blocks a merge before CI is
+configured. Once the secrets exist it runs the full suite. After confirming it's
+green, add **`Authenticated e2e (...)`** to the required status checks on `main`.
+
+> **Tradeoff (documented):** the e2e job currently runs against the **remote**
+> Supabase project (the app's single DB), so each run writes the namespaced,
+> idempotent `@e2e.aura.test` / `e2e-college-*` seed data there. This matches the
+> environment the suite was validated against. A future hardening is to run the
+> suite against an ephemeral local Supabase stack (as the `migrations` job does)
+> so CI never touches the shared project — deferred until a dedicated test project
+> or branch DB is set up.
+
 ## Setup status (outside the repo)
 
 ### 1. Branch protection on `main` — ✅ **configured (2026-06-20)**
@@ -82,6 +104,17 @@ Applied via the GitHub API. Current rule:
 For the weekly backup workflow:
 - `SUPABASE_DB_URL` — direct Postgres connection string (Dashboard → Settings → Database)
 - `BACKUP_ENCRYPTION_KEY` — long random passphrase (`openssl rand -base64 32`); keep a copy **outside** GitHub or backups are unrecoverable
+
+For the `e2e` job (Arch A2) — until these are set, the job skips green:
+- **Required to activate the gate:** `SUPABASE_SERVICE_ROLE_KEY`,
+  `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- **Recommended (so pages don't crash mid-crawl):** `NEXT_PUBLIC_RAZORPAY_KEY_ID`,
+  `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`,
+  `ANTHROPIC_API_KEY`, `SCHEDULER_API_URL`
+
+These are the same values already in `.env.local` / Vercel — copy them into the
+Actions secrets. After the `e2e` check goes green on a PR, mark it a required
+status check on `main`.
 
 ## Database migrations to production
 

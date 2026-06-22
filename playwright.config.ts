@@ -29,9 +29,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
+    // CI runs the built app (`npm run build` happens in the e2e job first) so the
+    // 230-route crawl isn't paying a dev-mode on-demand compile per route; locally
+    // we reuse a running `npm run dev` if present, else start one.
+    command: process.env.CI ? "npm run start" : "npm run dev",
     url: "http://localhost:3000",
-    reuseExistingServer: true,
-    timeout: 120_000,
+    reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
   },
 });

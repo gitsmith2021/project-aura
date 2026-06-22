@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-22 · **Execution start:** Track 2 (Arch A2) underway — **Steps 1–5 complete** (route-crawl green, 0 skipped; 5/5 critical flows green; 27 cross-role denials green; **institution isolation verified clean — no leak**; **4 production/security issues found & fixed**)
+> **Last updated:** 2026-06-22 · **Execution start:** Track 2 (Arch A2) underway — **Steps 1–5 complete + Step 6 wired** (route-crawl green, 0 skipped; 5/5 critical flows green; 27 cross-role denials green; **institution isolation verified clean — no leak**; e2e now in CI (secret-gated); **4 production/security issues found & fixed**)
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -59,7 +59,7 @@ P6 Parent self-link OTP (blocked on 3C SMS) · P7 CCTV (hardware/infra add-on).
 | **Step 3** | Critical user-flow e2e — admissions, fees, leave, exams, knowledge hub | ✅ | Step 1 | **100%** | **5/5 flows pass** (1 production bug found & fixed) |
 | **Step 4** | Cross-role negative auth — wrong role denied (not 200) | ✅ | Step 1 | **100%** | **27 cross-role denials green** (1 security gap found & fixed) |
 | **Step 5** | **Institution isolation** — tenant A cannot read tenant B via HTTP/API | ✅ | Step 1 | **100%** | **Isolation holds — 0 leaks** (4 RLS/IDOR checks green) |
-| **Step 6** | Wire e2e into `ci.yml` (seed → run) as a required check | 🔲 | Steps 2–5 | 0% | +2–3 days after S5 |
+| **Step 6** | Wire e2e into `ci.yml` (seed → run) as a required check | 🟡 | Steps 2–5 | **90%** | **Wired (secret-gated)** — activates once owner adds CI secrets + marks required |
 | **Step 7** | Action-wiring coverage — top ~20 money/grade/enrollment/access actions | 🔲 | Step 1 | 0% | +3–5 days |
 
 **Definition of Done:** all 230 routes crawl green under auth · 5 critical flows
@@ -143,7 +143,19 @@ own-tenant reads stay non-empty (so RLS isn't blanket-denying), plus a **direct-
 **Result: isolation HOLDS — no leak found** (4/4 checks green). This is the single
 most important multi-tenant guarantee and the hardest part of the release gate.
 
-**Track 2 completion: ~85%** (unit ✅; fixtures ✅; route-crawl ✅; 5 flows ✅; cross-role ✅; **isolation ✅**; CI-wiring + action-coverage pending)
+**Step 6 delivered (2026-06-22):** added the **`e2e` job** to `.github/workflows/ci.yml`
+— seeds the namespaced tenants then runs the `authed` Playwright project (setup →
+route-crawl → flows → cross-role → isolation) against the **built** app
+(`playwright.config.ts` is now CI-aware: `npm run start` + 1 retry). The job is
+**secret-gated**: a first step checks for the Supabase secrets and, if absent, exits
+**green (skipped)** so it never blocks a merge before CI is configured. Required
+secrets + the "runs against remote DB; local-stack hardening is future" tradeoff are
+documented in `docs/ci-cd.md`. **Owner action (B4):** add the secrets in repo
+Settings → Actions, confirm the job goes green, then mark **Authenticated e2e** a
+required status check on `main` — that makes Steps 2–5 a permanent enforced gate
+(and the institution-isolation guarantee continuous).
+
+**Track 2 completion: ~92%** (unit ✅; fixtures ✅; route-crawl ✅; 5 flows ✅; cross-role ✅; isolation ✅; **CI-wired (gated) 🟡**; action-coverage pending)
 
 ---
 
@@ -172,12 +184,12 @@ most important multi-tenant guarantee and the hardest part of the release gate.
 
 > Update this block every week. Percentages are toward the **v1.0 line**, not raw feature counts.
 
-### Completion snapshot — Week 0 (2026-06-22) · A2 Steps 1–5 ✅
+### Completion snapshot — Week 0 (2026-06-22) · A2 Steps 1–5 ✅ · Step 6 wired 🟡
 
 ```
-Overall v1.0   ██████████░░░░░░░░░░░░░░░░░░░░  ~35%
+Overall v1.0   ███████████░░░░░░░░░░░░░░░░░░░  ~37%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
-  Track 2  Arch A2 (gate)    ██████████████████░░░░  ~85%  (Steps 1–5/7 ✅ · route-crawl + 5 flows + 27 cross-role + isolation green)
+  Track 2  Arch A2 (gate)    ███████████████████░░░  ~92%  (Steps 1–5 ✅ · Step 6 wired 🟡 · only action-coverage left)
   Track 3  Phase 9 (P1 focus) █░░░░░░░░░░░░░░░░░░░░░░  ~3%
 ```
 
@@ -200,6 +212,7 @@ Overall v1.0   ██████████░░░░░░░░░░░�
 | B1 | Dev accounts (Apple/Google/EAS) not purchased | Phase 8 P0→all | Unassigned | Purchase to unblock all mobile natives |
 | B2 | Anthropic account has $0 credit | KH-5 AI live, 9B demo polish | Account owner | Add credit (console.anthropic.com → Billing) |
 | ~~B3~~ | ~~No seeded test tenant / role fixtures~~ | ~~A2 Steps 2–7, 9B demo~~ | — | ✅ **Resolved 2026-06-21** — `npm run seed:e2e` + `storageState` fixtures landed (A2 Step 1) |
+| B4 | CI secrets not set → e2e gate inactive (skips green) | A2 Step 6 enforcement | Repo owner | Add `SUPABASE_SERVICE_ROLE_KEY` + `NEXT_PUBLIC_SUPABASE_URL`/`ANON_KEY` (+ recommended runtime keys) in Settings → Actions, then mark **Authenticated e2e** a required check on `main` (see `docs/ci-cd.md`) |
 
 ### Risk Register
 
