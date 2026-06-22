@@ -96,10 +96,13 @@ under parallel load — and passes on the CI-standard single retry). HOD/role-bo
 access is deliberately deferred to Step 4 (canonical owner = INST_ADMIN is a strict
 superset for renderability).
 
-**Finding (logged, out of A2 scope):** `public.clubs` does not exist in the DB
-(dropped in the migration rebaseline `be1b9e4`), yet `src/actions/clubs.ts` still
-queries it — the Phase 4H clubs feature is silently broken (list shows empty, detail
-redirects to the list). Needs a follow-up migration to restore the table.
+**Finding (found by the crawl, now FIXED):** `public.clubs`, `club_members` and
+`club_activities` had been lost in the migration rebaseline (`be1b9e4`), yet
+`src/actions/clubs.ts` still queried them — the Phase 4H clubs feature was silently
+broken. Restored via `supabase/migrations/20260626000000_restore_clubs.sql`
+(schema reconstructed from clubs.ts + src/lib/clubs.ts, RLS mirroring the Phase 4
+`laboratories` pattern). Verified: all four clubs routes crawl green with a real
+seeded club rendering on the detail page; security advisors show no RLS gaps.
 
 **Track 2 completion: ~45%** (unit foundation ✅; auth fixtures ✅; full route-crawl green ✅; flows/isolation/CI pending)
 

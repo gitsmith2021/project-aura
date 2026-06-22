@@ -90,8 +90,6 @@ export function resolvePath(t, m) {
 
   // Straightforward entity ids from the seed manifest.
   const ids = {
-    // [clubId]: the `clubs` table is absent in the DB; the detail route redirects
-    // to the list (HTTP 200) for any id, so a uuid placeholder is sufficient.
     "[clubId]": m.clubAId ?? m.instA.id,
     "[subjectId]": m.subjectAId, "[componentId]": m.componentAId,
     "[incidentId]": m.incidentAId, "[grievanceId]": m.grievanceAId, "[formId]": m.formAId,

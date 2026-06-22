@@ -201,10 +201,7 @@ async function main() {
   ent.onlineExamAId = await seedOne("online_exams", { institution_id: A, title: "E2E Online Exam" }, { institution_id: A, title: "E2E Online Exam", status: "published", department_id: null, duration_minutes: 30 });
   ent.examSchedAId  = await seedOne("exam_schedules", { institution_id: A, subject_name: "E2E Exam Subject" }, { institution_id: A, department_id: D, subject_name: "E2E Exam Subject", exam_type: "internal", exam_date: "2026-12-01", start_time: "10:00", end_time: "13:00", semester: 1 });
   ent.componentAId  = await seedOne("cia_components", { institution_id: A, name: "E2E Component" }, { institution_id: A, department_id: D, subject_id: ent.subjectAId, name: "E2E Component", component_type: "unit_test", semester: 1 });
-  // NOTE: `public.clubs` does not exist in the DB (dropped in the migration
-  // rebaseline `be1b9e4`, though src/actions/clubs.ts still queries it). The
-  // clubs detail route redirects to the list for any id, so it's resolved to a
-  // uuid in route-map rather than seeded. Flagged as a separate finding.
+  ent.clubAId     = await seedOne("clubs", { institution_id: A, name: "E2E Club" }, { institution_id: A, name: "E2E Club", club_type: "cultural" });
   ent.hostelAId   = await seedOne("hostels", { institution_id: A, name: "E2E Hostel" }, { institution_id: A, name: "E2E Hostel", hostel_type: "boys" });
   ent.labAId      = await seedOne("laboratories", { institution_id: A, name: "E2E Lab" }, { institution_id: A, name: "E2E Lab", lab_type: "computer_science" });
   ent.incidentAId = await seedOne("disciplinary_incidents", { institution_id: A, description: "E2E incident" }, { institution_id: A, incident_type: "misconduct", incident_date: "2026-06-01", description: "E2E incident" });
