@@ -72,6 +72,16 @@ export async function updateSession(request: NextRequest) {
   const segs    = pathname.split("/");
   const instIdx = segs.indexOf("institutions");
   if (user && instIdx >= 0 && segs[instIdx + 1] && !UUID_RE.test(segs[instIdx + 1])) {
+    // /institutions/* is the admin-tier app. This slug→uuid rewrite returns
+    // early (below), which would skip the portal-role fences further down — so a
+    // portal role (student/staff/parent/alumni) reaching it via the *slug* URL
+    // would otherwise land on the admin shell. Apply the same fence here first.
+    const fenceRole = request.cookies.get("aura-role")?.value;
+    if (fenceRole === "student" || fenceRole === "staff" || fenceRole === "parent" || fenceRole === "alumni") {
+      const url = request.nextUrl.clone();
+      url.pathname = homePathFor(fenceRole);
+      return NextResponse.redirect(url);
+    }
     const { data: inst } = await supabase
       .from("institutions")
       .select("id")
