@@ -11,7 +11,6 @@ type Props = {
   month:         string;
   rows:          MonthlyStatutoryDeduction[];
   summary:       StatutorySummary;
-  onRefresh:     () => void;
 };
 
 function fmtINR(n: number) {
@@ -24,7 +23,7 @@ function monthLabel(m: string) {
   return d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 }
 
-export function StatutoryDeductionTable({ institutionId, month, rows, summary, onRefresh }: Props) {
+export function StatutoryDeductionTable({ institutionId, month, rows, summary }: Props) {
   const router = useRouter();
   const [running, setRunning] = useState(false);
   const [runMsg,  setRunMsg]  = useState<string | null>(null);
@@ -37,7 +36,6 @@ export function StatutoryDeductionTable({ institutionId, month, rows, summary, o
     if (!res.success) { setRunErr(res.error); return; }
     const { computed, skipped, alreadyRun } = res.data;
     setRunMsg(`Computed ${computed} records. ${alreadyRun} already ran. ${skipped} daily-wage skipped.`);
-    onRefresh();
     router.refresh();
   };
 

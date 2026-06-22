@@ -109,7 +109,6 @@ export default async function StatutoryPayrollPage({ params, searchParams }: Pag
           month={currentMonth}
           rows={deductionsResult.success ? deductionsResult.data : []}
           summary={summaryResult.success ? summaryResult.data : EMPTY_SUMMARY}
-          onRefresh={() => {}}
         />
       </div>
     </DashboardLayout>

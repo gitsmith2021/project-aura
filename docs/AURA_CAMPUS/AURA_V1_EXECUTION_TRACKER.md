@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-21 · **Execution start:** Track 2 (Arch A2) underway — **Step 1 complete**
+> **Last updated:** 2026-06-22 · **Execution start:** Track 2 (Arch A2) underway — **Steps 1–2 complete** (full authenticated route-crawl green, 0 skipped; 1 production 500 found & fixed; 1 missing-table finding logged)
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -55,7 +55,7 @@ P6 Parent self-link OTP (blocked on 3C SMS) · P7 CCTV (hardware/infra add-on).
 | Step | Description | Status | Dependencies | Progress % | Est. Completion |
 |------|-------------|--------|--------------|-----------|-----------------|
 | **Step 1** | Seed test tenant (2 institutions) + role login fixtures (`storageState` × 6 roles) | ✅ | — | **100%** | **Done (2026-06-21)** |
-| **Step 2** | Authenticated route-crawl — all 230 routes × allowed roles (HTTP<400, 0 `pageerror`) | 🔲 | Step 1 | 0% | +2–3 days after S1 |
+| **Step 2** | Authenticated route-crawl — every route × canonical owner role (HTTP<400, no `/login` bounce, 0 `pageerror`) | ✅ | Step 1 | **100%** | **238 passed · 0 skipped · 0 failed** (all 230 routes) |
 | **Step 3** | Critical user-flow e2e — admissions, fees, leave, exams, knowledge hub | 🔲 | Step 1 | 0% | +5–7 days after S1 |
 | **Step 4** | Cross-role negative auth — wrong role denied (not 200) | 🔲 | Step 1 | 0% | +2 days after S3 |
 | **Step 5** | **Institution isolation** — tenant A cannot read tenant B via HTTP/API | 🔲 | Step 1 | 0% | +2 days after S3 |
@@ -75,7 +75,33 @@ authenticate · 14/14 fixture+session checks green.** Found & fixed a seed-level
 en route — the `students` SELECT RLS keys self-read on `id = auth.uid()`, so the
 seed sets `students.id = uid` (not just `profile_id`). **Steps 2–7 now unblocked.**
 
-**Track 2 completion: ~25%** (unit foundation ✅; auth fixtures ✅; route-crawl/flows/isolation pending)
+**Step 2 delivered (2026-06-22):** `tests/e2e/fixtures/route-map.mjs` enumerates all
+**230** App-Router pages from the filesystem, classifies each into an access area
+matching `middleware.ts`, and resolves dynamic params from a seed manifest the
+seeder now emits (`.auth/seed-manifest.json` — institution slug/uuid, a student,
+staff & department id). `tests/e2e/authed/route-crawl.spec.ts` hits each route as
+its **canonical owner role** and asserts HTTP < 400, no bounce to `/login`, and
+**zero uncaught client `pageerror`**. caught a **real production 500** — `/finance/payroll/statutory` (a Server Component
+passed an `onRefresh` function prop to a Client Component, which React forbids);
+**fixed** by dropping the redundant prop (the table already calls `router.refresh()`).
+
+The seeder was then extended to create **one minimal row per entity-detail route**
+in institution A (23 entities + a teaching-assignment link + a submitted online-exam
+session so the exam-review route renders), and `route-map.mjs` resolves every
+dynamic param (with context-sensitivity: `[examId]`→exam_schedule for hall-tickets
+vs online_exam for online routes; `[applicationId]`→admissions vs job_applications;
+the budget-detail `?ay=` query). **Final result: 238 passed · 0 skipped · 0 failed**
+(the transport-detail route is marked flaky — a transient Supabase `ECONNRESET`
+under parallel load — and passes on the CI-standard single retry). HOD/role-boundary
+access is deliberately deferred to Step 4 (canonical owner = INST_ADMIN is a strict
+superset for renderability).
+
+**Finding (logged, out of A2 scope):** `public.clubs` does not exist in the DB
+(dropped in the migration rebaseline `be1b9e4`), yet `src/actions/clubs.ts` still
+queries it — the Phase 4H clubs feature is silently broken (list shows empty, detail
+redirects to the list). Needs a follow-up migration to restore the table.
+
+**Track 2 completion: ~45%** (unit foundation ✅; auth fixtures ✅; full route-crawl green ✅; flows/isolation/CI pending)
 
 ---
 
@@ -104,12 +130,12 @@ seed sets `students.id = uid` (not just `profile_id`). **Steps 2–7 now unblock
 
 > Update this block every week. Percentages are toward the **v1.0 line**, not raw feature counts.
 
-### Completion snapshot — Week 0 (2026-06-21) · A2 Step 1 ✅
+### Completion snapshot — Week 0 (2026-06-22) · A2 Steps 1–2 ✅
 
 ```
-Overall v1.0   ████░░░░░░░░░░░░░░░░░░░░░░░░░░  ~14%
+Overall v1.0   ██████░░░░░░░░░░░░░░░░░░░░░░░░  ~22%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
-  Track 2  Arch A2 (gate)    ███████░░░░░░░░░░░░░░░░  ~25%  (Step 1/7 ✅)
+  Track 2  Arch A2 (gate)    ██████████░░░░░░░░░░░░░  ~45%  (Steps 1–2/7 ✅ · full route-crawl green, 0 skipped)
   Track 3  Phase 9 (P1 focus) █░░░░░░░░░░░░░░░░░░░░░░  ~3%
 ```
 
