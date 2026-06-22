@@ -51,6 +51,10 @@ Check they're installed (any terminal):
        RESEND_API_KEY=...
        EMAIL_FROM=...
 
+   IMPORTANT: NEXT_PUBLIC_SUPABASE_URL is a web address that looks like
+   https://xxxxxxxx.supabase.co  — it is NOT a key. Pasting a key (a long
+   "eyJ..." string) here makes every page show an error.
+
 4) Start the website:
        npm run dev
 
@@ -147,17 +151,52 @@ IMPORTANT: Your phone and your computer must be on the SAME Wi-Fi network.
 
 
 ==================================================================
+ PART 4 — TESTS  (optional, for developers only)
+==================================================================
+ Only needed if you're a developer checking the app before shipping.
+ Skip this entirely if you're just using Aura.
+
+ Quick unit tests (fast, no setup):
+       npm test
+
+ Full browser tests (the "route crawl" — logs in as every role and opens
+ every page). These need the test accounts AND the built app running:
+
+   1) Create the test accounts + sample data (safe to re-run):
+          npm run seed:e2e
+
+   2) Build and start the app in ONE terminal:
+          npm run build
+          npm run start
+
+   3) In a SECOND terminal, run the browser crawl:
+          npm run test:e2e -- --project=authed
+
+   Notes:
+     - Run the tests against "npm run start" (the built app), NOT
+       "npm run dev" — dev mode rebuilds files while running and can
+       break the test server mid-run.
+     - Needs SUPABASE_SERVICE_ROLE_KEY and a valid NEXT_PUBLIC_SUPABASE_URL
+       (the https://...supabase.co address, not a key) in .env.local.
+
+
+==================================================================
  QUICK REFERENCE (after the one-time setup is done)
 ==================================================================
    Terminal 1:  npm run dev
    Terminal 2:  cd aura-scheduler-engine  ->  .\venv\Scripts\activate  ->  uvicorn main:app --reload
    Terminal 3:  cd aura-mobile  ->  npx expo start
+   Tests:       npm test   (unit)   |   npm run seed:e2e + npm run build + npm run start + npm run test:e2e -- --project=authed   (browser)
 
 
 ==================================================================
  IF SOMETHING DOESN'T WORK
 ==================================================================
  - "command not found: npm"      -> Node.js isn't installed (see top).
+ - Every page shows an error/500  -> NEXT_PUBLIC_SUPABASE_URL must be the project
+                                     URL (https://...supabase.co), NOT a key. It's
+                                     baked in when the app builds, so fix it and
+                                     restart (or rebuild) after changing it.
  - Website loads but data is blank -> check .env.local values are correct.
  - "Port 3000 already in use"     -> another copy is running; close it, or
                                      the terminal will offer port 3001.
