@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-22 · **Execution start:** Track 2 (Arch A2) underway — **Steps 1–5 complete + Step 6 wired** (route-crawl green, 0 skipped; 5/5 critical flows green; 27 cross-role denials green; **institution isolation verified clean — no leak**; e2e now in CI (secret-gated); **4 production/security issues found & fixed**)
+> **Last updated:** 2026-06-22 · **Execution start:** Track 2 (Arch A2) underway — **Steps 1–6 complete** (route-crawl green, 0 skipped; 5/5 critical flows green; 27 cross-role denials green; **institution isolation verified clean — no leak**; **e2e live & required in CI**; **4 production/security issues found & fixed**) — only Step 7 (action-coverage) remains
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -59,7 +59,7 @@ P6 Parent self-link OTP (blocked on 3C SMS) · P7 CCTV (hardware/infra add-on).
 | **Step 3** | Critical user-flow e2e — admissions, fees, leave, exams, knowledge hub | ✅ | Step 1 | **100%** | **5/5 flows pass** (1 production bug found & fixed) |
 | **Step 4** | Cross-role negative auth — wrong role denied (not 200) | ✅ | Step 1 | **100%** | **27 cross-role denials green** (1 security gap found & fixed) |
 | **Step 5** | **Institution isolation** — tenant A cannot read tenant B via HTTP/API | ✅ | Step 1 | **100%** | **Isolation holds — 0 leaks** (4 RLS/IDOR checks green) |
-| **Step 6** | Wire e2e into `ci.yml` (seed → run) as a required check | 🟡 | Steps 2–5 | **90%** | **Wired (secret-gated)** — activates once owner adds CI secrets + marks required |
+| **Step 6** | Wire e2e into `ci.yml` (seed → run) as a required check | ✅ | Steps 2–5 | **100%** | **Live & required** — secrets set, full suite green in CI (~6 min), now a required check on `main` |
 | **Step 7** | Action-wiring coverage — top ~20 money/grade/enrollment/access actions | 🔲 | Step 1 | 0% | +3–5 days |
 
 **Definition of Done:** all 230 routes crawl green under auth · 5 critical flows
@@ -150,12 +150,14 @@ route-crawl → flows → cross-role → isolation) against the **built** app
 **secret-gated**: a first step checks for the Supabase secrets and, if absent, exits
 **green (skipped)** so it never blocks a merge before CI is configured. Required
 secrets + the "runs against remote DB; local-stack hardening is future" tradeoff are
-documented in `docs/ci-cd.md`. **Owner action (B4):** add the secrets in repo
-Settings → Actions, confirm the job goes green, then mark **Authenticated e2e** a
-required status check on `main` — that makes Steps 2–5 a permanent enforced gate
-(and the institution-isolation guarantee continuous).
+documented in `docs/ci-cd.md`. **✅ Activated (2026-06-22):** the owner added the 9 CI
+secrets; the gate ran the full suite in CI — secrets check → npm ci → Playwright
+install → build → seed → **route-crawl + flows + cross-role + isolation all green
+(~6 min)** — and **Authenticated e2e** is now a **required status check on `main`**
+(alongside type-check/lint/unit and migration-replay). Steps 2–5 are a **permanent
+enforced gate** now, and the institution-isolation guarantee is continuous.
 
-**Track 2 completion: ~92%** (unit ✅; fixtures ✅; route-crawl ✅; 5 flows ✅; cross-role ✅; isolation ✅; **CI-wired (gated) 🟡**; action-coverage pending)
+**Track 2 completion: ~95%** (unit ✅; fixtures ✅; route-crawl ✅; 5 flows ✅; cross-role ✅; isolation ✅; **CI gate live & required ✅**; only action-coverage (Step 7) left)
 
 ---
 
@@ -184,12 +186,12 @@ required status check on `main` — that makes Steps 2–5 a permanent enforced 
 
 > Update this block every week. Percentages are toward the **v1.0 line**, not raw feature counts.
 
-### Completion snapshot — Week 0 (2026-06-22) · A2 Steps 1–5 ✅ · Step 6 wired 🟡
+### Completion snapshot — Week 0 (2026-06-22) · A2 Steps 1–6 ✅ (CI gate live)
 
 ```
-Overall v1.0   ███████████░░░░░░░░░░░░░░░░░░░  ~37%
+Overall v1.0   ███████████░░░░░░░░░░░░░░░░░░░  ~39%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
-  Track 2  Arch A2 (gate)    ███████████████████░░░  ~92%  (Steps 1–5 ✅ · Step 6 wired 🟡 · only action-coverage left)
+  Track 2  Arch A2 (gate)    ████████████████████░░  ~95%  (Steps 1–6 ✅ · e2e required in CI · only action-coverage left)
   Track 3  Phase 9 (P1 focus) █░░░░░░░░░░░░░░░░░░░░░░  ~3%
 ```
 
@@ -212,14 +214,14 @@ Overall v1.0   ███████████░░░░░░░░░░�
 | B1 | Dev accounts (Apple/Google/EAS) not purchased | Phase 8 P0→all | Unassigned | Purchase to unblock all mobile natives |
 | B2 | Anthropic account has $0 credit | KH-5 AI live, 9B demo polish | Account owner | Add credit (console.anthropic.com → Billing) |
 | ~~B3~~ | ~~No seeded test tenant / role fixtures~~ | ~~A2 Steps 2–7, 9B demo~~ | — | ✅ **Resolved 2026-06-21** — `npm run seed:e2e` + `storageState` fixtures landed (A2 Step 1) |
-| B4 | CI secrets not set → e2e gate inactive (skips green) | A2 Step 6 enforcement | Repo owner | Add `SUPABASE_SERVICE_ROLE_KEY` + `NEXT_PUBLIC_SUPABASE_URL`/`ANON_KEY` (+ recommended runtime keys) in Settings → Actions, then mark **Authenticated e2e** a required check on `main` (see `docs/ci-cd.md`) |
+| ~~B4~~ | ~~CI secrets not set → e2e gate inactive~~ | ~~A2 Step 6 enforcement~~ | — | ✅ **Resolved 2026-06-22** — 9 CI secrets added, full e2e suite green in CI, **Authenticated e2e** now a required check on `main` |
 
 ### Risk Register
 
 | # | Risk | Likelihood | Impact | Mitigation | Status |
 |---|------|-----------|--------|------------|--------|
-| R1 | Institution isolation regresses unseen (tenant data leak) | Low | 🔴 Critical | A2 Step 5 isolation e2e as required CI gate | Open |
-| R2 | A2 stays at Foundation → ship on unverified routes | Medium | 🔴 Critical | A2 = hard v1.0 gate | Open |
+| R1 | Institution isolation regresses unseen (tenant data leak) | Low | 🔴 Critical | A2 Step 5 isolation e2e — **now a required CI gate (live 2026-06-22)** | ✅ Mitigated |
+| R2 | A2 stays at Foundation → ship on unverified routes | Medium | 🔴 Critical | A2 = hard v1.0 gate; route-crawl + flows + cross-role + isolation now **required in CI** | 🟢 Largely mitigated (Step 7 remains) |
 | R3 | EAS / app-store approval delays | Medium | 🟠 High | Start P0 week 1; web is fully usable without mobile | Open |
 | R4 | Anthropic credit unfunded → AI inert in demos | Medium | 🟠 Med | Fund before 9B (B2) | Open |
 | R5 | CCTV scope creep drags release | Low | 🟠 Med | CCTV = post-v1.0 add-on (P7) | Mitigated |
