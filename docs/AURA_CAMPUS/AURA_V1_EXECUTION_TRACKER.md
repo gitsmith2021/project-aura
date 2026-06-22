@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-22 · **Execution start:** Track 2 (Arch A2) underway — **Steps 1–3 complete** (route-crawl green, 0 skipped; 5/5 critical flows green; 3 production bugs found & fixed)
+> **Last updated:** 2026-06-22 · **Execution start:** Track 2 (Arch A2) underway — **Steps 1–4 complete** (route-crawl green, 0 skipped; 5/5 critical flows green; 27 cross-role denials green; **4 production/security issues found & fixed**)
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -57,7 +57,7 @@ P6 Parent self-link OTP (blocked on 3C SMS) · P7 CCTV (hardware/infra add-on).
 | **Step 1** | Seed test tenant (2 institutions) + role login fixtures (`storageState` × 6 roles) | ✅ | — | **100%** | **Done (2026-06-21)** |
 | **Step 2** | Authenticated route-crawl — every route × canonical owner role (HTTP<400, no `/login` bounce, 0 `pageerror`) | ✅ | Step 1 | **100%** | **238 passed · 0 skipped · 0 failed** (all 230 routes) |
 | **Step 3** | Critical user-flow e2e — admissions, fees, leave, exams, knowledge hub | ✅ | Step 1 | **100%** | **5/5 flows pass** (1 production bug found & fixed) |
-| **Step 4** | Cross-role negative auth — wrong role denied (not 200) | 🔲 | Step 1 | 0% | +2 days after S3 |
+| **Step 4** | Cross-role negative auth — wrong role denied (not 200) | ✅ | Step 1 | **100%** | **27 cross-role denials green** (1 security gap found & fixed) |
 | **Step 5** | **Institution isolation** — tenant A cannot read tenant B via HTTP/API | 🔲 | Step 1 | 0% | +2 days after S3 |
 | **Step 6** | Wire e2e into `ci.yml` (seed → run) as a required check | 🔲 | Steps 2–5 | 0% | +2–3 days after S5 |
 | **Step 7** | Action-wiring coverage — top ~20 money/grade/enrollment/access actions | 🔲 | Step 1 | 0% | +3–5 days |
@@ -121,7 +121,19 @@ using the service-role client for the validated public insert (mirrors
 `checkApplicationStatus`). (2) a Knowledge-Hub test-only locator ambiguity
 ("Publish" vs "Unpublish") — hardened, not an app bug.
 
-**Track 2 completion: ~60%** (unit ✅; fixtures ✅; route-crawl ✅; 5 critical flows ✅; cross-role/isolation/CI pending)
+**Step 4 delivered (2026-06-22):** `tests/e2e/authed/cross-role.spec.ts` — a negative
+matrix asserting the **wrong** role is bounced out of every protected area (super-admin
+`/admin`, the institution admin app via **both** slug & uuid URLs, the staff/student/parent
+portals, and the admin-only view routes). **27 denials green across 5 roles.** Caught &
+fixed a **real defense-in-depth gap**: `/institutions/{slug}` routes bypassed the
+portal-role fence because the middleware slug→uuid rewrite `return`s before the fences run,
+so a logged-in student/staff could reach the institution **admin shell** via the slug URL
+(RLS still emptied the data, but the shell should never render). Fixed in
+`src/utils/supabase/middleware.ts` — portal roles are now bounced to their home before the
+slug rewrite (the same policy already enforced on the uuid form). Positive route-crawl
+unaffected (admin/HOD/super skip the fence).
+
+**Track 2 completion: ~70%** (unit ✅; fixtures ✅; route-crawl ✅; 5 flows ✅; cross-role ✅; isolation/CI/action-coverage pending)
 
 ---
 
@@ -150,12 +162,12 @@ using the service-role client for the validated public insert (mirrors
 
 > Update this block every week. Percentages are toward the **v1.0 line**, not raw feature counts.
 
-### Completion snapshot — Week 0 (2026-06-22) · A2 Steps 1–3 ✅
+### Completion snapshot — Week 0 (2026-06-22) · A2 Steps 1–4 ✅
 
 ```
-Overall v1.0   ████████░░░░░░░░░░░░░░░░░░░░░░  ~28%
+Overall v1.0   █████████░░░░░░░░░░░░░░░░░░░░░  ~31%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
-  Track 2  Arch A2 (gate)    █████████████░░░░░░░░░  ~60%  (Steps 1–3/7 ✅ · route-crawl + 5 flows green)
+  Track 2  Arch A2 (gate)    ███████████████░░░░░░░  ~70%  (Steps 1–4/7 ✅ · route-crawl + 5 flows + 27 cross-role denials green)
   Track 3  Phase 9 (P1 focus) █░░░░░░░░░░░░░░░░░░░░░░  ~3%
 ```
 
