@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-22 · **Execution start:** Track 2 (Arch A2) underway — **Steps 1–4 complete** (route-crawl green, 0 skipped; 5/5 critical flows green; 27 cross-role denials green; **4 production/security issues found & fixed**)
+> **Last updated:** 2026-06-22 · **Execution start:** Track 2 (Arch A2) underway — **Steps 1–5 complete** (route-crawl green, 0 skipped; 5/5 critical flows green; 27 cross-role denials green; **institution isolation verified clean — no leak**; **4 production/security issues found & fixed**)
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -58,7 +58,7 @@ P6 Parent self-link OTP (blocked on 3C SMS) · P7 CCTV (hardware/infra add-on).
 | **Step 2** | Authenticated route-crawl — every route × canonical owner role (HTTP<400, no `/login` bounce, 0 `pageerror`) | ✅ | Step 1 | **100%** | **238 passed · 0 skipped · 0 failed** (all 230 routes) |
 | **Step 3** | Critical user-flow e2e — admissions, fees, leave, exams, knowledge hub | ✅ | Step 1 | **100%** | **5/5 flows pass** (1 production bug found & fixed) |
 | **Step 4** | Cross-role negative auth — wrong role denied (not 200) | ✅ | Step 1 | **100%** | **27 cross-role denials green** (1 security gap found & fixed) |
-| **Step 5** | **Institution isolation** — tenant A cannot read tenant B via HTTP/API | 🔲 | Step 1 | 0% | +2 days after S3 |
+| **Step 5** | **Institution isolation** — tenant A cannot read tenant B via HTTP/API | ✅ | Step 1 | **100%** | **Isolation holds — 0 leaks** (4 RLS/IDOR checks green) |
 | **Step 6** | Wire e2e into `ci.yml` (seed → run) as a required check | 🔲 | Steps 2–5 | 0% | +2–3 days after S5 |
 | **Step 7** | Action-wiring coverage — top ~20 money/grade/enrollment/access actions | 🔲 | Step 1 | 0% | +3–5 days |
 
@@ -133,7 +133,17 @@ so a logged-in student/staff could reach the institution **admin shell** via the
 slug rewrite (the same policy already enforced on the uuid form). Positive route-crawl
 unaffected (admin/HOD/super skip the fence).
 
-**Track 2 completion: ~70%** (unit ✅; fixtures ✅; route-crawl ✅; 5 flows ✅; cross-role ✅; isolation/CI/action-coverage pending)
+**Step 5 delivered (2026-06-22) — the SaaS release gate, verified clean:**
+`tests/e2e/authed/isolation.spec.ts` proves a tenant cannot read another tenant's
+data through the public API/RLS layer the way a real PostgREST client reaches it.
+Each admin signs in with their own credentials; cross-tenant reads of `departments`,
+`students` and `institution_members` return **0 rows** in both directions, while
+own-tenant reads stay non-empty (so RLS isn't blanket-denying), plus a **direct-id
+(IDOR)** check — admin A fetching a B-owned student by primary key → 0 rows.
+**Result: isolation HOLDS — no leak found** (4/4 checks green). This is the single
+most important multi-tenant guarantee and the hardest part of the release gate.
+
+**Track 2 completion: ~85%** (unit ✅; fixtures ✅; route-crawl ✅; 5 flows ✅; cross-role ✅; **isolation ✅**; CI-wiring + action-coverage pending)
 
 ---
 
@@ -162,12 +172,12 @@ unaffected (admin/HOD/super skip the fence).
 
 > Update this block every week. Percentages are toward the **v1.0 line**, not raw feature counts.
 
-### Completion snapshot — Week 0 (2026-06-22) · A2 Steps 1–4 ✅
+### Completion snapshot — Week 0 (2026-06-22) · A2 Steps 1–5 ✅
 
 ```
-Overall v1.0   █████████░░░░░░░░░░░░░░░░░░░░░  ~31%
+Overall v1.0   ██████████░░░░░░░░░░░░░░░░░░░░  ~35%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
-  Track 2  Arch A2 (gate)    ███████████████░░░░░░░  ~70%  (Steps 1–4/7 ✅ · route-crawl + 5 flows + 27 cross-role denials green)
+  Track 2  Arch A2 (gate)    ██████████████████░░░░  ~85%  (Steps 1–5/7 ✅ · route-crawl + 5 flows + 27 cross-role + isolation green)
   Track 3  Phase 9 (P1 focus) █░░░░░░░░░░░░░░░░░░░░░░  ~3%
 ```
 
