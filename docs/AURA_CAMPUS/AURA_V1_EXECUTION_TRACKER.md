@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-22 · **Execution start:** Track 2 (Arch A2) underway — **Steps 1–2 complete** (full authenticated route-crawl green, 0 skipped; 1 production 500 found & fixed; 1 missing-table finding logged)
+> **Last updated:** 2026-06-22 · **Execution start:** Track 2 (Arch A2) underway — **Steps 1–3 complete** (route-crawl green, 0 skipped; 5/5 critical flows green; 3 production bugs found & fixed)
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -56,7 +56,7 @@ P6 Parent self-link OTP (blocked on 3C SMS) · P7 CCTV (hardware/infra add-on).
 |------|-------------|--------|--------------|-----------|-----------------|
 | **Step 1** | Seed test tenant (2 institutions) + role login fixtures (`storageState` × 6 roles) | ✅ | — | **100%** | **Done (2026-06-21)** |
 | **Step 2** | Authenticated route-crawl — every route × canonical owner role (HTTP<400, no `/login` bounce, 0 `pageerror`) | ✅ | Step 1 | **100%** | **238 passed · 0 skipped · 0 failed** (all 230 routes) |
-| **Step 3** | Critical user-flow e2e — admissions, fees, leave, exams, knowledge hub | 🔲 | Step 1 | 0% | +5–7 days after S1 |
+| **Step 3** | Critical user-flow e2e — admissions, fees, leave, exams, knowledge hub | ✅ | Step 1 | **100%** | **5/5 flows pass** (1 production bug found & fixed) |
 | **Step 4** | Cross-role negative auth — wrong role denied (not 200) | 🔲 | Step 1 | 0% | +2 days after S3 |
 | **Step 5** | **Institution isolation** — tenant A cannot read tenant B via HTTP/API | 🔲 | Step 1 | 0% | +2 days after S3 |
 | **Step 6** | Wire e2e into `ci.yml` (seed → run) as a required check | 🔲 | Steps 2–5 | 0% | +2–3 days after S5 |
@@ -104,7 +104,24 @@ broken. Restored via `supabase/migrations/20260626000000_restore_clubs.sql`
 `laboratories` pattern). Verified: all four clubs routes crawl green with a real
 seeded club rendering on the detail page; security advisors show no RLS gaps.
 
-**Track 2 completion: ~45%** (unit foundation ✅; auth fixtures ✅; full route-crawl green ✅; flows/isolation/CI pending)
+**Step 3 delivered (2026-06-22):** five critical user-flow specs under
+`tests/e2e/authed/flows/`, each driving the real UI across roles via per-role
+browser contexts (`tests/e2e/fixtures/flow.ts`): **leave** (staff applies →
+admin approves → staff sees approved), **admissions** (public form submit → admin
+sees the applicant), **fees** (student sees their seeded demand → admin sees it),
+**online exam** (admin creates an exam → it lists), **knowledge hub** (admin
+uploads a resource → it appears). The seeder now also records the two required
+DPDP consents per user (so the first-login banner can't block the UI) and a fee
+demand for the student. **Result: 5/5 flows pass; full authed suite green
+(route-crawl + flows).** Flows surfaced & fixed **2 more production bugs**:
+(1) the **public admissions form was completely broken** — `submitApplication`
+did an anon `.insert().select()` but anon has no SELECT policy on `admissions`,
+so every submission failed with "violates RLS policy" and saved nothing; fixed by
+using the service-role client for the validated public insert (mirrors
+`checkApplicationStatus`). (2) a Knowledge-Hub test-only locator ambiguity
+("Publish" vs "Unpublish") — hardened, not an app bug.
+
+**Track 2 completion: ~60%** (unit ✅; fixtures ✅; route-crawl ✅; 5 critical flows ✅; cross-role/isolation/CI pending)
 
 ---
 
@@ -133,12 +150,12 @@ seeded club rendering on the detail page; security advisors show no RLS gaps.
 
 > Update this block every week. Percentages are toward the **v1.0 line**, not raw feature counts.
 
-### Completion snapshot — Week 0 (2026-06-22) · A2 Steps 1–2 ✅
+### Completion snapshot — Week 0 (2026-06-22) · A2 Steps 1–3 ✅
 
 ```
-Overall v1.0   ██████░░░░░░░░░░░░░░░░░░░░░░░░  ~22%
+Overall v1.0   ████████░░░░░░░░░░░░░░░░░░░░░░  ~28%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
-  Track 2  Arch A2 (gate)    ██████████░░░░░░░░░░░░░  ~45%  (Steps 1–2/7 ✅ · full route-crawl green, 0 skipped)
+  Track 2  Arch A2 (gate)    █████████████░░░░░░░░░  ~60%  (Steps 1–3/7 ✅ · route-crawl + 5 flows green)
   Track 3  Phase 9 (P1 focus) █░░░░░░░░░░░░░░░░░░░░░░  ~3%
 ```
 

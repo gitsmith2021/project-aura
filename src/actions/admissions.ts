@@ -55,7 +55,12 @@ export async function submitApplication(input: ApplicationInput): Promise<Result
   try {
     if (!input.applicant_name.trim()) return { success: false, error: "Your name is required." };
     if (!isValidEmail(input.applicant_email)) return { success: false, error: "Enter a valid email." };
-    const supabase = createClient(await cookies());
+    // Dev Rule 16: public applicants are anonymous (no session). The anon role
+    // can INSERT (status='applied') but has no SELECT policy on admissions, so an
+    // anon `.insert().select()` read-back fails the whole statement ("violates
+    // RLS policy"). Use the service-role client for this controlled, validated
+    // public submission — mirrors checkApplicationStatus()'s service-role lookup.
+    const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("admissions")
       .insert({

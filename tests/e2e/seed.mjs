@@ -155,6 +155,16 @@ async function main() {
         if (lErr) throw new Error(`parent_student_links(${u.email}): ${lErr.message}`);
       }
     }
+
+    // DPDP first-login consent — record the two REQUIRED consents so the consent
+    // banner (a full-screen overlay) doesn't block the flow e2e tests.
+    await admin.from("data_consent_logs").delete().eq("user_id", uid);
+    await admin.from("data_consent_logs").insert(
+      ["platform_terms", "data_processing"].map((t) => ({
+        institution_id: iid, user_id: uid, consent_type: t, consented: true,
+      })),
+    );
+
     console.log("• user", u.email.padEnd(28), "→", u.role);
   }
 
@@ -208,6 +218,7 @@ async function main() {
   ent.grievanceAId = await seedOne("grievances", { institution_id: A, subject: "E2E grievance" }, { institution_id: A, complainant_type: "anonymous", category: "academic", subject: "E2E grievance", description: "E2E grievance details" });
   ent.formAId     = await seedOne("feedback_forms", { institution_id: A, title: "E2E Feedback Form" }, { institution_id: A, title: "E2E Feedback Form", staff_id: staffA ?? null, is_active: true });
   ent.certReqAId  = await seedOne("certificate_requests", { institution_id: A, certificate_no: "E2E/2026/0001" }, { institution_id: A, requester_type: "student", student_id: studentA, certificate_type: "bonafide", status: "issued", certificate_no: "E2E/2026/0001" });
+  if (studentA) ent.feeDemandAId = await seedOne("fee_demands", { institution_id: A, student_id: studentA, title: "E2E Fee Demand" }, { institution_id: A, student_id: studentA, title: "E2E Fee Demand", amount_due: 5000, due_date: "2026-12-31" });
   ent.meetingAId  = await seedOne("iqac_meetings", { institution_id: A, agenda: "E2E agenda" }, { institution_id: A, meeting_date: "2026-06-01", meeting_number: 1, agenda: "E2E agenda" });
   ent.assignmentAId = await seedOne("lms_assignments", { institution_id: A, title: "E2E Assignment" }, { institution_id: A, subject_id: ent.subjectAId, title: "E2E Assignment", due_date: "2026-12-01T10:00:00Z" });
   ent.schemeAId   = await seedOne("scholarship_schemes", { institution_id: A, name: "E2E Scheme" }, { institution_id: A, name: "E2E Scheme", scheme_type: "merit" });
