@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-22 · **Execution start:** Track 2 (Arch A2) underway — **Steps 1–6 complete** (route-crawl green, 0 skipped; 5/5 critical flows green; 27 cross-role denials green; **institution isolation verified clean — no leak**; **e2e live & required in CI**; **4 production/security issues found & fixed**) — only Step 7 (action-coverage) remains
+> **Last updated:** 2026-06-22 · **✅ ARCH A2 COMPLETE — all 7 steps done.** Route-crawl green (0 skipped); 5/5 critical flows; 27 cross-role denials; **institution isolation verified clean — no leak**; 11 write-authorization denials (no gap); **e2e live & required in CI**; **4 production/security issues found & fixed**. The Arch register flips 88% → 100% and the release gate's long pole is cleared.
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -60,7 +60,7 @@ P6 Parent self-link OTP (blocked on 3C SMS) · P7 CCTV (hardware/infra add-on).
 | **Step 4** | Cross-role negative auth — wrong role denied (not 200) | ✅ | Step 1 | **100%** | **27 cross-role denials green** (1 security gap found & fixed) |
 | **Step 5** | **Institution isolation** — tenant A cannot read tenant B via HTTP/API | ✅ | Step 1 | **100%** | **Isolation holds — 0 leaks** (4 RLS/IDOR checks green) |
 | **Step 6** | Wire e2e into `ci.yml` (seed → run) as a required check | ✅ | Steps 2–5 | **100%** | **Live & required** — secrets set, full suite green in CI (~6 min), now a required check on `main` |
-| **Step 7** | Action-wiring coverage — top ~20 money/grade/enrollment/access actions | 🔲 | Step 1 | 0% | +3–5 days |
+| **Step 7** | Action-wiring coverage — top ~20 money/grade/enrollment/access actions | ✅ | Step 1 | **100%** | **11 write-denials green — no gap found** (cross-tenant + privilege-escalation) |
 
 **Definition of Done:** all 230 routes crawl green under auth · 5 critical flows
 pass · cross-role + isolation green · e2e is a required CI check → **Arch A2 = 100%,
@@ -157,7 +157,23 @@ install → build → seed → **route-crawl + flows + cross-role + isolation al
 (alongside type-check/lint/unit and migration-replay). Steps 2–5 are a **permanent
 enforced gate** now, and the institution-isolation guarantee is continuous.
 
-**Track 2 completion: ~95%** (unit ✅; fixtures ✅; route-crawl ✅; 5 flows ✅; cross-role ✅; isolation ✅; **CI gate live & required ✅**; only action-coverage (Step 7) left)
+**Step 7 delivered (2026-06-22):** `tests/e2e/authed/action-auth.spec.ts` — the WRITE
+side of authorization (Steps 4–5 covered reads). It's the data-layer backstop behind
+the highest-risk server actions (money / grades / enrollment / access): even if an
+action's code gate were bypassed, the DB must reject the mutation. **11 write-denials
+green**, each against a real seeded target so an empty result means RLS blocked it, not
+"no such row": cross-tenant (admin A → tenant B) INSERT student/department → error,
+UPDATE B's student / DELETE B's department / change B's member roles → 0 rows; and
+privilege-escalation — a student can't self-promote membership, create a department,
+zero its own fee demand, self-admit an admission, or create a grade component, and
+staff can't grant itself an INST_ADMIN membership. **Result: no write-authorization
+gap found** — the RLS write-side holds.
+
+**Track 2 completion: 100% — ✅ ARCH A2 COMPLETE.** All 7 steps done: unit ✅ · fixtures ✅ ·
+route-crawl ✅ · 5 flows ✅ · cross-role ✅ · isolation ✅ · CI gate live & required ✅ ·
+action-wiring ✅. The Arch register flips **88% → 100% (8/8)**. The release gate's long
+pole is cleared — **4 production/security issues found & fixed** along the way, and the
+multi-tenant isolation + write-authorization guarantees are now continuously enforced in CI.
 
 ---
 
@@ -186,14 +202,18 @@ enforced gate** now, and the institution-isolation guarantee is continuous.
 
 > Update this block every week. Percentages are toward the **v1.0 line**, not raw feature counts.
 
-### Completion snapshot — Week 0 (2026-06-22) · A2 Steps 1–6 ✅ (CI gate live)
+### Completion snapshot — Week 0 (2026-06-22) · ✅ ARCH A2 COMPLETE (7/7)
 
 ```
-Overall v1.0   ███████████░░░░░░░░░░░░░░░░░░░  ~39%
+Overall v1.0   █████████████░░░░░░░░░░░░░░░░░  ~43%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
-  Track 2  Arch A2 (gate)    ████████████████████░░  ~95%  (Steps 1–6 ✅ · e2e required in CI · only action-coverage left)
+  Track 2  Arch A2 (gate)    ██████████████████████  100%  ✅ COMPLETE — all 7 steps · e2e required in CI
   Track 3  Phase 9 (P1 focus) █░░░░░░░░░░░░░░░░░░░░░░  ~3%
 ```
+
+> 🎯 **The release gate's long pole (Arch A2) is cleared.** The remaining v1.0 work is
+> **Phase 8** (mobile, gated on the EAS dev build — blocker B1) and **Phase 9 P1**
+> business-readiness (pricing · demo tenant · release checklist) — both parallelizable.
 
 *Overall = weighted toward the release gate: A2 40% · Phase 8 35% · Phase 9 25%.*
 
