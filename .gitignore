@@ -51,5 +51,3 @@ next-env.d.ts
 # Local IDE and sensitive files
 .vs/
 .claude/settings.local.json
-# Phase 9B — demo credentials (never commit)
-/.demo/

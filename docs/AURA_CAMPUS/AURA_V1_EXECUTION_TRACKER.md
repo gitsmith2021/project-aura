@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-23 · **✅ ARCH A2 COMPLETE — all 7 steps done** (route-crawl · 5 flows · 27 cross-role denials · institution isolation clean · 11 write-auth denials · 4 production/security bugs found & fixed; Arch register 88% → 100%). · **🩺 INFRA STABILIZATION done (R1+R2):** Supabase returned **Unhealthy → Healthy** (CPU 14% · Disk 17% · RAM 48%) — see the [Infra Stabilization](#-infrastructure-stabilization-unplanned--complete) section. The A2 e2e gate is **paused against prod** (R1) pending the local-stack CI job. · **🎬 PHASE 9B (Demo Institution) 🟡 In Review (80%):** showcase-grade "Aura Demo College" seeded (2,893 students · 148 faculty · 9 executive personas · KH 55 · fee 88% · placements 92%) + CLI/admin reset — manual walkthrough & screenshots pending.
+> **Last updated:** 2026-06-23 · **✅ ARCH A2 COMPLETE — all 7 steps done** (route-crawl · 5 flows · 27 cross-role denials · institution isolation clean · 11 write-auth denials · 4 production/security bugs found & fixed; Arch register 88% → 100%). · **🩺 INFRA STABILIZATION done (R1+R2):** Supabase returned **Unhealthy → Healthy** (CPU 14% · Disk 17% · RAM 48%) — see the [Infra Stabilization](#-infrastructure-stabilization-unplanned--complete) section. The A2 e2e gate is **paused against prod** (R1) pending the local-stack CI job.
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -210,7 +210,7 @@ pole is cleared — **4 production/security issues found & fixed** along the way
 | Item | Description | Priority | Status | Dependencies | Progress % |
 |------|-------------|----------|--------|--------------|-----------|
 | **9A** | Pricing Strategy — tiers mapped to `subscription_plans` (7E ✅) | 🔴 P1 | 🔲 | Phase 7E (✅) | 0% |
-| **9B** | Demo Institution — fully-seeded showcase tenant + reset script | 🔴 P1 | 🟡 **In Review** | Seed engine (✅) | **80%** — built & seeded; manual walkthrough + screenshots pending |
+| **9B** | Demo Institution — fully-seeded showcase tenant + reset script | 🔴 P1 | 🔲 | Seed engine (shared w/ A2 Step 1) | 0% |
 | **9C** | Trial Provisioning — spin-up → Onboarding Wizard (A4 ✅) → trial sub | 🟠 P2 | 🔲 | A4 (✅), 7E (✅) | 0% (foundations ✅) |
 | **9D** | Onboarding Toolkit — import templates, go-live checklist, migration playbook | 🟠 P2 | 🔲 | BulkUpload flows (✅) | 0% |
 | **9E** | Sales Deck — problem→solution, NAAC/NIRF/AISHE compliance story, ROI | 🟠 P2 | 🔲 | 9A | 0% |
@@ -219,25 +219,7 @@ pole is cleared — **4 production/security issues found & fixed** along the way
 | **9H** | Support & Help Center — in-app help, KB (dogfood Knowledge Hub ✅), tickets, SLA | 🟡 P3 | 🔲 | Knowledge Hub (✅) | 0% |
 | **9I** | Release Checklist — security, A2 green, backups, billing, legal, monitoring, rollback | 🔴 P1 (final gate) | 🔲 | All tracks | 0% |
 
-**9B delivered (2026-06-23) — 🟡 In Review (80%):** a standalone, showcase-grade demo
-tenant **"Aura Demo College"** (`aura-demo`, `@demo.aura.test`) — completely isolated
-from real + e2e tenants. `scripts/demo/` (independent of `tests/e2e`): `seed-demo.mjs`
-(idempotent, service-role) builds **2,893 students · 148 faculty · 6 departments** and
-a curated "best-case" story across every module — finance (**88% fee collection**,
-salaries, expenses, 6 dept budgets), attendance, academics (CO/PO, CIA marks & published
-results), admissions funnel, exams, **placements (92%)**, **320 scholarships**, research
-(22 projects/48 papers), 80 alumni, **Knowledge Hub 55 resources (hero)**, IQAC/NAAC
-(meetings + action items + accreditation evidence), role-specific notifications — so every
-KPI dashboard is populated. **9 executive personas** (Chairman · Principal · IQAC · Admin ·
-HOD · Faculty · Student · Parent · Alumnus) all authenticate (single password, written to
-gitignored `.demo/credentials.txt`). `reset-demo.mjs` + **`npm run seed:demo` / `reset:demo`**;
-admin-only **Reset Demo Tenant** button in `/admin` (`resetDemoInstitution()` — SUPER_ADMIN
-validated from DB, explicit `aura-demo` allowlist, refuses non-demo, type-to-confirm).
-**Verified:** 9/9 logins · reset scoped to demo only (Bishop Heber + e2e tenants untouched)
-· tsc + lint clean. **Reserved 20%:** manual walkthrough · screenshot/marketing validation
-· sales-readiness review.
-
-**Track 3 completion: ~12%** (9B in review; existing 7E/A4/Knowledge-Hub foundations)
+**Track 3 completion: ~3%** (existing 7E/A4/Knowledge-Hub foundations only)
 
 ---
 
@@ -245,13 +227,13 @@ validated from DB, explicit `aura-demo` allowlist, refuses non-demo, type-to-con
 
 > Update this block every week. Percentages are toward the **v1.0 line**, not raw feature counts.
 
-### Completion snapshot — Week 0 (2026-06-23) · A2 ✅ · Infra 🩺 · 9B 🟡 In Review
+### Completion snapshot — Week 0 (2026-06-23) · ✅ ARCH A2 COMPLETE (7/7) · 🩺 Infra stabilized
 
 ```
-Overall v1.0   ██████████████░░░░░░░░░░░░░░░░  ~46%
+Overall v1.0   █████████████░░░░░░░░░░░░░░░░░  ~43%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
   Track 2  Arch A2 (gate)    ██████████████████████  100%  ✅ COMPLETE — all 7 steps (e2e gate paused vs prod per R1)
-  Track 3  Phase 9 (P1 focus) ███░░░░░░░░░░░░░░░░░░░░  ~12%  (9B demo tenant 🟡 In Review · 9A/9I pending)
+  Track 3  Phase 9 (P1 focus) █░░░░░░░░░░░░░░░░░░░░░░  ~3%
   Infra    Supabase health   ██████████████████████  Healthy  ✅ R1+R2 done · R5 proposed
 ```
 
