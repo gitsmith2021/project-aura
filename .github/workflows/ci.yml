@@ -108,17 +108,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Gate: only run the suite when the Supabase secrets exist. Without them
-      # the job exits GREEN (skipped) so it never blocks a merge before the repo
-      # owner has configured CI secrets.
-      - name: Check for Supabase secrets
+      # Gate (Infra Stabilization R1): the authenticated suite runs against the
+      # *remote* Supabase project, which on the Nano tier was a major source of the
+      # Disk-I/O spike (seed churn + repeated logins + 230-route crawl on every CI
+      # event — see docs/AURA_CAMPUS/Infra_Stabilization/DISK_IO_ANALYSIS.md). It is
+      # therefore PAUSED against remote by default: the job runs the suite only when
+      # the repo variable `RUN_E2E` is "true" AND the Supabase secrets exist.
+      # Otherwise it exits GREEN (skipped) so the required check still passes without
+      # generating prod load. Run it locally instead (npm run seed:e2e &&
+      # npm run test:e2e). The permanent fix is the ephemeral local-Supabase CI job
+      # (R1-Phase-2 in INFRA_STABILIZATION_R1_R2_R5.md), after which RUN_E2E is set
+      # true and the remote dependency is gone.
+      - name: Decide whether to run the suite
         id: gate
         run: |
-          if [ -n "$SUPABASE_SERVICE_ROLE_KEY" ] && [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && [ -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
+          if [ "${{ vars.RUN_E2E }}" = "true" ] && [ -n "$SUPABASE_SERVICE_ROLE_KEY" ] && [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && [ -n "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=e2e skipped::Add SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Settings → Secrets and variables → Actions to enable the authenticated e2e gate (see docs/ci-cd.md)."
+            echo "::notice title=e2e paused::Authenticated e2e is paused against the remote DB for infra stabilization (R1). Run it locally (npm run seed:e2e && npm run test:e2e), or set repo variable RUN_E2E=true to re-enable. Permanent fix: the local-Supabase CI job (R1-Phase-2)."
           fi
 
       - uses: actions/setup-node@v4
