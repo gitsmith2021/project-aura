@@ -1,5 +1,6 @@
 import { getPlatformOverview } from "@/actions/superAdmin";
 import { PlatformDashboard } from "@/components/admin/PlatformDashboard";
+import { DemoResetCard } from "@/components/admin/DemoResetCard";
 import { AlertTriangle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -17,5 +18,11 @@ export default async function AdminOverviewPage() {
     );
   }
 
-  return <PlatformDashboard initial={result.data} />;
+  return (
+    <div className="space-y-6">
+      <PlatformDashboard initial={result.data} />
+      {/* Phase 9B — operator control to reset the showcase demo tenant. */}
+      <DemoResetCard />
+    </div>
+  );
 }
