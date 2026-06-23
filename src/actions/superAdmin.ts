@@ -95,8 +95,9 @@ function lastMonths(n: number): { key: string; month: string }[] {
   return out;
 }
 
-/** Resolves to the caller's user id when they hold a SUPER_ADMIN membership, else null. */
-async function requireSuperAdmin(): Promise<string | null> {
+/** Resolves to the caller's user id when they hold a SUPER_ADMIN membership, else null.
+ *  Shared by the /admin actions (Phase 7B) and the demo reset (Phase 9B). */
+export async function requireSuperAdmin(): Promise<string | null> {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
   const { data: { user } } = await supabase.auth.getUser();
