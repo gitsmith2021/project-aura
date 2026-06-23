@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-22 · **✅ ARCH A2 COMPLETE — all 7 steps done.** Route-crawl green (0 skipped); 5/5 critical flows; 27 cross-role denials; **institution isolation verified clean — no leak**; 11 write-authorization denials (no gap); **e2e live & required in CI**; **4 production/security issues found & fixed**. The Arch register flips 88% → 100% and the release gate's long pole is cleared.
+> **Last updated:** 2026-06-23 · **✅ ARCH A2 COMPLETE — all 7 steps done** (route-crawl · 5 flows · 27 cross-role denials · institution isolation clean · 11 write-auth denials · 4 production/security bugs found & fixed; Arch register 88% → 100%). · **🩺 INFRA STABILIZATION done (R1+R2):** Supabase returned **Unhealthy → Healthy** (CPU 14% · Disk 17% · RAM 48%) — see the [Infra Stabilization](#-infrastructure-stabilization-unplanned--complete) section. The A2 e2e gate is **paused against prod** (R1) pending the local-stack CI job.
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -172,8 +172,33 @@ gap found** — the RLS write-side holds.
 **Track 2 completion: 100% — ✅ ARCH A2 COMPLETE.** All 7 steps done: unit ✅ · fixtures ✅ ·
 route-crawl ✅ · 5 flows ✅ · cross-role ✅ · isolation ✅ · CI gate live & required ✅ ·
 action-wiring ✅. The Arch register flips **88% → 100% (8/8)**. The release gate's long
-pole is cleared — **4 production/security issues found & fixed** along the way, and the
-multi-tenant isolation + write-authorization guarantees are now continuously enforced in CI.
+pole is cleared — **4 production/security issues found & fixed** along the way.
+
+> ⚠️ **Gate status update (2026-06-23):** the A2 e2e suite is **paused against the
+> production DB** (Infra Stabilization R1 — it was a Disk-I/O source on Nano). It still
+> runs **locally** and lives in git; the **continuous** CI enforcement is restored by
+> R1-Phase-2 (ephemeral local-Supabase CI job), after which `RUN_E2E` is set true. A2
+> itself remains complete & accepted — the one-time validation stands.
+
+---
+
+# 🩺 Infrastructure Stabilization (unplanned — complete)
+
+> Mid-execution, the Supabase project went **Unhealthy** (high Disk I/O on the Nano
+> tier). Stabilized before resuming Phase 8. Full report + plan:
+> [INFRA_STABILIZATION/](INFRA_STABILIZATION/) (`DISK_IO_ANALYSIS.md` diagnosis ·
+> `INFRA_STABILIZATION_R1_R2_R5.md` plan/risk/impact/rollback).
+
+| Item | Action | Status | Result |
+|---|---|---|---|
+| **R1** | Remove e2e load from prod — CI suite gated behind `RUN_E2E` (default off → skip-green) | ✅ **Done** | Removed the acute Disk-I/O trigger (CI was hammering the 25 MB prod DB on every push/PR) |
+| **R2** | Resolve 166 `auth_rls_initplan` findings — wrap `auth.uid()`/`auth.email()` as `(select …)` so RLS evaluates once/query not per row (`20260709000000_rls_initplan_fix.sql`) | ✅ **Done + validated** | Applied to remote, 0 bare remaining; A2 RLS suite green (access control unchanged); lowered per-query CPU app-wide |
+| **R5** | Realtime — evaluate & propose disable for v1.0 | 🔎 **Proposed** | Only `notifications` is published; bell can poll. Recommend disable + poll fallback (removes top WAL-decode I/O). Needs code + owner toggle — **awaiting approval** |
+| R3 | Drop 341 unused indexes | ⏸️ Deferred (per direction) | — |
+| Tier upgrade | Nano → Micro/Small | ⏸️ Deferred (per direction) | — |
+
+**Outcome:** Supabase **Unhealthy → Healthy** (CPU 14% · Disk 17% · RAM 48%, 2026-06-23).
+**Open follow-ups:** R5 (approve), R1-Phase-2 (local-stack CI → re-enable continuous e2e).
 
 ---
 
@@ -202,18 +227,20 @@ multi-tenant isolation + write-authorization guarantees are now continuously enf
 
 > Update this block every week. Percentages are toward the **v1.0 line**, not raw feature counts.
 
-### Completion snapshot — Week 0 (2026-06-22) · ✅ ARCH A2 COMPLETE (7/7)
+### Completion snapshot — Week 0 (2026-06-23) · ✅ ARCH A2 COMPLETE (7/7) · 🩺 Infra stabilized
 
 ```
 Overall v1.0   █████████████░░░░░░░░░░░░░░░░░  ~43%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
-  Track 2  Arch A2 (gate)    ██████████████████████  100%  ✅ COMPLETE — all 7 steps · e2e required in CI
+  Track 2  Arch A2 (gate)    ██████████████████████  100%  ✅ COMPLETE — all 7 steps (e2e gate paused vs prod per R1)
   Track 3  Phase 9 (P1 focus) █░░░░░░░░░░░░░░░░░░░░░░  ~3%
+  Infra    Supabase health   ██████████████████████  Healthy  ✅ R1+R2 done · R5 proposed
 ```
 
-> 🎯 **The release gate's long pole (Arch A2) is cleared.** The remaining v1.0 work is
-> **Phase 8** (mobile, gated on the EAS dev build — blocker B1) and **Phase 9 P1**
-> business-readiness (pricing · demo tenant · release checklist) — both parallelizable.
+> 🎯 **The release gate's long pole (Arch A2) is cleared, and the prod DB is back to
+> Healthy.** Remaining v1.0 work is **Phase 8** (mobile, gated on the EAS dev build —
+> blocker B1) and **Phase 9 P1** business-readiness (pricing · demo tenant · release
+> checklist) — both parallelizable. Infra follow-ups (R5, R1-Phase-2) are non-blocking.
 
 *Overall = weighted toward the release gate: A2 40% · Phase 8 35% · Phase 9 25%.*
 
@@ -240,13 +267,14 @@ Overall v1.0   █████████████░░░░░░░░�
 
 | # | Risk | Likelihood | Impact | Mitigation | Status |
 |---|------|-----------|--------|------------|--------|
-| R1 | Institution isolation regresses unseen (tenant data leak) | Low | 🔴 Critical | A2 Step 5 isolation e2e — **now a required CI gate (live 2026-06-22)** | ✅ Mitigated |
-| R2 | A2 stays at Foundation → ship on unverified routes | Medium | 🔴 Critical | A2 = hard v1.0 gate; route-crawl + flows + cross-role + isolation now **required in CI** | 🟢 Largely mitigated (Step 7 remains) |
+| R1 | Institution isolation regresses unseen (tenant data leak) | Low | 🔴 Critical | A2 Step 5 isolation e2e (verified clean). ⚠️ CI gate **paused vs prod** (infra-R1) — still runs **locally** + in git; continuous CI restored by R1-Phase-2 (local-stack) | ✅ Mitigated (CI enforcement to re-arm) |
+| R2 | A2 stays at Foundation → ship on unverified routes | Medium | 🔴 Critical | A2 **complete (7/7)**; full suite runs locally; CI auto-run paused vs prod pending local-stack | 🟢 Mitigated |
 | R3 | EAS / app-store approval delays | Medium | 🟠 High | Start P0 week 1; web is fully usable without mobile | Open |
 | R4 | Anthropic credit unfunded → AI inert in demos | Medium | 🟠 Med | Fund before 9B (B2) | Open |
 | R5 | CCTV scope creep drags release | Low | 🟠 Med | CCTV = post-v1.0 add-on (P7) | Mitigated |
 | R6 | Scope drift into Aura Build / new modules | Medium | 🔴 Critical | Rules below; this tracker is execution-only | Open |
 | R7 | Deferred items (SMS/recurring billing) mistaken for v1.0 blockers | Low | 🟢 Low | They're add-ons with manual fallbacks | Mitigated |
+| R8 | Supabase Disk-I/O / Nano capacity (went Unhealthy 2026-06-22) | Med | 🔴 Critical | Infra-R1 (e2e off prod) + R2 (RLS initplan) → **back to Healthy**; R5 (disable Realtime) + tier-upgrade are the remaining levers for real traffic | 🟢 Mitigated (R5 + capacity pending real load) |
 
 ---
 

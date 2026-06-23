@@ -107,12 +107,13 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 14 | [DEFERRED_REGISTER.md](DEFERRED_REGISTER.md) | Deferred Items Register — consolidated rollup of all intentionally deferred work | 🗂️ Register |
 | 15 | [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md) | Final Completion Plan — Phase 8 + Arch A2 + Phase 9 (Business Readiness) + Aura Core extraction analysis + v1.0 Go/No-Go | 🎯 Plan |
 | 16 | [AURA_V1_EXECUTION_TRACKER.md](AURA_V1_EXECUTION_TRACKER.md) | **v1.0 Execution Tracker — single source of truth to release** (Track 1 Phase 8 · Track 2 Arch A2 · Track 3 Phase 9 · Weekly Dashboard) | 📊 Live |
+| 17 | [INFRA_STABILIZATION/](INFRA_STABILIZATION/) | Infra Stabilization — Supabase Disk-I/O diagnosis (`DISK_IO_ANALYSIS.md`) + R1/R2/R5 plan; Unhealthy → Healthy (2026-06-23) | 🩺 Ops |
 
 ---
 
 ## 📋 Overall Progress Tracker
 
-> **Last updated:** 2026-06-21  
+> **Last updated:** 2026-06-23 (Arch A2 complete · Supabase infra stabilized → Healthy)  
 > **85 of 92 modules complete — 92% of full platform built**
 
 ```
@@ -235,7 +236,7 @@ Arch       ███████████████████████
 | ✅ Phase 7F-sub | NAAC SSR Builder — registry, readiness dashboard, Excel workbook + AISHE return + NIRF extract + print-PDF report | Complete | `3944ed7` |
 | ✅ Phase 7F-sub2 | IQAC Meeting & Action Tracker (NAAC 6.1) — iqac_meetings + iqac_action_items + RLS; register + meeting detail (agenda, minutes editor, action items with inline status/overdue); ≥2-meetings/year compliance + resolved-% (built within 7F) | Complete | `3cc2876` |
 | ✅ Arch A1 | Fine-grained RLS Policies — full audit of every `public` policy: all tables RLS-on, fine-grained SUPER_ADMIN/INST_ADMIN/HOD/owner scoping verified; found & fixed 1 cross-tenant leak (`staff_appraisal_activities: read` → owner-scoped); detector queries + findings in `docs/rls-policy-map.md` | Complete | `20260701000000` |
-| ✅ Arch A2 | Testing Strategy — 653 Vitest unit tests + the **full authenticated Playwright suite**: seeded 2-tenant fixtures, route-crawl (all 230 routes × owner role), 5 critical user flows, 27 cross-role denials, institution isolation (RLS/IDOR — verified clean), and action-wiring write-authorization (11 denials). Wired into CI as a **required check** (`Authenticated e2e`). 4 production/security bugs found & fixed en route. `docs/testing-guide.md` / `docs/ci-cd.md` | Complete | `ea779f2`…`32c5078`+ |
+| ✅ Arch A2 | Testing Strategy — 653 Vitest unit tests + the **full authenticated Playwright suite**: seeded 2-tenant fixtures, route-crawl (all 230 routes × owner role), 5 critical user flows, 27 cross-role denials, institution isolation (RLS/IDOR — verified clean), and action-wiring write-authorization (11 denials). Wired into CI as a **required check** (`Authenticated e2e`). 4 production/security bugs found & fixed en route. `docs/testing-guide.md` / `docs/ci-cd.md`. ⚠️ CI auto-run **paused vs prod** during infra stabilization (Disk-I/O) — still runs locally + in git; continuous CI restored by the local-stack job ([INFRA_STABILIZATION](INFRA_STABILIZATION/)) | Complete | `ea779f2`…`e88a225` |
 | ✅ Arch A3 | Database Index Strategy — idempotent migration covers every foreign key with `ix_<table>_<fk_cols>`; advisor `unindexed_foreign_keys` **136 → 0**; strategy + deferred RLS-perf backlog in `docs/query-performance.md` | Complete | `20260702000000` |
 | ✅ Arch A4 | Institution Onboarding Wizard — `/onboarding/[id]` multi-step wizard (Departments → Academic Year → Fees → Staff CSV), `is_onboarded` flag + first-login redirect, admin-gated actions, 14 unit tests | Complete | `20260703000000` |
 | ✅ Arch A5 | CI/CD Pipeline — GitHub Actions `ci.yml`: quality job (typecheck/lint/tests) + migrations job (from-zero schema replay + lint). **PR-validated end-to-end (PR #1: CI + Vercel preview all green)**; migration drift fixed via a `pg_dump` schema baseline (133 migrations squashed); **branch protection live** (require PR + both checks). Weekly encrypted backup (2.5C) | Complete | `287f280`, `be1b9e4` |
