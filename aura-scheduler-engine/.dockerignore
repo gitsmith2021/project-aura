@@ -1,0 +1,11 @@
+# Never ship the local virtualenv, caches, or secrets into the image.
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.env*
+*.md
+.git
+.gitignore
