@@ -82,7 +82,7 @@ async function seedDemo() {
       await admin.from("profiles").upsert({ id: uid, full_name: p.name, email: p.email, role: "STUDENT", tenant_id: I, department_id: did }, { onConflict: "id" });
       const { data } = await admin.from("students").insert({
         id: uid, institution_id: I, department_id: did, full_name: p.name, email: p.email, profile_id: uid,
-        roll_number: "CSC25001", roll_no: "CSC25001", programme: "B.Sc Computer Science", student_program: "UG",
+        roll_number: "CSC25001", roll_no: "CSC25001", programme: "UG", student_program: "UG",
         student_year: 1, semester: 1, section: "A", batch_year: 2025, gender: "male", category: "general", is_active: true,
       }).select("id").single();
       personaStudentId[p.key] = data.id;
@@ -142,6 +142,7 @@ async function seedDemo() {
   // building a KPI override would be out of scope (Phase 9B rule: no new components).
   const PROGRAMS = { CS: "B.Sc Computer Science", COM: "B.Com", ENG: "B.A English", PHY: "B.Sc Physics", MAT: "B.Sc Mathematics", MGT: "BBA" };
   const BATCHES = [{ y: 2023, yr: 3 }, { y: 2024, yr: 2 }, { y: 2025, yr: 1 }];
+  const PG_BATCHES = [{ y: 2024, yr: 2 }, { y: 2025, yr: 1 }];
   const studentRows = [];
   const STUDENT_TARGET = Math.max(60, Number(process.env.DEMO_STUDENTS) || 2850);
   const perDept = Math.round(STUDENT_TARGET / DEPARTMENTS.length);
@@ -156,8 +157,27 @@ async function seedDemo() {
         studentRows.push({
           institution_id: I, department_id: deptId[d.key], full_name: fullName(g),
           email: `${roll.toLowerCase()}${DEMO_DOMAIN}`, roll_number: roll, roll_no: roll, register_number: `REG${b.y}${pad(n, 4)}`,
-          programme: PROGRAMS[d.key], student_program: "UG", student_year: b.yr, semester: b.yr * 2 - 1,
+          programme: "UG", student_program: "UG", student_year: b.yr, semester: b.yr * 2 - 1,
           section: pick(["A", "B", "C", "D"]), batch_year: b.y, admission_date: `${b.y}-06-15`,
+          gender: g, category: pick(["general", "general", "obc", "obc", "sc", "st", "ews"]), is_active: true,
+        });
+      }
+    }
+  }
+  // PG cohorts — smaller than UG (realistic ratio), so the PG pills populate too.
+  const pgPerYear = Math.max(8, Math.round(perDept * 0.06));
+  for (const d of DEPARTMENTS) {
+    let pn = 0;
+    for (const b of PG_BATCHES) {
+      for (let i = 0; i < pgPerYear; i++) {
+        const g = chance(0.5) ? "female" : "male";
+        pn++;
+        const roll = `${d.code}PG${String(b.y).slice(2)}${pad(pn)}`;
+        studentRows.push({
+          institution_id: I, department_id: deptId[d.key], full_name: fullName(g),
+          email: `${roll.toLowerCase()}${DEMO_DOMAIN}`, roll_number: roll, roll_no: roll, register_number: `REGPG${b.y}${pad(pn, 4)}`,
+          programme: "PG", student_program: "PG", student_year: b.yr, semester: b.yr * 2 - 1,
+          section: pick(["A", "B"]), batch_year: b.y, admission_date: `${b.y}-06-15`,
           gender: g, category: pick(["general", "general", "obc", "obc", "sc", "st", "ews"]), is_active: true,
         });
       }

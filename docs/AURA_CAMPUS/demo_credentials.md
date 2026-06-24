@@ -43,8 +43,8 @@
   resources · live **IQAC / NAAC** accreditation activity · role-specific notifications.
 
 > Dashboards display the **actual seeded row counts** (honest numbers). The default seed
-> is the full showcase (~2,850 students); a lighter tier can be seeded with
-> `DEMO_STUDENTS=N npm run seed:demo`.
+> is the full showcase (~3,240 students — ≈2,890 UG + ~350 PG); a lighter UG tier
+> can be seeded with `DEMO_STUDENTS=N npm run seed:demo`.
 
 ## Suggested walkthrough order (for sales / evaluators)
 

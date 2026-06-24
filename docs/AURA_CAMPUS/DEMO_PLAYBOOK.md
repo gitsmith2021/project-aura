@@ -17,7 +17,7 @@
 | Login | `/login` · password (all personas): `AuraDemo@2026` |
 | Tenant | `aura-demo` · `/institutions/aura-demo` |
 | Seed / reset | `npm run seed:demo` · `npm run reset:demo` (or `/admin` → Reset Demo Tenant) |
-| Headline | 6 departments · 2,893 students · ~148 faculty · 88% fee collection · 92% placements · 320 scholarships · KH 55 resources · live IQAC/NAAC |
+| Headline | 6 departments · 3,240 students (UG + PG) · ~148 faculty · 88% fee collection · 93% placements · 320 scholarships · KH 55 resources · live IQAC/NAAC |
 
 ---
 
@@ -50,7 +50,7 @@
 
 ### Chairman — `chairman@demo.aura.test` (lands: Admin / institution dashboards)
 - **Click-path:** login → institution dashboard.
-- **Highlight:** total students (2,893), fee collection **88%**, placements **92%**, attendance, NAAC A+.
+- **Highlight:** total students (3,240 — UG + PG), fee collection **88%**, placements **93%**, attendance, NAAC A+.
 - **Say:** "Your entire institution's health, live, from one source of truth."
 
 ### Principal — `principal@demo.aura.test` (lands: Admin)

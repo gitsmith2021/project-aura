@@ -18,7 +18,7 @@
 | **Pain Point** | No single, real-time view of institutional health. Board reviews run on stale spreadsheets compiled by hand across departments, finance, and compliance — by the time numbers reach the Chairman, they're weeks old and impossible to drill into. |
 | **Aura Capability** | Institution-wide **KPI dashboards** from one source of truth — students, fee collection, placements, attendance, and accreditation standing, live and drill-down-able. |
 | **Business Outcome** | Board-ready visibility in seconds, not weeks. Evidence-based decisions, and confidence in NAAC/NIRF standing without a reporting fire-drill. |
-| **Demo proof point** | 6 departments · 2,893 students · **88% fee collection** · **92% placements** — all live on the dashboard. |
+| **Demo proof point** | 6 departments · 3,240 students (UG + PG) · **88% fee collection** · **93% placements** — all live on the dashboard. |
 
 ## 2. Principal — *Dr. Lakshmi Narayan*
 

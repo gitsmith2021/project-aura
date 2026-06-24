@@ -6,7 +6,13 @@
 // `@demo.aura.test` namespace) — it is NEVER a real or e2e tenant.
 
 import { config } from "dotenv";
+import { WebSocket } from "ws";
 import { createClient } from "@supabase/supabase-js";
+
+// Node < 22 has no native WebSocket; @supabase/supabase-js 2.10x instantiates a
+// Realtime client inside createClient(). The seeder only uses REST, but provide a
+// WebSocket implementation so client creation doesn't throw on Node 20.
+if (!globalThis.WebSocket) globalThis.WebSocket = WebSocket;
 
 config({ path: ".env.local" });
 

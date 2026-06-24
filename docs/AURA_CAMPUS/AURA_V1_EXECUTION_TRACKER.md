@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-24 · **🧩 SCHEDULER ENGINE #1 PRODUCTION DEPLOYED:** the OR-Tools timetable engine is live on Railway (`project-aura-production-6b0d.up.railway.app`) with shared-secret auth — validated end-to-end; UptimeRobot monitoring still pending (release-checklist item 9I). See [AURA_SCHEDULER_DEPLOYMENT.md](AURA_SCHEDULER_DEPLOYMENT.md). · **✅ ARCH A2 COMPLETE — all 7 steps done** (route-crawl · 5 flows · 27 cross-role denials · institution isolation clean · 11 write-auth denials · 4 production/security bugs found & fixed; Arch register 88% → 100%). · **🩺 INFRA STABILIZATION done (R1+R2):** Supabase returned **Unhealthy → Healthy** (CPU 14% · Disk 17% · RAM 48%) — see the [Infra Stabilization](#-infrastructure-stabilization-unplanned--complete) section. The A2 e2e gate is **paused against prod** (R1) pending the local-stack CI job. · **🎬 PHASE 9B (Demo Institution) 🟡 In Review (80%):** showcase-grade "Aura Demo College" seeded (2,893 students · 148 faculty · 9 executive personas · KH 55 · fee 88% · placements 92%) + CLI/admin reset — manual walkthrough & screenshots pending.
+> **Last updated:** 2026-06-24 · **🧩 SCHEDULER ENGINE #1 PRODUCTION DEPLOYED:** the OR-Tools timetable engine is live on Railway (`project-aura-production-6b0d.up.railway.app`) with shared-secret auth — validated end-to-end; UptimeRobot monitoring still pending (release-checklist item 9I). See [AURA_SCHEDULER_DEPLOYMENT.md](AURA_SCHEDULER_DEPLOYMENT.md). · **✅ ARCH A2 COMPLETE — all 7 steps done** (route-crawl · 5 flows · 27 cross-role denials · institution isolation clean · 11 write-auth denials · 4 production/security bugs found & fixed; Arch register 88% → 100%). · **🩺 INFRA STABILIZATION done (R1+R2):** Supabase returned **Unhealthy → Healthy** (CPU 14% · Disk 17% · RAM 48%) — see the [Infra Stabilization](#-infrastructure-stabilization-unplanned--complete) section. The A2 e2e gate is **paused against prod** (R1) pending the local-stack CI job. · **🎬 PHASE 9B (Demo Institution) 🟡 In Review (80%):** showcase-grade "Aura Demo College" seeded (3,240 students (UG + PG) · 148 faculty · 9 executive personas · KH 55 · fee 88% · placements 92%) + CLI/admin reset — manual walkthrough & screenshots pending.
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -222,7 +222,7 @@ pole is cleared — **4 production/security issues found & fixed** along the way
 **9B delivered (2026-06-23) — 🟡 In Review (80%):** a standalone, showcase-grade demo
 tenant **"Aura Demo College"** (`aura-demo`, `@demo.aura.test`) — completely isolated
 from real + e2e tenants. `scripts/demo/` (independent of `tests/e2e`): `seed-demo.mjs`
-(idempotent, service-role) builds **2,893 students · 148 faculty · 6 departments** and
+(idempotent, service-role) builds **3,240 students (UG + PG) · 148 faculty · 6 departments** and
 a curated "best-case" story across every module — finance (**88% fee collection**,
 salaries, expenses, 6 dept budgets), attendance, academics (CO/PO, CIA marks & published
 results), admissions funnel, exams, **placements (92%)**, **320 scholarships**, research
