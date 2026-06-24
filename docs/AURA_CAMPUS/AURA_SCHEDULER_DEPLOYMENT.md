@@ -3,9 +3,9 @@
 > **Scope:** Phase 1 deployment planning for **Aura Engine #1 — Timetable Optimization**
 > (the Python FastAPI + Google OR-Tools microservice in [`aura-scheduler-engine/`](../../aura-scheduler-engine/)).
 >
-> **Status:** 📝 Planned — **not yet deployed.** This document and the accompanying
-> `Dockerfile` / `railway.json` are inert artifacts. No application code has been changed;
-> the security hardening in §3 is *designed here* and applied as a separate deploy step.
+> **Status:** ✅ **Production Deployed** — 2026-06-24. Live on Railway at
+> `https://project-aura-production-6b0d.up.railway.app`. Shared-secret auth + CORS hardening
+> active and validated end-to-end (see §8). `Dockerfile` / `railway.json` are the live build config.
 >
 > **Architectural guardrails (non-negotiable):**
 > 1. The scheduler stays a **separate Python FastAPI microservice**.
@@ -296,9 +296,39 @@ OR-Tools CP-SAT runtime). The service is mostly idle — solves are short, burst
 | [main.py](../../aura-scheduler-engine/main.py) auth + CORS (§3) | Shared-secret (fail-closed, constant-time) + env-driven CORS | ✅ Applied — effective once `SCHEDULER_API_KEY` set in Railway |
 | [src/lib/scheduler.ts](../../src/lib/scheduler.ts) `X-API-Key` header (§3.1) | Paired client-side auth | ✅ Applied — effective once `SCHEDULER_API_KEY` set in Vercel |
 
-Nothing here changes the engine's behaviour until someone runs the §2 steps. The service boundary
-(separate process, HTTP contract, stateless solver) is preserved end to end.
+The service boundary (separate process, HTTP contract, stateless solver) is preserved end to end.
 
 ---
 
-*Phase 1 deployment planning — prepared for Aura Engine #1. Last updated: 2026-06-24.*
+## 8. Production Validation & Deployment Record
+
+**Status:** ✅ Production Deployed · **Date:** 2026-06-24 · **Engine:** Aura Engine #1 (Timetable Optimization)
+
+| Field | Value |
+|---|---|
+| Railway service URL | `https://project-aura-production-6b0d.up.railway.app` |
+| Health endpoint | `GET /health` → `200 {"status":"ok"}` (public) |
+| App probe | `GET /api/scheduler-health` (Vercel) → `200` |
+| Security model | Shared-secret `X-API-Key` on `/generate-schedule` (fail-closed `503` if unset, constant-time compare, `401` on mismatch); `/health` public; CORS allow-list empty (no browser origin); HTTPS-only via Railway; engine stateless (holds no DB credentials) |
+| Secrets | `SCHEDULER_API_KEY` set in Railway (engine) + Vercel (app); rotate by updating both and redeploying |
+
+**Validation run — 2026-06-24** (live, against the Railway URL):
+
+| Check | Expected | Result |
+|---|---|---|
+| `GET /health` | `200 ok` | ✅ `200 {"status":"ok"}` |
+| `POST /generate-schedule` (no key) | `401` | ✅ `401 Invalid or missing API key.` |
+| `POST /generate-schedule` (wrong key) | `401` | ✅ `401` |
+| `POST /generate-schedule` (valid key + payload) | `200 OPTIMAL` | ✅ `200 OPTIMAL`, 20 entries, 0.009s |
+| End-to-end generation (app → engine) | schedule returned | ✅ verified in `/schedules` UI |
+| Draft persistence (Supabase) | draft saved & listed | ✅ verified after `academic_year_id` fix (commit `198a82b`) |
+| Railway deployment | online & healthy | ✅ healthcheck passing |
+
+**Monitoring recommendations:**
+- **UptimeRobot** HTTP monitor on `https://<prod-domain>/api/scheduler-health`, 5-min interval, alert admin on down — one probe covers both the engine and Vercel→engine connectivity.
+- Watch **Railway metrics** (CPU/RAM) for OR-Tools spikes on large solves; right-size the instance if needed.
+- Query **`scheduler_error_logs`** (Supabase) for any `network`/`timeout`/`http_error`/`401` entries — a misconfigured or rotated key surfaces here, not silently.
+
+---
+
+*Aura Engine #1 — Production Deployed on Railway, 2026-06-24. Last updated: 2026-06-24.*

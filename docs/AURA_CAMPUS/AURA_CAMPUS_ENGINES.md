@@ -94,8 +94,8 @@ A full strategic argument is in [§7 — Why Engines Matter](#7-why-engines-matt
 
 | | |
 |---|---|
-| **Status** | 🟢 Implemented · 🟣 Core Candidate |
-| **Technology** | Python · FastAPI · Google OR-Tools (constraint solver), running as a standalone microservice on port 8000 |
+| **Status** | 🟢 Implemented · 🚀 **Production Deployed** (Railway, 2026-06-24) · 🟣 Core Candidate |
+| **Technology** | Python · FastAPI · Google OR-Tools (constraint solver), deployed as a standalone Docker microservice on Railway (`project-aura-production-6b0d.up.railway.app`), guarded by shared-secret `X-API-Key` auth. See [AURA_SCHEDULER_DEPLOYMENT.md](AURA_SCHEDULER_DEPLOYMENT.md). |
 | **Business Value** | High |
 | **Aura Core Candidate** | **Yes** — future **Aura Scheduler Engine** |
 
@@ -414,7 +414,7 @@ Engine ([roadmap/05-phase3-notifications.md](roadmap/05-phase3-notifications.md)
 
 | # | Engine | Category | Status | Business Value | Aura Core Candidate |
 |---|--------|----------|--------|-----------------|----------------------|
-| 1 | Timetable Optimization Engine | Academic Optimization | 🟢 Implemented | High | 🟣 Yes — Aura Scheduler |
+| 1 | Timetable Optimization Engine | Academic Optimization | 🚀 Production Deployed (Railway) | High | 🟣 Yes — Aura Scheduler |
 | 2 | Attendance Intelligence Engine | Operational Intelligence | 🟡 Partial | High | Partial |
 | 3 | Fee Intelligence Engine | Financial Intelligence | 🟡 Partial | High | No |
 | 4 | Examination Scheduling Engine | Academic Optimization | 🟡 Designed | High | 🟣 Yes — Aura Scheduler |
@@ -467,4 +467,4 @@ changes (Conceptual → Designed → Implemented), or an engine is extracted int
 reference the relevant [roadmap/](roadmap/) phase file for implementation detail and commit
 hashes; this document tracks strategic classification, not build checklists.*
 
-*Last updated: 2026-06-17*
+*Last updated: 2026-06-24 — Engine #1 (Timetable Optimization) marked Production Deployed (Railway).*

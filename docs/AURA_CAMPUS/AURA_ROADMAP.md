@@ -32,8 +32,8 @@ Branch:       main
 - **Database:** Supabase (PostgreSQL) with @supabase/ssr cookie-based auth
 - **Icons:** Lucide React only
 - **Charts:** Recharts
-- **Hosting:** Vercel (frontend) · Local/Cloud (Python microservice)
-- **Scheduler:** Python FastAPI + Google OR-Tools on port 8000
+- **Hosting:** Vercel (frontend) · Railway (Python scheduler microservice)
+- **Scheduler:** Python FastAPI + Google OR-Tools — Production Deployed on Railway (`project-aura-production-6b0d.up.railway.app`), shared-secret `X-API-Key` auth. See [AURA_SCHEDULER_DEPLOYMENT.md](AURA_SCHEDULER_DEPLOYMENT.md).
 
 ### Naming Conventions (CRITICAL — never use old names)
 | ❌ Old | ✅ New |
@@ -156,7 +156,7 @@ Arch       ███████████████████████
 | ✅ Core | Auth, Multi-tenant, Middleware + Slug URL rewrite | Complete | — |
 | ✅ Core | Institutions & Departments CRUD | Complete | — |
 | ✅ Core | Staff & Students Directory | Complete | — |
-| ✅ Core | AI Timetable Scheduler (FastAPI + OR-Tools) | Complete | — |
+| ✅ Core | AI Timetable Scheduler (FastAPI + OR-Tools) — 🚀 Production Deployed (Railway, 2026-06-24) | Complete | `4096370` |
 | ✅ Core | Attendance System (NFC + Manual) | Complete | — |
 | ✅ Finance | Fee Structures | Complete | — |
 | ✅ Finance | Fee Payments + Razorpay | Complete | — |
