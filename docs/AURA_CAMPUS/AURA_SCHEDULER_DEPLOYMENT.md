@@ -115,10 +115,9 @@ Request/response contracts are defined in [models.py](../../aura-scheduler-engin
 4. **Deploy** and confirm the build succeeds. Railway runs the healthcheck against `/health`
    (`railway.json` → `healthcheckPath`). The deploy is marked healthy only after `200 ok`.
 
-5. **Apply the security hardening** from §3 to `main.py` (API key + CORS) and the paired
-   `X-API-Key` header in [src/lib/scheduler.ts](../../src/lib/scheduler.ts). Commit, let Railway
-   redeploy the engine. *(This is the one code change in the rollout; it is intentionally a
-   discrete, reviewable step — see §3.)*
+5. **Security hardening — ✅ already in code** (§3). Before redeploying, set `SCHEDULER_API_KEY`
+   (same value) in **both** Railway and Vercel — the engine fails closed (`503`) without it. See
+   the rollout-order warning in §3.
 
 6. **Grab the public URL** (Railway → Settings → Networking → Generate Domain), e.g.
    `https://aura-scheduler-production.up.railway.app`. Verify:
@@ -146,9 +145,17 @@ Request/response contracts are defined in [models.py](../../aura-scheduler-engin
 
 ## 3. Security Hardening
 
-The engine is currently open: `allow_origins=["*"]` and no authentication
-([main.py:18-23](../../aura-scheduler-engine/main.py#L18-L23)). Once it has a public Railway URL,
-that must change **before** real traffic. Two layers, designed below — **not yet applied.**
+> ✅ **Applied** in [main.py](../../aura-scheduler-engine/main.py) (shared-secret auth + env-driven
+> CORS) and [src/lib/scheduler.ts](../../src/lib/scheduler.ts) (`X-API-Key` header). The code is
+> live in the repo; it only becomes *effective* once `SCHEDULER_API_KEY` is set in **both** Railway
+> and Vercel — see the rollout-order warning below.
+
+> 🔧 **Rollout order matters — set env vars BEFORE deploying.** Auth fails **closed**: with the new
+> code deployed but `SCHEDULER_API_KEY` unset, the engine returns `503` and generation breaks. So:
+> **(1)** set the *same* `SCHEDULER_API_KEY` in Railway (engine) **and** Vercel (app, Production)
+> first; **(2)** then deploy/redeploy both. Railway auto-deploys on push, so pushing before the
+> vars are set opens a `503` window. For **local dev**, set `SCHEDULER_API_KEY` in both your engine
+> shell (before `uvicorn`) and `.env.local`, or `/generate-schedule` will return `503` locally too.
 
 ### 3.1 Shared-secret authentication (primary control)
 
@@ -286,8 +293,8 @@ OR-Tools CP-SAT runtime). The service is mostly idle — solves are short, burst
 | [aura-scheduler-engine/Dockerfile](../../aura-scheduler-engine/Dockerfile) | Container image (python:3.12-slim, non-root, OR-Tools) | ✅ Created (inert) |
 | [aura-scheduler-engine/.dockerignore](../../aura-scheduler-engine/.dockerignore) | Keep venv/cache/secrets out of the image | ✅ Created (inert) |
 | [aura-scheduler-engine/railway.json](../../aura-scheduler-engine/railway.json) | Railway build + deploy + healthcheck config | ✅ Created (inert) |
-| `main.py` auth + CORS (§3) | Shared-secret + origin hardening | 📝 Designed — applied at deploy step 5 |
-| `src/lib/scheduler.ts` `X-API-Key` header (§3.1) | Paired client-side auth | 📝 Designed — applied at deploy step 5 |
+| [main.py](../../aura-scheduler-engine/main.py) auth + CORS (§3) | Shared-secret (fail-closed, constant-time) + env-driven CORS | ✅ Applied — effective once `SCHEDULER_API_KEY` set in Railway |
+| [src/lib/scheduler.ts](../../src/lib/scheduler.ts) `X-API-Key` header (§3.1) | Paired client-side auth | ✅ Applied — effective once `SCHEDULER_API_KEY` set in Vercel |
 
 Nothing here changes the engine's behaviour until someone runs the §2 steps. The service boundary
 (separate process, HTTP contract, stateless solver) is preserved end to end.

@@ -14,6 +14,9 @@
 import { createAdminClient } from "@/utils/supabase/admin";
 
 const SCHEDULER_URL = process.env.SCHEDULER_API_URL ?? "http://127.0.0.1:8000";
+// Shared secret — must match SCHEDULER_API_KEY on the engine (Railway). Sent on
+// mutating calls via callScheduler(); the public /health probe omits it.
+const SCHEDULER_API_KEY = process.env.SCHEDULER_API_KEY;
 const DEFAULT_TIMEOUT_MS = 30_000;
 const HEALTH_TIMEOUT_MS = 5_000;
 
@@ -63,11 +66,15 @@ export async function callScheduler<T>(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
+  const headers: Record<string, string> = {};
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (SCHEDULER_API_KEY) headers["X-API-Key"] = SCHEDULER_API_KEY;
+
   let res: Response;
   try {
     res = await fetch(`${SCHEDULER_URL}${path}`, {
       method,
-      headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+      headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
       cache: "no-store",
       signal: controller.signal,

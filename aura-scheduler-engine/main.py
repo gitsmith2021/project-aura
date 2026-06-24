@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException, status
+import hmac
+import os
+
+from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from models import ScheduleRequest, ScheduleResponse
@@ -15,12 +18,40 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# CORS: the only caller is the Next.js *server* (server-to-server requests are
+# not subject to browser CORS), so the production allow-list is normally empty.
+# ALLOWED_ORIGINS is an optional comma-separated list for any genuine browser
+# client; default is no cross-origin browser access at all.
+ALLOWED_ORIGINS = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "X-API-Key"],
 )
+
+# Shared-secret auth. The secret is provisioned via the SCHEDULER_API_KEY env
+# var on both this service (Railway) and the Next.js app (Vercel). The mutating
+# endpoint requires it; /health stays public so liveness probes and uptime
+# monitors work without the key.
+SCHEDULER_API_KEY = os.environ.get("SCHEDULER_API_KEY")
+
+
+async def require_api_key(x_api_key: str | None = Header(default=None)) -> None:
+    # Fail closed: if the secret was never provisioned, reject rather than run
+    # open — a "working" but unauthenticated solver is a footgun.
+    if not SCHEDULER_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Scheduler misconfigured: SCHEDULER_API_KEY is not set.",
+        )
+    # Constant-time comparison to avoid leaking the key via timing.
+    if not hmac.compare_digest(x_api_key or "", SCHEDULER_API_KEY):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API key.",
+        )
 
 
 @app.get("/health", tags=["ops"])
@@ -39,6 +70,7 @@ async def health_check() -> dict[str, str]:
             "description": "Constraints are mathematically infeasible or timed-out without a solution.",
         }
     },
+    dependencies=[Depends(require_api_key)],
 )
 async def generate_schedule(request: ScheduleRequest) -> ScheduleResponse:
     """
