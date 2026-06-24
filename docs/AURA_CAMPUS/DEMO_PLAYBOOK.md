@@ -112,7 +112,7 @@
 | 8 | Parent | ☐ | Parent Portal | child data visible | |
 | 9 | Alumnus | ☐ | Alumni Portal | alumni surface renders | |
 
-**Cross-checks:** (a) AI/Knowledge-Hub-AI screens degrade gracefully (no error) without Anthropic credit; (b) reset is scoped to `aura-demo` only (Bishop Heber + e2e tenants untouched); (c) online payment uses test Razorpay keys.
+**Cross-checks:** (a) AI/Knowledge-Hub-AI screens degrade gracefully (no error) without Anthropic credit; (b) reset is scoped to `aura-demo` only (Bishop Heber + e2e tenants untouched); (c) online payment uses test Razorpay keys; (d) **Students page** (`/users/students`): department cards show **non-zero UG counts** and **distinct colours** — regression guard for the seed `student_program` (must be `"UG"`/`"PG"`, not a degree name) and per-department `color` fix. PG pills are `0` by design (seed is UG-only).
 
 **Sign-off:** _____________________  Date: __________
 

@@ -48,8 +48,12 @@ async function seedDemo() {
   const { data: ay } = await admin.from("academic_years").insert({ institution_id: I, label: "2025–26", start_date: "2025-06-01", end_date: "2026-05-31", is_current: true }).select("id").single();
   const AY = ay.id;
   const deptId = {};
-  for (const d of DEPARTMENTS) {
-    const { data } = await admin.from("departments").insert({ institution_id: I, name: d.name }).select("id").single();
+  // Distinct palette key per department so each card renders a unique colour
+  // (keys mirror src/lib/deptColors.ts DEPT_COLOR_PALETTE; default is 'violet').
+  const DEPT_COLORS = ["violet", "sky", "emerald", "amber", "rose", "teal", "indigo", "orange", "pink", "cyan", "lime", "fuchsia"];
+  for (let di = 0; di < DEPARTMENTS.length; di++) {
+    const d = DEPARTMENTS[di];
+    const { data } = await admin.from("departments").insert({ institution_id: I, name: d.name, color: DEPT_COLORS[di % DEPT_COLORS.length] }).select("id").single();
     deptId[d.key] = data.id;
   }
   console.log("• academic year + 6 departments");
@@ -78,7 +82,7 @@ async function seedDemo() {
       await admin.from("profiles").upsert({ id: uid, full_name: p.name, email: p.email, role: "STUDENT", tenant_id: I, department_id: did }, { onConflict: "id" });
       const { data } = await admin.from("students").insert({
         id: uid, institution_id: I, department_id: did, full_name: p.name, email: p.email, profile_id: uid,
-        roll_number: "CSC25001", roll_no: "CSC25001", programme: "UG", student_program: "B.Sc Computer Science",
+        roll_number: "CSC25001", roll_no: "CSC25001", programme: "B.Sc Computer Science", student_program: "UG",
         student_year: 1, semester: 1, section: "A", batch_year: 2025, gender: "male", category: "general", is_active: true,
       }).select("id").single();
       personaStudentId[p.key] = data.id;
@@ -152,7 +156,7 @@ async function seedDemo() {
         studentRows.push({
           institution_id: I, department_id: deptId[d.key], full_name: fullName(g),
           email: `${roll.toLowerCase()}${DEMO_DOMAIN}`, roll_number: roll, roll_no: roll, register_number: `REG${b.y}${pad(n, 4)}`,
-          programme: "UG", student_program: PROGRAMS[d.key], student_year: b.yr, semester: b.yr * 2 - 1,
+          programme: PROGRAMS[d.key], student_program: "UG", student_year: b.yr, semester: b.yr * 2 - 1,
           section: pick(["A", "B", "C", "D"]), batch_year: b.y, admission_date: `${b.y}-06-15`,
           gender: g, category: pick(["general", "general", "obc", "obc", "sc", "st", "ews"]), is_active: true,
         });
