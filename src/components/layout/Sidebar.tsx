@@ -41,8 +41,32 @@ const isAcademicPath = (path: string) => ACADEMIC_PATH_FRAGMENTS.some(f => path.
 const CAMPUS_PATH_FRAGMENTS = [
   "/library", "/bookings", "/hostels", "/laboratories", "/assets",
   "/vendors", "/id-cards", "/gate", "/clubs", "/infirmary", "/sports", "/events",
+  "/transport", "/certificates", "/feedback", "/industry-connect",
 ] as const;
 const isCampusPath = (path: string) => CAMPUS_PATH_FRAGMENTS.some(f => path.includes(f));
+
+// ── Institution group — its OWN members (allowlist) ──────────────────────────
+// Every institution-scoped page lives under /institutions/{slug}/…, so we can NOT
+// treat "starts with /institutions" as belonging to this group — that would claim
+// Research, Placements, Finance, etc. The group owns only the routes below plus the
+// institution dashboard/list root; standalone leaves match their own segment.
+const INSTITUTION_PATH_FRAGMENTS = [
+  "/departments", "/compliance", "/audit-log", "/iqac",
+  "/knowledge-hub", "/notices", "/disciplinary", "/grievances",
+] as const;
+// The institution dashboard root: the list (/institutions) or a single
+// institution's dashboard (/institutions/{slug}) — never a deeper module route.
+const isInstitutionRoot = (path: string) =>
+  path === "/institutions" ||
+  (path.startsWith("/institutions/") && path.split("/").filter(Boolean).length === 2);
+const isInstitutionGroupPath = (path: string) =>
+  isInstitutionRoot(path) || INSTITUTION_PATH_FRAGMENTS.some(f => path.includes(f));
+
+// ── People group — its OWN members (allowlist) ───────────────────────────────
+const PEOPLE_PATH_FRAGMENTS = [
+  "/users", "/appraisals", "/staff-attendance", "/staff/career", "/parents",
+] as const;
+const isPeoplePath = (path: string) => PEOPLE_PATH_FRAGMENTS.some(f => path.includes(f));
 
 // ── Staff portal nav (flat — already short) ───────────────────────────────────
 const STAFF_NAV = [
@@ -302,9 +326,11 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
     if (path.includes("/admissions")) return "admissions";
     if (isAcademicPath(path)) return "academics";
     if (isCampusPath(path)) return "campus";
-    if (path.startsWith("/institutions") || path.startsWith("/departments")) return "institution";
-    if (path.startsWith("/users")) return "people";
     if (path.includes("/finance")) return "finance";
+    if (isPeoplePath(path)) return "people";
+    if (isInstitutionGroupPath(path)) return "institution";
+    // Standalone leaves (Research, Placements, Scholarships, Alumni, Recruitment)
+    // belong to no group — leave everything collapsed.
     return "";
   };
 
@@ -322,11 +348,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   // ── Active detection ──────────────────────────────────────────────────────
   const isItemActive = (key: string, href: string, exact?: boolean): boolean => {
     if (exact) return pathname === href;
-    if (key === "institutions")
-      return (pathname === "/institutions" || pathname.startsWith("/institutions/")) &&
-        !pathname.includes("/finance") && !pathname.includes("/compliance") &&
-        !pathname.includes("/audit-log") && !pathname.includes("/iqac") &&
-        !pathname.includes("/notices") && !isAcademicPath(pathname);
+    if (key === "institutions")   return isInstitutionRoot(pathname);
     if (key === "compliance")     return pathname.includes("/compliance");
     if (key === "audit-log")      return pathname.includes("/audit-log");
     if (key === "iqac")           return pathname.includes("/iqac");
@@ -520,13 +542,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               <NavGroup
                 icon={<Landmark size={18} />}
                 label="Institution"
-                isActive={
-                  pathname === "/institutions" ||
-                  pathname.startsWith("/departments") ||
-                  (pathname.startsWith("/institutions/") &&
-                    !pathname.includes("/finance") && !isAcademicPath(pathname) && !isCampusPath(pathname) &&
-                    !pathname.includes("/admissions") && !pathname.includes("/recruitment"))
-                }
+                isActive={isInstitutionGroupPath(pathname)}
                 isOpen={openGroup === "institution"}
                 onToggle={() => toggleGroup("institution")}
                 isCollapsed={isCollapsed}
@@ -558,7 +574,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
             <NavGroup
               icon={<Users size={18} />}
               label="People"
-              isActive={pathname.startsWith("/users")}
+              isActive={isPeoplePath(pathname)}
               isOpen={openGroup === "people"}
               onToggle={() => toggleGroup("people")}
               isCollapsed={isCollapsed}
