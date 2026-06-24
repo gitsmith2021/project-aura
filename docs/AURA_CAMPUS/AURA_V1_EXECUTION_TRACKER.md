@@ -210,7 +210,7 @@ pole is cleared — **4 production/security issues found & fixed** along the way
 | Item | Description | Priority | Status | Dependencies | Progress % |
 |------|-------------|----------|--------|--------------|-----------|
 | **9A** | Pricing Strategy — tiers mapped to `subscription_plans` (7E ✅) | 🔴 P1 | 🔲 | Phase 7E (✅) | 0% |
-| **9B** | Demo Institution — fully-seeded showcase tenant + reset script | 🔴 P1 | 🟡 **In Review** | Seed engine (✅) | **80%** — built & seeded; manual walkthrough + screenshots pending |
+| **9B** | Demo Institution — fully-seeded showcase tenant + reset script | 🔴 P1 | 🟡 **In Review** | Seed engine (✅) | **95%** — built & seeded; **playbook + storyboards + validation checklist + screenshot catalog delivered** ([DEMO_PLAYBOOK.md](DEMO_PLAYBOOK.md) · [PERSONA_STORYBOARDS.md](PERSONA_STORYBOARDS.md)); live capture + validation sign-off pending (owner) |
 | **9C** | Trial Provisioning — spin-up → Onboarding Wizard (A4 ✅) → trial sub | 🟠 P2 | 🔲 | A4 (✅), 7E (✅) | 0% (foundations ✅) |
 | **9D** | Onboarding Toolkit — import templates, go-live checklist, migration playbook | 🟠 P2 | 🔲 | BulkUpload flows (✅) | 0% |
 | **9E** | Sales Deck — problem→solution, NAAC/NIRF/AISHE compliance story, ROI | 🟠 P2 | 🔲 | 9A | 0% |
@@ -237,7 +237,14 @@ validated from DB, explicit `aura-demo` allowlist, refuses non-demo, type-to-con
 · tsc + lint clean. **Reserved 20%:** manual walkthrough · screenshot/marketing validation
 · sales-readiness review.
 
-**Track 3 completion: ~12%** (9B in review; existing 7E/A4/Knowledge-Hub foundations)
+**9B 80% → 95% (2026-06-24):** delivered the demo enablement docs — [DEMO_PLAYBOOK.md](DEMO_PLAYBOOK.md)
+(10–15 min sales flow · per-persona walkthrough scripts · executive validation checklist · screenshot
+catalog) and [PERSONA_STORYBOARDS.md](PERSONA_STORYBOARDS.md) (Chairman · Principal · HOD · Faculty ·
+Student — Pain → Capability → Outcome, reusable across demo/deck/web). AI features scoped as
+*optional/roadmap* (no Anthropic credit needed). **Remaining 5%** (owner): live screenshot capture +
+persona validation sign-off → flip to 100%.
+
+**Track 3 completion: ~16%** (9B 95% in review; existing 7E/A4/Knowledge-Hub foundations; 9A/9I next)
 
 ---
 
@@ -251,7 +258,7 @@ validated from DB, explicit `aura-demo` allowlist, refuses non-demo, type-to-con
 Overall v1.0   ██████████████░░░░░░░░░░░░░░░░  ~46%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
   Track 2  Arch A2 (gate)    ██████████████████████  100%  ✅ COMPLETE — all 7 steps (e2e gate paused vs prod per R1)
-  Track 3  Phase 9 (P1 focus) ███░░░░░░░░░░░░░░░░░░░░  ~12%  (9B demo tenant 🟡 In Review · 9A/9I pending)
+  Track 3  Phase 9 (P1 focus) ████░░░░░░░░░░░░░░░░░░░  ~16%  (9B 95% — playbook+storyboards done, capture/signoff pending · 9A/9I next)
   Infra    Supabase health   ██████████████████████  Healthy  ✅ R1+R2 done · R5 proposed
 ```
 
