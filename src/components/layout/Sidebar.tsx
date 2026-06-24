@@ -216,6 +216,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const pathname = usePathname();
   const [role, setRole] = useState<string | null>(null);
   const [userAuth, setUserAuth] = useState<{ role: string; tenant_id: string; department_id: string } | null>(null);
+  const [userTenantId, setUserTenantId] = useState<string | null>(null);
 
   useEffect(() => {
     // The access-tier cookie (aura-role) is httpOnly, so it is NOT readable from
@@ -235,6 +236,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
           r === "STUDENT" ? "student" :
           (r === "HOD" || r === "DEPARTMENT_HEAD") ? "hod" : "admin";
         setRole(tier);
+        if (row.tenant_id) setUserTenantId(String(row.tenant_id));
         if (tier === "hod") setUserAuth(row);
         return;
       }
@@ -254,6 +256,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   // ── Slug resolution ───────────────────────────────────────────────────────
   const [financeInstSlug, setFinanceInstSlug] = useState<string | null>(null);
   const [activeInstSlug,  setActiveInstSlug]  = useState<string | null>(null);
+  const [ownInstSlug,     setOwnInstSlug]     = useState<string | null>(null);
 
   useEffect(() => {
     const slugFromCookie = document.cookie.split("; ")
@@ -286,29 +289,29 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
     }
   }, [pathname]);
 
+  // Resolve the LOGGED-IN user's own institution slug (once per tenant).
   useEffect(() => {
-    if (role !== "admin" || activeInstSlug) return;
-    const stored = localStorage.getItem("aura_active_inst_slug");
-    if (stored) { setActiveInstSlug(stored); return; }
+    if (!userTenantId) return;
     const supabase = createClient();
-    supabase.from("institutions").select("slug").limit(1).maybeSingle().then(({ data }) => {
-      if (data?.slug) {
-        setActiveInstSlug(data.slug);
-        localStorage.setItem("aura_active_inst_slug", data.slug);
-      }
+    supabase.from("institutions").select("slug").eq("id", userTenantId).maybeSingle().then(({ data }) => {
+      if (data?.slug) setOwnInstSlug(data.slug);
     });
-  }, [role, activeInstSlug]);
+  }, [userTenantId]);
 
+  // Authoritative default for institution-scoped nav links: the user's OWN
+  // institution. Overrides any stale cross-user localStorage/cookie slug and
+  // replaces the old "first institution" (`limit 1`) fallback that could leak a
+  // different tenant into the menu URLs. Skipped while actively viewing a specific
+  // institution's URL (a super-admin browsing another tenant — the path effect wins).
   useEffect(() => {
-    if (!userAuth?.tenant_id || activeInstSlug) return;
-    const supabase = createClient();
-    supabase.from("institutions").select("slug").eq("id", userAuth.tenant_id).maybeSingle().then(({ data }) => {
-      if (data?.slug) {
-        setActiveInstSlug(data.slug);
-        localStorage.setItem("aura_active_inst_slug", data.slug);
-      }
-    });
-  }, [userAuth?.tenant_id, activeInstSlug]);
+    if (!ownInstSlug) return;
+    const segs = pathname.split("/");
+    const i = segs.indexOf("institutions");
+    const onInstUrl = i >= 0 && !!segs[i + 1] && !UUID_RE.test(segs[i + 1]);
+    if (onInstUrl) return;
+    setActiveInstSlug(ownInstSlug);
+    localStorage.setItem("aura_active_inst_slug", ownInstSlug);
+  }, [ownInstSlug, pathname]);
 
   useEffect(() => {
     const handler = (e: Event) => {
