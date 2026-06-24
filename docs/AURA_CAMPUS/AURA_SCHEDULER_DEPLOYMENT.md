@@ -103,7 +103,14 @@ Request/response contracts are defined in [models.py](../../aura-scheduler-engin
    |---|---|
    | `SCHEDULER_API_KEY` | the secret from step 1 |
    | `ALLOWED_ORIGINS` | `https://<your-vercel-domain>` (defense-in-depth; see §3.2) |
-   - **Do not** set `PORT` — Railway injects it automatically; the start command reads `$PORT`.
+   - **Do not** set `PORT` — Railway injects it automatically. The container binds to it via
+     the Dockerfile `CMD` (`sh -c "uvicorn … --port ${PORT:-8000}"`).
+
+   > ⚠️ **Start command — known gotcha.** `railway.json` intentionally has **no `startCommand`**.
+   > Railway runs `startCommand` in **exec form (no shell)**, so `$PORT` is passed to uvicorn as
+   > the *literal string* `$PORT` — uvicorn crashes on startup and the `/health` healthcheck then
+   > fails. The shell-form Dockerfile `CMD` (`sh -c …`) expands `${PORT:-8000}` correctly, so we
+   > let the `CMD` provide the start command and keep `startCommand` out of `railway.json`.
 
 4. **Deploy** and confirm the build succeeds. Railway runs the healthcheck against `/health`
    (`railway.json` → `healthcheckPath`). The deploy is marked healthy only after `200 ok`.
