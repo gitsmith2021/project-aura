@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   Wand2, Loader2, CheckCircle2, AlertCircle, ChevronDown,
-  Clock, Pencil, Check, X, Eye, RotateCcw, Trash2, Upload, TriangleAlert,
+  Clock, Eye, RotateCcw, Trash2, Upload, TriangleAlert,
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { fundingTypeShortLabel } from "@/lib/deptFunding";
@@ -55,13 +55,26 @@ export function AutoSchedulerButton({ tenantId, onPublished }: Props) {
       });
   }, [tenantId]);
 
-  // Year management
-  const [savedYears, setSavedYears] = useState<string[]>([]);
-  const [selectedYear, setSelectedYear] = useState("");
-  const [isAddingNew, setIsAddingNew] = useState(false);
-  const [newYearInput, setNewYearInput] = useState("");
-  const [editingYear, setEditingYear] = useState<string | null>(null);
-  const [editInput, setEditInput] = useState("");
+  // Academic years (DB-backed — the academic_years table is the source of truth)
+  const [academicYears, setAcademicYears] = useState<{ id: string; label: string }[]>([]);
+  const [selectedYearId, setSelectedYearId] = useState("");
+
+  useEffect(() => {
+    if (!tenantId) return;
+    const supabase = createClient();
+    supabase
+      .from("academic_years")
+      .select("id, label")
+      .eq("institution_id", tenantId)
+      .order("label", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) { console.error("AutoScheduler academic years fetch error:", error.message); return; }
+        if (data) {
+          setAcademicYears(data);
+          setSelectedYearId((prev) => prev || (data[0]?.id ?? ""));
+        }
+      });
+  }, [tenantId]);
 
   // Scheduler state
   const [uiState, setUiState] = useState<UIState>("idle");
@@ -89,51 +102,25 @@ export function AutoSchedulerButton({ tenantId, onPublished }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId, selectedDeptId, uiState]);
 
-  // ── Year management ──────────────────────────────────────────────────────
-
-  function handleSelectChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const val = e.target.value;
-    if (val === "__add_new__") { setIsAddingNew(true); setNewYearInput(""); }
-    else setSelectedYear(val);
-  }
-
-  function handleSaveNew() {
-    const trimmed = newYearInput.trim();
-    if (!trimmed) return;
-    if (!savedYears.includes(trimmed)) setSavedYears((p) => [...p, trimmed]);
-    setSelectedYear(trimmed);
-    setIsAddingNew(false);
-    setNewYearInput("");
-  }
-
-  function handleSaveEdit() {
-    const trimmed = editInput.trim();
-    if (trimmed && trimmed !== editingYear) {
-      setSavedYears((p) => p.map((y) => (y === editingYear ? trimmed : y)));
-      setSelectedYear(trimmed);
-    }
-    setEditingYear(null);
-    setEditInput("");
-  }
-
   // ── Generate ─────────────────────────────────────────────────────────────
 
   async function handleGenerate() {
-    if (!selectedYear || !selectedDeptId) return;
+    if (!selectedYearId || !selectedDeptId) return;
     setUiState("loading");
     setStatusMessage("");
     setSolveTime(null);
     setDraftId(null);
     setDraftData(null);
 
-    const result: SchedulerResult = await generateDepartmentSchedule(tenantId, selectedDeptId, selectedYear);
+    const yearLabel = academicYears.find((y) => y.id === selectedYearId)?.label ?? "the selected year";
+    const result: SchedulerResult = await generateDepartmentSchedule(tenantId, selectedDeptId, selectedYearId);
 
     if (result.success) {
       const label = result.solverStatus === "OPTIMAL" ? "Optimal" : "Feasible";
       setUiState("success");
       setSolveTime(result.solveTime);
       setDraftId(result.draftId);
-      setStatusMessage(`${label} schedule generated for "${selectedYear}". Review and publish when ready.`);
+      setStatusMessage(`${label} schedule generated for "${yearLabel}". Review and publish when ready.`);
     } else {
       setUiState("error");
       setStatusMessage(result.error);
@@ -199,7 +186,7 @@ export function AutoSchedulerButton({ tenantId, onPublished }: Props) {
   }
 
   const isLoading = uiState === "loading";
-  const isBusy = isLoading || isAddingNew || !!editingYear;
+  const isBusy = isLoading;
 
   // ── Full-panel states ────────────────────────────────────────────────────
 
@@ -266,69 +253,21 @@ export function AutoSchedulerButton({ tenantId, onPublished }: Props) {
         </div>
       </div>
 
-      {/* Academic Year picker */}
+      {/* Academic Year picker — sourced from the academic_years table */}
       <div className="flex flex-col gap-1.5">
         <label className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Academic Year</label>
-
-        {isAddingNew ? (
-          <div className="flex items-center gap-1.5">
-            <input autoFocus type="text" value={newYearInput}
-              onChange={(e) => setNewYearInput(e.target.value)}
-              placeholder="e.g. 2025-2026"
-              className="flex-1 rounded-md border border-violet-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 placeholder-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSaveNew();
-                if (e.key === "Escape") { setIsAddingNew(false); setNewYearInput(""); }
-              }}
-            />
-            <button onClick={handleSaveNew} disabled={!newYearInput.trim()} title="Save"
-              className="flex items-center justify-center w-7 h-7 rounded-md bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-              <Check className="w-3.5 h-3.5" />
-            </button>
-            <button onClick={() => { setIsAddingNew(false); setNewYearInput(""); }} title="Cancel"
-              className="flex items-center justify-center w-7 h-7 rounded-md border border-slate-200 text-slate-400 hover:bg-slate-100 transition-colors">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        ) : editingYear ? (
-          <div className="flex items-center gap-1.5">
-            <input autoFocus type="text" value={editInput}
-              onChange={(e) => setEditInput(e.target.value)}
-              className="flex-1 rounded-md border border-violet-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSaveEdit();
-                if (e.key === "Escape") { setEditingYear(null); setEditInput(""); }
-              }}
-            />
-            <button onClick={handleSaveEdit} title="Save"
-              className="flex items-center justify-center w-7 h-7 rounded-md bg-violet-600 text-white hover:bg-violet-700 transition-colors">
-              <Check className="w-3.5 h-3.5" />
-            </button>
-            <button onClick={() => { setEditingYear(null); setEditInput(""); }} title="Cancel"
-              className="flex items-center justify-center w-7 h-7 rounded-md border border-slate-200 text-slate-400 hover:bg-slate-100 transition-colors">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
+        {academicYears.length === 0 ? (
+          <p className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 text-[11px] text-amber-700">
+            No academic years found for this institution. Create one in onboarding/settings before generating a schedule.
+          </p>
         ) : (
-          <div className="flex items-center gap-1.5">
-            <div className="relative flex-1">
-              <select value={selectedYear} onChange={handleSelectChange} disabled={isLoading}
-                className="w-full appearance-none rounded-md border border-slate-200 bg-white px-2.5 py-1.5 pr-7 text-xs text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                <option value="" disabled>
-                  {savedYears.length === 0 ? "Click '+ Add New' to begin…" : "Select a year…"}
-                </option>
-                {savedYears.map((y) => <option key={y} value={y}>{y}</option>)}
-                <option value="__add_new__">+ Add New</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-            </div>
-            {selectedYear && (
-              <button onClick={() => { setEditingYear(selectedYear); setEditInput(selectedYear); }}
-                disabled={isLoading} title="Edit year name"
-                className="flex items-center justify-center w-7 h-7 rounded-md border border-slate-200 text-slate-400 hover:text-violet-600 hover:border-violet-200 hover:bg-violet-50 disabled:opacity-40 transition-colors">
-                <Pencil className="w-3 h-3" />
-              </button>
-            )}
+          <div className="relative">
+            <select value={selectedYearId} onChange={(e) => setSelectedYearId(e.target.value)} disabled={isLoading}
+              className="w-full appearance-none rounded-md border border-slate-200 bg-white px-2.5 py-1.5 pr-7 text-xs text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              <option value="" disabled>Select a year…</option>
+              {academicYears.map((y) => <option key={y.id} value={y.id}>{y.label}</option>)}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
           </div>
         )}
       </div>
@@ -336,7 +275,7 @@ export function AutoSchedulerButton({ tenantId, onPublished }: Props) {
       {/* Generate button */}
       <button
         onClick={handleGenerate}
-        disabled={isBusy || !selectedYear || !selectedDeptId}
+        disabled={isBusy || !selectedYearId || !selectedDeptId}
         className="flex items-center justify-center gap-1.5 w-full px-3 py-1.5 bg-violet-600 hover:bg-violet-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-md shadow-sm transition-all duration-150"
       >
         {isLoading ? (

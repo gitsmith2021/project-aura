@@ -1,28 +1,11 @@
 "use server";
 
 /*
-  Required Supabase migration — run once in the SQL editor before using this action:
-
-  create table if not exists draft_schedules (
-    id            uuid        primary key default gen_random_uuid(),
-    institution_id uuid       not null references institutions(id) on delete cascade,
-    department_id uuid        not null references departments(id)  on delete cascade,
-    academic_year text        not null,
-    schedule_data jsonb       not null,
-    status        text        not null default 'DRAFT',
-    generated_at  timestamptz not null default now(),
-    created_at    timestamptz not null default now()
-  );
-
-  alter table draft_schedules enable row level security;
-
-  create policy "Tenant members can manage their own draft schedules"
-    on draft_schedules for all
-    using (
-      tenant_id = (
-        select tenant_id from profiles where id = auth.uid() limit 1
-      )
-    );
+  draft_schedules stores AI-generated timetable drafts before they are published
+  into `schedules`. Academic year is keyed by `academic_year_id` (uuid FK →
+  academic_years), NOT a free-text column — see migration
+  20260609000007_foundation_2pre_b_academic_year_fk_migration. Callers pass an
+  academic_year_id; reads join academic_years(label) for display.
 */
 
 import { cookies } from "next/headers";
@@ -122,7 +105,7 @@ export async function listDraftSchedules(
 
   const { data, error } = await supabase
     .from("draft_schedules")
-    .select("id, academic_year, status, generated_at, schedule_data")
+    .select("id, status, generated_at, schedule_data, academic_years(label)")
     .eq("institution_id", institutionId)
     .eq("department_id", departmentId)
     .order("generated_at", { ascending: false })
@@ -133,9 +116,10 @@ export async function listDraftSchedules(
   const summaries: DraftSummary[] = (data ?? []).map((row) => {
     const sd = row.schedule_data as Record<string, unknown>;
     const timetable = (sd?.timetable as unknown[]) ?? [];
+    const ay = row.academic_years as unknown as { label: string } | null;
     return {
       id: row.id as string,
-      academic_year: row.academic_year as string,
+      academic_year: ay?.label ?? "—",
       status: row.status as string,
       generated_at: row.generated_at as string,
       slot_count: timetable.length,
@@ -153,19 +137,20 @@ export async function getDraftSchedule(
 
   const { data, error } = await supabase
     .from("draft_schedules")
-    .select("id, institution_id, department_id, academic_year, schedule_data, status")
+    .select("id, institution_id, department_id, status, schedule_data, academic_years(label)")
     .eq("id", draftId)
     .single();
 
   if (error || !data) return { data: null, error: error?.message ?? "Draft not found" };
 
   const sd = data.schedule_data as Record<string, unknown>;
+  const ay = data.academic_years as unknown as { label: string } | null;
   return {
     data: {
       id: data.id as string,
       institution_id: data.institution_id as string,
       department_id: data.department_id as string,
-      academic_year: data.academic_year as string,
+      academic_year: ay?.label ?? "—",
       status: data.status as string,
       timetable: (sd.timetable as DraftTimetableEntry[]) ?? [],
       staff_workload: (sd.staff_workload as DraftStaffWorkload[]) ?? [],
@@ -293,9 +278,11 @@ export async function publishDraftSchedule(draftId: string): Promise<PublishResu
 export async function generateDepartmentSchedule(
   institutionId: string,
   departmentId: string,
-  academicYear: string,
+  academicYearId: string,
 ): Promise<SchedulerResult> {
   try {
+    if (!academicYearId) return { success: false, error: "Please select an academic year first." };
+
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
@@ -305,14 +292,14 @@ export async function generateDepartmentSchedule(
       .select("id")
       .eq("institution_id", institutionId)
       .eq("department_id", departmentId)
-      .eq("academic_year", academicYear)
+      .eq("academic_year_id", academicYearId)
       .limit(1)
       .maybeSingle();
 
     if (existing) {
       return {
         success: false,
-        error: `A schedule for "${academicYear}" already exists for this department. Delete the existing one from Past Schedules first, or choose a different year name.`,
+        error: `A schedule for this academic year already exists for this department. Delete the existing one from Past Schedules first, or choose a different year.`,
       };
     }
 
@@ -370,7 +357,7 @@ export async function generateDepartmentSchedule(
       .insert({
         institution_id: institutionId,
         department_id: departmentId,
-        academic_year: academicYear,
+        academic_year_id: academicYearId,
         schedule_data: solverResponse,
         status: "DRAFT",
         generated_at: new Date().toISOString(),
