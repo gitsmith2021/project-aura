@@ -41,5 +41,8 @@
 
 ## Notes
 
-- **Monitoring (recommended, not yet configured):** UptimeRobot on `/api/scheduler-health` (5-min); watch Railway CPU/RAM; review `scheduler_error_logs` for `401`/timeout entries.
+- 🔒 **Scheduler development freeze (2026-06-24):** Engine #1 is feature-frozen — production-issue fixes only; no new scheduler features. See [AURA_SCHEDULER_DEPLOYMENT.md](AURA_SCHEDULER_DEPLOYMENT.md).
+- ✅ **Architecture Track complete:** Arch register A1–A8 = 8/8 (A2 closed it); e2e gate paused vs prod per R1.
+- 🛠️ **Ops reference:** day-to-day checks live in [OPERATIONAL_CHECKLIST.md](OPERATIONAL_CHECKLIST.md); incident recovery in [DISASTER_RECOVERY.md](../DISASTER_RECOVERY.md).
+- **Monitoring (recommended, not yet configured):** UptimeRobot on `/api/scheduler-health` (5-min) — step-by-step in [AURA_SCHEDULER_DEPLOYMENT.md §4.1](AURA_SCHEDULER_DEPLOYMENT.md); watch Railway CPU/RAM; review `scheduler_error_logs` for `401`/timeout entries.
 - **Secret rotation:** `SCHEDULER_API_KEY` lives in both Railway (engine) and Vercel (app) — rotate in both, then redeploy.

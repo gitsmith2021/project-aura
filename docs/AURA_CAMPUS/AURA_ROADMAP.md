@@ -102,7 +102,7 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 | 9X | [AURA_CAMPUS_KNOWLEDGE_HUB.md](AURA_CAMPUS_KNOWLEDGE_HUB.md) | Phase 7X — Aura Knowledge Hub (KH-1 through KH-5) — *KH-1…KH-5 ✅ (Repository · Search · Collaboration · Analytics · AI Layer); semantic-search/pgvector deferred* | ✅ Complete |
 | 10 | [roadmap/10-phase8-mobile-apps.md](roadmap/10-phase8-mobile-apps.md) | Phase 8 — React Native Mobile Apps & CCTV (8A–8F) | 🔲 Pending |
 | 11 | [roadmap/11-erp-standards-register.md](roadmap/11-erp-standards-register.md) | Global Academic ERP Standards — Alignment & Gap Register | 📖 Reference |
-| 12 | [roadmap/12-architecture-quality-register.md](roadmap/12-architecture-quality-register.md) | Architecture & Quality Improvement Register (A1–A8) | ⚙️ Ongoing |
+| 12 | [roadmap/12-architecture-quality-register.md](roadmap/12-architecture-quality-register.md) | Architecture & Quality Improvement Register (A1–A8) | ✅ Complete (8/8 — A2 closed the register; e2e gate paused vs prod per R1) |
 | 13 | [roadmap/13-how-to-run.md](roadmap/13-how-to-run.md) | How to Run Full Stack Locally | 📖 Reference |
 | 14 | [DEFERRED_REGISTER.md](DEFERRED_REGISTER.md) | Deferred Items Register — consolidated rollup of all intentionally deferred work | 🗂️ Register |
 | 15 | [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md) | Final Completion Plan — Phase 8 + Arch A2 + Phase 9 (Business Readiness) + Aura Core extraction analysis + v1.0 Go/No-Go | 🎯 Plan |

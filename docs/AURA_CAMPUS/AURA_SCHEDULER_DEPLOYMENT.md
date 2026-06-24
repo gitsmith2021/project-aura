@@ -7,6 +7,10 @@
 > `https://project-aura-production-6b0d.up.railway.app`. Shared-secret auth + CORS hardening
 > active and validated end-to-end (see §8). `Dockerfile` / `railway.json` are the live build config.
 >
+> 🔒 **Development freeze (2026-06-24):** Engine #1 is feature-frozen. No new scheduler features.
+> Changes are limited to **production-issue fixes** (outage, security, data-correctness) and the
+> documented v1.1 hardening backlog (§8) when explicitly prioritized. New ideas → backlog, not code.
+>
 > **Architectural guardrails (non-negotiable):**
 > 1. The scheduler stays a **separate Python FastAPI microservice**.
 > 2. The OR-Tools solver is **not** moved into Next.js.
@@ -236,6 +240,25 @@ app.add_middleware(
 
 This reuses the resilience layer already shipped in Phase 2.5C — no new app code is needed for
 monitoring, only the UptimeRobot setup.
+
+### 4.1 UptimeRobot setup (step by step) — ⚠️ pending
+
+The only monitoring action not yet done. ~5 minutes, free tier:
+
+1. Create a free account at **uptimerobot.com** → **+ Add New Monitor**.
+2. **Monitor Type:** `HTTP(s)`.
+3. **Friendly Name:** `Aura Scheduler Engine (via app)`.
+4. **URL:** `https://project-aura-three.vercel.app/api/scheduler-health`
+   *(probe the **app** route, not the Railway URL directly — it returns `503` when the engine is
+   unreachable, so one monitor covers both the engine and Vercel→engine connectivity).*
+5. **Monitoring Interval:** `5 minutes`.
+6. *(Optional)* **Advanced → Expected Status Code:** `200` (the route returns `503` when down).
+7. **Alert Contacts:** add the admin email; enable **"Send a notification when the monitor goes down/up."**
+8. **Create Monitor.** Confirm it shows **Up** within one interval.
+
+> Note: `/api/scheduler-health` is intentionally public (no auth), so no API key is needed in the
+> monitor. Do **not** point the monitor at `POST /generate-schedule` — that requires the secret and
+> would consume solver capacity on every check.
 
 ---
 
