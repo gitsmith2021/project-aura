@@ -22,8 +22,9 @@ const TIERS = [
     period: "/ month",
     audience: "Best for institutions up to 5,000 students",
     features: [
-      "Everything in Essential", "Library", "Hostel", "Payroll", "Recruitment",
-      "Inventory", "Events", "Sports", "Medical", "Accreditation Tools",
+      "Everything in Essential", "Admissions CRM", "Library", "Hostel", "Payroll",
+      "Recruitment", "Placements", "Scholarships", "Knowledge Hub", "Events & Sports",
+      "Inventory & Assets", "Accreditation Tools",
     ],
     checkColor: "text-violet-500",
     highlight: true,
@@ -34,8 +35,9 @@ const TIERS = [
     period: " ",
     audience: "Universities, autonomous & multi-campus groups",
     features: [
-      "Everything in Professional", "Multi-campus support", "SSR Builder",
-      "API Access", "Dedicated Support", "SLA", "Custom Integrations",
+      "Everything in Professional", "Multi-campus support", "Research & Publications",
+      "Alumni Network", "IQAC / AQAR Suite", "SSR Builder", "API Access",
+      "Dedicated Support", "SLA", "Custom Integrations",
     ],
     checkColor: "text-teal-500",
     highlight: false,
