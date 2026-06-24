@@ -257,6 +257,72 @@ function AccreditationMockup() {
   );
 }
 
+function AdmissionsMockup() {
+  const funnel = [
+    { stage: "Enquiries",    count: "1,240", pct: 100, color: "bg-cyan-500" },
+    { stage: "Applications", count: "780",   pct: 63,  color: "bg-sky-500" },
+    { stage: "Merit-listed", count: "560",   pct: 45,  color: "bg-blue-500" },
+    { stage: "Admitted",     count: "420",   pct: 34,  color: "bg-violet-500" },
+  ];
+  return (
+    <MockupFrame title="aura.edu/admissions/crm">
+      <div className="flex items-baseline justify-between mb-4">
+        <div>
+          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Conversion rate</p>
+          <p className="text-2xl font-black text-white">33.9%</p>
+        </div>
+        <Chip label="2026 intake · Live" cls="bg-cyan-500/15 text-cyan-400 border border-cyan-500/25" />
+      </div>
+      <div className="space-y-3">
+        {funnel.map(f => (
+          <div key={f.stage}>
+            <div className="flex justify-between text-[11px] mb-1">
+              <span className="text-slate-400 font-semibold">{f.stage}</span>
+              <span className="text-slate-300 font-bold">{f.count}</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-slate-800 overflow-hidden">
+              <div className={`h-full rounded-full ${f.color}`} style={{ width: `${f.pct}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </MockupFrame>
+  );
+}
+
+function PlacementsMockup() {
+  const offers = [
+    { co: "Zoho",     ctc: "₹9.0 LPA", n: "12 offers" },
+    { co: "TCS",      ctc: "₹7.0 LPA", n: "34 offers" },
+    { co: "Infosys",  ctc: "₹6.5 LPA", n: "28 offers" },
+  ];
+  return (
+    <MockupFrame title="aura.edu/placements">
+      <div className="grid grid-cols-3 gap-2.5 mb-4">
+        {[
+          { label: "Placed", value: "86%" },
+          { label: "Highest", value: "₹24L" },
+          { label: "Offers", value: "312" },
+        ].map(k => (
+          <div key={k.label} className="rounded-xl bg-slate-800/70 px-3 py-2.5">
+            <p className="text-[9px] text-slate-500 uppercase tracking-wider font-bold leading-tight">{k.label}</p>
+            <p className="text-sm font-black text-white mt-1 leading-tight">{k.value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="space-y-2">
+        {offers.map(o => (
+          <div key={o.co} className="flex items-center justify-between rounded-lg bg-slate-800/70 px-3 py-2.5">
+            <span className="text-[11px] text-slate-300 font-semibold">{o.co}</span>
+            <span className="text-[10px] text-slate-500 font-semibold">{o.n}</span>
+            <Chip label={o.ctc} cls="bg-indigo-500/15 text-indigo-300 border border-indigo-500/25" />
+          </div>
+        ))}
+      </div>
+    </MockupFrame>
+  );
+}
+
 function MobileMockup() {
   return (
     <div className="flex justify-center">
@@ -296,6 +362,8 @@ const MOCKUPS: Record<MockupVariant, () => React.ReactElement> = {
   cia: CiaMockup,
   accreditation: AccreditationMockup,
   mobile: MobileMockup,
+  admissions: AdmissionsMockup,
+  placements: PlacementsMockup,
 };
 
 /* ── Panel ─────────────────────────────────────────────────────────────── */

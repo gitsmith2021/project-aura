@@ -3,7 +3,7 @@ import {
   Shield, Award, Briefcase, Mic2, BookText, Library, BadgePercent,
   Activity, Database, Smartphone, FlaskConical, Landmark, Building2,
   School, Cpu, Cloud, DatabaseBackup, KeyRound, Layers, ShieldCheck,
-  RefreshCw, type LucideIcon,
+  RefreshCw, Microscope, UserPlus, BedDouble, BrainCircuit, type LucideIcon,
 } from "lucide-react";
 
 export type DemoFormData = {
@@ -32,7 +32,8 @@ export const TRUST_BADGES = [
 /** Mockup variants rendered as coded UI on the right side of each feature panel. */
 export type MockupVariant =
   | "timetable" | "finance" | "student" | "staff"
-  | "attendance" | "cia" | "accreditation" | "mobile";
+  | "attendance" | "cia" | "accreditation" | "mobile"
+  | "admissions" | "placements";
 
 export type FeaturePanelData = {
   icon: LucideIcon;
@@ -54,6 +55,14 @@ export const FEATURE_PANELS: FeaturePanelData[] = [
     bullets: ["Conflict auto-detection", "Staff workload balancing", "Print-ready PDF export"],
     gradient: "linear-gradient(135deg, #3B82F6, #06B6D4)",
     variant: "timetable",
+  },
+  {
+    icon: UserPlus,
+    title: "Admissions & CRM",
+    desc: "Capture enquiries, run the full application funnel, generate merit lists and convert prospects — a built-in admissions CRM from first touch to enrolment.",
+    bullets: ["Enquiry-to-enrolment funnel", "Automated merit lists", "Conversion analytics"],
+    gradient: "linear-gradient(135deg, #06B6D4, #0EA5E9)",
+    variant: "admissions",
   },
   {
     icon: Wallet,
@@ -96,6 +105,14 @@ export const FEATURE_PANELS: FeaturePanelData[] = [
     variant: "cia",
   },
   {
+    icon: Briefcase,
+    title: "Placements & Careers",
+    desc: "Run placement drives end to end — company directory, student eligibility, application tracking and offer analytics — with live placement-rate dashboards for NIRF and NAAC.",
+    bullets: ["Drive & company management", "Offer & CTC analytics", "Placement-rate reporting"],
+    gradient: "linear-gradient(135deg, #4F46E5, #7C3AED)",
+    variant: "placements",
+  },
+  {
     icon: BarChart2,
     title: "Accreditation Reports",
     desc: "One-click NAAC / NIRF / NBA compliance exports built on structured, evidence-ready data from every module.",
@@ -120,8 +137,11 @@ export const ACCREDITATION = [
   { code: "2.3", label: "Teaching-Learning Process",               module: "Lesson Plan Diary" },
   { code: "2.4", label: "Teacher Quality & Syllabus Coverage",     module: "Curriculum Manager" },
   { code: "2.6", label: "Student Performance & Learning Outcomes", module: "CIA + Exam + Results" },
-  { code: "5.2", label: "Placement & Industrial Training",         module: "Internship + Ranking Export" },
+  { code: "3.4", label: "Research Publications & IPR",             module: "Research & Publications" },
+  { code: "5.1", label: "Student Support & Scholarships",          module: "Scholarships Module" },
+  { code: "5.2", label: "Placement & Industrial Training",         module: "Placements + Ranking Export" },
   { code: "6.4", label: "Finance & Budget Management",             module: "Finance & Fee Module" },
+  { code: "6.5", label: "Internal Quality Assurance (IQAC)",       module: "IQAC Dashboard + AQAR" },
   { code: "7.1", label: "Institutional Values & Best Practices",   module: "Reports & Compliance" },
 ];
 
@@ -138,7 +158,7 @@ export const TIMETABLE_BENEFITS = [
 /** Task 2 — accreditation frameworks + tooling highlighted in the Accreditation section. */
 export const COMPLIANCE_FRAMEWORKS = ["NAAC", "NIRF", "AISHE", "OBE", "CBCS"];
 export const ACCREDITATION_TOOLS = [
-  "SSR Builder", "CO/PO Mapping", "CIA Ledger", "Outcome Attainment", "Accreditation Reports",
+  "SSR Builder", "AQAR Generator", "CO/PO Mapping", "CIA Ledger", "Outcome Attainment", "IQAC Action Tracker",
 ];
 
 /** Task 3 — "Why institutions switch": pain → outcome transformations (not a module list). */
@@ -193,6 +213,13 @@ export const MARQUEE_ITEMS = [
   { Icon: Briefcase,     label: "Internship Tracker",    color: "from-amber-500 to-yellow-500" },
   { Icon: Users,         label: "Staff Portal",          color: "from-sky-500 to-blue-500" },
   { Icon: GraduationCap, label: "Student Portal",        color: "from-purple-500 to-violet-500" },
+  { Icon: UserPlus,      label: "Admissions CRM",        color: "from-cyan-500 to-sky-500" },
+  { Icon: Briefcase,     label: "Placements & Careers",  color: "from-blue-500 to-indigo-500" },
+  { Icon: Microscope,    label: "Research & Publications", color: "from-fuchsia-500 to-purple-500" },
+  { Icon: BrainCircuit,  label: "Knowledge Hub",         color: "from-violet-500 to-fuchsia-500" },
+  { Icon: Award,         label: "Scholarships",          color: "from-emerald-500 to-teal-500" },
+  { Icon: BedDouble,     label: "Hostel & Mess",         color: "from-amber-500 to-orange-500" },
+  { Icon: Library,       label: "Library & Assets",      color: "from-teal-500 to-cyan-500" },
   { Icon: BarChart2,     label: "Accreditation Reports", color: "from-rose-500 to-pink-500" },
   { Icon: Shield,        label: "NAAC Compliance",       color: "from-violet-500 to-indigo-500" },
   { Icon: Database,      label: "Secure Data",           color: "from-sky-500 to-teal-500" },
@@ -209,23 +236,40 @@ export const PLATFORM_TRUST: { Icon: LucideIcon; title: string; desc: string }[]
   { Icon: RefreshCw,      title: "Continuous Updates",           desc: "New features and improvements ship automatically — no upgrade projects, ever." },
 ];
 
-export const TECH = [
-  { name: "Next.js 16",       role: "App Router · Server Actions · Turbopack · Edge Runtime",
-    badge: "▲", badgeL: "bg-slate-900 text-white",         cardL: "bg-slate-100 border-slate-300",      nameL: "text-slate-900",
-    badgeD: "dark:bg-white dark:text-black",               cardD: "dark:bg-zinc-900 dark:border-zinc-700",             nameD: "dark:text-white" },
-  { name: "Supabase",         role: "PostgreSQL · Auth · Realtime · Row Level Security · Edge Functions",
-    badge: "⚡", badgeL: "bg-emerald-100 text-emerald-700", cardL: "bg-emerald-50 border-emerald-200",   nameL: "text-emerald-700",
-    badgeD: "dark:bg-emerald-500/20 dark:text-emerald-400", cardD: "dark:bg-emerald-950/40 dark:border-emerald-800/30", nameD: "dark:text-emerald-400" },
-  { name: "TypeScript",       role: "Strict end-to-end type safety · Zero `any` · Full-stack inference",
-    badge: "TS", badgeL: "bg-blue-100 text-blue-700",      cardL: "bg-blue-50 border-blue-200",         nameL: "text-blue-700",
-    badgeD: "dark:bg-blue-500/20 dark:text-blue-400",      cardD: "dark:bg-blue-950/30 dark:border-blue-800/30",       nameD: "dark:text-blue-400" },
-  { name: "Tailwind CSS v4",  role: "Utility-first · Dark mode · Responsive · Design tokens",
-    badge: "🎨", badgeL: "bg-cyan-100 text-cyan-700",       cardL: "bg-cyan-50 border-cyan-200",         nameL: "text-cyan-700",
-    badgeD: "dark:bg-cyan-500/20 dark:text-cyan-400",      cardD: "dark:bg-cyan-950/30 dark:border-cyan-800/30",       nameD: "dark:text-cyan-400" },
-  { name: "PostgreSQL + RLS", role: "Row Level Security · Multi-tenant isolation · SECURITY DEFINER",
-    badge: "🐘", badgeL: "bg-sky-100 text-sky-700",         cardL: "bg-sky-50 border-sky-200",           nameL: "text-sky-700",
-    badgeD: "dark:bg-sky-500/20 dark:text-sky-400",        cardD: "dark:bg-sky-950/30 dark:border-sky-800/30",         nameD: "dark:text-sky-400" },
-  { name: "Vercel Edge",      role: "Global edge deployment · Instant rollbacks · Git-based CI/CD",
-    badge: "▼", badgeL: "bg-slate-200 text-slate-700",     cardL: "bg-slate-100 border-slate-300",      nameL: "text-slate-800",
-    badgeD: "dark:bg-slate-600/40 dark:text-slate-300",    cardD: "dark:bg-slate-800/40 dark:border-slate-700/40",     nameD: "dark:text-slate-200" },
+/** Tech stack — `id` maps to a real brand mark in TechStack/brandLogos.tsx.
+    `logo` colors the glyph; `tint` is the masonry card's bg + border. */
+export type TechItem = { id: string; name: string; sub: string; logo: string; tint: string };
+export const TECH: TechItem[] = [
+  { id: "nextjs", name: "Next.js 16",
+    sub: "React framework with the App Router, Server Actions and Turbopack — server-rendered and fast by default.",
+    logo: "text-slate-900 dark:text-white",
+    tint: "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-700/60" },
+  { id: "supabase", name: "Supabase",
+    sub: "Postgres platform behind Auth, Realtime, Storage and Edge Functions — hosted in India.",
+    logo: "text-emerald-500 dark:text-emerald-400",
+    tint: "bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-800/30" },
+  { id: "typescript", name: "TypeScript",
+    sub: "Strict, end-to-end type safety across the entire stack.",
+    logo: "text-blue-600 dark:text-blue-400",
+    tint: "bg-blue-50/70 dark:bg-blue-950/20 border-blue-200/70 dark:border-blue-800/30" },
+  { id: "tailwind", name: "Tailwind",
+    sub: "Utility-first styling with design tokens and first-class dark mode.",
+    logo: "text-cyan-500 dark:text-cyan-400",
+    tint: "bg-cyan-50/70 dark:bg-cyan-950/20 border-cyan-200/70 dark:border-cyan-800/30" },
+  { id: "vector", name: "Vector Search",
+    sub: "pgvector embeddings power semantic search across the Knowledge Hub and documents.",
+    logo: "text-fuchsia-500 dark:text-fuchsia-400",
+    tint: "bg-fuchsia-50/70 dark:bg-fuchsia-950/20 border-fuchsia-200/70 dark:border-fuchsia-800/30" },
+  { id: "postgresql", name: "PostgreSQL + RLS",
+    sub: "Row-Level Security enforces strict multi-tenant isolation right at the database layer, with SECURITY DEFINER routines.",
+    logo: "text-indigo-600 dark:text-indigo-400",
+    tint: "bg-indigo-50/70 dark:bg-indigo-950/20 border-indigo-200/70 dark:border-indigo-800/30" },
+  { id: "python", name: "Python Engines + OR-Tools",
+    sub: "Google OR-Tools constraint solver generates conflict-free, workload-balanced timetables in seconds.",
+    logo: "text-sky-600 dark:text-sky-400",
+    tint: "bg-sky-50/70 dark:bg-sky-950/20 border-sky-200/70 dark:border-sky-800/30" },
+  { id: "vercel", name: "Vercel Edge Infrastructure",
+    sub: "Global edge network with instant rollbacks and Git-based continuous deployment.",
+    logo: "text-slate-900 dark:text-white",
+    tint: "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-700/60" },
 ];

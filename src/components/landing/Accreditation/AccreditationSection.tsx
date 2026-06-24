@@ -25,7 +25,7 @@ export function AccreditationSection() {
       id="naac"
       ref={sectionRef}
       aria-label="Accreditation alignment"
-      className="py-24 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-violet-50 via-purple-50/50 to-white dark:from-violet-950/25 dark:via-purple-950/20 dark:to-slate-950 border-y border-violet-100 dark:border-violet-900/20 transition-colors duration-300"
+      className="py-24 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-violet-50 via-purple-50/50 to-white dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 border-y border-violet-100 dark:border-slate-800/60 transition-colors duration-300"
     >
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
         <div className="naac-intro">

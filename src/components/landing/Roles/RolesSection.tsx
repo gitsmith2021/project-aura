@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import {
-  CheckCircle2, TrendingUp, Landmark, ShieldCheck, Layers, BookOpen, GraduationCap, Users,
+  CheckCircle2, TrendingUp, Landmark, ShieldCheck, Layers, BookOpen, GraduationCap, Users, Handshake,
   type LucideIcon,
 } from "lucide-react";
 import { gsap, useGSAP, prefersReducedMotion } from "@/lib/gsap";
@@ -122,6 +122,21 @@ const ROLES: Role[] = [
       ],
     },
   },
+  {
+    key: "alumni", label: "Alumni", Icon: Handshake, accent: "#E11D48",
+    headline: "Stay connected to your alma mater.",
+    description: "Engage with your institution for life — reunions, mentorship, a professional network and giving back, all in one alumni portal.",
+    highlights: ["Alumni Directory", "Reunions & Events", "Mentorship Programs", "Career Network", "Giving & Endowments"],
+    preview: {
+      portal: "alumni",
+      kpis: [{ label: "Network", value: "4,200+" }, { label: "Events / yr", value: "6" }, { label: "Mentors", value: "180" }],
+      list: [
+        { label: "Annual Alumni Meet — 12 Apr", tag: "RSVP", ok: true },
+        { label: "Mentor a final-year student", tag: "Open", ok: true },
+        { label: "Class of 2015 reunion", tag: "New", ok: true },
+      ],
+    },
+  },
 ];
 
 /* ── Coded portal preview (no images) ─────────────────────────────────────── */
@@ -213,7 +228,7 @@ export function RolesSection() {
       id="roles"
       ref={sectionRef}
       aria-label="Designed for every role"
-      className="py-24 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-white via-violet-50/50 to-white dark:from-slate-950 dark:via-violet-950/15 dark:to-slate-950 border-y border-violet-100 dark:border-violet-900/20 transition-colors duration-300"
+      className="py-24 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-white via-violet-50/50 to-white dark:from-slate-950 dark:via-slate-950 dark:to-slate-950 border-y border-violet-100 dark:border-slate-800/60 transition-colors duration-300"
     >
       <div className="max-w-6xl mx-auto">
         {/* Header */}

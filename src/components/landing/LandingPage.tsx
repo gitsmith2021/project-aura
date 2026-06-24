@@ -17,9 +17,10 @@ import { CTASection } from "./CTA/CTASection";
 import { Footer } from "./Footer";
 
 export function LandingPage() {
-  // No theme toggle — the page uses a fixed light/dark rhythm. The hero and the
-  // top of the page are light; two sections deeper are wrapped in `.dark` to
-  // create deliberate visual breaks while scrolling (see <main> below).
+  // No theme toggle — the page uses a fixed light/dark rhythm: regular content
+  // sections alternate odd=light / even=dark (dark ones wrapped in `.dark`), and
+  // three accent strips (Stat Counter band, Tech Stack, CTA) ride purple
+  // gradients as deliberate visual breaks while scrolling (see <main> below).
   return (
     <SmoothScrollProvider>
       <div>
@@ -59,35 +60,27 @@ export function LandingPage() {
           <main>
             {/* Storytelling flow: Hero → Trust → AI Timetable → Accreditation →
                 Why Switch → Roles (every stakeholder) → Core Features →
-                Institution Types → Pricing → Tech Stack → Final CTA.
+                Institution Types → Pricing → Tech Stack → Built With → Final CTA.
 
-                Fixed light/dark rhythm (no toggle): light intro, a dark band,
-                light again, then a dark close-out — each `.dark` wrapper flips
-                the section's built-in dark variants for a clean visual break. */}
+                Fixed light/dark rhythm (no toggle): regular content sections
+                strictly alternate — odd = light, even = dark — and each dark
+                section is wrapped in `.dark` to flip its built-in dark variants.
+                The three accent strips (Stat Counter band, Tech Stack, CTA) sit
+                on purple gradients regardless, as deliberate visual breaks. */}
 
-            {/* ── Light: the introduction ── */}
-            <HeroSection />
-            <StatsSection />
-            <TimetableSpotlight />
-            <AccreditationSection />
-
-            {/* ── Dark band: the pitch ── */}
-            <div className="dark bg-slate-950 text-white">
-              <ComparisonSection />
-              <RolesSection />
-              <FeaturesSection />
-            </div>
-
-            {/* ── Light: who it's for & pricing ── */}
-            <InstitutionTypesSection />
-            <PricingSection />
-
-            {/* ── Dark close-out: tech + final CTA ── */}
-            <div className="dark bg-slate-950 text-white">
-              <TechStackSection />
-              <BuiltWithSection />
-              <CTASection />
-            </div>
+            {/* 1 · Light */}                <HeroSection />
+            {/* 2 · Dark (purple stat band on top) */}
+            <div className="dark"><StatsSection /></div>
+            {/* 3 · Light */}                <TimetableSpotlight />
+            {/* 4 · Dark */}                 <div className="dark"><AccreditationSection /></div>
+            {/* 5 · Light */}                <ComparisonSection />
+            {/* 6 · Dark */}                 <div className="dark"><RolesSection /></div>
+            {/* 7 · Light */}                <FeaturesSection />
+            {/* 8 · Dark */}                 <div className="dark"><InstitutionTypesSection /></div>
+            {/* 9 · Light */}                <PricingSection />
+            {/* ── Purple strip ── */}       <TechStackSection />
+            {/* 11 · Light */}               <BuiltWithSection />
+            {/* ── Purple strip ── */}       <CTASection />
           </main>
           <div className="dark bg-slate-950 text-white">
             <Footer />
