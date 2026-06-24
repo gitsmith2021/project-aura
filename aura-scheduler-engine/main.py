@@ -4,6 +4,7 @@ import hmac
 import os
 
 from fastapi import Depends, FastAPI, Header, HTTPException, status
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 
 from models import ScheduleRequest, ScheduleResponse
@@ -80,7 +81,10 @@ async def generate_schedule(request: ScheduleRequest) -> ScheduleResponse:
     - **FEASIBLE**: A valid schedule was found within the time limit (may not be perfectly balanced).
     - **400**: No valid schedule exists for the given constraints.
     """
-    result = solve(request)
+    # The CP-SAT solve is synchronous and CPU-bound (up to 30s). Run it in a
+    # worker thread so it never blocks the event loop — keeps /health responsive
+    # and concurrent requests unserialized during a long solve.
+    result = await run_in_threadpool(solve, request)
 
     if result.status not in ("OPTIMAL", "FEASIBLE"):
         raise HTTPException(

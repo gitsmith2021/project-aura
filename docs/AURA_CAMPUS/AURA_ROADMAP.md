@@ -113,7 +113,7 @@ Page receives: /institutions/22f26ef2-d7e9-4a41-a267-97d7eaa7c1d8/curriculum  (a
 
 ## 📋 Overall Progress Tracker
 
-> **Last updated:** 2026-06-23 (Arch A2 complete · Supabase infra stabilized → Healthy)  
+> **Last updated:** 2026-06-24 (Scheduler Engine #1 Production Deployed on Railway · Arch A2 complete · Supabase infra Healthy)  
 > **85 of 92 modules complete — 92% of full platform built**
 
 ```
@@ -156,7 +156,7 @@ Arch       ███████████████████████
 | ✅ Core | Auth, Multi-tenant, Middleware + Slug URL rewrite | Complete | — |
 | ✅ Core | Institutions & Departments CRUD | Complete | — |
 | ✅ Core | Staff & Students Directory | Complete | — |
-| ✅ Core | AI Timetable Scheduler (FastAPI + OR-Tools) — 🚀 Production Deployed (Railway, 2026-06-24) | Complete | `4096370` |
+| ✅ Core | AI Timetable Scheduler (FastAPI + OR-Tools) — 🚀 Production Deployed (Railway, 2026-06-24) | Complete | `a5a43f4`…`4096370` |
 | ✅ Core | Attendance System (NFC + Manual) | Complete | — |
 | ✅ Finance | Fee Structures | Complete | — |
 | ✅ Finance | Fee Payments + Razorpay | Complete | — |

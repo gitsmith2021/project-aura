@@ -25,7 +25,7 @@
 
 ## Completed
 
-- **Aura Engine #1 — Timetable Scheduler: Production Deployed** (2026-06-24, commit `4096370`)
+- **Aura Engine #1 — Timetable Scheduler: Production Deployed** (2026-06-24, deployed from `main` `a5a43f4`→`4096370`)
   - Python FastAPI + Google OR-Tools engine deployed as a standalone Docker microservice on **Railway** (`project-aura-production-6b0d.up.railway.app`) — kept off Vercel by design (long-lived CPU-bound solver, not a serverless function).
   - Fixed the `$PORT` exec-form startup crash (Dockerfile shell-form `CMD`, no `railway.json` startCommand) and the draft-save failure (aligned scheduler to the `academic_year_id` FK).
   - Security: shared-secret `X-API-Key` on `/generate-schedule` (fail-closed, constant-time), `/health` public, CORS allow-list empty, HTTPS-only.

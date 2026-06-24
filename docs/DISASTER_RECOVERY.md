@@ -58,34 +58,51 @@ psql "<NEW_PROJECT_DB_URL>" -f backup.sql
 
 ---
 
-## Scheduler resilience (Python engine, port 8000)
+## Scheduler resilience (Python OR-Tools engine on Railway)
 
 The OR-Tools scheduler is a stateless microservice — if it dies, **no data is
-lost**; only AI timetable generation is unavailable.
+lost**; only AI timetable generation is unavailable. It runs as a standalone
+Docker service on **Railway** (`https://project-aura-production-6b0d.up.railway.app`),
+reached by the Next.js app via `SCHEDULER_API_URL`. Full deployment record:
+[AURA_SCHEDULER_DEPLOYMENT.md](AURA_CAMPUS/AURA_SCHEDULER_DEPLOYMENT.md).
 
 - **Wrapper:** every call goes through `callScheduler()` in
   [`src/lib/scheduler.ts`](../src/lib/scheduler.ts) (Dev Rule 14) — 30s
   timeout, failures logged to the `scheduler_error_logs` table.
+- **Auth:** `POST /generate-schedule` requires the shared secret `X-API-Key`
+  (`SCHEDULER_API_KEY`, set in **both** Railway and Vercel); `/health` is public.
 - **Health probe:** `GET /api/scheduler-health` (public) → pings the engine's
   `/health`; returns `200 ok` / `503 offline`.
 - **UI fallback:** the AI Auto-Scheduler panel shows an amber "AI Scheduler is
   offline" banner when the probe fails; manual scheduling keeps working.
 
-**Uptime monitoring (manual setup):** create a free UptimeRobot HTTP monitor on
-`https://<production-domain>/api/scheduler-health`, interval 5 minutes, alert
-the admin email when down. (The monitor reaches the Next.js app, which probes
-the engine over its private connection — the engine itself is not exposed.)
+**Uptime monitoring (⚠️ recommended — NOT yet configured):** create a free
+UptimeRobot HTTP monitor on `https://<production-domain>/api/scheduler-health`,
+interval 5 minutes, alert the admin email when down. One check covers both the
+engine and Vercel→engine connectivity.
 
-**Manual timetable fallback procedure** (while the engine is down):
+**Recovery ladder (production, fastest first):**
 
-1. Schedules → select department → **Add Class** for each slot (or publish an
-   existing past draft from the AI panel's *Past Schedules* list — publishing
-   does not need the engine).
-2. Use the conflict badge on the Schedules page to catch double-bookings.
-3. To restart the engine locally:
-   `cd aura-scheduler-engine && venv\Scripts\activate && uvicorn main:app --port 8000`
-4. Check `scheduler_error_logs` (Supabase table editor) for the failure window
-   and root cause.
+1. **Engine unhealthy / bad deploy** → Railway → service → **Deployments** →
+   select the last healthy deploy → **Redeploy**. (Railway also auto-restarts on
+   healthcheck failure per `railway.json`.)
+2. **Keep the app up in degraded mode** → Vercel → unset `SCHEDULER_API_URL`
+   (or point it at a dead host) → redeploy. The offline banner appears; manual
+   timetable building + publishing still works.
+3. **`503 "SCHEDULER_API_KEY is not set"`** → the key is missing/mismatched on
+   the engine; auth fails closed. Re-set `SCHEDULER_API_KEY` (identical in
+   Railway **and** Vercel) and redeploy both.
+4. **Diagnose** → check `scheduler_error_logs` (Supabase table editor) for the
+   failure window (`network`/`timeout`/`http_error`/`401`).
+
+**Local dev only (not a production path):**
+`cd aura-scheduler-engine && venv\Scripts\activate && uvicorn main:app --port 8000`
+— set `SCHEDULER_API_KEY` in your shell + `.env.local`, or `/generate-schedule`
+returns `503`.
+
+**Manual timetable fallback** (while the engine is down): Schedules → select
+department → **Add Class** per slot, or publish an existing past draft (publishing
+needs no engine); use the conflict badge to catch double-bookings.
 
 ---
 
@@ -95,6 +112,6 @@ the engine over its private connection — the engine itself is not exposed.)
 |----------|--------|
 | Bad data written (e.g. wrong bulk import) | PITR restore to just before the write |
 | Supabase project lost / region outage | Restore latest weekly dump into a new project, repoint env vars |
-| Scheduler down | No action needed for data; restart engine, use manual scheduling meanwhile |
+| Scheduler down | Data safe (stateless). Railway → Redeploy last healthy; or Vercel unset `SCHEDULER_API_URL` for degraded mode. Use manual scheduling meanwhile |
 | Leaked `SUPABASE_SERVICE_ROLE_KEY` | Dashboard → Settings → API → rotate service role key, update Vercel + `.env.local` |
 | Leaked `BACKUP_ENCRYPTION_KEY` | Rotate the secret; old artifacts remain encrypted with the old key — delete them after rotating |

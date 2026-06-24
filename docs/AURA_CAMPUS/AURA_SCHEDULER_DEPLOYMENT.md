@@ -81,10 +81,13 @@ Request/response contracts are defined in [models.py](../../aura-scheduler-engin
 
 ---
 
-## 2. Deployment Steps
+## 2. Deployment Procedure (executed 2026-06-24)
 
+> These are the **as-run** steps that produced the live deployment recorded in §8 — retained as
+> the repeatable procedure for re-provisioning or standing up a second environment.
+>
 > Prerequisite: a Railway account and the engine source pushed to the connected GitHub repo
-> (it already lives in [`aura-scheduler-engine/`](../../aura-scheduler-engine/)).
+> (it lives in [`aura-scheduler-engine/`](../../aura-scheduler-engine/)).
 
 1. **Generate the shared secret** (used by both the engine and Vercel):
    ```bash
@@ -304,6 +307,10 @@ The service boundary (separate process, HTTP contract, stateless solver) is pres
 
 **Status:** ✅ Production Deployed · **Date:** 2026-06-24 · **Engine:** Aura Engine #1 (Timetable Optimization)
 
+> This section is the **canonical source** for the engine URL, deployment date, and security model.
+> Other trackers (roadmap, engines register, DEV_TRACKER, DISASTER_RECOVERY) link here rather than
+> re-stating these values, to avoid drift.
+
 | Field | Value |
 |---|---|
 | Railway service URL | `https://project-aura-production-6b0d.up.railway.app` |
@@ -320,14 +327,26 @@ The service boundary (separate process, HTTP contract, stateless solver) is pres
 | `POST /generate-schedule` (no key) | `401` | ✅ `401 Invalid or missing API key.` |
 | `POST /generate-schedule` (wrong key) | `401` | ✅ `401` |
 | `POST /generate-schedule` (valid key + payload) | `200 OPTIMAL` | ✅ `200 OPTIMAL`, 20 entries, 0.009s |
-| End-to-end generation (app → engine) | schedule returned | ✅ verified in `/schedules` UI |
-| Draft persistence (Supabase) | draft saved & listed | ✅ verified after `academic_year_id` fix (commit `198a82b`) |
+| End-to-end generation (app → engine) | schedule returned | ✅ confirmed in the `/schedules` UI by the product owner (2026-06-24) |
+| Draft persistence (Supabase) | draft saved & listed | ✅ confirmed working in-app by the product owner post-fix (`198a82b`); not independently re-queried in the DB |
 | Railway deployment | online & healthy | ✅ healthcheck passing |
 
 **Monitoring recommendations:**
 - **UptimeRobot** HTTP monitor on `https://<prod-domain>/api/scheduler-health`, 5-min interval, alert admin on down — one probe covers both the engine and Vercel→engine connectivity.
 - Watch **Railway metrics** (CPU/RAM) for OR-Tools spikes on large solves; right-size the instance if needed.
 - Query **`scheduler_error_logs`** (Supabase) for any `network`/`timeout`/`http_error`/`401` entries — a misconfigured or rotated key surfaces here, not silently.
+
+**Known limitations & planned hardening (v1 → v1.1):**
+- **Concurrency — ✅ fixed:** the CPU-bound CP-SAT solve runs in a worker thread
+  (`run_in_threadpool` in [main.py](../../aura-scheduler-engine/main.py)), so a long solve no longer
+  blocks the event loop or the `/health` check.
+- **No rate limiting / payload-size cap** on `/generate-schedule` yet — an *authenticated* client
+  could submit an oversized problem and tie up a worker. Add a request-size guard + basic rate limit.
+- **Single instance, no autoscaling/HA** — adequate for current load; revisit (horizontal scaling or
+  a job queue) before heavy concurrent multi-tenant use.
+- **Monitoring not yet active** — the UptimeRobot probe and a `scheduler_error_logs` alert are
+  recommended above but not yet configured.
+- **Cost/availability:** Railway Hobby tier (~$5 credit), no formal SLA — revisit the tier at scale.
 
 ---
 

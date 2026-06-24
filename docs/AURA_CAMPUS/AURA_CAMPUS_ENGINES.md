@@ -64,7 +64,8 @@ A full strategic argument is in [§7 — Why Engines Matter](#7-why-engines-matt
 
 | Status | Meaning |
 |--------|---------|
-| 🟢 **Implemented** | Live in production, processing real institutional data today |
+| 🟢 **Implemented** | Built and live in the app, running against demo/pilot data |
+| 🚀 **Production Deployed** | Implemented *and* deployed to a managed production host (beyond local/dev) with authentication + healthchecks |
 | 🟡 **Designed** | Schema and roadmap spec exist (see linked phase file); not yet built |
 | 🔵 **Conceptual** | Strategic opportunity identified; no schema or spec written yet |
 | 🟣 **Core Candidate** | Strong candidate to extract into a shared [AURA_CORE](../AURA_CORE/) service |
@@ -94,7 +95,7 @@ A full strategic argument is in [§7 — Why Engines Matter](#7-why-engines-matt
 
 | | |
 |---|---|
-| **Status** | 🟢 Implemented · 🚀 **Production Deployed** (Railway, 2026-06-24) · 🟣 Core Candidate |
+| **Status** | 🚀 **Production Deployed** (Railway, 2026-06-24) · 🟣 Core Candidate |
 | **Technology** | Python · FastAPI · Google OR-Tools (constraint solver), deployed as a standalone Docker microservice on Railway (`project-aura-production-6b0d.up.railway.app`), guarded by shared-secret `X-API-Key` auth. See [AURA_SCHEDULER_DEPLOYMENT.md](AURA_SCHEDULER_DEPLOYMENT.md). |
 | **Business Value** | High |
 | **Aura Core Candidate** | **Yes** — future **Aura Scheduler Engine** |
