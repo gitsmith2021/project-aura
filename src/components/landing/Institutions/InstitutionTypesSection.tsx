@@ -27,19 +27,19 @@ export function InstitutionTypesSection() {
     <section
       id="institutions"
       ref={sectionRef}
-      aria-label="Built for Indian higher education"
+      aria-label="Built for Managing Higher Educational Institutions"
       className="py-24 sm:py-28 px-4 sm:px-6 bg-slate-50 dark:bg-slate-900/20 transition-colors duration-300"
     >
       <div className="max-w-6xl mx-auto">
         <div className="inst-head text-center mb-14">
           <p className="text-[11px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400 mb-3">Purpose-Built</p>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight mb-4 text-slate-900 dark:text-white">
-            Built for
-            <span className="bg-gradient-to-r from-violet-600 to-pink-500 dark:from-violet-400 dark:to-pink-400 bg-clip-text text-transparent"> Indian Higher Education.</span>
+            Built for Managing<br/>
+            <span className="bg-gradient-to-r from-violet-600 to-pink-500 dark:from-violet-400 dark:to-pink-400 bg-clip-text text-transparent"> Higher Educational Institutions.</span>
           </h2>
           <p className="text-slate-500 dark:text-slate-400 max-w-xl mx-auto text-sm">
-            From single-department colleges to multi-campus universities — AURA understands the
-            workflows, compliance and rhythms of Indian academic institutions.
+            From single-department colleges to multi-campus universities — AURA CAMPUS™ understands the
+            workflows, compliance and rhythms of all academic institutions.
           </p>
         </div>
 

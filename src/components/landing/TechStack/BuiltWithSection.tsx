@@ -54,7 +54,7 @@ export function BuiltWithSection() {
         </div>
 
         <p className="mt-9 text-center text-xs text-slate-400 dark:text-slate-500">
-          Open stack, hosted in India — no proprietary lock-in.
+          Open stack, Cloud based Hosting — no proprietary lock-in.
         </p>
       </div>
     </section>

@@ -34,7 +34,7 @@ export function HeroText() {
   return (
     <div ref={scopeRef} className="flex-1 text-center lg:text-left max-w-2xl mx-auto lg:mx-0">
       <div className="hero-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/8 text-violet-600 dark:text-violet-300 text-xs font-semibold mb-7">
-        <Zap size={11} /> Purpose-built Academic Management · Trusted by Educational Institutions Worldwide
+        <Zap size={11} /> Purpose-built Academic Management · Trust Worthy Partner for all Educational Institutions
       </div>
 
       <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[72px] font-black tracking-tighter leading-[0.95] mb-5 text-slate-900 dark:text-white">
