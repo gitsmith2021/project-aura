@@ -23,7 +23,7 @@
 | 3. Backups & DR | 🔴 | 🟡 Runbook ready; secrets + PITR pending | **Partial** |
 | 4. Billing | 🔴 | ✅ 7E live; recurring deferred (manual invoicing) | No |
 | 5. Legal & Compliance | 🔴 | ✅ Privacy policy + DPDP consent/erasure live | No |
-| 6. Monitoring | 🟠 | 🔲 UptimeRobot not configured | No (recommended) |
+| 6. Monitoring | 🟠 | ✅ UptimeRobot live (web + scheduler, 5-min) | No |
 | 7. Rollback | 🔴 | ✅ CI migration-replay + git revert + Vercel rollback | No |
 | 8. Performance & Infra | 🟠 | ✅ Supabase Healthy (Nano — capacity-watch under real load) | No |
 | 9. Sign-off | 🔴 | 🔲 Awaiting owner sign-off | **Yes** |
@@ -116,11 +116,11 @@ Pro upgrade or accept the weekly-backup RPO as a documented launch risk.
 | # | Check | Status | Action |
 |---|-------|--------|--------|
 | 6.1 | Scheduler health endpoint | ✅ | `/api/scheduler-health` + `/health` on Railway. |
-| 6.2 | UptimeRobot (or equiv) on web + scheduler | 🔲 | **Not configured** (register 2.5-3). Set up monitors on the Vercel URL + Railway `/health` — steps in [AURA_SCHEDULER_DEPLOYMENT.md](AURA_SCHEDULER_DEPLOYMENT.md) §4.1. |
+| 6.2 | UptimeRobot (or equiv) on web + scheduler | ✅ | **Live** — 2 monitors (Aura Campus Health + Aura Scheduler Engine), 5-min HTTP checks, both Up. Scheduler `/health` now answers HEAD (UptimeRobot's method) after the GET+HEAD fix (`c0c7c9f`). |
 | 6.3 | Platform health dashboard | ✅ | Phase 7D `/admin/health` (scheduler ping, payment failures, audit, DB counts). |
 | 6.4 | Error visibility | 🟡 | Vercel + Railway logs + Supabase logs. No aggregated APM (acceptable for v1.0). |
 
-**Gate result:** 🟠 — strongly recommended to set UptimeRobot before cutover (15-min task); not a hard blocker because `/admin/health` gives manual visibility.
+**Gate result:** ✅ — UptimeRobot live on both the web app and the scheduler (5-min checks); `/admin/health` remains the in-app fallback.
 
 ---
 
@@ -157,7 +157,7 @@ Cutover may proceed when all 🔴 blockers above are ✅ **and** the items below
 
 - [ ] §3.2 backup secrets set · §3.5 webhook secret confirmed in Vercel
 - [ ] §4.5 Razorpay **live** keys confirmed in Vercel
-- [ ] §6.2 UptimeRobot monitors live (recommended)
+- [x] §6.2 UptimeRobot monitors live (web + scheduler) ✅ 2026-06-25
 - [ ] Pro-plan decision recorded for §1.6 (leaked-password) + §3.3 (PITR)
 - [ ] `npm run build` + full local e2e re-run green at cutover
 - [ ] Security advisors re-checked (no new critical findings)
