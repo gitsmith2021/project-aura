@@ -53,3 +53,7 @@ next-env.d.ts
 .claude/settings.local.json
 # Phase 9B — demo credentials (never commit)
 /.demo/
+# Secrets / key exports (never commit)
+docs/AURA_CAMPUS/rzp-key.csv
+*-key.csv
+*.secret.csv
