@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-24 · **🧩 SCHEDULER ENGINE #1 PRODUCTION DEPLOYED:** the OR-Tools timetable engine is live on Railway (`project-aura-production-6b0d.up.railway.app`) with shared-secret auth — validated end-to-end; UptimeRobot monitoring still pending (release-checklist item 9I). See [AURA_SCHEDULER_DEPLOYMENT.md](AURA_SCHEDULER_DEPLOYMENT.md). · **✅ ARCH A2 COMPLETE — all 7 steps done** (route-crawl · 5 flows · 27 cross-role denials · institution isolation clean · 11 write-auth denials · 4 production/security bugs found & fixed; Arch register 88% → 100%). · **🩺 INFRA STABILIZATION done (R1+R2):** Supabase returned **Unhealthy → Healthy** (CPU 14% · Disk 17% · RAM 48%) — see the [Infra Stabilization](#-infrastructure-stabilization-unplanned--complete) section. The A2 e2e gate is **paused against prod** (R1) pending the local-stack CI job. · **🎬 PHASE 9B (Demo Institution) 🟡 In Review (80%):** showcase-grade "Aura Demo College" seeded (3,240 students (UG + PG) · 148 faculty · 9 executive personas · KH 55 · fee 88% · placements 92%) + CLI/admin reset — manual walkthrough & screenshots pending.
+> **Last updated:** 2026-06-25 · **💰 PHASE 9A PRICING ✅ COMPLETE:** public pricing page is the single source of truth (Essential ₹9,999 · Professional ₹24,999 · Enterprise Custom) with monthly/annual toggle (15% off) + 30-day free trial; `subscription_plans` aligned via migration `20260710000000` (awaiting remote apply); [PRICING_STRATEGY.md](PRICING_STRATEGY.md) documents the commercial reference. · **🧩 SCHEDULER ENGINE #1 PRODUCTION DEPLOYED:** the OR-Tools timetable engine is live on Railway (`project-aura-production-6b0d.up.railway.app`) with shared-secret auth — validated end-to-end; UptimeRobot monitoring still pending (release-checklist item 9I). See [AURA_SCHEDULER_DEPLOYMENT.md](AURA_SCHEDULER_DEPLOYMENT.md). · **✅ ARCH A2 COMPLETE — all 7 steps done** (route-crawl · 5 flows · 27 cross-role denials · institution isolation clean · 11 write-auth denials · 4 production/security bugs found & fixed; Arch register 88% → 100%). · **🩺 INFRA STABILIZATION done (R1+R2):** Supabase returned **Unhealthy → Healthy** (CPU 14% · Disk 17% · RAM 48%) — see the [Infra Stabilization](#-infrastructure-stabilization-unplanned--complete) section. The A2 e2e gate is **paused against prod** (R1) pending the local-stack CI job. · **🎬 PHASE 9B (Demo Institution) 🟡 In Review (80%):** showcase-grade "Aura Demo College" seeded (3,240 students (UG + PG) · 148 faculty · 9 executive personas · KH 55 · fee 88% · placements 92%) + CLI/admin reset — manual walkthrough & screenshots pending.
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -209,7 +209,7 @@ pole is cleared — **4 production/security issues found & fixed** along the way
 
 | Item | Description | Priority | Status | Dependencies | Progress % |
 |------|-------------|----------|--------|--------------|-----------|
-| **9A** | Pricing Strategy — tiers mapped to `subscription_plans` (7E ✅) | 🔴 P1 | 🔲 | Phase 7E (✅) | 0% |
+| **9A** | Pricing Strategy — tiers mapped to `subscription_plans` (7E ✅) | 🔴 P1 | ✅ | Phase 7E (✅) | **100%** |
 | **9B** | Demo Institution — fully-seeded showcase tenant + reset script | 🔴 P1 | 🟡 **In Review** | Seed engine (✅) | **95%** — built & seeded; **playbook + storyboards + validation checklist + screenshot catalog delivered** ([DEMO_PLAYBOOK.md](DEMO_PLAYBOOK.md) · [PERSONA_STORYBOARDS.md](PERSONA_STORYBOARDS.md)); live capture + validation sign-off pending (owner) |
 | **9C** | Trial Provisioning — spin-up → Onboarding Wizard (A4 ✅) → trial sub | 🟠 P2 | 🔲 | A4 (✅), 7E (✅) | 0% (foundations ✅) |
 | **9D** | Onboarding Toolkit — import templates, go-live checklist, migration playbook | 🟠 P2 | 🔲 | BulkUpload flows (✅) | 0% |
@@ -244,7 +244,19 @@ Student — Pain → Capability → Outcome, reusable across demo/deck/web). AI 
 *optional/roadmap* (no Anthropic credit needed). **Remaining 5%** (owner): live screenshot capture +
 persona validation sign-off → flip to 100%.
 
-**Track 3 completion: ~16%** (9B 95% in review; existing 7E/A4/Knowledge-Hub foundations; 9A/9I next)
+**9A delivered (2026-06-25) — ✅ Complete:** the public pricing page
+([PricingSection.tsx](../../src/components/landing/Pricing/PricingSection.tsx)) is now
+the single source of truth — **Essential ₹9,999 · Professional ₹24,999 · Enterprise Custom**,
+with a **monthly/annual billing toggle (15% annual discount)** and a **30-day free trial**
+on every paid CTA; AI features explicitly scoped as an optional add-on. The `subscription_plans`
+catalog (7E) is aligned to these anchors via migration
+[`20260710000000_phase9a_pricing_alignment.sql`](../../supabase/migrations/20260710000000_phase9a_pricing_alignment.sql)
+(Starter→Essential, Pro→Professional reprice; Enterprise custom + MRR baseline; FK-safe rename;
+idempotent + cold-start seed). Commercial reference documented in
+[PRICING_STRATEGY.md](PRICING_STRATEGY.md) (tiers · levers · source-of-truth mapping · billing
+mechanics · deferrals). **Migration awaiting apply to remote DB (owner authorization).**
+
+**Track 3 completion: ~30%** (9A ✅; 9B 95% in review; existing 7E/A4/Knowledge-Hub foundations; 9I next)
 
 ---
 
@@ -255,10 +267,10 @@ persona validation sign-off → flip to 100%.
 ### Completion snapshot — Week 0 (2026-06-23) · A2 ✅ · Infra 🩺 · 9B 🟡 In Review
 
 ```
-Overall v1.0   ██████████████░░░░░░░░░░░░░░░░  ~46%
+Overall v1.0   ███████████████░░░░░░░░░░░░░░░  ~49%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
   Track 2  Arch A2 (gate)    ██████████████████████  100%  ✅ COMPLETE — all 7 steps (e2e gate paused vs prod per R1)
-  Track 3  Phase 9 (P1 focus) ████░░░░░░░░░░░░░░░░░░░  ~16%  (9B 95% — playbook+storyboards done, capture/signoff pending · 9A/9I next)
+  Track 3  Phase 9 (P1 focus) ███████░░░░░░░░░░░░░░░░  ~30%  (9A ✅ pricing+strategy+plan-alignment · 9B 95% capture/signoff pending · 9I next)
   Infra    Supabase health   ██████████████████████  Healthy  ✅ R1+R2 done · R5 proposed
 ```
 

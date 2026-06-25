@@ -111,7 +111,7 @@ export function StatsSection() {
 
           <div className="max-w-2xl mx-auto rounded-2xl bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-700/40 p-5 text-center">
             <p className="text-sm text-violet-800 dark:text-violet-300 font-medium leading-relaxed">
-              🚀 AURA CAMPUS™ is currently in early access with pilot institutions across India.
+              🚀 AURA CAMPUS™ is currently in early access with pilot institutions.
               Spots are limited — join now to shape the product.
             </p>
           </div>
