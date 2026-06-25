@@ -25,10 +25,13 @@ export function HeroSection() {
     });
   }, { scope: sectionRef });
 
-  function handleDemoSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleDemoSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // TODO: wire to /api/demo-request or CRM webhook
-    console.log("Demo request:", demoForm);
+    await fetch("/api/demo-request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(demoForm),
+    });
     setFormSubmitted(true);
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { X, Check, Clock, Zap, Layers } from "lucide-react";
+import { X, Check, Clock, Zap, Layers, ArrowDown } from "lucide-react";
 import { gsap, useGSAP, prefersReducedMotion } from "@/lib/gsap";
 import { useLenis } from "../SmoothScrollProvider";
 import { TRANSFORMATIONS } from "../data";
@@ -44,6 +44,10 @@ export function ComparisonSection() {
       y: 28, opacity: 0, duration: 0.7, ease: "power2.out", immediateRender: false,
       scrollTrigger: { trigger: ".compare-table", start: "top 92%", once: true },
     });
+    gsap.from(".compare-card", {
+      y: 20, opacity: 0, duration: 0.5, stagger: 0.06, ease: "power2.out", immediateRender: false,
+      scrollTrigger: { trigger: ".compare-cards", start: "top 92%", once: true },
+    });
     gsap.from(".compare-stat", {
       y: 20, opacity: 0, scale: 0.95, duration: 0.5, stagger: 0.12,
       ease: "back.out(1.5)", immediateRender: false,
@@ -78,8 +82,56 @@ export function ComparisonSection() {
           </p>
         </div>
 
-        {/* ── Before / After comparison table ── */}
-        <div className="compare-table rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/60 shadow-2xl shadow-slate-100/80 dark:shadow-black/40">
+        {/* ══════════════════════════════════════════════════════════════
+            MOBILE LAYOUT — stacked before/after cards (hidden on md+)
+        ══════════════════════════════════════════════════════════════ */}
+        <div className="compare-cards md:hidden space-y-3">
+
+          {/* Column legend */}
+          <div className="grid grid-cols-2 gap-2 mb-5">
+            <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700/60">
+              <span className="w-4 h-4 rounded-full bg-rose-100 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/25 flex items-center justify-center shrink-0">
+                <X size={9} className="text-rose-500" />
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-rose-500 dark:text-rose-400">Old Way</span>
+            </div>
+            <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-violet-600">
+              <span className="w-4 h-4 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+                <Check size={9} className="text-white" />
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-white">AURA CAMPUS™</span>
+            </div>
+          </div>
+
+          {/* One card per transformation */}
+          {TRANSFORMATIONS.map(({ from, to }) => (
+            <div key={from} className="compare-card rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/60 shadow-sm">
+              {/* Before */}
+              <div className="flex items-start gap-3 px-4 py-3.5 bg-slate-50 dark:bg-slate-900/80">
+                <div className="mt-0.5 w-5 h-5 rounded-full bg-rose-100 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/25 flex items-center justify-center shrink-0">
+                  <X size={10} className="text-rose-500" />
+                </div>
+                <span className="text-sm text-slate-400 dark:text-slate-500 font-medium leading-snug">{from}</span>
+              </div>
+              {/* Arrow divider */}
+              <div className="flex items-center justify-center py-1 bg-gradient-to-b from-slate-50 to-violet-50/50 dark:from-slate-900/80 dark:to-violet-950/20 border-y border-slate-100 dark:border-slate-800/40">
+                <ArrowDown size={13} className="text-violet-400 dark:text-violet-500" />
+              </div>
+              {/* After */}
+              <div className="flex items-start gap-3 px-4 py-3.5 bg-violet-50/50 dark:bg-violet-950/20">
+                <div className="mt-0.5 w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/25 flex items-center justify-center shrink-0">
+                  <Check size={10} className="text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <span className="text-sm text-slate-800 dark:text-white font-semibold leading-snug">{to}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ══════════════════════════════════════════════════════════════
+            DESKTOP LAYOUT — side-by-side table (hidden on mobile)
+        ══════════════════════════════════════════════════════════════ */}
+        <div className="compare-table hidden md:block rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/60 shadow-2xl shadow-slate-100/80 dark:shadow-black/40">
 
           {/* Column headers */}
           <div className="grid grid-cols-2">
@@ -87,7 +139,7 @@ export function ComparisonSection() {
               <span className="w-5 h-5 rounded-full bg-rose-100 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/25 flex items-center justify-center shrink-0">
                 <X size={11} className="text-rose-500" />
               </span>
-              <span className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-rose-500 dark:text-rose-400">
+              <span className="text-[11px] font-black uppercase tracking-widest text-rose-500 dark:text-rose-400">
                 The Old Way
               </span>
             </div>
@@ -95,7 +147,7 @@ export function ComparisonSection() {
               <span className="w-5 h-5 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
                 <Check size={11} className="text-white" />
               </span>
-              <span className="text-[11px] sm:text-xs font-black uppercase tracking-widest text-white">
+              <span className="text-[11px] font-black uppercase tracking-widest text-white">
                 With AURA CAMPUS™
               </span>
             </div>
@@ -109,42 +161,38 @@ export function ComparisonSection() {
                 i % 2 === 1 ? "bg-slate-50/60 dark:bg-slate-900/30" : "bg-white dark:bg-transparent"
               }`}
             >
-              {/* Before */}
-              <div className="flex items-center gap-3 px-5 py-4 sm:py-5 border-r border-slate-100 dark:border-slate-800/50">
+              <div className="flex items-center gap-3 px-5 py-5 border-r border-slate-100 dark:border-slate-800/50">
                 <X size={13} className="text-rose-400/50 shrink-0" />
-                <span className="text-sm text-slate-400 dark:text-slate-500 font-medium leading-snug">
-                  {from}
-                </span>
+                <span className="text-sm text-slate-400 dark:text-slate-500 font-medium leading-snug">{from}</span>
               </div>
-              {/* After */}
-              <div className="flex items-center gap-3 px-5 py-4 sm:py-5 bg-violet-50/40 dark:bg-violet-950/20">
+              <div className="flex items-center gap-3 px-5 py-5 bg-violet-50/40 dark:bg-violet-950/20">
                 <Check size={13} className="text-emerald-500 shrink-0" />
-                <span className="text-sm text-slate-800 dark:text-white font-semibold leading-snug">
-                  {to}
-                </span>
+                <span className="text-sm text-slate-800 dark:text-white font-semibold leading-snug">{to}</span>
               </div>
             </div>
           ))}
         </div>
 
-        {/* ── Impact stats ── */}
-        <div className="compare-stats mt-10 grid grid-cols-3 gap-4">
+        {/* ── Impact stats — 1 col on mobile, 3 on sm+ ── */}
+        <div className="compare-stats mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {IMPACT.map(({ Icon, value, unit, label, accent }) => (
             <div
               key={label}
-              className="compare-stat text-center rounded-2xl border border-slate-200 dark:border-slate-800/70 bg-white dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow"
+              className="compare-stat flex sm:flex-col items-center sm:items-center sm:text-center gap-4 sm:gap-0 rounded-2xl border border-slate-200 dark:border-slate-800/70 bg-white dark:bg-slate-900/60 p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow"
             >
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-3"
+                className="w-12 h-12 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 sm:mx-auto sm:mb-3"
                 style={{ backgroundColor: `${accent}18`, border: `1px solid ${accent}35` }}
               >
-                <Icon size={18} style={{ color: accent }} />
+                <Icon size={20} style={{ color: accent }} />
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-none">
-                {value}
-                <span className="text-sm font-bold text-slate-400 dark:text-slate-500 ml-1.5">{unit}</span>
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium leading-snug">{label}</p>
+              <div className="sm:text-center">
+                <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-none">
+                  {value}
+                  <span className="text-sm font-bold text-slate-400 dark:text-slate-500 ml-1.5">{unit}</span>
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-medium leading-snug">{label}</p>
+              </div>
             </div>
           ))}
         </div>

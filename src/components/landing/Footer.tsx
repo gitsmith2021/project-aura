@@ -21,7 +21,7 @@ export function Footer() {
     else window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919XXXXXXXXX";
+  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "919884722295";
 
   return (
     <>
