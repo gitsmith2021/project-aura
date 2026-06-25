@@ -18,7 +18,7 @@
 
 | Domain | Gate | Status | Blocking? |
 |--------|------|--------|-----------|
-| 1. Security | 🔴 | ✅ Baseline clean (2 fixable WARNs tracked) | No |
+| 1. Security | 🔴 | ✅ Baseline clean (search_path WARNs fixed) | No |
 | 2. Testing (Arch A2) | 🔴 | ✅ Complete (CI gate paused vs prod — runs locally) | No |
 | 3. Backups & DR | 🔴 | 🟡 Runbook ready; secrets + PITR pending | **Partial** |
 | 4. Billing | 🔴 | ✅ 7E live; recurring deferred (manual invoicing) | No |
@@ -42,13 +42,12 @@ Everything else has a working fallback.
 | 1.2 | Institution isolation verified (no cross-tenant read/write) | ✅ | Arch A2 Step 5 isolation e2e + Step 7 write-auth — 0 leaks. |
 | 1.3 | Webhook signatures verified (Razorpay HMAC, NFC secret) | ✅ | Phase 2.5A; `RAZORPAY_WEBHOOK_SECRET` must be set in Vercel (see §3.5). |
 | 1.4 | Secrets server-only (`SERVICE_ROLE_KEY`, `RAZORPAY_KEY_SECRET`, `SCHEDULER_API_KEY`) | ✅ | No `NEXT_PUBLIC_` leakage; scheduler shared-secret enforced fail-closed. |
-| 1.5 | Security advisors — only accepted baseline | 🟡 | 2 INFO (intentional deny-all `razorpay_webhook_events`, `scheduler_error_logs`) + 9 public document buckets (documented). **2 fixable WARNs:** `kr_update_search_vector` / `kr_recalc_rating` mutable `search_path` → set `search_path = ''`. 1 WARN `review_leave_request` SECURITY DEFINER callable (has internal auth; review). |
+| 1.5 | Security advisors — only accepted baseline | ✅ | 2 INFO (intentional deny-all `razorpay_webhook_events`, `scheduler_error_logs`) + 9 public document buckets (documented accepted baseline). The 2 `function_search_path_mutable` WARNs (`kr_update_search_vector` / `kr_recalc_rating`) were **fixed** — `search_path` pinned to `''` (migration `20260711000000`, applied & re-verified). 1 WARN `review_leave_request` SECURITY DEFINER callable remains — has internal auth checks; tracked for review. |
 | 1.6 | Leaked-password protection (HaveIBeenPwned) | 🔲 | Deferred — requires Supabase **Pro** (register item 7-2). |
 | 1.7 | Security headers / CSP | 🟡 | Headers set in `next.config.ts`; full resource-restricting CSP is report-only rollout (deferred). |
 | 1.8 | Audit log append-only & immutable | ✅ | Arch A8 — no UPDATE/DELETE policy on `audit_logs`; `logAudit()` wired to all sensitive mutations (Dev Rule 13/17). |
 
-**Pre-cutover (optional, fast):** clear 1.5's two `search_path` WARNs (trivial DDL).
-**Gate result:** ✅ — baseline is the documented accepted set; no critical findings.
+**Gate result:** ✅ — baseline is the documented accepted set; no critical findings. The two `search_path` WARNs are cleared (2026-06-25).
 
 ---
 
