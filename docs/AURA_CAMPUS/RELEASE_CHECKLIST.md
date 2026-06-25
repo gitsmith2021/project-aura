@@ -8,9 +8,11 @@
 > **Status legend:** ✅ Done · 🟡 Acceptable with fallback · 🔲 Open · ⛔ Blocker-open
 > **Gate legend:** 🔴 Blocker (must be ✅) · 🟠 Strongly recommended · 🟢 Nice-to-have
 >
-> **Last verified:** 2026-06-25 · **Verdict: 🟡 CONDITIONAL GO** — code/security/test
-> gates green; remaining items are **ops toggles** (monitoring, backup secrets) and
-> **Pro-plan** security upgrades, all with documented fallbacks.
+> **Last verified:** 2026-06-25 · **Verdict: ✅ GO — ENGINEERING RELEASE READY.** All
+> 🔴 blockers green and signed off; ops toggles (Vercel env, repo secrets, UptimeRobot)
+> configured. Supabase Pro (PITR + leaked-password) **consciously deferred** — accepted
+> launch risk with documented fallbacks (weekly encrypted backup as RPO floor;
+> strong-password policy at signup).
 
 ---
 
@@ -20,17 +22,18 @@
 |--------|------|--------|-----------|
 | 1. Security | 🔴 | ✅ Baseline clean (search_path WARNs fixed) | No |
 | 2. Testing (Arch A2) | 🔴 | ✅ Complete (CI gate paused vs prod — runs locally) | No |
-| 3. Backups & DR | 🔴 | 🟡 Runbook ready; secrets + PITR pending | **Partial** |
+| 3. Backups & DR | 🔴 | ✅ Runbook + secrets set; PITR deferred (accepted) | No |
 | 4. Billing | 🔴 | ✅ 7E live; recurring deferred (manual invoicing) | No |
 | 5. Legal & Compliance | 🔴 | ✅ Privacy policy + DPDP consent/erasure live | No |
 | 6. Monitoring | 🟠 | ✅ UptimeRobot live (web + scheduler, 5-min) | No |
 | 7. Rollback | 🔴 | ✅ CI migration-replay + git revert + Vercel rollback | No |
 | 8. Performance & Infra | 🟠 | ✅ Supabase Healthy (Nano — capacity-watch under real load) | No |
-| 9. Sign-off | 🔴 | 🔲 Awaiting owner sign-off | **Yes** |
+| 9. Sign-off | 🔴 | ✅ Signed off 2026-06-25 | No |
 
-**Bottom line:** no engineering blockers remain. The two true pre-cutover actions
-are **(a)** set the backup secrets + decide PITR (§3) and **(b)** owner sign-off (§9).
-Everything else has a working fallback.
+**Bottom line:** ✅ **Engineering Release Ready** — every 🔴 blocker is green and the
+owner has signed off. Ops toggles (Vercel env, repo secrets, UptimeRobot) are configured.
+The only consciously-deferred item is Supabase Pro (PITR + leaked-password), accepted as a
+documented launch risk with fallbacks.
 
 ---
 
@@ -43,7 +46,7 @@ Everything else has a working fallback.
 | 1.3 | Webhook signatures verified (Razorpay HMAC, NFC secret) | ✅ | Phase 2.5A; `RAZORPAY_WEBHOOK_SECRET` must be set in Vercel (see §3.5). |
 | 1.4 | Secrets server-only (`SERVICE_ROLE_KEY`, `RAZORPAY_KEY_SECRET`, `SCHEDULER_API_KEY`) | ✅ | No `NEXT_PUBLIC_` leakage; scheduler shared-secret enforced fail-closed. |
 | 1.5 | Security advisors — only accepted baseline | ✅ | 2 INFO (intentional deny-all `razorpay_webhook_events`, `scheduler_error_logs`) + 9 public document buckets (documented accepted baseline). The 2 `function_search_path_mutable` WARNs (`kr_update_search_vector` / `kr_recalc_rating`) were **fixed** — `search_path` pinned to `''` (migration `20260711000000`, applied & re-verified). 1 WARN `review_leave_request` SECURITY DEFINER callable remains — has internal auth checks; tracked for review. |
-| 1.6 | Leaked-password protection (HaveIBeenPwned) | 🔲 | Deferred — requires Supabase **Pro** (register item 7-2). |
+| 1.6 | Leaked-password protection (HaveIBeenPwned) | 🟡 | **Deferred (accepted)** — requires Supabase **Pro** (register 7-2). Fallback: strong-password policy at signup. Revisit on Pro upgrade. |
 | 1.7 | Security headers / CSP | 🟡 | Headers set in `next.config.ts`; full resource-restricting CSP is report-only rollout (deferred). |
 | 1.8 | Audit log append-only & immutable | ✅ | Arch A8 — no UPDATE/DELETE policy on `audit_logs`; `logAudit()` wired to all sensitive mutations (Dev Rule 13/17). |
 
@@ -71,15 +74,15 @@ Everything else has a working fallback.
 | # | Check | Status | Action |
 |---|-------|--------|--------|
 | 3.1 | DR runbook exists (RTO/RPO, recovery ladder) | ✅ | [DISASTER_RECOVERY.md](../DISASTER_RECOVERY.md) — includes scheduler (Railway) recovery. |
-| 3.2 | Weekly encrypted DB backup workflow | 🟡 | GitHub Action exists (Phase 2.5C) — **needs `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets** (register 2.5-2). |
-| 3.3 | Point-in-Time Recovery (PITR) | 🔲 | Requires Supabase **Pro** (register 2.5-1). Until then: weekly backup is the RPO floor. |
+| 3.2 | Weekly encrypted DB backup workflow | ✅ | GitHub Action (Phase 2.5C) — `SUPABASE_DB_URL` + `BACKUP_ENCRYPTION_KEY` repo secrets **set** (2026-06-25). |
+| 3.3 | Point-in-Time Recovery (PITR) | 🟡 | **Deferred (accepted)** — requires Supabase **Pro** (register 2.5-1). Weekly encrypted backup is the RPO floor until upgrade. |
 | 3.4 | Scheduler resilience (timeout + graceful degrade) | ✅ | `callScheduler()` wrapper; offline → in-app banner, no crash. |
-| 3.5 | `RAZORPAY_WEBHOOK_SECRET` set in Vercel | 🔲 | Verify in Vercel env (register 2.5 manual ops). Without it, webhook verification fails closed. |
-| 3.6 | `RESEND_API_KEY` + `EMAIL_FROM` set (transactional + demo-request email) | 🟡 | Verify in Vercel; `sendEmail` no-ops safely if unset. Verify domain in Resend for non-sandbox delivery. |
+| 3.5 | `RAZORPAY_WEBHOOK_SECRET` set in Vercel | ✅ | Set in Vercel env (2026-06-25); webhook verification fails closed without it. |
+| 3.6 | `RESEND_API_KEY` + `EMAIL_FROM` set (transactional + demo-request email) | ✅ | Set in Vercel env (2026-06-25); verify Resend sender domain for non-sandbox delivery. |
 
-**🔴 Pre-cutover action:** set 3.2 backup secrets and confirm 3.5 webhook secret.
-PITR (3.3) and leaked-password (1.6) are the two **Pro-plan** upgrades — schedule the
-Pro upgrade or accept the weekly-backup RPO as a documented launch risk.
+**Gate result:** ✅ — backup secrets + webhook/email env set (2026-06-25). PITR (3.3) and
+leaked-password (1.6) are the two **Pro-plan** upgrades — **consciously deferred**, with the
+weekly encrypted backup as the accepted RPO floor. Revisit on the Pro upgrade.
 
 ---
 
@@ -91,7 +94,7 @@ Pro upgrade or accept the weekly-backup RPO as a documented launch risk.
 | 4.2 | Subscriptions + invoices + MRR/ARR | ✅ | Phase 7E; `/admin/billing`. |
 | 4.3 | 30-day trial provisioning | ✅ | `status='trial'` supported; pricing CTAs open trial. |
 | 4.4 | Feature gating | 🟡 | `isFeatureEnabled()` (page-level, default-allow). Middleware hard-gate + Razorpay recurring auto-charge deferred — **manual invoicing for v1.0** (documented). |
-| 4.5 | Razorpay live keys configured | 🟡 | Web verified; confirm **live** (not test) keys in Vercel before taking real payments. |
+| 4.5 | Razorpay live keys configured | ✅ | Live keys set in Vercel env (2026-06-25). |
 
 **Gate result:** ✅ — billing operates; recurring auto-charge is an accepted post-v1.0 add-on with a manual fallback.
 
@@ -153,16 +156,23 @@ Pro upgrade or accept the weekly-backup RPO as a documented launch risk.
 
 ## 9. ✍️ Final Sign-off  ·  Gate 🔴
 
-Cutover may proceed when all 🔴 blockers above are ✅ **and** the items below are checked:
+All 🔴 blockers above are ✅ and the sign-off items are confirmed:
 
-- [ ] §3.2 backup secrets set · §3.5 webhook secret confirmed in Vercel
-- [ ] §4.5 Razorpay **live** keys confirmed in Vercel
+- [x] §3.2 backup secrets set (repo) · §3.5 webhook secret in Vercel ✅ 2026-06-25
+- [x] §4.5 Razorpay **live** keys in Vercel ✅ 2026-06-25
 - [x] §6.2 UptimeRobot monitors live (web + scheduler) ✅ 2026-06-25
-- [ ] Pro-plan decision recorded for §1.6 (leaked-password) + §3.3 (PITR)
-- [ ] `npm run build` + full local e2e re-run green at cutover
-- [ ] Security advisors re-checked (no new critical findings)
+- [x] Pro-plan decision recorded — §1.6 (leaked-password) + §3.3 (PITR) **deferred (accepted)**, weekly-backup RPO floor + strong-password fallback; revisit on Pro
+- [x] `npm run build` clean · full e2e suite green locally
+- [x] Security advisors re-checked — only the documented accepted baseline
 
-**Sign-off:** _____________________  Role: __________  Date: __________
+> ### ✅ ENGINEERING RELEASE READY — signed off 2026-06-25
+>
+> Every 🔴 release blocker is green. Remaining deferrals (Supabase Pro: PITR +
+> leaked-password protection) are conscious, documented launch risks with
+> fallbacks, to be revisited on the Pro upgrade. The platform is cleared for v1.0
+> cutover from an engineering standpoint.
+
+**Sign-off:** Smith Immanuel (Owner)  ·  Role: Product Owner  ·  Date: 2026-06-25
 
 ---
 

@@ -5,7 +5,7 @@
 > execution of the already-approved [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md).
 > Update it **continuously** as work progresses.
 >
-> **Last updated:** 2026-06-25 · **📦 PHASE 9D + 9E ✅ DELIVERED:** Onboarding Toolkit ([ONBOARDING_TOOLKIT.md](ONBOARDING_TOOLKIT.md) — importer-accurate CSV templates, go-live checklist, migration playbook) and Sales Deck ([SALES_DECK.md](SALES_DECK.md) — 16-slide narrative + objection handling). Track 3 → ~60%. · **🚦 PHASE 9I RELEASE CHECKLIST ✅ DELIVERED — 🟡 CONDITIONAL GO:** the v1.0 go/no-go gate ([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)) is live across 9 domains, evidenced against real platform state. **No engineering blockers** — remaining items are ops toggles (backup secrets, UptimeRobot), Pro-plan upgrades (PITR, leaked-password) and owner sign-off, all with fallbacks. · **💰 PHASE 9A PRICING ✅ COMPLETE:** public pricing page is the single source of truth (Essential ₹9,999 · Professional ₹24,999 · Enterprise Custom) with monthly/annual toggle (15% off) + 30-day free trial; `subscription_plans` aligned via migration `20260710000000` (awaiting remote apply); [PRICING_STRATEGY.md](PRICING_STRATEGY.md) documents the commercial reference. · **🧩 SCHEDULER ENGINE #1 PRODUCTION DEPLOYED:** the OR-Tools timetable engine is live on Railway (`project-aura-production-6b0d.up.railway.app`) with shared-secret auth — validated end-to-end; UptimeRobot monitoring still pending (release-checklist item 9I). See [AURA_SCHEDULER_DEPLOYMENT.md](AURA_SCHEDULER_DEPLOYMENT.md). · **✅ ARCH A2 COMPLETE — all 7 steps done** (route-crawl · 5 flows · 27 cross-role denials · institution isolation clean · 11 write-auth denials · 4 production/security bugs found & fixed; Arch register 88% → 100%). · **🩺 INFRA STABILIZATION done (R1+R2):** Supabase returned **Unhealthy → Healthy** (CPU 14% · Disk 17% · RAM 48%) — see the [Infra Stabilization](#-infrastructure-stabilization-unplanned--complete) section. The A2 e2e gate is **paused against prod** (R1) pending the local-stack CI job. · **🎬 PHASE 9B (Demo Institution) 🟡 In Review (80%):** showcase-grade "Aura Demo College" seeded (3,240 students (UG + PG) · 148 faculty · 9 executive personas · KH 55 · fee 88% · placements 92%) + CLI/admin reset — manual walkthrough & screenshots pending.
+> **Last updated:** 2026-06-25 · **✅ WEB PLATFORM ENGINEERING RELEASE READY — 9I SIGNED OFF:** every 🔴 release-checklist blocker is green ([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)); ops toggles configured (Vercel env, repo backup secrets, UptimeRobot); Supabase Pro (PITR + leaked-password) deferred (accepted). **Note:** this is the *web platform* gate — **Track 1 (Phase 8 mobile) is still ~12%, blocked on EAS/dev-account purchase (B1)**, and is the remaining piece of the full v1.0 line. · **📦 PHASE 9D + 9E ✅ DELIVERED:** Onboarding Toolkit ([ONBOARDING_TOOLKIT.md](ONBOARDING_TOOLKIT.md) — importer-accurate CSV templates, go-live checklist, migration playbook) and Sales Deck ([SALES_DECK.md](SALES_DECK.md) — 16-slide narrative + objection handling). Track 3 → ~60%. · **🚦 PHASE 9I RELEASE CHECKLIST ✅ DELIVERED — 🟡 CONDITIONAL GO:** the v1.0 go/no-go gate ([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)) is live across 9 domains, evidenced against real platform state. **No engineering blockers** — remaining items are ops toggles (backup secrets, UptimeRobot), Pro-plan upgrades (PITR, leaked-password) and owner sign-off, all with fallbacks. · **💰 PHASE 9A PRICING ✅ COMPLETE:** public pricing page is the single source of truth (Essential ₹9,999 · Professional ₹24,999 · Enterprise Custom) with monthly/annual toggle (15% off) + 30-day free trial; `subscription_plans` aligned via migration `20260710000000` (awaiting remote apply); [PRICING_STRATEGY.md](PRICING_STRATEGY.md) documents the commercial reference. · **🧩 SCHEDULER ENGINE #1 PRODUCTION DEPLOYED:** the OR-Tools timetable engine is live on Railway (`project-aura-production-6b0d.up.railway.app`) with shared-secret auth — validated end-to-end; UptimeRobot monitoring still pending (release-checklist item 9I). See [AURA_SCHEDULER_DEPLOYMENT.md](AURA_SCHEDULER_DEPLOYMENT.md). · **✅ ARCH A2 COMPLETE — all 7 steps done** (route-crawl · 5 flows · 27 cross-role denials · institution isolation clean · 11 write-auth denials · 4 production/security bugs found & fixed; Arch register 88% → 100%). · **🩺 INFRA STABILIZATION done (R1+R2):** Supabase returned **Unhealthy → Healthy** (CPU 14% · Disk 17% · RAM 48%) — see the [Infra Stabilization](#-infrastructure-stabilization-unplanned--complete) section. The A2 e2e gate is **paused against prod** (R1) pending the local-stack CI job. · **🎬 PHASE 9B (Demo Institution) 🟡 In Review (80%):** showcase-grade "Aura Demo College" seeded (3,240 students (UG + PG) · 148 faculty · 9 executive personas · KH 55 · fee 88% · placements 92%) + CLI/admin reset — manual walkthrough & screenshots pending.
 
 **Status legend:** 🔲 Not Started · 🟡 In Progress · ⛔ Blocked · ✅ Complete
 
@@ -217,7 +217,7 @@ pole is cleared — **4 production/security issues found & fixed** along the way
 | **9F** | Implementation Guide — infra runbook, DR (✅), config matrix, cutover | 🟡 P3 | 🔲 | Infra docs (partial ✅) | 0% |
 | **9G** | Training Materials — role quickstarts, short videos, FAQ, cheat-sheets | 🟡 P3 | 🔲 | Stable UI | 0% |
 | **9H** | Support & Help Center — in-app help, KB (dogfood Knowledge Hub ✅), tickets, SLA | 🟡 P3 | 🔲 | Knowledge Hub (✅) | 0% |
-| **9I** | Release Checklist — security, A2 green, backups, billing, legal, monitoring, rollback | 🔴 P1 (final gate) | 🟡 **Delivered** | All tracks | **90%** — checklist live ([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)); verdict 🟡 CONDITIONAL GO; sign-off + ops toggles pending |
+| **9I** | Release Checklist — security, A2 green, backups, billing, legal, monitoring, rollback | 🔴 P1 (final gate) | ✅ | All tracks | **100%** — ✅ **ENGINEERING RELEASE READY, signed off 2026-06-25** ([RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md)); all blockers green; Supabase Pro (PITR + leaked-password) deferred (accepted) |
 
 **9B delivered (2026-06-23) — 🟡 In Review (80%):** a standalone, showcase-grade demo
 tenant **"Aura Demo College"** (`aura-demo`, `@demo.aura.test`) — completely isolated
@@ -274,7 +274,14 @@ problem→solution→proof→compliance→ROI→pricing→close narrative (perso
 storyboards, screenshots from the demo shot-list), plus an objection-handling cheat sheet and a
 deck-build checklist. Both are doc-only, no external blockers.
 
-**Track 3 completion: ~60%** (9A ✅ · 9D ✅ · 9E ✅ · 9I ✅ delivered; 9B 95% capture/signoff pending; 7E/A4/KH foundations; 9C/9F/9G/9H remain)
+**9I signed off (2026-06-25) — ✅ ENGINEERING RELEASE READY:** every 🔴 release blocker is
+green and the owner has signed off. Ops toggles all configured — Vercel env (`RAZORPAY_WEBHOOK_SECRET`,
+live Razorpay keys, `RESEND_API_KEY`/`EMAIL_FROM`), GitHub repo secrets (`SUPABASE_DB_URL` +
+`BACKUP_ENCRYPTION_KEY` → weekly encrypted backup live), and UptimeRobot (web + scheduler, 5-min).
+Supabase Pro (PITR + leaked-password protection) **consciously deferred** — accepted launch risk with
+documented fallbacks (weekly-backup RPO floor; strong-password policy), to revisit on Pro upgrade.
+
+**Track 3 completion: ~65%** (9A · 9D · 9E · 9I ✅ — P1 release gate signed off; 9B 95% capture/signoff pending; 9C/9F/9G/9H remain, non-gating)
 
 ---
 
@@ -285,10 +292,10 @@ deck-build checklist. Both are doc-only, no external blockers.
 ### Completion snapshot — Week 0 (2026-06-23) · A2 ✅ · Infra 🩺 · 9B 🟡 In Review
 
 ```
-Overall v1.0   █████████████████░░░░░░░░░░░░░  ~59%
+Overall v1.0   █████████████████░░░░░░░░░░░░░  ~60%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
   Track 2  Arch A2 (gate)    ██████████████████████  100%  ✅ COMPLETE — all 7 steps (e2e gate paused vs prod per R1)
-  Track 3  Phase 9 (P1 focus) █████████████░░░░░░░░░  ~60%  (9A·9D·9E·9I ✅ · 9B 95% capture/signoff pending · 9C/9F/9G/9H remain)
+  Track 3  Phase 9 (P1 focus) ██████████████░░░░░░░░  ~65%  (9A·9D·9E·9I ✅ — P1 gate SIGNED OFF · 9B 95% · 9C/9F/9G/9H remain, non-gating)
   Infra    Supabase health   ██████████████████████  Healthy  ✅ R1+R2 done · R5 proposed
 ```
 
