@@ -55,7 +55,10 @@ async def require_api_key(x_api_key: str | None = Header(default=None)) -> None:
         )
 
 
-@app.get("/health", tags=["ops"])
+# GET + HEAD so liveness probes and uptime monitors (e.g. UptimeRobot, which
+# uses HEAD) both succeed. Starlette runs the same handler for HEAD and strips
+# the body per the HTTP spec, so both return 200.
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["ops"])
 async def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
