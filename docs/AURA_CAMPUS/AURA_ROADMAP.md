@@ -335,3 +335,39 @@ SUPABASE_DB_URL=
 *This roadmap was split into [`roadmap/`](roadmap/) on 2026-06-12 for readability — each phase now lives in its own file with a "Depends on / Feeds into" note. See the Roadmap Index above.*
 
 *Update 2026-06-13 — **Mobile:** Phase 8A complete (Expo SDK 54, role-adaptive bottom tabs for all 6 roles, Supabase auth, portal screens); 8B/8C screens built (staff Leave/Payslip/Schedule/Attendance view + admin & HOD leave Approvals; student Dashboard/Timetable/Attendance/Fees) — NFC marking, push, in-app pay, CCTV and the Parent app remain deferred. **Web hardening (this session):** codebase audit + schema/code drift repairs (`57919e9`), PRINCIPAL role end-to-end + staff CIA marks entry (`b212733`), staff↔departments PostgREST embed disambiguation fix — repaired the empty admin Staff page and the staff-portal redirect loop (`a1af19a`), sidebar overhaul + collapse persistence (`a1af19a`), staff leave RLS fix (`1f21402`), web sidebar role-nav fix (`4ace308`). **Next new module:** Phase 3A — Notification Infrastructure.*
+
+---
+---
+
+# 🧱 AURA CORE FOUNDATION
+
+> ⚠️ **Separate platform stream — NOT an Aura Campus phase, NOT a "Phase 10".**
+> Everything above this banner is the **Aura Campus** ERP roadmap (a *product*).
+> Everything below is the **Aura Core Foundation** — the first reusable **platform
+> capabilities** that will eventually power Campus, Build, Field, Vision and future
+> Aura products. These are developed *initially inside the Campus repo* but
+> designed to be product-agnostic. **This stream does NOT gate or change the Aura
+> Campus v1.0 release.**
+>
+> **Authoritative docs:** [../AURA_CORE/AURA_CORE_FOUNDATION.md](../AURA_CORE/AURA_CORE_FOUNDATION.md)
+> (capability specs) · [../AURA_CORE/AURA_CORE_ARCHITECTURE.md](../AURA_CORE/AURA_CORE_ARCHITECTURE.md)
+> (the 9 `@aura/*` services) · [../AURA_CORE/AURA_CORE_ROADMAP.md](../AURA_CORE/AURA_CORE_ROADMAP.md)
+> · [../AURA_CORE/DEV_TRACKER.md](../AURA_CORE/DEV_TRACKER.md).
+
+## Capabilities (tracked independently as CF-1…CF-5)
+
+| CF | Capability | Priority | Maps to Core service | Status |
+|----|-----------|----------|----------------------|--------|
+| **CF-1** | App Configuration Center — category-based settings, search, global + future per-institution overrides; config over hardcoding | 🔴 P1 | new `@aura/config` | 🔲 Planned |
+| **CF-2** | Data Explorer — visual query builder, filters/sort/group, Excel/CSV/PDF export, saved reports; read-only SQL (permissioned, audited) | 🔴 P1 | Aura Insights | 🔲 Planned |
+| **CF-3** | Platform Operations Center — scheduler/Railway/Vercel/Supabase health, jobs/queues, errors, usage, active users | 🟠 P2 | Aura Insights + ops telemetry | 🔲 Planned |
+| **CF-4** | Audit & Activity Center — logins, config/permission changes, exports, security events, scheduler/AI usage | 🟠 P2 | Aura Audit | 🔲 Planned |
+| **CF-5** | Feature Management — flag definition + targeting (institution/plan/role/env/beta). **Architecture only; runtime enforcement deferred** | 🟢 P3 | Aura Identity + billing | 🔲 Planned |
+
+**Architecture principles (every capability):** product-independent · institution-independent ·
+reusable · API-first · secure by default · audit-friendly · multi-tenant aware · configuration
+over hardcoding. **The reuse test:** *"Can Aura Build or Aura Field reuse this?"* — if no, redesign.
+
+**Long-term vision:** Aura Campus → Aura Core Foundation → Aura Core Platform → Aura Ecosystem.
+
+*Added 2026-06-25 — Aura Core Foundation stream opened (planning only; no code; no Campus v1.0 scope change). Full specs in [../AURA_CORE/AURA_CORE_FOUNDATION.md](../AURA_CORE/AURA_CORE_FOUNDATION.md).*

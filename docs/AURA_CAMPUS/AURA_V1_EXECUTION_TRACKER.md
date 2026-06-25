@@ -351,6 +351,16 @@ Overall v1.0   █████████████████░░░░�
 - ✅ **Track execution only.** This document is the operational dashboard for the
   Aura Campus v1.0 release; keep it continuously updated.
 
+> ### 🧱 Note — Aura Core Foundation (owner-directed, 2026-06-25)
+> A separate **Aura Core Foundation** platform stream (CF-1…CF-5) has been opened
+> at [../AURA_CORE/AURA_CORE_FOUNDATION.md](../AURA_CORE/AURA_CORE_FOUNDATION.md).
+> This is **planning/architecture only — no code, and it does NOT change the Aura
+> Campus v1.0 scope or gate the release.** It honours the rules above *in intent*:
+> Core Foundation is **not** a new Campus module, **not** the start of Aura
+> Build/Field/Vision, and lives in its own `AURA_CORE/` area with its own roadmap
+> + DEV_TRACKER — so v1.0 execution here stays undisturbed. (Mitigates R6: the
+> stream is explicitly fenced off from Campus v1.0 execution.)
+
 ---
 
 *Cross-reference: [AURA_CAMPUS_FINAL_COMPLETION_PLAN.md](AURA_CAMPUS_FINAL_COMPLETION_PLAN.md) (the approved plan) · [AURA_ROADMAP.md](AURA_ROADMAP.md) (master tracker) · [DEFERRED_REGISTER.md](DEFERRED_REGISTER.md).*
