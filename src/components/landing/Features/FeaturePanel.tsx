@@ -366,24 +366,111 @@ const MOCKUPS: Record<MockupVariant, () => React.ReactElement> = {
   placements: PlacementsMockup,
 };
 
+/* ── Per-panel theme driven by index % 3 ───────────────────────────────── */
+
+type ThemeKey = "light" | "dark" | "purple";
+
+const PANEL_THEMES: Record<ThemeKey, {
+  bg: string;
+  bgNumber: string;
+  labelText: string;
+  labelLine: string;
+  labelCounter: string;
+  heading: string;
+  desc: string;
+  bullet: string;
+  bulletIcon: string;
+  btn: string;
+  badge: string;
+}> = {
+  light: {
+    bg:           "bg-white",
+    bgNumber:     "text-slate-900/[0.04]",
+    labelText:    "text-violet-500",
+    labelLine:    "bg-slate-200",
+    labelCounter: "text-slate-400",
+    heading:      "text-slate-900",
+    desc:         "text-slate-600",
+    bullet:       "text-slate-700",
+    bulletIcon:   "text-emerald-600",
+    btn:          "text-violet-600 hover:text-violet-500",
+    badge:        "bg-amber-100 border border-amber-300 text-amber-700",
+  },
+  dark: {
+    bg:           "bg-slate-950",
+    bgNumber:     "text-white/[0.04]",
+    labelText:    "text-violet-400",
+    labelLine:    "bg-slate-700",
+    labelCounter: "text-slate-600",
+    heading:      "text-white",
+    desc:         "text-slate-400",
+    bullet:       "text-slate-300",
+    bulletIcon:   "text-emerald-400",
+    btn:          "text-violet-400 hover:text-violet-300",
+    badge:        "bg-amber-500/15 border border-amber-500/30 text-amber-400",
+  },
+  purple: {
+    bg:           "bg-gradient-to-br from-violet-950 via-purple-950 to-violet-900",
+    bgNumber:     "text-white/[0.04]",
+    labelText:    "text-violet-300",
+    labelLine:    "bg-violet-700",
+    labelCounter: "text-violet-700",
+    heading:      "text-white",
+    desc:         "text-violet-200",
+    bullet:       "text-violet-100",
+    bulletIcon:   "text-emerald-400",
+    btn:          "text-violet-200 hover:text-white",
+    badge:        "bg-amber-400/15 border border-amber-400/30 text-amber-300",
+  },
+};
+
 /* ── Panel ─────────────────────────────────────────────────────────────── */
 
-export function FeaturePanel({ feature, index }: { feature: FeaturePanelData; index: number }) {
+export function FeaturePanel({
+  feature,
+  index,
+  total,
+}: {
+  feature: FeaturePanelData;
+  index: number;
+  total: number;
+}) {
   const { scrollToId } = useLenis();
   const Mockup = MOCKUPS[feature.variant];
   const number = String(index + 1).padStart(2, "0");
+  const totalStr = String(total).padStart(2, "0");
+
+  const themeKey: ThemeKey = index % 3 === 0 ? "light" : index % 3 === 1 ? "dark" : "purple";
+  const t = PANEL_THEMES[themeKey];
 
   return (
     <div
-      className={`feature-panel relative w-full md:w-screen md:h-screen shrink-0 flex items-center overflow-hidden py-16 md:py-0 transition-colors duration-300 ${
-        index % 2 === 0
-          ? "bg-white dark:bg-slate-950"
-          : "bg-violet-50/60 dark:bg-slate-900"
-      }`}
+      className={`feature-panel relative w-full md:w-screen md:h-screen shrink-0 flex items-center overflow-hidden py-16 md:py-0 transition-colors duration-500 ${t.bg}`}
     >
-      {/* large faded background number */}
+      {/* Purple mode: atmospheric glow orbs */}
+      {themeKey === "purple" && (
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="absolute top-1/4 -left-24 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 -right-24 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-fuchsia-600/8 rounded-full blur-3xl" />
+        </div>
+      )}
+
+      {/* "Features of AURA CAMPUS™" persistent section label */}
+      <div className="absolute top-0 left-0 right-0 flex items-center gap-3 px-4 sm:px-10 pt-5 z-20">
+        <div className={`w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0`} />
+        <span className={`text-[10px] font-black uppercase tracking-widest ${t.labelText} opacity-80`}>
+          Features of AURA CAMPUS™
+        </span>
+        <div className={`flex-1 h-px ${t.labelLine} opacity-40`} />
+        <span className={`text-[10px] font-bold tabular-nums ${t.labelCounter} opacity-70`}>
+          {number} / {totalStr}
+        </span>
+      </div>
+
+      {/* Large faded background number */}
       <span aria-hidden="true"
-        className="absolute top-8 left-4 sm:left-10 text-[9rem] sm:text-[13rem] font-black leading-none text-slate-900/[0.04] dark:text-white/[0.04] select-none pointer-events-none">
+        className={`absolute top-8 left-4 sm:left-10 text-[9rem] sm:text-[13rem] font-black leading-none ${t.bgNumber} select-none pointer-events-none`}>
         {number}
       </span>
 
@@ -395,30 +482,30 @@ export function FeaturePanel({ feature, index }: { feature: FeaturePanelData; in
               <feature.icon size={22} className="text-white" />
             </div>
             {feature.comingSoon && (
-              <span className="px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-500/15 border border-amber-300 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider">
+              <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${t.badge}`}>
                 Coming Soon · Phase 8
               </span>
             )}
           </div>
 
-          <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-4">
+          <h3 className={`text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight mb-4 ${t.heading}`}>
             {feature.title}
           </h3>
-          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
+          <p className={`text-base sm:text-lg leading-relaxed mb-6 ${t.desc}`}>
             {feature.desc}
           </p>
 
           <ul className="space-y-2.5 mb-7">
             {feature.bullets.map(b => (
-              <li key={b} className="flex items-start gap-2.5 text-sm text-slate-700 dark:text-slate-300">
-                <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+              <li key={b} className={`flex items-start gap-2.5 text-sm ${t.bullet}`}>
+                <CheckCircle2 size={16} className={`${t.bulletIcon} mt-0.5 shrink-0`} />
                 <span>{b}</span>
               </li>
             ))}
           </ul>
 
           <button type="button" onClick={() => scrollToId("contact")}
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-violet-600 dark:text-violet-400 hover:text-violet-500 dark:hover:text-violet-300 transition-colors group">
+            className={`inline-flex items-center gap-1.5 text-sm font-bold transition-colors group ${t.btn}`}>
             Learn more
             <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
           </button>

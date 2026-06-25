@@ -16,17 +16,17 @@ export type DemoFormData = {
 export const NAV_LINKS = [
   { id: "features", label: "Features" },
   { id: "naac",     label: "Accreditation" },
-  { id: "why",      label: "Why AURA" },
+  { id: "why",      label: "Why AURA CAMPUS™" },
   { id: "pricing",  label: "Pricing" },
   { id: "tech",     label: "Platform" },
   { id: "contact",  label: "Contact" },
 ];
 
 export const TRUST_BADGES = [
-  "✓ UGC / AICTE Workflow Ready",
+  "✓ Accreditation-Workflow Ready",
   "✓ Razorpay Payments Built-in",
-  "✓ DPDP Act 2023 Compliant",
-  "✓ Hosted in India (Supabase)",
+  "✓ Data Privacy Compliant",
+  "✓ Enterprise Cloud Infrastructure",
 ];
 
 /** Mockup variants rendered as coded UI on the right side of each feature panel. */
@@ -194,9 +194,9 @@ export const COMPARE: [string, string, string][] = [
 ];
 
 export const TESTIMONIALS = [
-  { init: "EC", name: "Engineering College, Tamil Nadu",   quote: "Finally, a system that understands our NAAC workflow." },
-  { init: "AC", name: "Autonomous College, Kerala",        quote: "Setup took one day. Our staff actually use it." },
-  { init: "VI", name: "Vocational Institute, Maharashtra", quote: "The timetable AI alone is worth the price." },
+  { init: "EC", name: "Engineering University",   quote: "Finally, a system that understands our accreditation workflow." },
+  { init: "AC", name: "Autonomous College",       quote: "Setup took one day. Our staff actually use it." },
+  { init: "VI", name: "Vocational Institute",     quote: "The timetable AI alone is worth the price." },
 ];
 
 export const TESTIMONIAL_MS = 4500;
@@ -227,7 +227,7 @@ export const MARQUEE_ITEMS = [
 
 /** Enterprise-grade platform trust indicators (institution leadership, not developers). */
 export const PLATFORM_TRUST: { Icon: LucideIcon; title: string; desc: string }[] = [
-  { Icon: Cloud,          title: "Secure Cloud Infrastructure", desc: "Hosted in India on enterprise cloud — encrypted, monitored and always on." },
+  { Icon: Cloud,          title: "Secure Cloud Infrastructure", desc: "Enterprise cloud infrastructure — encrypted, monitored and always on." },
   { Icon: DatabaseBackup, title: "Automated Backups",            desc: "Point-in-time backups run continuously, so your institutional data is never at risk." },
   { Icon: KeyRound,       title: "Role-Based Access Control",    desc: "Principals, HODs, staff and students each see exactly what they should — nothing more." },
   { Icon: Smartphone,     title: "Mobile Ready",                 desc: "Every portal works on any phone, tablet or desktop — no app store required." },
@@ -245,7 +245,7 @@ export const TECH: TechItem[] = [
     logo: "text-slate-900 dark:text-white",
     tint: "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-700/60" },
   { id: "supabase", name: "Supabase",
-    sub: "Postgres platform behind Auth, Realtime, Storage and Edge Functions — hosted in India.",
+    sub: "Postgres platform behind Auth, Realtime, Storage and Edge Functions — enterprise-grade infrastructure.",
     logo: "text-emerald-500 dark:text-emerald-400",
     tint: "bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-800/30" },
   { id: "typescript", name: "TypeScript",

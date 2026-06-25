@@ -74,7 +74,7 @@ export function FeaturesSection() {
     >
       <div ref={trackRef} className="flex flex-col md:flex-row md:w-max will-change-transform">
         {FEATURE_PANELS.map((feature, i) => (
-          <FeaturePanel key={feature.title} feature={feature} index={i} />
+          <FeaturePanel key={feature.title} feature={feature} index={i} total={FEATURE_PANELS.length} />
         ))}
       </div>
     </section>

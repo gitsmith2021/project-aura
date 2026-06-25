@@ -31,8 +31,8 @@ export function Footer() {
             <div className="w-7 h-7 rounded-md bg-violet-600 flex items-center justify-center border border-violet-500">
               <Building2 size={13} className="text-white" />
             </div>
-            <span className="text-sm font-black tracking-tight text-slate-900 dark:text-white">AURA</span>
-            <span className="text-slate-400 text-xs hidden sm:inline">· Academic ERP for Educational Institutions</span>
+            <span className="text-sm font-black tracking-tight text-slate-900 dark:text-white">AURA CAMPUS<sup className="text-[9px] ml-0.5">™</sup></span>
+            <span className="text-slate-400 text-xs hidden sm:inline">· Academic Management Platform</span>
           </div>
           <nav aria-label="Footer navigation" className="flex flex-wrap justify-center items-center gap-5 text-xs text-slate-400 dark:text-slate-500">
             {NAV_LINKS.map(l => (
@@ -48,7 +48,7 @@ export function Footer() {
               Login →
             </Link>
           </nav>
-          <p className="text-xs text-slate-400 dark:text-slate-600">© 2026 AURA · Built on Next.js &amp; Supabase</p>
+          <p className="text-xs text-slate-400 dark:text-slate-600">© 2026 AURA CAMPUS™ · Built on Next.js &amp; Supabase</p>
         </div>
       </footer>
 

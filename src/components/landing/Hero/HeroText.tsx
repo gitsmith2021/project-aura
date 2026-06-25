@@ -53,7 +53,7 @@ export function HeroText() {
       </h1>
 
       <p className="hero-sub text-base sm:text-lg text-slate-500 dark:text-slate-400 leading-relaxed mb-7">
-        AURA replaces disconnected spreadsheets, outdated portals and manual accreditation work with one unified platform —
+        AURA CAMPUS™ replaces disconnected spreadsheets, outdated portals and manual accreditation work with one unified platform —
         built for colleges, universities and vocational institutes that demand more.
       </p>
 

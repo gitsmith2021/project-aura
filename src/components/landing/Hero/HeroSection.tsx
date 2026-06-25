@@ -78,23 +78,23 @@ export function HeroSection() {
           ) : (
             <div className="rounded-2xl border border-violet-200 dark:border-violet-700/40 bg-white/95 dark:bg-slate-900/80 backdrop-blur-sm p-6 sm:p-8 shadow-2xl shadow-violet-100/40 dark:shadow-violet-900/20">
               <h3 className="text-lg font-black text-slate-900 dark:text-white mb-1">Book Your Free Demo</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">Join early access institutions across India.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">Join institutions worldwide on AURA CAMPUS™.</p>
 
               <form onSubmit={handleDemoSubmit} className="space-y-3">
                 <input
                   type="text" name="institutionName"
                   value={demoForm.institutionName} onChange={handleFormChange}
-                  placeholder="St. Joseph's College of Engineering"
+                  placeholder="e.g. Springfield University"
                   required className={INPUT_CLS} />
                 <input
                   type="text" name="yourName"
                   value={demoForm.yourName} onChange={handleFormChange}
-                  placeholder="Dr. Ramesh Kumar"
+                  placeholder="e.g. Dr. Alex Morgan"
                   required className={INPUT_CLS} />
                 <input
                   type="tel" name="phone"
                   value={demoForm.phone} onChange={handleFormChange}
-                  placeholder="+91 98765 43210"
+                  placeholder="e.g. +1 555 000 0000"
                   required className={INPUT_CLS} />
                 <select
                   name="institutionType"

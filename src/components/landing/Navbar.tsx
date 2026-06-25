@@ -40,10 +40,7 @@ export function Navbar() {
             <Building2 size={15} className="text-white" />
           </div>
           <span className="text-xl font-black tracking-tight bg-gradient-to-r from-violet-600 to-fuchsia-500 bg-clip-text text-transparent">
-            AURA
-          </span>
-          <span className="text-[9px] bg-violet-100 text-violet-600 border border-violet-200 px-1.5 py-0.5 rounded-full font-bold tracking-widest uppercase hidden sm:block">
-            Platform
+            AURA CAMPUS<sup className="text-[11px] ml-0.5 font-black not-italic">™</sup>
           </span>
         </div>
 
