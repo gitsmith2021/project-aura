@@ -7,7 +7,8 @@ import { createClient } from "@/utils/supabase/client";
 import { LocalizationSettings } from "@/components/settings/LocalizationSettings";
 import { listInstitutionSettings, setSetting, resetSetting } from "@/actions/config";
 import {
-  groupByCategory, searchSettings, type ResolvedSetting, type SettingValue,
+  groupByCategory, searchSettings, isEnforced, isDeferred,
+  type ResolvedSetting, type SettingValue,
 } from "@/lib/config";
 
 // AURA CORE FOUNDATION · CF-1 — App Configuration Center.
@@ -198,6 +199,14 @@ function Shell({ children }: { children: React.ReactNode }) {
         <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
           Manage platform behaviour without changing code — settings apply to the selected institution.
         </p>
+        <div className="flex items-center gap-3 mt-1.5 text-[10px] font-semibold">
+          <span className="text-emerald-600 dark:text-emerald-400">● Live</span>
+          <span className="text-slate-400">— takes effect now</span>
+          <span className="text-amber-600 dark:text-amber-400">◷ Planned</span>
+          <span className="text-slate-400">— awaits deferred infra (SMS/push/2FA)</span>
+          <span className="text-slate-400">○ Advisory</span>
+          <span className="text-slate-400">— stored, not yet wired</span>
+        </div>
       </div>
       {children}
     </div>
@@ -206,6 +215,26 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function Empty({ msg }: { msg: string }) {
   return <div className="flex items-center justify-center h-40 text-xs text-slate-400">{msg}</div>;
+}
+
+/** Honest status of a setting: does changing it actually do anything yet? */
+function StatusBadge({ settingKey }: { settingKey: string }) {
+  if (isEnforced(settingKey)) {
+    return (
+      <span title="This setting is wired to behaviour — changes take effect."
+        className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">● Live</span>
+    );
+  }
+  if (isDeferred(settingKey)) {
+    return (
+      <span title="Gates infrastructure that isn't live yet (e.g. SMS/push/2FA). Stored, but no effect until that ships."
+        className="text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">◷ Planned</span>
+    );
+  }
+  return (
+    <span title="Stored & audited, but not yet wired to behaviour."
+      className="text-[9px] font-bold uppercase tracking-wider text-slate-400">○ Advisory</span>
+  );
 }
 
 function SettingRow({
@@ -222,6 +251,7 @@ function SettingRow({
           {showCategory && (
             <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{setting.category}</span>
           )}
+          <StatusBadge settingKey={setting.key} />
           {setting.isOverridden && (
             <span className="text-[9px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Customised</span>
           )}

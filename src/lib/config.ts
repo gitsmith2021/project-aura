@@ -54,6 +54,46 @@ export function categoryOrder(category: string): number {
   return i === -1 ? SETTING_CATEGORIES.length : i;
 }
 
+/**
+ * Settings whose value is actually consumed by feature code (i.e. changing them
+ * changes behaviour). This is the honest source of truth behind the "Enforced"
+ * vs "Advisory" badge in the Configuration Center — a setting not listed here is
+ * stored & audited but not yet wired to behaviour. Add a key here the moment its
+ * consumption point lands (see src/lib/configServer.ts consumers).
+ */
+export const ENFORCED_KEYS: ReadonlySet<string> = new Set<string>([
+  // Finance / payments
+  "finance.online_payments",
+  "integrations.razorpay_enabled",
+  // Admissions
+  "admissions.online_enabled",
+  // AI add-ons
+  "ai.summaries_enabled",
+  "ai.assistant_enabled",
+]);
+
+/** Whether a setting is wired to real behaviour (vs. stored-only / advisory). */
+export function isEnforced(key: string): boolean {
+  return ENFORCED_KEYS.has(key);
+}
+
+/**
+ * Settings that gate intentionally-deferred infrastructure (SMS/WhatsApp/push/
+ * 2FA/session-timeout). The downstream isn't live, so these can't take effect
+ * yet — the UI marks them distinctly so they're never mistaken for working.
+ */
+export const DEFERRED_KEYS: ReadonlySet<string> = new Set<string>([
+  "notifications.sms_enabled",
+  "notifications.whatsapp_enabled",
+  "mobile.push_enabled",
+  "security.enforce_2fa",
+  "security.session_timeout_min",
+]);
+
+export function isDeferred(key: string): boolean {
+  return DEFERRED_KEYS.has(key);
+}
+
 // ── Value coercion ─────────────────────────────────────────────────────────────
 
 /**
