@@ -1,13 +1,7 @@
-import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { ConfigurationCenter } from "@/components/settings/ConfigurationCenter";
+import { redirect } from "next/navigation";
 
-// AURA CORE FOUNDATION · CF-1 — the App Configuration Center replaces the former
-// mock settings tabs. Behaviour is now data-driven (app_setting_definitions /
-// app_setting_values), scoped to the selected institution.
+// Settings is now a parent of two sub-pages: General (platform/institution
+// settings) and App Config (the CF-1 Configuration Center). Land on General.
 export default function SettingsPage() {
-  return (
-    <DashboardLayout>
-      <ConfigurationCenter />
-    </DashboardLayout>
-  );
+  redirect("/settings/general");
 }

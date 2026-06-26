@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase, BrainCircuit,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart, FileStack, Handshake, Scale,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart, FileStack, Handshake, Scale, SlidersHorizontal,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -325,7 +325,8 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   // ── Group open state ──────────────────────────────────────────────────────
   // Determine which group the current path belongs to and auto-open it
   const detectOpenGroup = (path: string): string => {
-    if (path === "/" || path.startsWith("/settings")) return "";
+    if (path.startsWith("/settings")) return "settings";
+    if (path === "/") return "";
     if (path.includes("/admissions")) return "admissions";
     if (isAcademicPath(path)) return "academics";
     if (isCampusPath(path)) return "campus";
@@ -737,15 +738,29 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               </NavGroup>
             )}
 
-            {/* Settings (admin only) */}
+            {/* Settings (admin only) — parent group: General + App Config */}
             {role !== "hod" && (
-              <SidebarLink
-                href="/settings"
+              <NavGroup
                 icon={<Settings size={18} />}
                 label="Settings"
-                active={pathname === "/settings"}
+                isActive={pathname.startsWith("/settings")}
+                isOpen={openGroup === "settings"}
+                onToggle={() => toggleGroup("settings")}
                 isCollapsed={isCollapsed}
-              />
+              >
+                <SubLink
+                  href="/settings/general"
+                  icon={<Settings size={15} />}
+                  label="General"
+                  active={pathname.startsWith("/settings/general")}
+                />
+                <SubLink
+                  href="/settings/app-config"
+                  icon={<SlidersHorizontal size={15} />}
+                  label="App Config"
+                  active={pathname.startsWith("/settings/app-config")}
+                />
+              </NavGroup>
             )}
           </>
         )}
