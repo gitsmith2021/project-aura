@@ -358,7 +358,7 @@ SUPABASE_DB_URL=
 
 | CF | Capability | Priority | Maps to Core service | Status |
 |----|-----------|----------|----------------------|--------|
-| **CF-1** | App Configuration Center — category-based settings, search, global + future per-institution overrides; config over hardcoding | 🔴 P1 | new `@aura/config` | 🔲 Planned |
+| **CF-1** | App Configuration Center — category-based settings, search, institution-scoped values; config over hardcoding | 🔴 P1 | new `@aura/config` | ✅ **v1** — engine + 17-category seed (47 settings) + Configuration Center UI (replaced mock `/settings`); migration `20260712000000`. Behaviour-wiring is the follow-up |
 | **CF-2** | Data Explorer — visual query builder, filters/sort/group, Excel/CSV/PDF export, saved reports; read-only SQL (permissioned, audited) | 🔴 P1 | Aura Insights | 🔲 Planned |
 | **CF-3** | Platform Operations Center — scheduler/Railway/Vercel/Supabase health, jobs/queues, errors, usage, active users | 🟠 P2 | Aura Insights + ops telemetry | 🔲 Planned |
 | **CF-4** | Audit & Activity Center — logins, config/permission changes, exports, security events, scheduler/AI usage | 🟠 P2 | Aura Audit | 🔲 Planned |

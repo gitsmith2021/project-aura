@@ -28,7 +28,7 @@ P3  ── CF-5  Feature Management (arch only)  → Aura Identity + billing
 
 | CF | Capability | Priority | Status |
 |----|-----------|----------|--------|
-| CF-1 | App Configuration Center | 🔴 P1 | 🔲 Planned |
+| CF-1 | App Configuration Center | 🔴 P1 | ✅ v1 — engine + 17-category seed + Configuration Center UI (migration `20260712000000`) |
 | CF-2 | Data Explorer | 🔴 P1 | 🔲 Planned |
 | CF-3 | Platform Operations Center | 🟠 P2 | 🔲 Planned |
 | CF-4 | Audit & Activity Center | 🟠 P2 | 🔲 Planned |

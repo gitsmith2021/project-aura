@@ -9,9 +9,9 @@
 
 | Area | Status |
 |--------|--------|
-| Planned | 5 (CF-1…CF-5) |
+| Planned | 4 (CF-2…CF-5) |
 | In Progress | 0 |
-| Completed | 0 |
+| Completed | 1 (CF-1 v1 — engine) |
 | Deferred | 0 |
 
 ---
@@ -20,7 +20,6 @@
 
 | CF | Capability | Priority | Maps to Core service |
 |----|-----------|----------|----------------------|
-| CF-1 | App Configuration Center | 🔴 P1 | new `@aura/config` |
 | CF-2 | Data Explorer | 🔴 P1 | Aura Insights |
 | CF-3 | Platform Operations Center | 🟠 P2 | Aura Insights + ops telemetry |
 | CF-4 | Audit & Activity Center | 🟠 P2 | Aura Audit |
@@ -36,7 +35,15 @@
 
 ## Completed
 
-- _none_
+- **CF-1 — App Configuration Center (v1, engine)** — product-agnostic config engine
+  (the `@aura/config` seam): `app_setting_definitions` (registry) + `app_setting_values`
+  (institution-scoped) with RLS + a 47-setting seed across all 17 categories; pure
+  resolver `src/lib/config.ts` (precedence: institution value → default; +12 unit tests);
+  `src/actions/config.ts` (list/set/reset, INST_ADMIN+ gated, audited); the `/settings`
+  page rebuilt as a registry-driven Configuration Center (category sidebar + search +
+  typed controls + reset-to-default), replacing the former mock tabs.
+  **Migration `20260712000000` must be applied to the remote DB.** Wiring individual
+  settings to runtime behaviour is the planned follow-up (seed is inert by decision).
 
 ---
 
