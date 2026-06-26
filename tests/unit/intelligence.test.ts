@@ -40,6 +40,11 @@ describe("matchIntent", () => {
   it("routes faculty questions to people.faculty", () => {
     expect(matchIntent("how many faculty do we have", INTENTS, "INST_ADMIN")?.intent.id).toBe("people.faculty");
   });
+  it("routes Batch-A questions (placements / scholarships / results)", () => {
+    expect(matchIntent("show placement statistics", INTENTS, "INST_ADMIN")?.intent.id).toBe("placements.overview");
+    expect(matchIntent("show scholarship distribution", INTENTS, "PRINCIPAL")?.intent.id).toBe("finance.scholarships");
+    expect(matchIntent("what is the pass percentage", INTENTS, "IQAC")?.intent.id).toBe("academics.results");
+  });
   it("returns null for an unknown question", () => {
     expect(matchIntent("what is the weather today", INTENTS, "INST_ADMIN")).toBeNull();
   });
@@ -100,7 +105,7 @@ describe("registry intents are well-formed", () => {
       expect(dashboard.kpis.length + dashboard.widgets.length).toBeGreaterThan(0);
       expect(intent.followups.length).toBeGreaterThan(0);
       // queries only reference CF-2 entities
-      for (const q of queries) expect(["fee_payments", "admissions", "students", "staff", "departments", "student_attendance"]).toContain(q.model.entity);
+      for (const q of queries) expect(["fee_payments", "admissions", "students", "staff", "departments", "student_attendance", "placements", "scholarships", "results"]).toContain(q.model.entity);
     }
   });
 });
