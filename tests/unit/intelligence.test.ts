@@ -34,11 +34,23 @@ describe("matchIntent", () => {
   it("routes enrolment questions to people.enrollment", () => {
     expect(matchIntent("how many students do we have", INTENTS, "IQAC")?.intent.id).toBe("people.enrollment");
   });
+  it("routes attendance questions to attendance_risk (over enrollment)", () => {
+    expect(matchIntent("show students below 75% attendance", INTENTS, "INST_ADMIN")?.intent.id).toBe("academics.attendance_risk");
+  });
+  it("routes faculty questions to people.faculty", () => {
+    expect(matchIntent("how many faculty do we have", INTENTS, "INST_ADMIN")?.intent.id).toBe("people.faculty");
+  });
   it("returns null for an unknown question", () => {
     expect(matchIntent("what is the weather today", INTENTS, "INST_ADMIN")).toBeNull();
   });
   it("respects role permissions (a student can't run fee collection)", () => {
     expect(matchIntent("fee collection", INTENTS, "STUDENT")).toBeNull();
+  });
+  it("attendance risk is admin-scoped — never served to a principal (who can't read attendance)", () => {
+    // A principal may still match a permitted intent (e.g. enrollment via 'students'),
+    // but must NEVER be routed to attendance_risk.
+    expect(matchIntent("students below 75% attendance", INTENTS, "PRINCIPAL")?.intent.id).not.toBe("academics.attendance_risk");
+    expect(matchIntent("students below 75% attendance", INTENTS, "INST_ADMIN")?.intent.id).toBe("academics.attendance_risk");
   });
 });
 
@@ -88,7 +100,7 @@ describe("registry intents are well-formed", () => {
       expect(dashboard.kpis.length + dashboard.widgets.length).toBeGreaterThan(0);
       expect(intent.followups.length).toBeGreaterThan(0);
       // queries only reference CF-2 entities
-      for (const q of queries) expect(["fee_payments", "admissions", "students", "staff", "departments"]).toContain(q.model.entity);
+      for (const q of queries) expect(["fee_payments", "admissions", "students", "staff", "departments", "student_attendance"]).toContain(q.model.entity);
     }
   });
 });

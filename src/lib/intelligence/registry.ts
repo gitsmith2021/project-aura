@@ -7,11 +7,15 @@ import type { IntentDefinition, Role } from "./types";
 import { feeCollectionIntent } from "./intents/finance.fee-collection";
 import { admissionsIntent } from "./intents/admissions.overview";
 import { enrollmentIntent } from "./intents/people.enrollment";
+import { attendanceRiskIntent } from "./intents/academics.attendance-risk";
+import { facultyIntent } from "./intents/people.faculty";
 
 export const INTENTS: IntentDefinition[] = [
   feeCollectionIntent,
   admissionsIntent,
   enrollmentIntent,
+  attendanceRiskIntent,
+  facultyIntent,
 ];
 
 export function getIntent(id: string): IntentDefinition | undefined {
