@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { logAudit } from "@/lib/auditLog";
 import { notifyPaymentReceived } from "@/actions/notificationTriggers";
+import { isSettingEnabled } from "@/lib/configServer";
 import type { FeePayment, PaymentMode, PaymentStatus, PaymentSummary } from "@/types/finance";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -199,6 +200,17 @@ export async function createRazorpayOrder(payload: {
   }
   if (!payload.amount || payload.amount <= 0) {
     return { success: false, error: "Amount must be greater than 0." };
+  }
+
+  // CF-1: online payments must be enabled AND the Razorpay integration on for
+  // this institution. Fail-open (default true) so a config glitch never blocks
+  // fee collection; an explicit `false` from an admin disables online pay.
+  const [payEnabled, rzpEnabled] = await Promise.all([
+    isSettingEnabled(payload.institutionId, "finance.online_payments"),
+    isSettingEnabled(payload.institutionId, "integrations.razorpay_enabled"),
+  ]);
+  if (!payEnabled || !rzpEnabled) {
+    return { success: false, error: "Online payments are disabled for this institution." };
   }
 
   try {
