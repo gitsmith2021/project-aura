@@ -34,7 +34,7 @@ P3  ── CF-5  Feature Management (arch only)  → Aura Identity + billing
 |----|-----------|----------|--------|
 | CF-1 | App Configuration Center | 🔴 P1 | ✅ v1 — engine + 17-category seed + Configuration Center UI (migration `20260712000000`) |
 | CF-2 | Data Explorer | 🔴 P1 | ✅ v1 — Visual Builder + Query Model + PostgREST compiler + saved views + exports (migration `20260713000000`) |
-| CF-3 | **Aura Intelligence** | 🔴 P1 | ✅ **v1 — 15 flagship intents** (ask-a-question executive dashboards on top of CF-2); [CF3_AURA_INTELLIGENCE.md](CF3_AURA_INTELLIGENCE.md); migrations `…14000000`–`…20000000` |
+| CF-3 | **Aura Intelligence** | 🔴 P1 | ✅ **v1 COMPLETE — 15 flagship intents + comparison (vs last year) + HOD department-scoping + optional/graceful LLM layer + trend charts** (ask-a-question executive dashboards on top of CF-2); [CF3_AURA_INTELLIGENCE.md](CF3_AURA_INTELLIGENCE.md); migrations `…14000000`–`…20000000` |
 | CF-4 | Audit & Activity Center | 🟠 P2 | 🔲 Planned |
 | CF-5 | Feature Management | 🟢 P3 | 🔲 Planned (architecture only; runtime deferred) |
 | CF-6 | Platform Operations Center (was CF-3) | 🟠 P2 | 🔲 Planned |

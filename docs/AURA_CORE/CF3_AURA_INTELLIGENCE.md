@@ -4,7 +4,7 @@
 > The single place an executive *asks a question* and Aura composes a board-quality
 > dashboard + a plain-English summary + what to ask next — all from real, RLS-safe data.
 >
-> **Type:** Architecture & roadmap. **Status:** Design (no code yet). **Last updated:** 2026-06-26
+> **Type:** Architecture & roadmap. **Status:** ✅ **v1 COMPLETE (2026-06-26)** — engine + 15 flagship intents + comparison (vs last year) + HOD department-scoping + optional/graceful LLM layer + trend charts; 24 unit tests; build green. Items in §11 are deferred by design. **Last updated:** 2026-06-26
 >
 > **Built ON TOP of CF-2 — CF-2 is frozen.** Aura Intelligence never touches the
 > Data Explorer engine; it *consumes* it. See [CF2_DATA_EXPLORER.md](CF2_DATA_EXPLORER.md).
