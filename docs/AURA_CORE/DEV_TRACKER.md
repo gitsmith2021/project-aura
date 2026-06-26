@@ -43,8 +43,18 @@
   page rebuilt as a registry-driven Configuration Center (category sidebar + search +
   typed controls + reset-to-default), replacing the former mock tabs.
   **Migration `20260712000000` applied to the remote DB (2026-06-26, via SQL editor).**
-  Wiring individual settings to runtime behaviour is the planned follow-up (seed is
-  inert by decision).
+
+  **Wiring (2026-06-26):** added the consumption layer (`src/lib/configServer.ts` —
+  service-role, request-cached `getInstitutionSettings` + `isSettingEnabled` /
+  `getNumberSetting`, fail-open) and an honesty layer (`ENFORCED_KEYS` / `DEFERRED_KEYS`
+  in `lib/config.ts` → per-setting **Live / Planned / Advisory** badge in the UI).
+  **11 settings now genuinely enforce:** finance.online_payments, integrations.razorpay_enabled,
+  admissions.online_enabled, ai.summaries_enabled, ai.assistant_enabled,
+  integrations.scheduler_engine, faculty_portal.marks_entry, student_portal.show_fees/
+  show_attendance/show_results, parent_portal.enabled. Deferred-infra toggles
+  (SMS/WhatsApp/push/2FA/session-timeout) are badged **Planned**. Remaining ~25 are badged
+  **Advisory** (stored + audited, not yet wired) — tracked backlog. Settings → General was
+  reworked to real-only (profile + localization persist; behaviour moved to App Config).
 
 ---
 
