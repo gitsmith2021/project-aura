@@ -50,11 +50,16 @@
   13 unit tests; build green; **fully deterministic — no Anthropic credit needed**.
   Migrations `20260714000000` (`intelligence_queries`) + `20260715000000`
   (`student_attendance_summary` view + entity) **applied to prod (2026-06-26, SQL editor)**.
-  Registry now has **5 flagship intents**: Fee Collection · Admissions · Student Enrollment ·
-  **Attendance Risk** (security_invoker attendance view) · **Faculty & Staff**.
-  Path to 15–20: register each remaining domain entity (placements/scholarships/results/
-  payroll/budget/NAAC/IQAC/research/alumni) then add one intent file each. LLM classifier +
-  summary-refiner are the designed-for enhancement layer (not required).
+  Registry now has **8 flagship intents** (migrations `…14000000` + `…15000000` + Batch A
+  `20260716000000` all applied to prod 2026-06-26):
+  Fee Collection · Admissions · Student Enrollment · **Attendance Risk** · **Faculty & Staff** ·
+  **Placements** · **Scholarships** · **Results**. Batch A added `placement_summary` +
+  `scholarship_summary` security_invoker views + registered the existing `exam_results` table.
+  Remaining toward 15–20 — **Batch B** (Finance Overview · Payroll · Budget) · **Batch C**
+  (NAAC · IQAC · Research · Alumni), each = register entity + one intent file.
+  **Pre-existing flag (not CF-3):** `exam_results` DDL is missing from migrations (rebaseline
+  gap like clubs) — restore it for CI-from-zero integrity; verify the Results intent returns
+  data. LLM classifier + summary-refiner remain the designed-for enhancement layer (not required).
 
 ---
 
