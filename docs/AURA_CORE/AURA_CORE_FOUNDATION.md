@@ -114,31 +114,38 @@ not "the Admissions category."
 
 ---
 
-### CF-2 — Data Explorer · **P1**
+### CF-2 — Data Explorer · **P1**  ·  full spec → [CF2_DATA_EXPLORER.md](CF2_DATA_EXPLORER.md)
 
-**Audience:** Super Admin · Implementation Consultant · Power Users.
+> **Direction (2026-06-26):** an **Institutional Intelligence Platform** (Power BI /
+> Salesforce Reports style), **not** a SQL tool. The **Visual Builder is the primary
+> (and only v1) experience.** Everything compiles to one internal **Query Model
+> (JSON)** that future Natural-Language and Advanced-SQL modes also produce.
 
-**Purpose:** Let users build reports and explore institutional data **without
-developer involvement**.
+**Audience:** Chairman · Principal · IQAC · Administrator · HOD · power users — **non-developers**.
 
-**Features:** Visual Query Builder · table selection · field selection · filters ·
-sorting · grouping · export (Excel / CSV / PDF) · saved reports · favourite reports.
+**Purpose:** build reports and explore institutional data **without writing SQL**.
 
-**Advanced mode:** read-only SQL · permission-controlled · audit-logged.
+**v1 features:** entity picker · column selection · nested **AND/OR** filters · date
+ranges · sorting · **group by** + **aggregations** (count/sum/avg/min/max) · results
+grid · **saved views** + favourites · export (CSV / Excel / PDF) · charts-ready · role-aware (RLS).
 
-**Core mapping:** a surface over **Aura Insights**. The query builder compiles to
-Insights' report primitives; exports reuse Insights' CSV/Excel exporters. The
-read-only SQL path is gated by Identity (permission) and recorded by Audit.
+**Architecture:** `Visual Builder → Query Model (JSON) → PostgREST/Supabase compiler → Results`.
+The Query Model is the durable abstraction (saved views, charts, exports, and future
+AI queries all build on it). Execution runs **as the user** — read-only by nature,
+RLS-respecting, no SQL-injection surface.
 
-**Reusability:** the builder operates over **whatever schema the host product
-exposes** — it never assumes `students`/`fees`. Build/Field point it at their own
-allow-listed tables/views.
+**Core mapping:** a surface over **Aura Insights**; exports reuse the Excel helper;
+runs/exports audited (A8 → feeds CF-4).
 
-**Campus-specific traps to avoid:** no Campus table names baked into the builder;
-it reads an **allow-list of exposed entities** the product registers. Read-only
-enforcement + RLS are mandatory (never raw write SQL).
+**Reusability:** operates over a registered **entity allow-list** (`data_explorer_entities`),
+never assuming `students`/`fees`. Build/Field register their own entities.
 
-**Goal:** reduce custom report development.
+**Deferred (NOT v1):** **Advanced SQL mode** — SUPER_ADMIN only, dedicated read-only
+PG role, statement timeout, row limit, DDL/DML blocked, SQL validated + every query
+logged. A specialist platform capability, never the default. **Natural Language** →
+translates to the same Query Model. Both are designed-for extension points now.
+
+**Goal:** an intelligence platform any administrator can use — reporting power without SQL.
 
 ---
 
