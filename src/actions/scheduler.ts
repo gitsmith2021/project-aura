@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { SHIFT_PERIOD_TIMES } from "@/lib/scheduleConstants";
 import { callScheduler } from "@/lib/scheduler";
+import { isSettingEnabled } from "@/lib/configServer";
 import { notifySchedulePublished } from "@/actions/notificationTriggers";
 
 // Cohort definitions are fixed per academic structure. Adjust required_hours_per_day
@@ -282,6 +283,11 @@ export async function generateDepartmentSchedule(
 ): Promise<SchedulerResult> {
   try {
     if (!academicYearId) return { success: false, error: "Please select an academic year first." };
+
+    // CF-1: respect the AI-timetable-engine toggle (fail-open).
+    if (!(await isSettingEnabled(institutionId, "integrations.scheduler_engine"))) {
+      return { success: false, error: "The AI timetable engine is disabled for this institution." };
+    }
 
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);

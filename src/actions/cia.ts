@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { logAuditBatch } from "@/lib/auditLog";
+import { isSettingEnabled } from "@/lib/configServer";
 import { computeCIA, type CIAComputation, type ComputationMode } from "@/lib/ciaEngine";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -165,6 +166,11 @@ export async function bulkSaveCIAMarks(
   input: BulkCIAMarkInput
 ): Promise<{ success: true; count: number } | { success: false; error: string }> {
   try {
+    // CF-1: respect the faculty marks-entry toggle (fail-open).
+    if (!(await isSettingEnabled(input.institution_id, "faculty_portal.marks_entry"))) {
+      return { success: false, error: "Marks entry is disabled for this institution." };
+    }
+
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
     const { data: { user } } = await supabase.auth.getUser();

@@ -70,6 +70,10 @@ export const ENFORCED_KEYS: ReadonlySet<string> = new Set<string>([
   // AI add-ons
   "ai.summaries_enabled",
   "ai.assistant_enabled",
+  // Integrations
+  "integrations.scheduler_engine",
+  // Faculty portal
+  "faculty_portal.marks_entry",
 ]);
 
 /** Whether a setting is wired to real behaviour (vs. stored-only / advisory). */
