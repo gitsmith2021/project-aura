@@ -13,7 +13,7 @@
 import type { QueryModel, ResultRow } from "@/lib/dataExplorer";
 
 export type Role =
-  | "SUPER_ADMIN" | "INST_ADMIN" | "PRINCIPAL" | "IQAC" | "HOD" | "STAFF" | "STUDENT" | "PARENT";
+  | "SUPER_ADMIN" | "INST_ADMIN" | "PRINCIPAL" | "IQAC" | "HOD" | "DEPARTMENT_HEAD" | "STAFF" | "STUDENT" | "PARENT";
 
 export type Domain =
   | "Finance" | "Admissions" | "Academics" | "People" | "Compliance" | "Placements";

@@ -12,6 +12,9 @@ import { facultyIntent } from "./intents/people.faculty";
 import { placementsIntent } from "./intents/placements.overview";
 import { scholarshipsIntent } from "./intents/finance.scholarships";
 import { resultsIntent } from "./intents/academics.results";
+import { financeOverviewIntent } from "./intents/finance.overview";
+import { payrollIntent } from "./intents/hr.payroll";
+import { budgetIntent } from "./intents/finance.budget";
 
 export const INTENTS: IntentDefinition[] = [
   feeCollectionIntent,
@@ -22,6 +25,9 @@ export const INTENTS: IntentDefinition[] = [
   placementsIntent,
   scholarshipsIntent,
   resultsIntent,
+  financeOverviewIntent,
+  payrollIntent,
+  budgetIntent,
 ];
 
 export function getIntent(id: string): IntentDefinition | undefined {
