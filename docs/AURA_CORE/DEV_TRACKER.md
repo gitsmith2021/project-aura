@@ -45,7 +45,8 @@
   `src/components/data-explorer/DataExplorer.tsx` at `/data-explorer` (entity →
   columns → filters (match ALL/ANY) → group-by → aggregations → sort → date range →
   results grid → CSV/Excel/PDF export → saved views) + sidebar nav.
-  **Migration `20260713000000` must be applied to the remote DB.** Deferred to
+  **Migration `20260713000000` applied to the remote DB (2026-06-26, via SQL editor)
+  → `/data-explorer` live.** Deferred to
   future (designed-for, not built): Advanced SQL mode + Natural-Language queries;
   nested AND/OR *UI* (engine already supports nesting); per-entity views for prettier
   label joins / exact large-scale aggregation.
