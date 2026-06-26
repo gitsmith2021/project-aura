@@ -359,7 +359,7 @@ SUPABASE_DB_URL=
 | CF | Capability | Priority | Maps to Core service | Status |
 |----|-----------|----------|----------------------|--------|
 | **CF-1** | App Configuration Center — category-based settings, search, institution-scoped values; config over hardcoding | 🔴 P1 | new `@aura/config` | ✅ **v1** — engine + 17-category seed (47 settings) + Configuration Center UI (replaced mock `/settings`); migration `20260712000000`. Behaviour-wiring is the follow-up |
-| **CF-2** | Data Explorer — visual query builder, filters/sort/group, Excel/CSV/PDF export, saved reports; read-only SQL (permissioned, audited) | 🔴 P1 | Aura Insights | 🔲 Planned |
+| **CF-2** | Data Explorer — **Institutional Intelligence Platform** (Power BI–style Visual Builder, not a SQL tool): entity → columns → AND/OR filters → group-by → aggregations → sort → date range → CSV/Excel/PDF → saved views. `Visual Builder → Query Model (JSON) → PostgREST compiler` | 🔴 P1 | Aura Insights | ✅ **v1** — `/data-explorer`; migration `20260713000000`; 19 unit tests. Advanced SQL + NL queries are designed-for future modes over the same Query Model |
 | **CF-3** | Platform Operations Center — scheduler/Railway/Vercel/Supabase health, jobs/queues, errors, usage, active users | 🟠 P2 | Aura Insights + ops telemetry | 🔲 Planned |
 | **CF-4** | Audit & Activity Center — logins, config/permission changes, exports, security events, scheduler/AI usage | 🟠 P2 | Aura Audit | 🔲 Planned |
 | **CF-5** | Feature Management — flag definition + targeting (institution/plan/role/env/beta). **Architecture only; runtime enforcement deferred** | 🟢 P3 | Aura Identity + billing | 🔲 Planned |

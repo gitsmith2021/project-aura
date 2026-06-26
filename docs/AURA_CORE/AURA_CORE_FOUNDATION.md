@@ -245,7 +245,7 @@ P3  ── CF-5  Feature Management         (architecture only; runtime deferred
 | CF | Capability | Priority | Status |
 |----|-----------|----------|--------|
 | CF-1 | App Configuration Center | 🔴 P1 | ✅ v1 (engine + seed + UI) — migration `20260712000000` |
-| CF-2 | Data Explorer | 🔴 P1 | 🔲 Planned |
+| CF-2 | Data Explorer | 🔴 P1 | ✅ v1 (Visual Builder + Query Model + compiler) — migration `20260713000000` |
 | CF-3 | Platform Operations Center | 🟠 P2 | 🔲 Planned |
 | CF-4 | Audit & Activity Center | 🟠 P2 | 🔲 Planned |
 | CF-5 | Feature Management (architecture only) | 🟢 P3 | 🔲 Planned |

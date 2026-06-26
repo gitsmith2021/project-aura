@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase, BrainCircuit,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart, FileStack, Handshake, Scale, SlidersHorizontal,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart, FileStack, Handshake, Scale, SlidersHorizontal, Database,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -736,6 +736,17 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               >
                 {financeChildren}
               </NavGroup>
+            )}
+
+            {/* Data Explorer (admin tier) — CF-2 */}
+            {role !== "hod" && (
+              <SidebarLink
+                href="/data-explorer"
+                icon={<Database size={18} />}
+                label="Data Explorer"
+                active={pathname.startsWith("/data-explorer")}
+                isCollapsed={isCollapsed}
+              />
             )}
 
             {/* Settings (admin only) — parent group: General + App Config */}

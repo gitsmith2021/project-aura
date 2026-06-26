@@ -3,15 +3,15 @@
 > Tracks **Aura Core Foundation** capabilities (CF-1…CF-5) and, later, the
 > extraction of the 9 `@aura/*` services. See [AURA_CORE_FOUNDATION.md](AURA_CORE_FOUNDATION.md)
 > for the capability specs and [AURA_CORE_ARCHITECTURE.md](AURA_CORE_ARCHITECTURE.md)
-> for the service architecture. **Last updated:** 2026-06-25
+> for the service architecture. **Last updated:** 2026-06-26
 
 ## Status Summary
 
 | Area | Status |
 |--------|--------|
-| Planned | 4 (CF-2…CF-5) |
+| Planned | 3 (CF-3…CF-5) |
 | In Progress | 0 |
-| Completed | 1 (CF-1 v1 — engine) |
+| Completed | 2 (CF-1 v1, CF-2 v1) |
 | Deferred | 0 |
 
 ---
@@ -20,7 +20,6 @@
 
 | CF | Capability | Priority | Maps to Core service |
 |----|-----------|----------|----------------------|
-| CF-2 | Data Explorer | 🔴 P1 | Aura Insights |
 | CF-3 | Platform Operations Center | 🟠 P2 | Aura Insights + ops telemetry |
 | CF-4 | Audit & Activity Center | 🟠 P2 | Aura Audit |
 | CF-5 | Feature Management (architecture only) | 🟢 P3 | Aura Identity + billing |
@@ -34,6 +33,22 @@
 ---
 
 ## Completed
+
+- **CF-2 — Data Explorer (v1, Visual Builder)** — an Institutional Intelligence
+  Platform, **not** a SQL tool ([CF2_DATA_EXPLORER.md](CF2_DATA_EXPLORER.md)).
+  `Visual Builder → Query Model (JSON) → PostgREST compiler → Results`. Migration
+  `20260713000000` (`data_explorer_entities` registry + 5-entity Campus seed +
+  `data_explorer_reports` saved views, RLS). Pure engine `src/lib/dataExplorer.ts`
+  (validation · nested AND/OR PostgREST compiler · in-process group/aggregate ·
+  CSV; **19 unit tests**). Actions `src/actions/dataExplorer.ts` (run as the user →
+  read-only + RLS-scoped; save/load/favourite views, audited). UI
+  `src/components/data-explorer/DataExplorer.tsx` at `/data-explorer` (entity →
+  columns → filters (match ALL/ANY) → group-by → aggregations → sort → date range →
+  results grid → CSV/Excel/PDF export → saved views) + sidebar nav.
+  **Migration `20260713000000` must be applied to the remote DB.** Deferred to
+  future (designed-for, not built): Advanced SQL mode + Natural-Language queries;
+  nested AND/OR *UI* (engine already supports nesting); per-entity views for prettier
+  label joins / exact large-scale aggregation.
 
 - **CF-1 — App Configuration Center (v1, engine)** — product-agnostic config engine
   (the `@aura/config` seam): `app_setting_definitions` (registry) + `app_setting_values`
