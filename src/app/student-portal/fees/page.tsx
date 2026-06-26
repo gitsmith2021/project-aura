@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getStudentProfile, getStudentFeeHistory, getStudentFeeStructures } from "@/actions/studentPortal";
 import { getMyDemands } from "@/actions/feeDemands";
+import { isSettingEnabled } from "@/lib/configServer";
+import { SectionUnavailable } from "@/components/student-portal/SectionUnavailable";
 import { MyDues } from "@/components/finance/MyDues";
 import { CheckCircle2, Clock, XCircle, AlertCircle, CreditCard, type LucideIcon } from "lucide-react";
 
@@ -50,6 +52,11 @@ export default async function FeesPage({ searchParams }: PageProps) {
   const profileResult = await getStudentProfile();
   if (!profileResult.success) redirect("/login");
   const student = profileResult.data;
+
+  // CF-1: institution can hide the fees section from the student portal.
+  if (!(await isSettingEnabled(student.institution_id, "student_portal.show_fees"))) {
+    return <SectionUnavailable title="Fees & Payments" />;
+  }
 
   const [historyResult, structuresResult, demandsResult] = await Promise.all([
     getStudentFeeHistory(student.id),

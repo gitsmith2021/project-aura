@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { getStudentProfile, getStudentAttendanceSummary } from "@/actions/studentPortal";
+import { isSettingEnabled } from "@/lib/configServer";
+import { SectionUnavailable } from "@/components/student-portal/SectionUnavailable";
 
 function pctColor(p: number) {
   if (p >= 75) return "text-emerald-700 dark:text-emerald-400";
@@ -46,6 +48,11 @@ export default async function AttendancePage() {
   const profileResult = await getStudentProfile();
   if (!profileResult.success) redirect("/login");
   const student = profileResult.data;
+
+  // CF-1: institution can hide the attendance section from the student portal.
+  if (!(await isSettingEnabled(student.institution_id, "student_portal.show_attendance"))) {
+    return <SectionUnavailable title="My Attendance" />;
+  }
 
   const summaryResult = await getStudentAttendanceSummary(student.id);
   const rows = summaryResult.success ? summaryResult.data : [];

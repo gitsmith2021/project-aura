@@ -74,6 +74,10 @@ export const ENFORCED_KEYS: ReadonlySet<string> = new Set<string>([
   "integrations.scheduler_engine",
   // Faculty portal
   "faculty_portal.marks_entry",
+  // Student portal visibility
+  "student_portal.show_fees",
+  "student_portal.show_attendance",
+  "student_portal.show_results",
 ]);
 
 /** Whether a setting is wired to real behaviour (vs. stored-only / advisory). */
