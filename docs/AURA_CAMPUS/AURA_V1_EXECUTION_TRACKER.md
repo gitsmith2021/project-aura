@@ -211,7 +211,7 @@ pole is cleared — **4 production/security issues found & fixed** along the way
 |------|-------------|----------|--------|--------------|-----------|
 | **9A** | Pricing Strategy — tiers mapped to `subscription_plans` (7E ✅) | 🔴 P1 | ✅ | Phase 7E (✅) | **100%** |
 | **9B** | Demo Institution — fully-seeded showcase tenant + reset script | 🔴 P1 | 🟡 **In Review** | Seed engine (✅) | **95%** — built & seeded; **playbook + storyboards + validation checklist + screenshot catalog delivered** ([DEMO_PLAYBOOK.md](DEMO_PLAYBOOK.md) · [PERSONA_STORYBOARDS.md](PERSONA_STORYBOARDS.md)); live capture + validation sign-off pending (owner) |
-| **9C** | Trial Provisioning — spin-up → Onboarding Wizard (A4 ✅) → trial sub | 🟠 P2 | 🔲 | A4 (✅), 7E (✅) | 0% (foundations ✅) |
+| **9C** | Trial Provisioning — spin-up → Onboarding Wizard (A4 ✅) → trial sub | 🟠 P2 | ✅ | A4 (✅), 7E (✅) | **100%** — `provisionInstitution()` action: creates institution (is_onboarded=false → wizard) + auto-starts a 30-day trial on the entry plan; `TRIAL_DAYS`/`trialExpiry()` helpers + 4 unit tests |
 | **9D** | Onboarding Toolkit — import templates, go-live checklist, migration playbook | 🟠 P2 | ✅ | BulkUpload flows (✅) | **100%** — [ONBOARDING_TOOLKIT.md](ONBOARDING_TOOLKIT.md) (CSV templates matching the in-app importer · 4-phase go-live checklist · migration playbook · error→fix table) |
 | **9E** | Sales Deck — problem→solution, NAAC/NIRF/AISHE compliance story, ROI | 🟠 P2 | ✅ | 9A | **100%** — [SALES_DECK.md](SALES_DECK.md) (16-slide structure · persona slides · ROI · pricing · objection-handling · deck-build checklist) |
 | **9F** | Implementation Guide — infra runbook, DR (✅), config matrix, cutover | 🟡 P3 | 🔲 | Infra docs (partial ✅) | 0% |
@@ -281,7 +281,16 @@ live Razorpay keys, `RESEND_API_KEY`/`EMAIL_FROM`), GitHub repo secrets (`SUPABA
 Supabase Pro (PITR + leaked-password protection) **consciously deferred** — accepted launch risk with
 documented fallbacks (weekly-backup RPO floor; strong-password policy), to revisit on Pro upgrade.
 
-**Track 3 completion: ~65%** (9A · 9D · 9E · 9I ✅ — P1 release gate signed off; 9B 95% capture/signoff pending; 9C/9F/9G/9H remain, non-gating)
+**9C delivered (2026-06-26) — ✅ Complete:** `provisionInstitution()` server action
+([src/actions/institutions.ts](../../src/actions/institutions.ts)) makes spinning up a tenant one
+SUPER_ADMIN operation: creates the institution with `is_onboarded=false` (so the admin's first login
+routes into the Arch A4 Onboarding Wizard) **and** auto-starts a **30-day trial** on the entry plan
+(7E `institution_subscriptions`, `status='trial'`), audit-logged (A8). Best-effort trial — institution
+is created even if no plan exists. New pure helpers `TRIAL_DAYS` + `trialExpiry()` in
+[subscriptions.ts](../../src/lib/subscriptions.ts) (+4 unit tests, 16/16 green). AddInstitutionModal
+now routes through the action instead of a raw client insert.
+
+**Track 3 completion: ~70%** (9A · 9C · 9D · 9E · 9I ✅; 9B 95% capture/signoff pending; 9F/9G/9H remain, non-gating P3 docs)
 
 ---
 
@@ -292,10 +301,10 @@ documented fallbacks (weekly-backup RPO floor; strong-password policy), to revis
 ### Completion snapshot — Week 0 (2026-06-23) · A2 ✅ · Infra 🩺 · 9B 🟡 In Review
 
 ```
-Overall v1.0   █████████████████░░░░░░░░░░░░░  ~60%
+Overall v1.0   █████████████████░░░░░░░░░░░░░  ~62%
   Track 1  Phase 8 (P0–P5)   ███░░░░░░░░░░░░░░░░░░░░  ~12%
   Track 2  Arch A2 (gate)    ██████████████████████  100%  ✅ COMPLETE — all 7 steps (e2e gate paused vs prod per R1)
-  Track 3  Phase 9 (P1 focus) ██████████████░░░░░░░░  ~65%  (9A·9D·9E·9I ✅ — P1 gate SIGNED OFF · 9B 95% · 9C/9F/9G/9H remain, non-gating)
+  Track 3  Phase 9 (P1 focus) ███████████████░░░░░░░  ~70%  (9A·9C·9D·9E·9I ✅ — P1 gate SIGNED OFF · 9B 95% · 9F/9G/9H remain, non-gating P3 docs)
   Infra    Supabase health   ██████████████████████  Healthy  ✅ R1+R2 done · R5 proposed
 ```
 

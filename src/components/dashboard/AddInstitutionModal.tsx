@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
-import { createClient } from "@/utils/supabase/client";
+import { provisionInstitution } from "@/actions/institutions";
 
 type SessionTypeKey = "NORMAL" | "DAY" | "EVENING";
 
@@ -54,16 +54,17 @@ export function AddInstitutionModal({ isOpen, onClose, onSuccess }: Props) {
     if (!name || !type || !subdomain || sessionTypes.length === 0) return;
     setLoading(true);
 
-    const supabase = createClient();
-    const { error } = await supabase.from('institutions').insert([
-      { name, college_type: type, subdomain, status: 'Active', session_types: sessionTypes }
-    ]);
+    // Phase 9C — provision through the server action: creates the institution
+    // (is_onboarded=false → onboarding wizard) and auto-starts a 30-day trial.
+    const res = await provisionInstitution({
+      name, collegeType: type, subdomain, sessionTypes,
+    });
 
     setLoading(false);
 
-    if (error) {
-      console.error('Error inserting institution:', error);
-      alert('Failed to save institution: ' + error.message);
+    if (!res.success) {
+      console.error('Error provisioning institution:', res.error);
+      alert('Failed to save institution: ' + res.error);
     } else {
       onSuccess();
       onClose();

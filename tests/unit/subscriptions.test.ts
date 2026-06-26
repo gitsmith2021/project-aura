@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   FEATURES, FEATURE_LABELS, planHasFeature, STATUS_LABELS,
   daysLeft, effectiveStatus, planMonthlyEquivalent, mrr, arr, withinLimits,
-  formatINR, invoiceNumber,
+  formatINR, invoiceNumber, TRIAL_DAYS, trialExpiry,
   type SubLike,
 } from "@/lib/subscriptions";
 
@@ -19,6 +19,27 @@ describe("feature catalog", () => {
   });
   it("labels every status", () => {
     for (const s of ["active", "trial", "expired", "cancelled"] as const) expect(STATUS_LABELS[s]).toBeTruthy();
+  });
+});
+
+describe("trial provisioning (9C)", () => {
+  it("trialExpiry is TRIAL_DAYS out from the given instant", () => {
+    const from = new Date("2026-06-19T12:00:00Z");
+    const exp = trialExpiry(from);
+    expect(daysLeft(exp, from)).toBe(TRIAL_DAYS);
+  });
+  it("a fresh trial reads as 'trial', not expired", () => {
+    const from = new Date("2026-06-19T12:00:00Z");
+    expect(effectiveStatus("trial", trialExpiry(from), from)).toBe("trial");
+  });
+  it("a trial past its expiry downgrades to 'expired'", () => {
+    const from = new Date("2026-06-19T12:00:00Z");
+    const exp = trialExpiry(from);
+    const afterTrial = new Date(new Date(exp).getTime() + 86_400_000); // 1 day past
+    expect(effectiveStatus("trial", exp, afterTrial)).toBe("expired");
+  });
+  it("defaults to a 30-day trial", () => {
+    expect(TRIAL_DAYS).toBe(30);
   });
 });
 

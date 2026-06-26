@@ -42,6 +42,19 @@ export const STATUS_LABELS: Record<SubStatus, string> = {
   active: "Active", trial: "Trial", expired: "Expired", cancelled: "Cancelled",
 };
 
+// ── Trial provisioning (Phase 9C) ──────────────────────────────────────────────
+
+/** Free-trial length for a newly provisioned institution. Matches the 30-day
+ *  trial advertised on the public pricing page (see PRICING_STRATEGY.md). */
+export const TRIAL_DAYS = 30;
+
+/** ISO expiry for a fresh trial: `from` + TRIAL_DAYS days. Pure / unit-tested. */
+export function trialExpiry(from: Date = new Date()): string {
+  const d = new Date(from);
+  d.setDate(d.getDate() + TRIAL_DAYS);
+  return d.toISOString();
+}
+
 export const STATUS_STYLES: Record<SubStatus, string> = {
   active: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300",
   trial: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300",
