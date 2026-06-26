@@ -66,9 +66,10 @@ coherent with the service architecture instead of inventing a parallel one.
 |----|-----------|----------------------|------------------|-------------------------------|
 | **CF-1** | App Configuration Center | (new) **`@aura/config`** | Settings registry + resolver | Settings UI, locale (Arch A6), `isFeatureEnabled` |
 | **CF-2** | Data Explorer | **Aura Insights** | Query builder over Insights | `actions/*` reports, `lib/excelXml.ts`, SSR/NIRF/AISHE exports |
-| **CF-3** | Platform Operations Center | **Aura Insights** + ops telemetry | Health/telemetry aggregator | Phase 7D `/admin/health`, scheduler `/health`, `scheduler_error_logs` |
+| **CF-3** | **Aura Intelligence** (ask-a-question dashboards) | **Aura Insights** (on top of CF-2) | Intent registry + Dashboard Composer | CF-2 `runQuery`, KH-5 Claude SDK, Recharts |
 | **CF-4** | Audit & Activity Center | **Aura Audit** | Activity surface over `audit_logs` | `lib/auditLog.ts`, `audit_logs` (Arch A8), login events |
 | **CF-5** | Feature Management | **Aura Identity** + billing | Flag definition & targeting model | `subscription_plans` (7E), `isFeatureEnabled` |
+| **CF-6** | Platform Operations Center *(was CF-3)* | **Aura Insights** + ops telemetry | Health/telemetry aggregator | Phase 7D `/admin/health`, scheduler `/health`, `scheduler_error_logs` |
 
 ---
 
@@ -149,7 +150,32 @@ translates to the same Query Model. Both are designed-for extension points now.
 
 ---
 
-### CF-3 — Platform Operations Center · **P2**
+### CF-3 — Aura Intelligence · **P1**  ·  ✅ v1 (15 intents) — full spec → [CF3_AURA_INTELLIGENCE.md](CF3_AURA_INTELLIGENCE.md)
+
+> **Reassigned 2026-06-26** (the former Platform Operations Center is now CF-6).
+
+**Audience:** Chairman · Principal · IQAC · Administrator · HOD — non-developers.
+
+**Purpose:** Aura's Intelligence Layer — an executive asks a question and Aura composes
+a board-quality dashboard + grounded executive summary + suggested follow-ups, all on
+top of CF-2 (frozen).
+
+**Architecture:** `Question → Intent + Slots (LLM-optional) → Query Model (code) → CF-2
+runQuery (RLS) → Dashboard Composer (code) → Executive Summary → Follow-ups`. The LLM
+never writes SQL and never sees raw PII; v1 is fully deterministic (works with $0 credit).
+
+**v1 shipped:** an **intent registry** (one file per intent) with **15 flagship intents** —
+Fee Collection · Admissions · Enrollment · Attendance Risk · Faculty · Placements ·
+Scholarships · CIA Results · Finance Overview · Payroll · Budget · IQAC · Research ·
+Alumni · NAAC Readiness — over 17 registered CF-2 entities (incl. 4 security_invoker
+views). Calm `/intelligence` UI; deterministic matcher + Dashboard Composer.
+
+**Goal:** the signature experience — reporting power without SQL. **Deferred-for** (designed,
+not built): LLM intent-classifier + summary-refiner · NL queries · comparison/trend slots.
+
+---
+
+### CF-6 — Platform Operations Center · **P2** *(was CF-3)*
 
 **Audience:** Platform Administrators.
 
@@ -237,8 +263,9 @@ must not assume Campus plan names or roles — those are *values*, not schema.
 ```
 P1  ── CF-1  App Configuration Center   (config-over-hardcoding foundation)
        CF-2  Data Explorer              (reduces custom report dev)
-P2  ── CF-3  Platform Operations Center (single ops dashboard)
-       CF-4  Audit & Activity Center    (enterprise transparency)
+       CF-3  Aura Intelligence          (ask-a-question executive dashboards)
+P2  ── CF-4  Audit & Activity Center    (enterprise transparency)
+       CF-6  Platform Operations Center (single ops dashboard — was CF-3)
 P3  ── CF-5  Feature Management         (architecture only; runtime deferred)
 ```
 
@@ -246,9 +273,10 @@ P3  ── CF-5  Feature Management         (architecture only; runtime deferred
 |----|-----------|----------|--------|
 | CF-1 | App Configuration Center | 🔴 P1 | ✅ v1 (engine + seed + UI) — migration `20260712000000` |
 | CF-2 | Data Explorer | 🔴 P1 | ✅ v1 (Visual Builder + Query Model + compiler) — migration `20260713000000` |
-| CF-3 | Platform Operations Center | 🟠 P2 | 🔲 Planned |
+| CF-3 | **Aura Intelligence** | 🔴 P1 | ✅ **v1 — 15 flagship intents** ([CF3_AURA_INTELLIGENCE.md](CF3_AURA_INTELLIGENCE.md)); migrations `…14000000`–`…20000000` |
 | CF-4 | Audit & Activity Center | 🟠 P2 | 🔲 Planned |
 | CF-5 | Feature Management (architecture only) | 🟢 P3 | 🔲 Planned |
+| CF-6 | Platform Operations Center *(was CF-3)* | 🟠 P2 | 🔲 Planned |
 
 > **Gating note:** Aura Core Foundation does **not** gate or alter the Aura Campus
 > v1.0 release. It is a parallel platform stream. v1.0 ships on the Campus track.

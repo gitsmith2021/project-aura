@@ -360,9 +360,10 @@ SUPABASE_DB_URL=
 |----|-----------|----------|----------------------|--------|
 | **CF-1** | App Configuration Center — category-based settings, search, institution-scoped values; config over hardcoding | 🔴 P1 | new `@aura/config` | ✅ **v1** — engine + 17-category seed (47 settings) + Configuration Center UI (replaced mock `/settings`); migration `20260712000000`. Behaviour-wiring is the follow-up |
 | **CF-2** | Data Explorer — **Institutional Intelligence Platform** (Power BI–style Visual Builder, not a SQL tool): entity → columns → AND/OR filters → group-by → aggregations → sort → date range → CSV/Excel/PDF → saved views. `Visual Builder → Query Model (JSON) → PostgREST compiler` | 🔴 P1 | Aura Insights | ✅ **v1** — `/data-explorer`; migration `20260713000000`; 19 unit tests. Advanced SQL + NL queries are designed-for future modes over the same Query Model |
-| **CF-3** | Platform Operations Center — scheduler/Railway/Vercel/Supabase health, jobs/queues, errors, usage, active users | 🟠 P2 | Aura Insights + ops telemetry | 🔲 Planned |
+| **CF-3** | **Aura Intelligence** — Aura's Intelligence Layer (ask-a-question executive dashboards on top of CF-2): `Question → Intent+Slots → Query Model → CF-2 runQuery (RLS) → Dashboard Composer → Executive Summary → Follow-ups`. Not a chatbot — composed board-quality dashboards | 🔴 P1 | Aura Insights (on CF-2) | ✅ **v1 — 15 flagship intents** at `/intelligence` ([../AURA_CORE/CF3_AURA_INTELLIGENCE.md](../AURA_CORE/CF3_AURA_INTELLIGENCE.md)); migrations `…14000000`–`…20000000`; deterministic (no AI credit). *Reassigned from Platform Ops Center, now CF-6* |
 | **CF-4** | Audit & Activity Center — logins, config/permission changes, exports, security events, scheduler/AI usage | 🟠 P2 | Aura Audit | 🔲 Planned |
 | **CF-5** | Feature Management — flag definition + targeting (institution/plan/role/env/beta). **Architecture only; runtime enforcement deferred** | 🟢 P3 | Aura Identity + billing | 🔲 Planned |
+| **CF-6** | Platform Operations Center *(was CF-3)* — scheduler/Railway/Vercel/Supabase health, jobs/queues, errors, usage, active users | 🟠 P2 | Aura Insights + ops telemetry | 🔲 Planned |
 
 **Architecture principles (every capability):** product-independent · institution-independent ·
 reusable · API-first · secure by default · audit-friendly · multi-tenant aware · configuration

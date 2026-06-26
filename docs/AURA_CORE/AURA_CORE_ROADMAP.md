@@ -21,18 +21,23 @@
 ```
 P1  ── CF-1  App Configuration Center      → new @aura/config
        CF-2  Data Explorer                 → Aura Insights
-P2  ── CF-3  Platform Operations Center     → Aura Insights + ops telemetry
-       CF-4  Audit & Activity Center        → Aura Audit
+       CF-3  Aura Intelligence             → Aura Insights (on top of CF-2)
+P2  ── CF-4  Audit & Activity Center        → Aura Audit
+       CF-6  Platform Operations Center     → Aura Insights + ops telemetry
 P3  ── CF-5  Feature Management (arch only)  → Aura Identity + billing
 ```
+
+> **CF-3 was reassigned to Aura Intelligence (2026-06-26).** The former Platform
+> Operations Center is renumbered **CF-6**.
 
 | CF | Capability | Priority | Status |
 |----|-----------|----------|--------|
 | CF-1 | App Configuration Center | 🔴 P1 | ✅ v1 — engine + 17-category seed + Configuration Center UI (migration `20260712000000`) |
 | CF-2 | Data Explorer | 🔴 P1 | ✅ v1 — Visual Builder + Query Model + PostgREST compiler + saved views + exports (migration `20260713000000`) |
-| CF-3 | Platform Operations Center | 🟠 P2 | 🔲 Planned |
+| CF-3 | **Aura Intelligence** | 🔴 P1 | ✅ **v1 — 15 flagship intents** (ask-a-question executive dashboards on top of CF-2); [CF3_AURA_INTELLIGENCE.md](CF3_AURA_INTELLIGENCE.md); migrations `…14000000`–`…20000000` |
 | CF-4 | Audit & Activity Center | 🟠 P2 | 🔲 Planned |
 | CF-5 | Feature Management | 🟢 P3 | 🔲 Planned (architecture only; runtime deferred) |
+| CF-6 | Platform Operations Center (was CF-3) | 🟠 P2 | 🔲 Planned |
 
 ---
 
