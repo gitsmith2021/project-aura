@@ -78,6 +78,8 @@ export const ENFORCED_KEYS: ReadonlySet<string> = new Set<string>([
   "student_portal.show_fees",
   "student_portal.show_attendance",
   "student_portal.show_results",
+  // Parent portal
+  "parent_portal.enabled",
 ]);
 
 /** Whether a setting is wired to real behaviour (vs. stored-only / advisory). */

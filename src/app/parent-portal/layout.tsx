@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { getLinkedStudents } from "@/actions/parentPortal";
+import { isSettingEnabled } from "@/lib/configServer";
 import { ParentPortalShell } from "@/components/parent-portal/ParentPortalShell";
 
 export const metadata = { title: "AURA — Parent Portal" };
@@ -20,6 +21,20 @@ export default async function ParentPortalLayout({ children }: { children: React
     .eq("user_id", user.id)
     .maybeSingle();
   if (!parent) redirect("/login");
+
+  // CF-1: an institution can switch its parent portal off entirely.
+  if (!(await isSettingEnabled(parent.institution_id as string, "parent_portal.enabled"))) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 px-6">
+        <div className="max-w-sm text-center">
+          <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">Parent Portal Unavailable</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+            The parent portal is currently disabled by your institution. Please contact the institution office.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const [kidsRes, { data: inst }] = await Promise.all([
     getLinkedStudents(),
