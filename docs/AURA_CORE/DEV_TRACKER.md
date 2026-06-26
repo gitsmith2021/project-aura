@@ -48,9 +48,13 @@
   `/intelligence` (greeting · ask box · recent · KPIs · Recharts widgets · executive
   summary · follow-ups). Sidebar **Analytics** group (Aura Intelligence + Data Explorer).
   13 unit tests; build green; **fully deterministic — no Anthropic credit needed**.
-  Migration `20260714000000` (`intelligence_queries`) **must be applied to the remote DB**
-  (MCP dropped this session). Next: **Attendance Risk** intent (needs an attendance entity
-  registered); LLM classifier + summary-refiner are the designed-for enhancement layer.
+  Migrations `20260714000000` (`intelligence_queries`) + `20260715000000`
+  (`student_attendance_summary` view + entity) **applied to prod (2026-06-26, SQL editor)**.
+  Registry now has **5 flagship intents**: Fee Collection · Admissions · Student Enrollment ·
+  **Attendance Risk** (security_invoker attendance view) · **Faculty & Staff**.
+  Path to 15–20: register each remaining domain entity (placements/scholarships/results/
+  payroll/budget/NAAC/IQAC/research/alumni) then add one intent file each. LLM classifier +
+  summary-refiner are the designed-for enhancement layer (not required).
 
 ---
 
