@@ -90,7 +90,7 @@ weekly encrypted backup as the accepted RPO floor. Revisit on the Pro upgrade.
 
 | # | Check | Status | Evidence |
 |---|-------|--------|----------|
-| 4.1 | Plan catalog matches public pricing | ✅ | Phase 9A — `subscription_plans` aligned to Essential/Professional/Enterprise; [PRICING_STRATEGY.md](PRICING_STRATEGY.md). Applied to prod 2026-06-25. |
+| 4.1 | Plan catalog matches public pricing | ✅ | Phase 9A — `subscription_plans` aligned to Essential/Professional/Enterprise; [PRICING_STRATEGY.md](PRICING_STRATEGY.md). Migration `20260710000000` **applied to prod 2026-06-26** (SQL editor). |
 | 4.2 | Subscriptions + invoices + MRR/ARR | ✅ | Phase 7E; `/admin/billing`. |
 | 4.3 | 30-day trial provisioning | ✅ | `status='trial'` supported; pricing CTAs open trial. |
 | 4.4 | Feature gating | 🟡 | `isFeatureEnabled()` (page-level, default-allow). Middleware hard-gate + Razorpay recurring auto-charge deferred — **manual invoicing for v1.0** (documented). |

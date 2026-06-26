@@ -42,8 +42,9 @@
   `src/actions/config.ts` (list/set/reset, INST_ADMIN+ gated, audited); the `/settings`
   page rebuilt as a registry-driven Configuration Center (category sidebar + search +
   typed controls + reset-to-default), replacing the former mock tabs.
-  **Migration `20260712000000` must be applied to the remote DB.** Wiring individual
-  settings to runtime behaviour is the planned follow-up (seed is inert by decision).
+  **Migration `20260712000000` applied to the remote DB (2026-06-26, via SQL editor).**
+  Wiring individual settings to runtime behaviour is the planned follow-up (seed is
+  inert by decision).
 
 ---
 
