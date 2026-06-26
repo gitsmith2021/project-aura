@@ -22,7 +22,10 @@
       "Bash(npm run *)",
       "Bash(xargs grep -l \"CREATE TABLE.*schedules\")",
       "Skill(update-config)",
-      "Bash(gh repo *)"
+      "Bash(gh repo *)",
+      "Bash(claude update *)",
+      "Bash(claude doctor *)",
+      "Bash(claude --version)"
     ],
     "additionalDirectories": [
       "d:\\Aura-Project\\project-aura\\src\\app\\institutions\\[id]\\finance"
