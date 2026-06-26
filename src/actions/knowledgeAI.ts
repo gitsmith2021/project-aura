@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/utils/supabase/server";
+import { isSettingEnabled } from "@/lib/configServer";
 import { searchResources, type KnowledgeResource } from "@/actions/knowledgeHub";
 import {
   SUMMARY_SYSTEM, ASSISTANT_SYSTEM, buildSummaryPrompt, buildAssistantPrompt, citedResources,
@@ -62,6 +63,11 @@ export async function generateResourceSummary(resourceId: string): Promise<Resul
       .maybeSingle();
     if (!resource) return { success: false, error: "Resource not found." };
 
+    // CF-1: AI summaries are an opt-in add-on — off unless enabled (fail-closed).
+    if (!(await isSettingEnabled(resource.institution_id as string, "ai.summaries_enabled", false))) {
+      return { success: false, error: "AI summaries are disabled for this institution." };
+    }
+
     // Gate before spending tokens: uploader or an institution admin/HOD.
     let allowed = resource.uploaded_by === user.id;
     if (!allowed) {
@@ -115,6 +121,11 @@ export async function askKnowledgeAssistant(
     const { data: member } = await supabase.from("institution_members").select("role").eq("profile_id", user.id).maybeSingle();
     if (!ADMIN_ROLES.includes((member?.role as string) ?? "")) {
       return { success: false, error: "The Knowledge Assistant is available to administrators." };
+    }
+
+    // CF-1: the assistant is an opt-in add-on — off unless enabled (fail-closed).
+    if (!(await isSettingEnabled(institutionId, "ai.assistant_enabled", false))) {
+      return { success: false, error: "The Knowledge Assistant is disabled for this institution." };
     }
 
     // Retrieve top matches over the KH-2 full-text index (RLS-scoped).

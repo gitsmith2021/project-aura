@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { logAudit } from "@/lib/auditLog";
+import { isSettingEnabled } from "@/lib/configServer";
 import { generateRollNo, isValidEmail, type Admission, type AdmissionStatus } from "@/lib/admissions";
 
 type Result<T> = { success: true; data: T } | { success: false; error: string };
@@ -55,6 +56,10 @@ export async function submitApplication(input: ApplicationInput): Promise<Result
   try {
     if (!input.applicant_name.trim()) return { success: false, error: "Your name is required." };
     if (!isValidEmail(input.applicant_email)) return { success: false, error: "Enter a valid email." };
+    // CF-1: respect the institution's online-applications toggle (fail-open).
+    if (!(await isSettingEnabled(input.institutionId, "admissions.online_enabled"))) {
+      return { success: false, error: "Online applications are currently closed for this institution." };
+    }
     // Dev Rule 16: public applicants are anonymous (no session). The anon role
     // can INSERT (status='applied') but has no SELECT policy on admissions, so an
     // anon `.insert().select()` read-back fails the whole statement ("violates
