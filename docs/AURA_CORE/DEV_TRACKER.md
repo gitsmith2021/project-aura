@@ -10,7 +10,7 @@
 | Area | Status |
 |--------|--------|
 | Planned | 3 (CF-4, CF-5, CF-6) |
-| In Progress | 1 (CF-3 Aura Intelligence — design ✅, build next) |
+| In Progress | 1 (CF-3 Aura Intelligence — v1 engine + 3 flagship intents shipped) |
 | Completed | 2 (CF-1 v1, CF-2 v1) |
 | Deferred | 0 |
 
@@ -37,8 +37,20 @@
   Query Model (code) → CF-2 runQuery → RLS dataset → Dashboard Composer (code) →
   Executive Summary (LLM, grounded) → Follow-ups`. **Decisions:** Intent Registry
   (LLM classifies, code builds — no free-form SQL); graceful degradation (works
-  without Anthropic credit); build = engine + 3 flagship intents (Fee Collection,
-  Low Admissions, Attendance Risk) then scale. Spec: [CF3_AURA_INTELLIGENCE.md](CF3_AURA_INTELLIGENCE.md).
+  without Anthropic credit); build = engine + 3 flagship intents then scale.
+  Spec: [CF3_AURA_INTELLIGENCE.md](CF3_AURA_INTELLIGENCE.md).
+
+  **v1 shipped (2026-06-26):** engine `src/lib/intelligence/` (types · deterministic
+  matcher + slot extraction · Dashboard Composer · intent **registry**) + 3 flagship
+  intents over existing CF-2 entities — **Fee Collection**, **Admissions** (incl. "low
+  admissions"), **Student Enrollment**. Orchestrator `src/actions/intelligence.ts`
+  (`askAura` → CF-2 `runQuery`, RLS-scoped; recent questions; role launcher). Calm UI
+  `/intelligence` (greeting · ask box · recent · KPIs · Recharts widgets · executive
+  summary · follow-ups). Sidebar **Analytics** group (Aura Intelligence + Data Explorer).
+  13 unit tests; build green; **fully deterministic — no Anthropic credit needed**.
+  Migration `20260714000000` (`intelligence_queries`) **must be applied to the remote DB**
+  (MCP dropped this session). Next: **Attendance Risk** intent (needs an attendance entity
+  registered); LLM classifier + summary-refiner are the designed-for enhancement layer.
 
 ---
 

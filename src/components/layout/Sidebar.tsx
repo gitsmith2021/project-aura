@@ -6,7 +6,7 @@ import {
   Layers, Landmark, Wallet, Tag, CreditCard, BarChart2, ChevronDown,
   ClipboardCheck, CalendarOff, CalendarDays, BookOpen, BadgePercent,
   ClipboardList, Award, BadgeCheck, Library, BookText, Mic2, Briefcase, BrainCircuit,
-  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart, FileStack, Handshake, Scale, SlidersHorizontal, Database,
+  ShieldCheck, ScrollText, ChevronsLeft, ChevronsRight, Megaphone, BedDouble, FlaskConical, Package, Truck, Nfc, DoorOpen, Receipt, Stethoscope, Trophy, Star, School, UserPlus, ListOrdered, FileText, Search, ShieldAlert, Microscope, CalendarCheck, UserCog, Bus, MonitorCheck, MessageSquareHeart, FileStack, Handshake, Scale, SlidersHorizontal, Database, Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -326,6 +326,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   // Determine which group the current path belongs to and auto-open it
   const detectOpenGroup = (path: string): string => {
     if (path.startsWith("/settings")) return "settings";
+    if (path.startsWith("/data-explorer") || path.startsWith("/intelligence")) return "analytics";
     if (path === "/") return "";
     if (path.includes("/admissions")) return "admissions";
     if (isAcademicPath(path)) return "academics";
@@ -738,15 +739,29 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               </NavGroup>
             )}
 
-            {/* Data Explorer (admin tier) — CF-2 */}
+            {/* Analytics (admin tier) — CF-2 Data Explorer + CF-3 Aura Intelligence */}
             {role !== "hod" && (
-              <SidebarLink
-                href="/data-explorer"
+              <NavGroup
                 icon={<Database size={18} />}
-                label="Data Explorer"
-                active={pathname.startsWith("/data-explorer")}
+                label="Analytics"
+                isActive={pathname.startsWith("/data-explorer") || pathname.startsWith("/intelligence")}
+                isOpen={openGroup === "analytics"}
+                onToggle={() => toggleGroup("analytics")}
                 isCollapsed={isCollapsed}
-              />
+              >
+                <SubLink
+                  href="/intelligence"
+                  icon={<Sparkles size={15} />}
+                  label="Aura Intelligence"
+                  active={pathname.startsWith("/intelligence")}
+                />
+                <SubLink
+                  href="/data-explorer"
+                  icon={<Database size={15} />}
+                  label="Data Explorer"
+                  active={pathname.startsWith("/data-explorer")}
+                />
+              </NavGroup>
             )}
 
             {/* Settings (admin only) — parent group: General + App Config */}
