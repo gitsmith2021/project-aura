@@ -11,7 +11,7 @@ export const researchIntent: IntentDefinition = {
   title: "Research & Publications",
   domain: "Academics",
   aliases: ["research", "publications", "research projects", "papers", "funding", "scopus", "research output", "publication count"],
-  roles: ["SUPER_ADMIN", "INST_ADMIN"],
+  roles: ["SUPER_ADMIN", "INST_ADMIN", "HOD", "DEPARTMENT_HEAD"],
   sample: "Show research projects and publications",
 
   build() {

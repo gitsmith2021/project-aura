@@ -31,6 +31,24 @@ function computeKpi(spec: KpiSpec, rows: ResultRow[]): ComputedKpi {
 }
 
 function shapeWidget(spec: WidgetSpec, rows: ResultRow[]): ComputedWidget {
+  // Trend: bucket raw rows by month (YYYY-MM) from the date field; sum `value`
+  // (or count rows when no value column). Output series sorted chronologically.
+  if (spec.type === "trend") {
+    const catKey = spec.category ?? "period";
+    const outValKey = spec.value ?? "count";
+    const buckets = new Map<string, number>();
+    for (const r of rows) {
+      const raw = spec.dateField ? String(r[spec.dateField] ?? "") : "";
+      const month = raw.slice(0, 7);
+      if (!/^\d{4}-\d{2}$/.test(month)) continue;
+      buckets.set(month, (buckets.get(month) ?? 0) + (spec.value ? num(r[spec.value]) : 1));
+    }
+    const series = [...buckets.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([m, v]) => ({ [catKey]: m, [outValKey]: v } as ResultRow));
+    return { ...spec, category: catKey, value: outValKey, rows: series };
+  }
+
   let out = rows;
   // Charts/rankings: sort by the value column and cap.
   if (spec.value && (spec.type === "bar" || spec.type === "pie" || spec.type === "donut" || spec.type === "ranking" || spec.type === "line" || spec.type === "area")) {
@@ -40,6 +58,21 @@ function shapeWidget(spec: WidgetSpec, rows: ResultRow[]): ComputedWidget {
   }
   if (spec.limit && spec.limit > 0) out = out.slice(0, spec.limit);
   return { ...spec, rows: out };
+}
+
+/** Attach period-over-period deltas to current KPIs by matching prior KPIs by label. */
+export function attachDeltas(current: ComputedKpi[], prior: ComputedKpi[], periodLabel: string): void {
+  const priorByLabel = new Map(prior.map((k) => [k.label, k.value]));
+  for (const kpi of current) {
+    const p = priorByLabel.get(kpi.label);
+    if (kpi.value === null || p === null || p === undefined) { kpi.delta = null; continue; }
+    if (p === 0) {
+      kpi.delta = kpi.value === 0 ? { pct: 0, dir: "flat", label: periodLabel } : { pct: null, dir: "up", label: periodLabel };
+      continue;
+    }
+    const pct = ((kpi.value - p) / Math.abs(p)) * 100;
+    kpi.delta = { pct: Math.round(pct * 10) / 10, dir: pct > 0.5 ? "up" : pct < -0.5 ? "down" : "flat", label: periodLabel };
+  }
 }
 
 // ── Formatting ──────────────────────────────────────────────────────────────────

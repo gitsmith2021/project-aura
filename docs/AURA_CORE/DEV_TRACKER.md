@@ -10,8 +10,8 @@
 | Area | Status |
 |--------|--------|
 | Planned | 3 (CF-4, CF-5, CF-6) |
-| In Progress | 1 (CF-3 Aura Intelligence — v1 engine + 3 flagship intents shipped) |
-| Completed | 2 (CF-1 v1, CF-2 v1) |
+| In Progress | 0 |
+| Completed | 3 (CF-1 v1, CF-2 v1, **CF-3 v1**) |
 | Deferred | 0 |
 
 > **Roadmap note (2026-06-26):** CF-3 was reassigned to **Aura Intelligence** (owner
@@ -31,7 +31,13 @@
 
 ## In Progress
 
-- **CF-3 — Aura Intelligence (design approved 2026-06-26)** — Aura's Intelligence
+- _none_
+
+---
+
+## Completed (CF-3 detail)
+
+- **CF-3 — Aura Intelligence — ✅ v1 COMPLETE (2026-06-26)** — Aura's Intelligence
   Layer: an executive asks a question → composed board-quality dashboard + summary +
   follow-ups, all via CF-2 (frozen). Architecture: `Question → Intent+Slots (LLM) →
   Query Model (code) → CF-2 runQuery → RLS dataset → Dashboard Composer (code) →
@@ -59,8 +65,21 @@
   iqac-actions; NAAC is a cross-entity readiness intent — no NAAC table exists). 20 unit
   tests; fully deterministic (no Anthropic credit). The `exam_results` rebaseline gap was
   **fixed separately** (`20260718000000` restores the Campus marksheet table); CF-3 Results
-  reads `cia_results`. Remaining (optional): LLM classifier + summary-refiner; comparison/
-  trend slots; HOD department-scoping; more intents (the registry scales one-file-per-intent).
+  reads `cia_results`.
+
+  **v1 finished (2026-06-26)** — all four remaining polish items landed (code-only, no
+  migration): (1) **Comparison ("vs last year")** — the `comparison` slot re-runs the prior-year
+  period and `attachDeltas` puts up/down/flat KPI **deltas** on the cards; (2) **HOD
+  department-scoping** — `askAura` resolves the asker's `department_id` and auto-injects a
+  `department_id` filter for HOD/DEPARTMENT_HEAD on dept-scoped entities (+ those roles added to
+  enrollment/attendance-risk/results/research/faculty); (3) **LLM enhancement layer**
+  (`src/lib/intelligence/llm.ts`) — optional Claude intent-classifier (fallback when the
+  deterministic matcher misses) + summary-refiner (grounded only in KPIs, never PII), fully
+  graceful (no-op at $0 credit, validated against the registry); (4) **Trends** — month-bucketed
+  area charts (Fee Collection / Admissions over time) via in-process bucketing in the Composer.
+  **24 unit tests pass; production build green.** Deferred by design (spec §11, NOT v1):
+  CF-3.1 Voice · 3.2 Conversation Memory · 3.3 Scheduled Insights · 3.4 Predictive ·
+  3.5 Recommendations · 3.6 Cross-dashboard · 3.7 Health Score · 3.8 Chairman's Daily Brief.
 
 ---
 

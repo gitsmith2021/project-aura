@@ -11,7 +11,7 @@ export const enrollmentIntent: IntentDefinition = {
   title: "Student Enrollment",
   domain: "People",
   aliases: ["students", "enrollment", "enrolment", "how many students", "student strength", "student count", "students by department", "students by program"],
-  roles: ["SUPER_ADMIN", "INST_ADMIN", "PRINCIPAL", "IQAC"],
+  roles: ["SUPER_ADMIN", "INST_ADMIN", "PRINCIPAL", "IQAC", "HOD", "DEPARTMENT_HEAD"],
   sample: "How many students do we have, by department?",
 
   build() {

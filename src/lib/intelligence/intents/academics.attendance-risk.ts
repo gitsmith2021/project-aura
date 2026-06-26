@@ -12,7 +12,7 @@ export const attendanceRiskIntent: IntentDefinition = {
   title: "Attendance Risk",
   domain: "Academics",
   aliases: ["attendance risk", "low attendance", "attendance below", "students below", "short of attendance", "attendance shortage", "defaulters", "attendance"],
-  roles: ["SUPER_ADMIN", "INST_ADMIN"],
+  roles: ["SUPER_ADMIN", "INST_ADMIN", "HOD", "DEPARTMENT_HEAD"],
   sample: "Show students below 75% attendance",
 
   build(slots: Slots) {

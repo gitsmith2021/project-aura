@@ -12,7 +12,7 @@ export const facultyIntent: IntentDefinition = {
   title: "Faculty & Staff",
   domain: "People",
   aliases: ["faculty", "staff", "teaching staff", "how many faculty", "faculty count", "staff strength", "teachers", "non-teaching staff"],
-  roles: ["SUPER_ADMIN", "INST_ADMIN", "PRINCIPAL", "IQAC"],
+  roles: ["SUPER_ADMIN", "INST_ADMIN", "PRINCIPAL", "IQAC", "HOD", "DEPARTMENT_HEAD"],
   sample: "How many faculty do we have, by department?",
 
   build() {

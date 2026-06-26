@@ -14,7 +14,7 @@ export const resultsIntent: IntentDefinition = {
   title: "CIA Results",
   domain: "Academics",
   aliases: ["results", "cia results", "internal assessment", "pass percentage", "pass rate", "result analysis", "academic performance", "examination results", "cia"],
-  roles: ["SUPER_ADMIN", "INST_ADMIN", "PRINCIPAL", "IQAC"],
+  roles: ["SUPER_ADMIN", "INST_ADMIN", "PRINCIPAL", "IQAC", "HOD", "DEPARTMENT_HEAD"],
   sample: "Show the CIA results and pass percentage",
 
   build() {

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { extractSlots, matchIntent } from "@/lib/intelligence/matcher";
-import { composeDashboard, formatValue, sumOf, sumWhere, ratioPct } from "@/lib/intelligence/composer";
+import { composeDashboard, formatValue, sumOf, sumWhere, ratioPct, attachDeltas } from "@/lib/intelligence/composer";
+import type { ComputedKpi } from "@/lib/intelligence/types";
 import { INTENTS } from "@/lib/intelligence/registry";
 import type { DashboardSpec } from "@/lib/intelligence/types";
 import type { ResultRow } from "@/lib/dataExplorer";
@@ -108,6 +109,52 @@ describe("composeDashboard", () => {
   });
   it("flags empty when all datasets are empty", () => {
     expect(composeDashboard(spec, new Map([["s", []]])).empty).toBe(true);
+  });
+});
+
+describe("trend bucketing (composer)", () => {
+  it("buckets a date column by month and sums the value", () => {
+    const spec: DashboardSpec = {
+      kpis: [],
+      widgets: [{ type: "trend", title: "Collection over time", fromQuery: "t", dateField: "paid_at", value: "amount_paid", category: "period" }],
+    };
+    const datasets = new Map<string, ResultRow[]>([["t", [
+      { paid_at: "2026-06-03", amount_paid: 100 },
+      { paid_at: "2026-06-20", amount_paid: 150 },
+      { paid_at: "2026-07-05", amount_paid: 200 },
+    ]]]);
+    const w = composeDashboard(spec, datasets).widgets[0];
+    expect(w.rows).toEqual([
+      { period: "2026-06", amount_paid: 250 },
+      { period: "2026-07", amount_paid: 200 },
+    ]);
+  });
+  it("counts rows per month when no value column", () => {
+    const spec: DashboardSpec = { kpis: [], widgets: [{ type: "trend", title: "Apps", fromQuery: "t", dateField: "applied_at", category: "period" }] };
+    const datasets = new Map<string, ResultRow[]>([["t", [
+      { applied_at: "2026-06-01" }, { applied_at: "2026-06-15" }, { applied_at: "2026-08-02" },
+    ]]]);
+    const w = composeDashboard(spec, datasets).widgets[0];
+    expect(w.value).toBe("count");
+    expect(w.rows).toEqual([{ period: "2026-06", count: 2 }, { period: "2026-08", count: 1 }]);
+  });
+});
+
+describe("attachDeltas (vs last year)", () => {
+  const mk = (label: string, value: number): ComputedKpi => ({ label, value, display: String(value), tone: "default" });
+  it("computes up/down/flat deltas by matching labels", () => {
+    const current = [mk("Collected", 110), mk("Outstanding", 50), mk("Payments", 100)];
+    const prior = [mk("Collected", 100), mk("Outstanding", 100), mk("Payments", 100)];
+    attachDeltas(current, prior, "vs last year");
+    expect(current[0].delta).toEqual({ pct: 10, dir: "up", label: "vs last year" });
+    expect(current[1].delta).toEqual({ pct: -50, dir: "down", label: "vs last year" });
+    expect(current[2].delta).toEqual({ pct: 0, dir: "flat", label: "vs last year" });
+  });
+  it("handles a zero prior baseline", () => {
+    const current = [mk("New", 5)];
+    attachDeltas(current, [mk("New", 0)], "vs last year");
+    expect(current[0].delta?.dir).toBe("up");
+    expect(current[0].delta?.pct).toBeNull();
   });
 });
 

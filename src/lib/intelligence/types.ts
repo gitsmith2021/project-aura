@@ -45,7 +45,7 @@ export type KpiSpec = {
 };
 
 export type WidgetType =
-  | "bar" | "line" | "area" | "pie" | "donut" | "ranking" | "table" | "alert" | "progress";
+  | "bar" | "line" | "area" | "pie" | "donut" | "ranking" | "table" | "trend" | "alert" | "progress";
 
 export type WidgetSpec = {
   type: WidgetType;
@@ -59,6 +59,8 @@ export type WidgetSpec = {
   /** Optional friendly relabelling of category values (e.g. status codes). */
   labelMap?: Record<string, string>;
   span?: 1 | 2;             // grid columns the widget occupies
+  /** For `trend`: the date column to bucket by month (value summed, or counted). */
+  dateField?: string;
 };
 
 export type DashboardSpec = { kpis: KpiSpec[]; widgets: WidgetSpec[] };
@@ -83,7 +85,8 @@ export type IntentDefinition = {
 };
 
 // ── Composer output ─────────────────────────────────────────────────────────────
-export type ComputedKpi = { label: string; value: number | null; display: string; tone: string };
+export type KpiDelta = { pct: number | null; dir: "up" | "down" | "flat"; label: string };
+export type ComputedKpi = { label: string; value: number | null; display: string; tone: string; delta?: KpiDelta | null };
 export type ComputedWidget = WidgetSpec & { rows: ResultRow[] };
 export type ComputedDashboard = { kpis: ComputedKpi[]; widgets: ComputedWidget[]; empty: boolean };
 

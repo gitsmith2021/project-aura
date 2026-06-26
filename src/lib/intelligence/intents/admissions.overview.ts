@@ -31,6 +31,8 @@ export const admissionsIntent: IntentDefinition = {
         aggregations: [{ fn: "count", field: "*", as: "n" }], dateRange: dr, limit: 5000 } },
       { name: "recent", model: { entity: "admissions", fields: ["applied_at", "applicant_name", "program_applied", "status"],
         sort: [{ field: "applied_at", dir: "desc" }], dateRange: dr, limit: 10 } },
+      { name: "trend", model: { entity: "admissions", fields: ["applied_at"],
+        dateRange: dr, sort: [{ field: "applied_at", dir: "asc" }], limit: 2000 } },
     ];
     return {
       queries,
@@ -42,6 +44,7 @@ export const admissionsIntent: IntentDefinition = {
           { label: "Conversion %", fromQuery: "by_status", compute: conversionPct, format: "percent" },
         ],
         widgets: [
+          { type: "trend", title: "Applications over time", fromQuery: "trend", dateField: "applied_at", category: "period", span: 2 },
           { type: "ranking", title: "Programs by intake (lowest first)", fromQuery: "by_program", category: "program_applied", value: "n", sort: "asc", limit: 10, span: 1 },
           { type: "donut", title: "Pipeline by status", fromQuery: "by_status", category: "status", value: "n", span: 1 },
           { type: "table", title: "Recent applications", fromQuery: "recent", span: 2,

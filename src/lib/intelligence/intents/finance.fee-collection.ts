@@ -24,6 +24,9 @@ export const feeCollectionIntent: IntentDefinition = {
         aggregations: [{ fn: "sum", field: "amount_paid", as: "total" }], dateRange: dr, limit: 5000 } },
       { name: "recent", model: { entity: "fee_payments", fields: ["paid_at", "amount_paid", "payment_mode", "payment_status"],
         sort: [{ field: "paid_at", dir: "desc" }], dateRange: dr, limit: 10 } },
+      { name: "trend", model: { entity: "fee_payments", fields: ["paid_at", "amount_paid"],
+        filters: { op: "and", conditions: [{ field: "payment_status", operator: "eq", value: "completed" }] },
+        dateRange: dr, sort: [{ field: "paid_at", dir: "asc" }], limit: 2000 } },
     ];
     return {
       queries,
@@ -35,6 +38,7 @@ export const feeCollectionIntent: IntentDefinition = {
           { label: "Payments", fromQuery: "by_status", compute: sumOf("n"), format: "number" },
         ],
         widgets: [
+          { type: "trend", title: "Collection over time", fromQuery: "trend", dateField: "paid_at", value: "amount_paid", category: "period", span: 2 },
           { type: "donut", title: "Collection by status", fromQuery: "by_status", category: "payment_status", value: "total", labelMap: STATUS_LABELS, span: 1 },
           { type: "bar", title: "By payment mode", fromQuery: "by_mode", category: "payment_mode", value: "total", span: 1 },
           { type: "table", title: "Recent collections", fromQuery: "recent", span: 2,

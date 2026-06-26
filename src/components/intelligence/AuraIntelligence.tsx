@@ -152,6 +152,11 @@ function AnswerDashboard({ answer, onAsk }: { answer: Extract<AuraAnswer, { ok: 
             <div key={k.label} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{k.label}</p>
               <p className={`text-2xl font-black mt-1 tabular-nums ${TONE_TEXT[k.tone] ?? TONE_TEXT.default}`}>{k.display}</p>
+              {k.delta && k.delta.pct !== null && (
+                <p className={`text-[10px] font-bold mt-1 ${k.delta.dir === "up" ? "text-emerald-600 dark:text-emerald-400" : k.delta.dir === "down" ? "text-rose-600 dark:text-rose-400" : "text-slate-400"}`}>
+                  {k.delta.dir === "up" ? "▲" : k.delta.dir === "down" ? "▼" : "▬"} {Math.abs(k.delta.pct)}% <span className="font-medium text-slate-400">{k.delta.label}</span>
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -244,7 +249,7 @@ function Widget({ widget: w }: { widget: ComputedWidget }) {
       </ResponsiveContainer>
     );
   }
-  if (w.type === "line" || w.type === "area") {
+  if (w.type === "line" || w.type === "area" || w.type === "trend") {
     const Chart = w.type === "line" ? LineChart : AreaChart;
     return (
       <ResponsiveContainer width="100%" height={220}>
