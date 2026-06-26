@@ -50,6 +50,15 @@ describe("matchIntent", () => {
     expect(matchIntent("show the payroll", INTENTS, "INST_ADMIN")?.intent.id).toBe("hr.payroll");
     expect(matchIntent("show department budgets", INTENTS, "HOD")?.intent.id).toBe("finance.budget");
   });
+  it("routes Batch-C questions (iqac / research / alumni / naac)", () => {
+    expect(matchIntent("show iqac meetings and action items", INTENTS, "INST_ADMIN")?.intent.id).toBe("compliance.iqac");
+    expect(matchIntent("show research projects and publications", INTENTS, "INST_ADMIN")?.intent.id).toBe("academics.research");
+    expect(matchIntent("show the alumni network", INTENTS, "INST_ADMIN")?.intent.id).toBe("people.alumni");
+    expect(matchIntent("show the naac readiness", INTENTS, "INST_ADMIN")?.intent.id).toBe("compliance.naac");
+  });
+  it("registry now spans 15 intents", () => {
+    expect(INTENTS.length).toBe(15);
+  });
   it("returns null for an unknown question", () => {
     expect(matchIntent("what is the weather today", INTENTS, "INST_ADMIN")).toBeNull();
   });
@@ -110,7 +119,7 @@ describe("registry intents are well-formed", () => {
       expect(dashboard.kpis.length + dashboard.widgets.length).toBeGreaterThan(0);
       expect(intent.followups.length).toBeGreaterThan(0);
       // queries only reference CF-2 entities
-      for (const q of queries) expect(["fee_payments", "admissions", "students", "staff", "departments", "student_attendance", "placements", "scholarships", "results", "payroll", "budgets", "expenses"]).toContain(q.model.entity);
+      for (const q of queries) expect(["fee_payments", "admissions", "students", "staff", "departments", "student_attendance", "placements", "scholarships", "results", "payroll", "budgets", "expenses", "iqac", "iqac_actions", "research", "publications", "alumni"]).toContain(q.model.entity);
     }
   });
 });

@@ -15,6 +15,10 @@ import { resultsIntent } from "./intents/academics.results";
 import { financeOverviewIntent } from "./intents/finance.overview";
 import { payrollIntent } from "./intents/hr.payroll";
 import { budgetIntent } from "./intents/finance.budget";
+import { iqacIntent } from "./intents/compliance.iqac";
+import { researchIntent } from "./intents/academics.research";
+import { alumniIntent } from "./intents/people.alumni";
+import { naacIntent } from "./intents/compliance.naac";
 
 export const INTENTS: IntentDefinition[] = [
   feeCollectionIntent,
@@ -28,6 +32,10 @@ export const INTENTS: IntentDefinition[] = [
   financeOverviewIntent,
   payrollIntent,
   budgetIntent,
+  iqacIntent,
+  researchIntent,
+  alumniIntent,
+  naacIntent,
 ];
 
 export function getIntent(id: string): IntentDefinition | undefined {

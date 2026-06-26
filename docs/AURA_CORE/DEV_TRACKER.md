@@ -50,16 +50,17 @@
   13 unit tests; build green; **fully deterministic — no Anthropic credit needed**.
   Migrations `20260714000000` (`intelligence_queries`) + `20260715000000`
   (`student_attendance_summary` view + entity) **applied to prod (2026-06-26, SQL editor)**.
-  Registry now has **8 flagship intents** (migrations `…14000000` + `…15000000` + Batch A
-  `20260716000000` all applied to prod 2026-06-26):
-  Fee Collection · Admissions · Student Enrollment · **Attendance Risk** · **Faculty & Staff** ·
-  **Placements** · **Scholarships** · **Results**. Batch A added `placement_summary` +
-  `scholarship_summary` security_invoker views + registered the existing `exam_results` table.
-  Remaining toward 15–20 — **Batch B** (Finance Overview · Payroll · Budget) · **Batch C**
-  (NAAC · IQAC · Research · Alumni), each = register entity + one intent file.
-  **Pre-existing flag (not CF-3):** `exam_results` DDL is missing from migrations (rebaseline
-  gap like clubs) — restore it for CI-from-zero integrity; verify the Results intent returns
-  data. LLM classifier + summary-refiner remain the designed-for enhancement layer (not required).
+  **Phase 1 target met — registry now spans 15 flagship intents** (all migrations
+  `…14000000`–`…20000000` applied to prod + history reconciled to repo filenames):
+  Fee Collection · Admissions · Student Enrollment · Attendance Risk · Faculty ·
+  Placements · Scholarships · CIA Results · **Finance Overview · Payroll · Budget**
+  (Batch B) · **IQAC · Research · Alumni · NAAC Readiness** (Batch C). 17 CF-2 entities
+  registered (incl. 4 security_invoker views for attendance/placements/scholarships/
+  iqac-actions; NAAC is a cross-entity readiness intent — no NAAC table exists). 20 unit
+  tests; fully deterministic (no Anthropic credit). The `exam_results` rebaseline gap was
+  **fixed separately** (`20260718000000` restores the Campus marksheet table); CF-3 Results
+  reads `cia_results`. Remaining (optional): LLM classifier + summary-refiner; comparison/
+  trend slots; HOD department-scoping; more intents (the registry scales one-file-per-intent).
 
 ---
 
