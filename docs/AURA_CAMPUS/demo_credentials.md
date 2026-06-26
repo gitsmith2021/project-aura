@@ -16,7 +16,7 @@
 | **Institution URL** | `/institutions/aura-demo` |
 | **Password (all personas)** | `AuraDemo@2026` |
 
-## Personas
+## Personas  
 
 | Role | Login email | Name | Lands on |
 |------|-------------|------|----------|
