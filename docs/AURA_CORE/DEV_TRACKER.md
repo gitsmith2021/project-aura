@@ -9,10 +9,13 @@
 
 | Area | Status |
 |--------|--------|
-| Planned | 3 (CF-3…CF-5) |
-| In Progress | 0 |
+| Planned | 3 (CF-4, CF-5, CF-6) |
+| In Progress | 1 (CF-3 Aura Intelligence — design ✅, build next) |
 | Completed | 2 (CF-1 v1, CF-2 v1) |
 | Deferred | 0 |
+
+> **Roadmap note (2026-06-26):** CF-3 was reassigned to **Aura Intelligence** (owner
+> direction). The former "Platform Operations Center" is renumbered **CF-6**.
 
 ---
 
@@ -20,15 +23,22 @@
 
 | CF | Capability | Priority | Maps to Core service |
 |----|-----------|----------|----------------------|
-| CF-3 | Platform Operations Center | 🟠 P2 | Aura Insights + ops telemetry |
 | CF-4 | Audit & Activity Center | 🟠 P2 | Aura Audit |
 | CF-5 | Feature Management (architecture only) | 🟢 P3 | Aura Identity + billing |
+| CF-6 | Platform Operations Center (was CF-3) | 🟠 P2 | Aura Insights + ops telemetry |
 
 ---
 
 ## In Progress
 
-- _none_
+- **CF-3 — Aura Intelligence (design approved 2026-06-26)** — Aura's Intelligence
+  Layer: an executive asks a question → composed board-quality dashboard + summary +
+  follow-ups, all via CF-2 (frozen). Architecture: `Question → Intent+Slots (LLM) →
+  Query Model (code) → CF-2 runQuery → RLS dataset → Dashboard Composer (code) →
+  Executive Summary (LLM, grounded) → Follow-ups`. **Decisions:** Intent Registry
+  (LLM classifies, code builds — no free-form SQL); graceful degradation (works
+  without Anthropic credit); build = engine + 3 flagship intents (Fee Collection,
+  Low Admissions, Attendance Risk) then scale. Spec: [CF3_AURA_INTELLIGENCE.md](CF3_AURA_INTELLIGENCE.md).
 
 ---
 
