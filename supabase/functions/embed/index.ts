@@ -6,8 +6,13 @@
 //   supabase functions deploy embed
 // then set SUPABASE_EMBED_URL to its public URL for the app to use it.
 //
-// @ts-nocheck — Deno globals (`Supabase`, `Deno`) are not in the web tsconfig;
-// this file is excluded from the Next.js build (supabase/ is outside src/).
+// Runs on the Deno Edge Runtime — `Supabase` and `Deno` are Deno globals. This
+// directory is excluded from the web tsconfig + ESLint (separate runtime), so the
+// Deno-only globals below are expected to be unknown to the Next.js toolchain.
+
+// deno-lint-ignore-file
+declare const Supabase: { ai: { Session: new (m: string) => { run: (i: string, o: Record<string, unknown>) => Promise<number[]> } } };
+declare const Deno: { serve: (h: (req: Request) => Promise<Response>) => void };
 
 const session = new Supabase.ai.Session("gte-small");
 
