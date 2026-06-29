@@ -1,36 +1,31 @@
 // CF-3 v2 — embeddings edge function (Deno / Supabase Edge Runtime).
 //
-// Generates 384-dim embeddings with the in-stack `gte-small` model — free, no
-// external paid API (Anthropic has no embeddings endpoint). Used by the
-// `buildSemanticIndex` action and the optional vector-resolution tier. Deploy:
-//   supabase functions deploy embed
-// then set SUPABASE_EMBED_URL to its public URL for the app to use it.
+// Generates 384-dim `gte-small` embeddings for the Aura Intelligence semantic
+// catalog — free, in-stack (Anthropic has no embeddings endpoint). Custom-
+// authenticated: only callers presenting the project's service role key (as the
+// app's `embedText()` does) may invoke it, so `verify_jwt` is off but the endpoint
+// is not open. Non-sensitive — it only embeds caller-supplied text.
 //
-// Runs on the Deno Edge Runtime — `Supabase` and `Deno` are Deno globals. This
-// directory is excluded from the web tsconfig + ESLint (separate runtime), so the
-// Deno-only globals below are expected to be unknown to the Next.js toolchain.
-
-// deno-lint-ignore-file
-declare const Supabase: { ai: { Session: new (m: string) => { run: (i: string, o: Record<string, unknown>) => Promise<number[]> } } };
-declare const Deno: { serve: (h: (req: Request) => Promise<Response>) => void };
+// Deploy:  supabase functions deploy embed   (or via the Supabase MCP)
+// This directory is excluded from the web tsconfig + ESLint (separate Deno runtime).
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const session = new Supabase.ai.Session("gte-small");
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 Deno.serve(async (req: Request) => {
+  const auth = req.headers.get("Authorization") ?? "";
+  if (!SERVICE_KEY || auth !== `Bearer ${SERVICE_KEY}`) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+  }
   try {
     const { input } = await req.json();
     if (!input || typeof input !== "string") {
-      return new Response(JSON.stringify({ error: "Provide { input: string }" }), {
-        status: 400, headers: { "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "Provide { input: string }" }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
     const embedding = await session.run(input, { mean_pool: true, normalize: true });
-    return new Response(JSON.stringify({ embedding }), {
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ embedding }), { headers: { "Content-Type": "application/json" } });
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500, headers: { "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ error: String(err) }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 });
