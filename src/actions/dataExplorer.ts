@@ -93,13 +93,18 @@ function applyLeaf(query: any, c: Condition): any {
 
 export type RunResult = { columns: string[]; rows: ResultRow[]; rowCount: number; capped: boolean };
 
-/** Validate + compile + run a Query Model. Read-only, RLS-scoped to the institution. */
-export async function runQuery(institutionId: string, model: QueryModel): Promise<Result<RunResult>> {
-  try {
-    const guard = await requireExplorerAdmin(institutionId);
-    if (!guard.ok) return { success: false, error: guard.error };
+type SupabaseSrv = Awaited<ReturnType<typeof db>>;
 
-    const supabase = await db();
+/**
+ * Validate + compile + run a Query Model on a CALLER-PROVIDED client. The shared
+ * CF-2 execution core: it runs read-only, RLS-scoped to the institution, and is
+ * reused by CF-3 (Aura Intelligence) so there is exactly ONE query path. Callers
+ * are responsible for their own authorization before invoking this.
+ */
+export async function executeQueryModel(
+  supabase: SupabaseSrv, institutionId: string, model: QueryModel,
+): Promise<Result<RunResult>> {
+  try {
     const { data: entRow, error: entErr } = await supabase
       .from("data_explorer_entities")
       .select("key, label, category, source, columns, default_date_field, sort_order")
@@ -154,6 +159,14 @@ export async function runQuery(institutionId: string, model: QueryModel): Promis
   } catch (err) {
     return { success: false, error: err instanceof Error ? err.message : "Unexpected error." };
   }
+}
+
+/** Admin-tier Data Explorer entry point: guard, then run via the shared executor. */
+export async function runQuery(institutionId: string, model: QueryModel): Promise<Result<RunResult>> {
+  const guard = await requireExplorerAdmin(institutionId);
+  if (!guard.ok) return { success: false, error: guard.error };
+  const supabase = await db();
+  return executeQueryModel(supabase, institutionId, model);
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 

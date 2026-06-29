@@ -30,7 +30,7 @@ function computeKpi(spec: KpiSpec, rows: ResultRow[]): ComputedKpi {
   };
 }
 
-function shapeWidget(spec: WidgetSpec, rows: ResultRow[]): ComputedWidget {
+export function shapeWidget(spec: WidgetSpec, rows: ResultRow[]): ComputedWidget {
   // Trend: bucket raw rows by month (YYYY-MM) from the date field; sum `value`
   // (or count rows when no value column). Output series sorted chronologically.
   if (spec.type === "trend") {

@@ -90,7 +90,52 @@ export type ComputedKpi = { label: string; value: number | null; display: string
 export type ComputedWidget = WidgetSpec & { rows: ResultRow[] };
 export type ComputedDashboard = { kpis: ComputedKpi[]; widgets: ComputedWidget[]; empty: boolean };
 
-// ── askAura result ──────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+// CF-3 v2 — general engine: business-question understanding → typed answer blocks
+// ════════════════════════════════════════════════════════════════════════════
+
+/** What kind of answer the business question expects (Response Strategy output). */
+export type ResponseType = "KPI" | "LIST" | "TREND" | "COMPARISON" | "DISTRIBUTION" | "EXECUTIVE" | "MIXED";
+
+/** A catalog-constrained query parsed from a question (by LLM or the deterministic
+ *  extractor). Every `column` references a real CF-2 entity column; values needing
+ *  DB resolution (e.g. a department NAME) are flagged for the planner. */
+export type ExtractedFilter = {
+  column: string;
+  operator: import("@/lib/dataExplorer").FilterOperator;
+  value: unknown;
+  rawValue?: string;        // original human text (for resolution + display)
+  resolve?: boolean;        // planner must resolve rawValue → a real stored value/id
+};
+
+export type ExtractedQuery = {
+  entity: string;                                    // CF-2 entity key
+  filters: ExtractedFilter[];
+  numericMetric?: string | null;                     // a numeric column the question is "about" (salary…)
+  dateRange?: { field?: string; from?: string; to?: string; label?: string } | null;
+  groupBy?: string | null;
+  sort?: { field: string; dir: "asc" | "desc" } | null;
+  limit?: number | null;
+  comparison?: boolean;
+  responseHint?: ResponseType | null;
+  title?: string;                                    // human title for the answer
+  via?: "llm" | "deterministic";
+};
+
+// ── Card / Response-Pattern Library — the Visualization Composer renders these ───
+export type GridColumn = { key: string; label: string; format?: ValueFormat };
+
+export type Block =
+  | { kind: "kpiStrip"; kpis: ComputedKpi[] }
+  | { kind: "recordGrid"; title: string; columns: GridColumn[]; rows: ResultRow[]; total: number; capped: boolean }
+  | { kind: "chart"; widget: ComputedWidget }
+  | { kind: "comparison"; title: string; kpis: ComputedKpi[]; periodLabel: string }
+  | { kind: "summary"; text: string }
+  | { kind: "recommendations"; items: string[] };
+
+export type ComposedView = { title: string; responseType: ResponseType; blocks: Block[]; empty: boolean };
+
+// ── askAura result (v2 — unified, block-based) ───────────────────────────────────
 export type AuraAnswer =
-  | { ok: true; intentId: string; title: string; domain: Domain; dashboard: ComputedDashboard; summary: string; followups: string[] }
+  | { ok: true; intentId: string | null; domain: Domain | null; view: ComposedView; followups: string[] }
   | { ok: false; reason: "no_match" | "not_authorised" | "error"; message: string; suggestions?: string[] };

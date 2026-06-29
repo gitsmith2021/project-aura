@@ -267,3 +267,33 @@ None built now. Each slots into the existing pipeline without re-architecting.
 
 *CF-3 · Aura Intelligence — the Intelligence Layer. Built on CF-2, secured by RLS, extensible by
 one-file-per-intent. The signature experience of Aura Infinity.*
+
+---
+
+## CF-3 v2 — General Executive Intelligence Engine (2026-06-29)
+
+v1 answered by **intent** (15 curated questions). v2 adds a **general engine** that answers
+arbitrary business questions by **business meaning**, choosing the right visual automatically.
+CF-2 stays frozen; the LLM only classifies/extracts (never writes SQL).
+
+**Pipeline:** Question → Slot Extraction (`slotExtractor.ts` deterministic + `llm.ts:extractQueryLLM`)
+→ Semantic Resolution (`semantic.ts`: exact → trigram → pgvector; e.g. "computer science" →
+`department_id`) → Query Planner (`queryPlanner.ts` → validated CF-2 Query Models) → shared CF-2
+executor (`dataExplorer.ts:executeQueryModel`, RLS) → Response Strategy (`responseStrategy.ts`:
+KPI/LIST/TREND/COMPARISON/DISTRIBUTION/EXECUTIVE) → Visualization Composer (`composerV2.ts` → typed
+**blocks**: KpiStrip, RecordGrid, Chart, Comparison, Summary, Recommendations) → grounded Summary
+(`summary.ts`) → Follow-ups (`followups.ts`). The 15 v1 intents still serve broad/executive
+questions, adapted into the same block model.
+
+**Vector search:** pgvector + pg_trgm (migrations `20260721…`–`20260724…`); a `staff_salary` CF-2
+view (staff ⋈ active salary structure) backs salary questions; `intelligence_catalog_terms` +
+`intelligence_value_index` hold embeddings (gte-small via the `embed` edge function). Embeddings are
+optional — exact/trigram resolution works with `$0` credit and no edge function.
+
+**UI:** the answer view renders blocks dynamically (no fixed dashboard); RecordGrid is sortable,
+paginated, and exports CSV/Excel/PDF. **Acceptance:** "staff drawing salary < ₹10,000" → KPIs +
+record grid (no faculty dashboard); "second-year computer science students" → filtered list.
+Tests: `tests/unit/intelligenceV2.test.ts`.
+
+> ⚠️ "Vector Search" becomes literally true once the `embed` function is deployed
+> (`SUPABASE_EMBED_URL` set); until then resolution runs on exact/trigram (still effective).
