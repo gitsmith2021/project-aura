@@ -101,14 +101,25 @@ export async function resolveValue(
 
 // ── Optional vector tier (gte-small embeddings via Supabase edge fn) ─────────────
 
-/** Embed text with the in-stack gte-small model (returns null if not configured). */
+/** URL of the deployed gte-small `embed` edge function. Defaults to the project's
+ *  Functions endpoint so no extra env var is needed once the function is deployed;
+ *  override with SUPABASE_EMBED_URL if hosted elsewhere. */
+function embedUrl(): string | null {
+  if (process.env.SUPABASE_EMBED_URL) return process.env.SUPABASE_EMBED_URL;
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return base ? `${base.replace(/\/$/, "")}/functions/v1/embed` : null;
+}
+
+/** Embed text with the in-stack gte-small model (returns null if unavailable). The
+ *  function is custom-authenticated, so the service-role key is always sent. */
 export async function embedText(text: string): Promise<number[] | null> {
-  const url = process.env.SUPABASE_EMBED_URL; // deployed `embed` edge function
-  if (!url) return null;
+  const url = embedUrl();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...(process.env.SUPABASE_SERVICE_ROLE_KEY ? { Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` } : {}) },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
       body: JSON.stringify({ input: text }),
     });
     if (!res.ok) return null;
@@ -120,7 +131,7 @@ export async function embedText(text: string): Promise<number[] | null> {
 }
 
 export function vectorAvailable(): boolean {
-  return !!process.env.SUPABASE_EMBED_URL;
+  return !!embedUrl() && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
 }
 
 /** Vector resolution via the cosine RPC — only meaningful once embeddings exist. */
