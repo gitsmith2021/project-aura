@@ -16,7 +16,7 @@ import { classifyIntent, refineSummary, extractQueryLLM, llmAvailable } from "@/
 import type {
   AuraAnswer, Block, ComposedView, ComputedKpi, ExtractedQuery, NamedQueryModel, Role, Slots,
 } from "@/lib/intelligence/types";
-import type { EntityDef, ResultRow, QueryModel } from "@/lib/dataExplorer";
+import type { EntityDef, ResultRow } from "@/lib/dataExplorer";
 
 // CF-3 v2 — Aura Intelligence orchestrator (general executive engine).
 //
@@ -264,6 +264,3 @@ export async function getRecentQuestions(institutionId: string): Promise<string[
   }
   return out;
 }
-
-// Keep referenced for type-completeness of QueryModel import.
-export type { QueryModel };
