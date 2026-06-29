@@ -15,6 +15,9 @@ const eslintConfig = defineConfig([
     // The React Native / Expo app is a separate project with its own toolchain
     // and lint config — the web ESLint config must not lint it.
     "aura-mobile/**",
+    // Supabase Edge Functions run on Deno (Supabase.ai / Deno globals) — a
+    // separate runtime the web ESLint/TS toolchain must not lint or type-check.
+    "supabase/functions/**",
     // Throwaway DB-poking debug scripts at the repo root (CommonJS, not part of
     // the Next build and not imported anywhere). Kept for ad-hoc debugging but
     // out of scope for app linting.
