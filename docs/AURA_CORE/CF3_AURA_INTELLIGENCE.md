@@ -297,3 +297,35 @@ Tests: `tests/unit/intelligenceV2.test.ts`.
 
 > ⚠️ "Vector Search" becomes literally true once the `embed` function is deployed
 > (`SUPABASE_EMBED_URL` set); until then resolution runs on exact/trigram (still effective).
+
+---
+
+## CF-3.1 — Quality, Trust & Measurability (2026-06-30)
+
+The architecture (CF-3 v2) is **stable and frozen** — no major changes. CF-3.1 makes Aura
+Intelligence **measurable, accurate and trustworthy**. Engineering principles unchanged: no
+AI-generated SQL, no bypassing CF-2/RLS, business logic deterministic, LLM only classifies.
+
+### Workstream 1 — Evaluation Suite ✅ (this increment)
+`tests/intelligence-evaluation/` runs in CI (no DB, no LLM — pure functions):
+- `catalog.ts` — a fixture mirroring the real CF-2 entity registry (all 17 entities).
+- `cases.ts` — a growing library of real executive questions, tiered:
+  - **core** — asserted individually (must pass exactly),
+  - **extended** — counted toward the accuracy **baseline** (`BASELINE_RATE`, currently 0.95),
+  - **gap** — known limitations (missing entity/dimension/routing); reported, never asserted — this is the improvement roadmap.
+- `eval.test.ts` — drives extract → plan → response-strategy per case, prints a per-domain
+  scoreboard + the gap list, and **fails CI if accuracy regresses**. Target: grow to 300–500.
+
+Building the suite already raised real accuracy to **100%** on 66 core+extended questions by
+fixing entity disambiguation in `slotExtractor.ts` (salary vs headcount, attendance vs students,
+IQAC actions) and generalising group-by detection to any groupable column ("by grade/scheme/company").
+
+### Roadmap (sequenced follow-ups)
+- **WS2 Confidence Engine** — per-stage + overall confidence (internal; dev-mode only).
+- **WS3 Clarification Engine** — below threshold or ambiguous resolution → ask, never guess.
+- **WS4 Developer Lab** `/admin/dev/ai-lab` — inspect every stage of a question.
+- **WS9 Observability** — per-execution trace (stages, timings, confidence) + replay.
+- **WS5 Performance Metrics**, **WS6 Intelligence Analytics**, **WS7 Semantic Catalog Manager**,
+  **WS8 Response Pattern Library** (heatmap/map/timeline/forecast blocks).
+
+> The suite is the keystone: every later change is gated by "no accuracy regression".
