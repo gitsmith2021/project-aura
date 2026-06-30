@@ -36,7 +36,7 @@ scope** for Aura Campus v1.0 (see [Out of Scope](#out-of-scope)).
 
 | # | Deliverable | Status |
 |---|-------------|--------|
-| **P8.1** | Android Mobile Applications (role-adaptive) | 🟡 In progress — core screens built |
+| **P8.1** | Android Mobile Applications (role-adaptive) | 🟡 In progress — Sprint 2 landed student Results/Profile/Knowledge Hub/Downloads/Notifications + staff CIA Marks Entry/Knowledge Hub/Profile (only in-app Razorpay + executive CF-3 views remain) |
 | **P8.2** | Student Card Attendance (RFID / NFC / MIFARE / DESFire) | 🔲 Not started (new directive) |
 | **P8.3** | NFC Staff Attendance | 🔲 Not started (refines prior NFC plan) |
 | **P8.4** | Intelligent Timetable Validation + Substitute Faculty | 🔲 Not started (new directive) |
@@ -159,12 +159,12 @@ below; checkboxes reflect **current build status**.
 - [x] **Timetable** (`app/(app)/schedule.tsx`) — department timetable
 - [x] **Attendance** (`app/(app)/attendance.tsx`) — per-subject attendance
 - [x] **Fee Dues** (`app/(app)/fees.tsx`) — dues + payment history
-- [ ] **Examination Results** — student results screen *(pending — parent results screen exists; reuse for student)*
+- [x] **Examination Results** (`screens/student/StudentResults.tsx`) — own marksheet from `exam_results` under RLS, CGPA + per-semester grades/GP + arrears (Sprint 2)
 - [ ] **Online Fee Payment (Razorpay)** — in-app `PayScreen` *(pending — web Pay page already exists)*
-- [ ] **Notifications** — push inbox *(pending — needs Phase 3 + P8.5)*
-- [ ] **Profile** *(pending)*
-- [ ] **Knowledge Hub** *(pending)*
-- [ ] **Downloads** *(pending)*
+- [x] **Notifications** (`screens/Notifications.tsx`) — in-app inbox: reads/marks-read `notifications` under RLS, pull-to-refresh (Sprint 2). Push *delivery* to the device is still P8.5 (Phase 3 + device token)
+- [x] **Profile** (`screens/Profile.tsx`) — role-aware identity card (roll/programme/semester/department) (Sprint 2)
+- [x] **Knowledge Hub** (`screens/KnowledgeHub.tsx`) — published `study_materials` for the student's department, grouped by subject, opens file/link (Sprint 2)
+- [x] **Downloads** (`screens/student/Downloads.tsx`) — `certificate_requests` status + issued documents open in the web portal (Sprint 2)
 
 ### Staff App
 
@@ -176,10 +176,10 @@ below; checkboxes reflect **current build status**.
 - [x] **Approvals** (`app/(app)/approvals.tsx`) — admin/HOD review (approve/reject) leave requests *(beyond original spec)*
 - [x] **Attendance view** (`app/(app)/attendance.tsx`) — read-only summary
 - [ ] **Attendance Entry** — faculty's **own** attendance is now via NFC room-tag tap (**P8.3 + P8.4**); class-level student attendance is via **RFID readers (P8.2)**. ⚠️ See reconciliation note below.
-- [ ] **CIA Marks Entry** *(pending)*
-- [ ] **Notifications** *(pending — P8.5)*
-- [ ] **Knowledge Hub** *(pending)*
-- [ ] **Profile** *(pending)*
+- [x] **CIA Marks Entry** (`screens/staff/StaffCIA.tsx`) — components for the teacher's subjects → roster marks grid; reads under RLS, the Save **write** goes through `POST /api/staff/cia-marks` so the CF-1 `faculty_portal.marks_entry` gate **and** the audit log (Dev Rule 13) are enforced server-side (Sprint 2)
+- [x] **Notifications** (`screens/Notifications.tsx`, shared) — in-app inbox under RLS (Sprint 2). Push delivery is still P8.5
+- [x] **Knowledge Hub** (`screens/KnowledgeHub.tsx`, shared) — materials for the subjects the staff teaches (RLS-scoped) (Sprint 2)
+- [x] **Profile** (`screens/Profile.tsx`, shared) — designation/employee-id/department identity card (Sprint 2)
 
 > ⚠️ **Reconciliation (supersedes earlier plan):** the original spec had a staff
 > `NFCAttendanceScreen` where **staff tapped each student's card** with their phone to mark

@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { roleLabel } from "@/lib/roles";
 import { Card, PrimaryButton } from "@/components/ui";
+import { QuickLinks, type QuickLink } from "@/components/QuickLinks";
 import { colors, radius, spacing } from "@/lib/theme";
 
 function Row({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string }) {
@@ -40,6 +41,24 @@ export default function Account() {
     router.replace("/login");
   };
 
+  // Role-aware hub links to the secondary screens (kept off the bottom bar).
+  const tier = identity?.tier;
+  const links: QuickLink[] = [
+    { icon: "person-outline", label: "Profile", href: "/profile" },
+    { icon: "notifications-outline", label: "Notifications", href: "/notifications", accent: colors.rose },
+  ];
+  if (tier === "student") {
+    links.push(
+      { icon: "library-outline", label: "Knowledge Hub", href: "/knowledge", accent: colors.sky },
+      { icon: "download-outline", label: "Downloads", href: "/downloads", accent: colors.emerald },
+    );
+  } else if (tier === "staff") {
+    links.push(
+      { icon: "clipboard-outline", label: "CIA Marks", href: "/cia", accent: colors.violet },
+      { icon: "library-outline", label: "Knowledge Hub", href: "/knowledge", accent: colors.sky },
+    );
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
       <View style={styles.header}>
@@ -60,7 +79,9 @@ export default function Account() {
         ) : null}
       </Card>
 
-      <Card>
+      <QuickLinks title="More" links={links} />
+
+      <Card style={{ marginTop: spacing.md }}>
         <Text style={styles.note}>
           You&apos;re signed in to the same Aura account as the web portal. Full administration and data entry remain on
           the web dashboard; this app is for on-the-go access.

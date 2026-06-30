@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth, type Identity } from "@/context/AuthContext";
 import { roleLabel } from "@/lib/roles";
 import { Card, StatCard, SectionTitle, Loading, ErrorNote } from "@/components/ui";
+import { QuickLinks } from "@/components/QuickLinks";
 import { colors, radius, spacing, inr } from "@/lib/theme";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -63,8 +64,16 @@ export function StudentHome({ identity }: { identity: Identity }) {
         <StatCard label="Fees Due" value={feesDue > 0 ? inr.format(feesDue) : "₹0"} accent={feesDue > 0 ? colors.rose : colors.emerald} />
       </View>
       <Card>
-        <Text style={styles.note}>Open the Attendance and Fees tabs below for the full breakdown.</Text>
+        <Text style={styles.note}>Open the Attendance, Fees and Results tabs below for the full breakdown.</Text>
       </Card>
+      <QuickLinks
+        links={[
+          { icon: "notifications-outline", label: "Notifications", href: "/notifications", accent: colors.rose },
+          { icon: "library-outline", label: "Knowledge Hub", href: "/knowledge", accent: colors.sky },
+          { icon: "download-outline", label: "Downloads", href: "/downloads", accent: colors.emerald },
+          { icon: "person-outline", label: "Profile", href: "/profile" },
+        ]}
+      />
     </ScrollView>
   );
 }
@@ -108,10 +117,18 @@ export function StaffHome({ identity }: { identity: Identity }) {
       </View>
       <Card>
         <Text style={styles.note}>
-          Open the Schedule tab for your weekly classes. CIA marks entry, leave applications and payslips are on the web
-          staff portal — coming to mobile in a later build.
+          Open the Schedule tab for your weekly classes and the Leave and Payslip tabs for your records. Enter internal
+          assessment marks from CIA Marks below.
         </Text>
       </Card>
+      <QuickLinks
+        links={[
+          { icon: "clipboard-outline", label: "CIA Marks", href: "/cia", accent: colors.violet },
+          { icon: "library-outline", label: "Knowledge Hub", href: "/knowledge", accent: colors.sky },
+          { icon: "notifications-outline", label: "Notifications", href: "/notifications", accent: colors.rose },
+          { icon: "person-outline", label: "Profile", href: "/profile" },
+        ]}
+      />
     </ScrollView>
   );
 }
@@ -211,6 +228,12 @@ function OversightHome({ identity, scope }: { identity: Identity; scope: "instit
             : "Department analytics, approvals and CIA management are on the Aura web portal. This mobile view is a quick read-only snapshot."}
         </Text>
       </Card>
+      <QuickLinks
+        links={[
+          { icon: "notifications-outline", label: "Notifications", href: "/notifications", accent: colors.rose },
+          { icon: "person-outline", label: "Profile", href: "/profile" },
+        ]}
+      />
     </ScrollView>
   );
 }

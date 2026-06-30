@@ -33,9 +33,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Parent mobile API (Phase 8F) authenticates via a Bearer token, not cookies,
-  // so it must skip the cookie-session redirect to /login.
-  if (pathname.startsWith("/api/parent")) {
+  // Mobile APIs (Phase 8) authenticate via a Bearer token, not cookies, so they
+  // must skip the cookie-session redirect to /login. Parent = /api/parent (8F);
+  // staff = /api/staff (Sprint 2, e.g. CIA marks entry).
+  if (pathname.startsWith("/api/parent") || pathname.startsWith("/api/staff")) {
     return NextResponse.next();
   }
 

@@ -81,7 +81,7 @@ export default function AppLayout() {
         name="results"
         options={{
           title: "Results",
-          href: parentOnly,
+          href: studentOrParent,
           tabBarIcon: ({ color, size }) => <Ionicons name="school-outline" color={color} size={size} />,
         }}
       />
@@ -124,6 +124,14 @@ export default function AppLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="person-circle-outline" color={color} size={size} />,
         }}
       />
+
+      {/* Secondary screens — kept out of the bottom bar (href:null) to avoid a
+          crowded tab strip; reached from Home quick-links and the Account hub. */}
+      <Tabs.Screen name="notifications" options={{ href: null, title: "Notifications" }} />
+      <Tabs.Screen name="profile" options={{ href: null, title: "Profile" }} />
+      <Tabs.Screen name="knowledge" options={{ href: null, title: "Knowledge Hub" }} />
+      <Tabs.Screen name="downloads" options={{ href: null, title: "Downloads" }} />
+      <Tabs.Screen name="cia" options={{ href: null, title: "CIA Marks Entry" }} />
     </Tabs>
     </ParentChildProvider>
   );
