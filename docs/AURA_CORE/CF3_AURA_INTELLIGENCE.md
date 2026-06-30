@@ -337,9 +337,15 @@ and the Developer Lab (returns answer + trace). No architectural change: same st
 - **WS9 Observability** — every execution builds a `Trace` (`traceId`, ordered stages with
   ms + confidence + detail, path, overall confidence, total ms). Exposed only in dev.
 
+### Metrics & analytics ✅ (WS5 + WS6)
+- Migration `20260725000000_cf3_1_query_metrics` adds `confidence`, `latency_ms`, `path` to
+  `intelligence_queries`; `logQuestion` persists them from the trace each run (no result data).
+- `metrics.ts` (pure, tested) summarizes the log: avg/p95 latency, avg confidence, answered /
+  clarified / failed rates, slowest questions, top response types & intents, most-common
+  questions, and the **weakest recognitions** (lowest confidence ≈ "unknown terms" roadmap).
+- `getIntelligenceMetrics` (SUPER_ADMIN) + **`/admin/dev/ai-metrics`** dashboard (AdminNav).
+
 ### Remaining roadmap
-- **WS5 Performance Metrics** + **WS6 Intelligence Analytics** (persist confidence/latency
-  columns on `intelligence_queries`; admin dashboards).
 - **WS7 Semantic Catalog Manager** (manage aliases/synonyms, rebuild index, inspect matches).
 - **WS8 Response Pattern Library** (heatmap / map / timeline / risk-matrix / forecast blocks).
 

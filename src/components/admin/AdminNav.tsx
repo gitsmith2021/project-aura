@@ -10,6 +10,7 @@ const TABS = [
   { href: "/admin/security", label: "Security", ready: true },         // Phase 7D
   { href: "/admin/billing", label: "Billing", ready: true },           // Phase 7E
   { href: "/admin/dev/ai-lab", label: "AI Lab", ready: true },         // CF-3.1 WS4
+  { href: "/admin/dev/ai-metrics", label: "AI Metrics", ready: true }, // CF-3.1 WS5/6
 ];
 
 export function AdminNav() {
