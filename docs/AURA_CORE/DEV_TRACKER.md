@@ -3,7 +3,7 @@
 > Tracks **Aura Core Foundation** capabilities (CF-1…CF-5) and, later, the
 > extraction of the 9 `@aura/*` services. See [AURA_CORE_FOUNDATION.md](AURA_CORE_FOUNDATION.md)
 > for the capability specs and [AURA_CORE_ARCHITECTURE.md](AURA_CORE_ARCHITECTURE.md)
-> for the service architecture. **Last updated:** 2026-06-26
+> for the service architecture. **Last updated:** 2026-06-30
 
 ## Status Summary
 
@@ -11,7 +11,7 @@
 |--------|--------|
 | Planned | 3 (CF-4, CF-5, CF-6) |
 | In Progress | 0 |
-| Completed | 3 (CF-1 v1, CF-2 v1, **CF-3 v1**) |
+| Completed | 3 (CF-1 v1, CF-2 v1, **CF-3 v2 + CF-3.1 COMPLETE**) |
 | Deferred | 0 |
 
 > **Roadmap note (2026-06-26):** CF-3 was reassigned to **Aura Intelligence** (owner
@@ -36,6 +36,35 @@
 ---
 
 ## Completed (CF-3 detail)
+
+- **CF-3 v2 — General Executive Intelligence Engine — ✅ COMPLETE (2026-06-29)** — replaced
+  intent-only matching with a general engine that answers arbitrary business questions by
+  **meaning** and chooses the visual automatically. Pipeline (each layer single-responsibility,
+  pure where possible, unit-tested): `Question → Slot Extraction (deterministic + LLM,
+  catalog-constrained) → Semantic Resolution (exact → pg_trgm → pgvector) → Query Planner
+  (validated CF-2 Query Models) → shared CF-2 executor (RLS) → Response Strategy (KPI/LIST/TREND/
+  COMPARISON/DISTRIBUTION/EXECUTIVE) → Visualization Composer (typed blocks) → grounded Summary →
+  Follow-ups`. Vector search: `pgvector` + `pg_trgm`, a `security_invoker` `staff_salary` CF-2 view,
+  a semantic catalog (`intelligence_catalog_terms` + `intelligence_value_index`) + cosine-match RPCs,
+  a `gte-small` `embed` edge function (deployed). Block-driven UI; RecordGrid with CSV/Excel/PDF.
+  Migrations `20260721…`–`20260724…` **applied to prod** + the embed function deployed.
+  PRs #19/#20/#21. CF-2 frozen; LLM classifies/extracts only.
+
+- **CF-3.1 — Quality, Trust & Measurability — ✅ COMPLETE (2026-06-30)** — made the engine
+  production-grade with **no architectural change**. All 9 workstreams shipped:
+  - **WS1 Evaluation Suite** (`tests/intelligence-evaluation/`, in CI) — tiered question library +
+    runner; fails CI on accuracy regression; raised real accuracy to **100%** on 66 core+extended
+    questions. PR #22.
+  - **WS2 Confidence** (`confidence.ts`) + **WS9 Observability** (per-execution `Trace`) via one
+    shared instrumented core `pipeline.ts`. **WS3 Clarification** (ambiguous → ask, never guess).
+    **WS4 Developer Lab** `/admin/dev/ai-lab`. PR #23.
+  - **WS5/6 Metrics & Analytics** — migration `20260725…` (confidence/latency/path) + `metrics.ts`
+    + `/admin/dev/ai-metrics`. PR #24.
+  - **WS7 Semantic Catalog Manager** — DB entity aliases (migration `20260726…`) read by the
+    extractor + `/admin/dev/semantic` (aliases, match inspector, rebuild index). PR #25.
+  - **WS8 Response Pattern Library** (`responsePatterns.ts`) — reusable blocks (alerts, forecast
+    [least-squares projection], timeline, heatmap, benchmark, riskMatrix). PR #26.
+  - **783 unit tests; eval baseline 100%; typecheck + lint clean.** All CF-3.1 prod migrations applied.
 
 - **CF-3 — Aura Intelligence — ✅ v1 COMPLETE (2026-06-26)** — Aura's Intelligence
   Layer: an executive asks a question → composed board-quality dashboard + summary +
