@@ -12,6 +12,7 @@ import type { ResultRow, EntityDef } from "@/lib/dataExplorer";
 import type { Block, ComposedView, ComputedKpi, ComputedWidget } from "./types";
 import type { Plan } from "./queryPlanner";
 import { formatValue, shapeWidget } from "./composer";
+import { buildForecast, buildAlerts, countAlert } from "./responsePatterns";
 
 type Datasets = Map<string, ResultRow[]>;
 const num = (v: unknown) => (typeof v === "number" ? v : Number(v) || 0);
@@ -53,6 +54,13 @@ export function composeView(plan: Plan, datasets: Datasets, entity: EntityDef): 
     if (kpis.length) blocks.push({ kind: "kpiStrip", kpis });
   }
 
+  // WS8 — Alert: a filtered LIST (threshold query) flags how many records matched.
+  if (plan.responseType === "LIST" && datasets.has("stats")) {
+    const n = statsRow?.n != null ? num(statsRow.n) : list.length;
+    const al = buildAlerts([countAlert(n, `${entity.label.toLowerCase()} match this criteria — review`)]);
+    if (al) blocks.push(al);
+  }
+
   // Record grid — the list of matching records
   if (datasets.has("list")) {
     const total = statsRow?.n != null ? num(statsRow.n) : list.length;
@@ -69,13 +77,16 @@ export function composeView(plan: Plan, datasets: Datasets, entity: EntityDef): 
     blocks.push({ kind: "chart", widget });
   }
 
-  // Trend chart (monthly buckets)
+  // Trend chart (monthly buckets) — or a WS8 forecast block when projected.
   if (datasets.has("trend") && plan.dateField) {
     const widget: ComputedWidget = shapeWidget(
       { type: "trend", title: plan.title, fromQuery: "trend", category: "period", value: plan.numericMetric ?? "count", dateField: plan.dateField },
       trend,
     );
-    blocks.push({ kind: "chart", widget });
+    const fc = plan.forecast
+      ? buildForecast(plan.title, widget.rows.map((r) => ({ period: String(r[widget.category!]), value: num(r[widget.value!]) })), 3, isCurrency(plan.numericMetric) ? "currency" : "number")
+      : null;
+    blocks.push(fc ?? { kind: "chart", widget });
   }
 
   const empty = (!datasets.has("list") || list.length === 0)

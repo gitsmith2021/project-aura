@@ -227,7 +227,10 @@ export function extractQuery(question: string, catalog: EntityDef[], aliases: Al
   const comparison = /\bcompare|\bvs\b|versus|last year|previous (?:year|semester)|year[\s-]?on[\s-]?year\b/.test(q);
 
   const partial: Partial<ExtractedQuery> = { entity: e.key, filters, numericMetric: numericCol?.key ?? null, groupBy, sort, limit, comparison };
-  const responseHint = detectResponseType(question, partial);
+  const responseHint0 = detectResponseType(question, partial);
+  // WS8 — a forecast/projection question is a trend projected forward.
+  const forecast = /\bforecast|projection|projected|\bproject\b|\bpredict|next (?:\d+ )?(?:month|months|quarter|quarters|year|years)\b/.test(q);
+  const responseHint = forecast && (responseHint0 === "LIST" || responseHint0 === "KPI") ? "TREND" : responseHint0;
 
   const out: ExtractedQuery = {
     entity: e.key,
@@ -237,6 +240,7 @@ export function extractQuery(question: string, catalog: EntityDef[], aliases: Al
     sort,
     limit,
     comparison,
+    forecast,
     responseHint,
     title: buildTitle(e, partial),
     via: "deterministic",

@@ -355,7 +355,30 @@ and the Developer Lab (returns answer + trace). No architectural change: same st
   index (reuses `buildSemanticIndex`), and recent **unrecognized** questions to address.
 - UI: **`/admin/dev/semantic`** (AdminNav). Add an alias → routing updates immediately.
 
-### Remaining roadmap
-- **WS8 Response Pattern Library** (heatmap / map / timeline / risk-matrix / forecast blocks).
+### Response Pattern Library ✅ (WS8)
+`responsePatterns.ts` (pure, tested) is the single reusable library of visualization
+primitives every Aura product composes from — **never hardcode a layout in an intent**.
+New `Block` variants + renderers: `alerts`, `forecast`, `timeline`, `heatmap`, `benchmark`,
+`riskMatrix` (added to KPI strip / record grid / chart / comparison / summary / recommendations).
+
+Wired deterministic producers (more can opt in over time):
+- **Forecast** — a "forecast/project/next N months" question routes to TREND with a flag; the
+  composer projects the monthly series forward via a **least-squares linear fit** (clearly
+  labelled "projection", never an LLM guess).
+- **Alerts** — a threshold LIST emits a grounded alert flagging the matched count.
+
+`heatmap` / `timeline` / `benchmark` / `riskMatrix` ship as tested, renderable primitives for
+intents and future products to compose (e.g. attendance heatmap, KPI-vs-target benchmark).
+
+---
+
+## CF-3.1 — COMPLETE (2026-06-30)
+
+All eight workstreams shipped: **WS1** Evaluation Suite · **WS2** Confidence · **WS3**
+Clarification · **WS4** Developer Lab · **WS5/6** Metrics & Analytics · **WS7** Semantic Catalog
+Manager · **WS8** Response Pattern Library · **WS9** Observability. Aura Intelligence is now
+**explainable, observable, measurable and continuously evaluated** — every change gated by the
+"no accuracy regression" suite. Architecture unchanged from CF-3 v2; CF-2/RLS untouched; LLM
+classifies/extracts only. Ready for CF-4.
 
 > The evaluation suite is the keystone: every change above is gated by "no accuracy regression".
