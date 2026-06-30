@@ -9,9 +9,9 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import type {
-  AlertItem, AlertSeverity, BenchmarkItem, Block, ForecastPoint, HeatmapBlock, RiskItem, TimelineEvent,
+  AlertItem, AlertSeverity, BenchmarkItem, Block, ForecastPoint, HeatmapBlock, RiskItem, TimelineEvent, ValueFormat,
 } from "./types";
-import type { ResultRow, ValueFormat } from "@/lib/dataExplorer";
+import type { ResultRow } from "@/lib/dataExplorer";
 
 const num = (v: unknown) => (typeof v === "number" ? v : Number(v) || 0);
 
