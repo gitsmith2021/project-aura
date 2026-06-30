@@ -17,7 +17,7 @@ const ENTITY_SYNONYMS: Record<string, string[]> = {
   staff: ["staff", "faculty", "teacher", "teachers", "employee", "employees", "teaching"],
   staff_salary: ["salary", "salaries", "pay", "payscale", "wage", "wages", "earning", "earnings", "drawing salary", "remuneration"],
   payroll: ["payroll", "disbursement", "disbursed", "salary paid"],
-  student_attendance: ["attendance", "present", "absent", "attending"],
+  student_attendance: ["attendance", "present", "absent", "attending", "student attendance", "students", "student"],
   fee_payments: ["fee", "fees", "collection", "payment", "payments", "paid"],
   admissions: ["admission", "admissions", "applicant", "applicants", "application", "applications", "enquiry"],
   placements: ["placement", "placements", "placed", "offer", "offers", "recruited", "ctc"],
@@ -30,6 +30,7 @@ const ENTITY_SYNONYMS: Record<string, string[]> = {
   results: ["result", "results", "grade", "grades", "gpa", "marks"],
   departments: ["department", "departments", "dept"],
   iqac: ["iqac", "quality"],
+  iqac_actions: ["action item", "action items", "pending action", "corrective action", "action plan"],
 };
 
 const ORDINALS: Record<string, number> = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, "1st": 1, "2nd": 2, "3rd": 3, "4th": 4, "5th": 5 };
@@ -60,6 +61,12 @@ export function pickEntity(question: string, catalog: EntityDef[]): EntityDef | 
     for (const w of e.label.toLowerCase().split(/\s+/)) if (w.length > 2 && q.includes(w)) score += 1;
     for (const c of e.columns) { const cl = c.label.toLowerCase(); if (cl.length > 3 && q.includes(cl)) score += 1; }
     if (score > 0 && (!best || score > best.score)) best = { e, score };
+  }
+  // Disambiguate the headcount entity vs the salary view: a salary/earning/pay
+  // question about faculty/staff is about staff_salary, not the staff roster.
+  if (best?.e.key === "staff" && /\b(salary|salaries|earning|earnings|\bpay\b|paid|wage|wages|drawing|remuneration)\b/.test(q)) {
+    const sal = catalog.find((e) => e.key === "staff_salary");
+    if (sal) return sal;
   }
   return best?.e ?? null;
 }
@@ -119,10 +126,19 @@ function detectTextFilter(question: string, e: EntityDef): ExtractedFilter | nul
 
 function detectGroupBy(question: string, e: EntityDef): string | null {
   const q = norm(question);
+  if (!/\bby \w|[\s-]wise|\bper \w|\beach \w/.test(q)) return null;
+  // Department is the most common ask and maps to the FK column specifically.
   if (/by department|per department|department[\s-]?wise|each department/.test(q)) return e.columns.find((c) => c.key === "department_id" && c.groupable)?.key ?? null;
-  if (/by status|status[\s-]?wise/.test(q)) return e.columns.find((c) => /status/.test(c.key) && c.groupable)?.key ?? null;
-  if (/by program|by programme|program[\s-]?wise/.test(q)) return e.columns.find((c) => /program/.test(c.key) && c.groupable)?.key ?? null;
-  if (/by type|by designation/.test(q)) return e.columns.find((c) => /type|designation/.test(c.key) && c.groupable)?.key ?? null;
+  // Generic: any groupable column referenced via "by X", "per X" or "X-wise"
+  // (e.g. by grade, by scheme, by company, by category, by stage, by status).
+  for (const col of e.columns) {
+    if (!col.groupable) continue;
+    const toks = new Set<string>([col.key.toLowerCase(), col.label.toLowerCase(), ...col.label.toLowerCase().split(/\s+/)]);
+    for (const t of toks) {
+      if (t.length < 3) continue;
+      if (new RegExp(`\\bby ${t}\\b|\\bper ${t}\\b|\\b${t}[\\s-]?wise\\b`).test(q)) return col.key;
+    }
+  }
   return null;
 }
 

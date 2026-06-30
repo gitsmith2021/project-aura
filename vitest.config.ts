@@ -15,7 +15,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"],
+    include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx", "tests/intelligence-evaluation/**/*.test.ts"],
     reporters: "default",
     // Use the forks pool. The default `threads` pool intermittently crashes at
     // transform time on Windows under vitest v4 + @vitejs/plugin-react ("Cannot
