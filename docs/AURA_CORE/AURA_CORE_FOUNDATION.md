@@ -12,7 +12,7 @@
 >
 > **Companion docs:** [AURA_CORE_ARCHITECTURE.md](AURA_CORE_ARCHITECTURE.md) (the 9
 > Core *services* + monorepo migration) · [AURA_CORE_ROADMAP.md](AURA_CORE_ROADMAP.md)
-> (sequencing) · [DEV_TRACKER.md](DEV_TRACKER.md) (status). · **Last updated:** 2026-06-25
+> (sequencing) · [DEV_TRACKER.md](DEV_TRACKER.md) (status). · **Last updated:** 2026-06-30
 
 ---
 
@@ -150,7 +150,7 @@ translates to the same Query Model. Both are designed-for extension points now.
 
 ---
 
-### CF-3 — Aura Intelligence · **P1**  ·  ✅ v1 COMPLETE (15 intents + comparison + HOD scoping + LLM layer + trends) — full spec → [CF3_AURA_INTELLIGENCE.md](CF3_AURA_INTELLIGENCE.md)
+### CF-3 — Aura Intelligence · **P1**  ·  ✅ v2 + CF-3.1 COMPLETE (general engine + vector search + quality milestone: eval suite · confidence · clarification · dev lab · metrics · semantic catalog manager · pattern library · observability) — full spec → [CF3_AURA_INTELLIGENCE.md](CF3_AURA_INTELLIGENCE.md)
 
 > **Reassigned 2026-06-26** (the former Platform Operations Center is now CF-6).
 
@@ -273,7 +273,7 @@ P3  ── CF-5  Feature Management         (architecture only; runtime deferred
 |----|-----------|----------|--------|
 | CF-1 | App Configuration Center | 🔴 P1 | ✅ v1 (engine + seed + UI) — migration `20260712000000` |
 | CF-2 | Data Explorer | 🔴 P1 | ✅ v1 (Visual Builder + Query Model + compiler) — migration `20260713000000` |
-| CF-3 | **Aura Intelligence** | 🔴 P1 | ✅ **v1 COMPLETE — 15 intents + comparison + HOD scoping + LLM layer + trends** ([CF3_AURA_INTELLIGENCE.md](CF3_AURA_INTELLIGENCE.md)); migrations `…14000000`–`…20000000` |
+| CF-3 | **Aura Intelligence** | 🔴 P1 | ✅ **v2 + CF-3.1 COMPLETE** — general engine + vector search + quality milestone (eval suite · confidence · clarification · dev lab · metrics · catalog manager · pattern library · observability) ([CF3_AURA_INTELLIGENCE.md](CF3_AURA_INTELLIGENCE.md)); migrations `…14000000`–`…26000000`; 783 tests |
 | CF-4 | Audit & Activity Center | 🟠 P2 | 🔲 Planned |
 | CF-5 | Feature Management (architecture only) | 🟢 P3 | 🔲 Planned |
 | CF-6 | Platform Operations Center *(was CF-3)* | 🟠 P2 | 🔲 Planned |
