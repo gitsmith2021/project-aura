@@ -120,7 +120,25 @@ export type ExtractedQuery = {
   responseHint?: ResponseType | null;
   title?: string;                                    // human title for the answer
   via?: "llm" | "deterministic";
+  // CF-3.1 — internal confidence (dev-mode / clarification only, never shown to users)
+  confidence?: number;                               // overall, pre-semantic
+  confidenceParts?: { entity: number; slots: number; response: number; semantic?: number };
 };
+
+// ── CF-3.1 — Observability trace (built every execution; exposed only in dev) ────
+export type TraceStage = { stage: string; ms: number; confidence?: number; detail?: Record<string, unknown> };
+export type Trace = {
+  traceId: string;
+  question: string;
+  path: "general" | "intent" | "clarify" | "no_match";
+  stages: TraceStage[];
+  overallConfidence: number;
+  totalMs: number;
+};
+
+// ── CF-3.1 — Clarification (ask, never guess) ────────────────────────────────────
+export type ClarifyOption = { label: string; /** the question to ask when picked */ ask: string };
+export type Clarification = { prompt: string; options: ClarifyOption[] };
 
 // ── Card / Response-Pattern Library — the Visualization Composer renders these ───
 export type GridColumn = { key: string; label: string; format?: ValueFormat };
@@ -135,7 +153,8 @@ export type Block =
 
 export type ComposedView = { title: string; responseType: ResponseType; blocks: Block[]; empty: boolean };
 
-// ── askAura result (v2 — unified, block-based) ───────────────────────────────────
+// ── askAura result (v2 — unified, block-based; CF-3.1 adds clarify) ──────────────
 export type AuraAnswer =
-  | { ok: true; intentId: string | null; domain: Domain | null; view: ComposedView; followups: string[] }
+  | { ok: true; intentId: string | null; domain: Domain | null; view: ComposedView; followups: string[]; confidence?: number }
+  | { ok: false; reason: "clarify"; message: string; clarify: Clarification }
   | { ok: false; reason: "no_match" | "not_authorised" | "error"; message: string; suggestions?: string[] };
