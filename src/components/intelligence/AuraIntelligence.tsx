@@ -70,8 +70,10 @@ export function AuraIntelligence() {
             </div>
           ) : answer && answer.ok ? (
             <AnswerView view={answer.view} followups={answer.followups} onAsk={ask} />
+          ) : answer && !answer.ok && answer.reason === "clarify" ? (
+            <Clarify message={answer.message} options={answer.clarify.options} onAsk={ask} />
           ) : answer ? (
-            <NoAnswer message={answer.message} suggestions={answer.suggestions ?? []} onAsk={ask} />
+            <NoAnswer message={answer.message} suggestions={"suggestions" in answer ? (answer.suggestions ?? []) : []} onAsk={ask} />
           ) : null}
         </div>
       </Frame>
@@ -328,6 +330,23 @@ function printTable(title: string, headers: string[], rows: string[][]) {
   const w = window.open("", "_blank"); if (!w) return;
   w.document.write(`<!doctype html><title>${esc(title)}</title><style>body{font:12px system-ui,sans-serif;padding:24px;color:#0f172a}h1{font-size:16px}table{border-collapse:collapse;width:100%;margin-top:12px}th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:left}th{background:#f8fafc;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#64748b}</style><h1>${esc(title)}</h1><table><thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(String(c))}</td>`).join("")}</tr>`).join("")}</tbody></table>`);
   w.document.close(); w.focus(); setTimeout(() => w.print(), 250);
+}
+
+// CF-3.1 — Clarification: when a value is ambiguous, Aura asks instead of guessing.
+function Clarify({ message, options, onAsk }: { message: string; options: { label: string; ask: string }[]; onAsk: (q: string) => void }) {
+  return (
+    <div className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-3">{message}</p>
+      <div className="flex flex-wrap gap-2">
+        {options.map((o) => (
+          <button key={o.label} onClick={() => onAsk(o.ask)}
+            className="px-3.5 py-1.5 rounded-full text-xs font-bold text-amber-800 dark:text-amber-200 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-500/40 hover:bg-amber-100 dark:hover:bg-amber-500/15 transition-colors">
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function NoAnswer({ message, suggestions, onAsk }: { message: string; suggestions: string[]; onAsk: (q: string) => void }) {

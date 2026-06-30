@@ -10,6 +10,7 @@
 
 import type { EntityDef, FilterOperator } from "@/lib/dataExplorer";
 import type { ExtractedQuery, ExtractedFilter, ResponseType } from "./types";
+import { entityConfidence, slotConfidence, responseConfidence, overallConfidence } from "./confidence";
 
 // Entity synonyms — extends the registry labels so colloquial words route correctly.
 const ENTITY_SYNONYMS: Record<string, string[]> = {
@@ -51,24 +52,36 @@ function parseAmount(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function scoreEntity(e: EntityDef, q: string): number {
+  let score = 0;
+  for (const syn of ENTITY_SYNONYMS[e.key] ?? []) if (q.includes(` ${syn} `) || q.includes(`${syn} `) || q.includes(` ${syn}`)) score += syn.includes(" ") ? 3 : 2;
+  for (const w of e.label.toLowerCase().split(/\s+/)) if (w.length > 2 && q.includes(w)) score += 1;
+  for (const c of e.columns) { const cl = c.label.toLowerCase(); if (cl.length > 3 && q.includes(cl)) score += 1; }
+  return score;
+}
+
+export type EntityPick = { entity: EntityDef; score: number; margin: number; switched: boolean };
+
+/** Score every entity; return the best with its margin over the runner-up (drives
+ *  routing confidence). `switched` flags the salary-intent override (a heuristic). */
+export function pickEntityScored(question: string, catalog: EntityDef[]): EntityPick | null {
+  const q = norm(question);
+  const ranked = catalog.map((e) => ({ e, score: scoreEntity(e, q) })).filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
+  if (ranked.length === 0) return null;
+  const top = ranked[0];
+  const margin = top.score - (ranked[1]?.score ?? 0);
+  // Disambiguate headcount vs salary view: a salary/earning/pay question about
+  // faculty/staff is about staff_salary, not the staff roster.
+  if (top.e.key === "staff" && /\b(salary|salaries|earning|earnings|\bpay\b|paid|wage|wages|drawing|remuneration)\b/.test(q)) {
+    const sal = catalog.find((e) => e.key === "staff_salary");
+    if (sal) return { entity: sal, score: top.score, margin: 0, switched: true };
+  }
+  return { entity: top.e, score: top.score, margin, switched: false };
+}
+
 /** Score every entity by synonym/label/column overlap; return the best key. */
 export function pickEntity(question: string, catalog: EntityDef[]): EntityDef | null {
-  const q = norm(question);
-  let best: { e: EntityDef; score: number } | null = null;
-  for (const e of catalog) {
-    let score = 0;
-    for (const syn of ENTITY_SYNONYMS[e.key] ?? []) if (q.includes(` ${syn} `) || q.includes(`${syn} `) || q.includes(` ${syn}`)) score += syn.includes(" ") ? 3 : 2;
-    for (const w of e.label.toLowerCase().split(/\s+/)) if (w.length > 2 && q.includes(w)) score += 1;
-    for (const c of e.columns) { const cl = c.label.toLowerCase(); if (cl.length > 3 && q.includes(cl)) score += 1; }
-    if (score > 0 && (!best || score > best.score)) best = { e, score };
-  }
-  // Disambiguate the headcount entity vs the salary view: a salary/earning/pay
-  // question about faculty/staff is about staff_salary, not the staff roster.
-  if (best?.e.key === "staff" && /\b(salary|salaries|earning|earnings|\bpay\b|paid|wage|wages|drawing|remuneration)\b/.test(q)) {
-    const sal = catalog.find((e) => e.key === "staff_salary");
-    if (sal) return sal;
-  }
-  return best?.e ?? null;
+  return pickEntityScored(question, catalog)?.entity ?? null;
 }
 
 const NUM_COMPARATORS: { re: RegExp; op: FilterOperator }[] = [
@@ -185,8 +198,9 @@ function buildTitle(e: EntityDef, x: Partial<ExtractedQuery>): string {
 
 /** Parse a question → ExtractedQuery (or null if no entity matched). Pure. */
 export function extractQuery(question: string, catalog: EntityDef[]): ExtractedQuery | null {
-  const e = pickEntity(question, catalog);
-  if (!e) return null;
+  const pick = pickEntityScored(question, catalog);
+  if (!pick) return null;
+  const e = pick.entity;
   const q = norm(question);
 
   const filters: ExtractedFilter[] = [];
@@ -211,7 +225,7 @@ export function extractQuery(question: string, catalog: EntityDef[]): ExtractedQ
   const partial: Partial<ExtractedQuery> = { entity: e.key, filters, numericMetric: numericCol?.key ?? null, groupBy, sort, limit, comparison };
   const responseHint = detectResponseType(question, partial);
 
-  return {
+  const out: ExtractedQuery = {
     entity: e.key,
     filters,
     numericMetric: numericCol?.key ?? null,
@@ -223,4 +237,8 @@ export function extractQuery(question: string, catalog: EntityDef[]): ExtractedQ
     title: buildTitle(e, partial),
     via: "deterministic",
   };
+  const parts = { entity: entityConfidence(pick.margin, pick.switched), slots: slotConfidence(out), response: responseConfidence(out) };
+  out.confidenceParts = parts;
+  out.confidence = overallConfidence(parts);
+  return out;
 }

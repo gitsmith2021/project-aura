@@ -320,12 +320,27 @@ Building the suite already raised real accuracy to **100%** on 66 core+extended 
 fixing entity disambiguation in `slotExtractor.ts` (salary vs headcount, attendance vs students,
 IQAC actions) and generalising group-by detection to any groupable column ("by grade/scheme/company").
 
-### Roadmap (sequenced follow-ups)
-- **WS2 Confidence Engine** — per-stage + overall confidence (internal; dev-mode only).
-- **WS3 Clarification Engine** — below threshold or ambiguous resolution → ask, never guess.
-- **WS4 Developer Lab** `/admin/dev/ai-lab` — inspect every stage of a question.
-- **WS9 Observability** — per-execution trace (stages, timings, confidence) + replay.
-- **WS5 Performance Metrics**, **WS6 Intelligence Analytics**, **WS7 Semantic Catalog Manager**,
-  **WS8 Response Pattern Library** (heatmap/map/timeline/forecast blocks).
+### The trust spine ✅ (WS2 + WS3 + WS4 + WS9)
+The pipeline is now instrumented in **one shared core** — `lib/intelligence/pipeline.ts`
+(`runPipeline`, not a "use server" module) — used by both `askAura` (returns the answer)
+and the Developer Lab (returns answer + trace). No architectural change: same stages.
 
-> The suite is the keystone: every later change is gated by "no accuracy regression".
+- **WS2 Confidence Engine** (`confidence.ts`) — every stage scores [0,1]; overall = the
+  weakest link. Routing confidence comes from the entity-score margin (`pickEntityScored`).
+  Internal only — surfaced in the dev lab + used by clarification, never shown to users.
+- **WS3 Clarification Engine** — when a department reference is genuinely ambiguous (two
+  near-equal matches within `AMBIGUITY_MARGIN`), Aura returns a **clarify** answer with
+  options instead of guessing; picking one re-asks with the value pinned. Never fabricates.
+- **WS4 Developer Lab** `/admin/dev/ai-lab` (SUPER_ADMIN, in AdminNav) — `traceAura` runs the
+  real pipeline and renders every stage: timings, per-stage confidence, slots, semantic
+  matches, query models, response strategy, blocks, and the raw answer payload.
+- **WS9 Observability** — every execution builds a `Trace` (`traceId`, ordered stages with
+  ms + confidence + detail, path, overall confidence, total ms). Exposed only in dev.
+
+### Remaining roadmap
+- **WS5 Performance Metrics** + **WS6 Intelligence Analytics** (persist confidence/latency
+  columns on `intelligence_queries`; admin dashboards).
+- **WS7 Semantic Catalog Manager** (manage aliases/synonyms, rebuild index, inspect matches).
+- **WS8 Response Pattern Library** (heatmap / map / timeline / risk-matrix / forecast blocks).
+
+> The evaluation suite is the keystone: every change above is gated by "no accuracy regression".

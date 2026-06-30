@@ -44,20 +44,21 @@ export function bigramSimilarity(a: string, b: string): number {
   return (2 * inter) / (ga.size + gb.size + [...ga.values()].reduce((s, n) => s + n - 1, 0) + [...gb.values()].reduce((s, n) => s + n - 1, 0));
 }
 
-/** Rank candidates against a query through tiers 1–3. Returns the best, if any clears the floor. */
-export function rankCandidates(query: string, candidates: Candidate[], floor = 0.34): Resolution | null {
+/** Rank candidates against a query through tiers 1–3, best first, above the floor. */
+export function rankAll(query: string, candidates: Candidate[], floor = 0.34): Resolution[] {
   const q = normalize(query);
-  if (!q) return null;
-  let best: Resolution | null = null;
-  for (const c of candidates) {
+  if (!q) return [];
+  return candidates.map((c): Resolution => {
     const nr = normalize(c.raw);
-    let score: number, via: Resolution["via"];
-    if (nr === q) { score = 1; via = "exact"; }
-    else if (nr.includes(q) || q.includes(nr)) { score = 0.85; via = "substring"; }
-    else { score = bigramSimilarity(q, c.raw); via = "bigram"; }
-    if (!best || score > best.score) best = { raw: c.raw, resolved: c.resolved, score, via };
-  }
-  return best && best.score >= floor ? best : null;
+    if (nr === q) return { raw: c.raw, resolved: c.resolved, score: 1, via: "exact" };
+    if (nr.includes(q) || q.includes(nr)) return { raw: c.raw, resolved: c.resolved, score: 0.85, via: "substring" };
+    return { raw: c.raw, resolved: c.resolved, score: bigramSimilarity(q, c.raw), via: "bigram" };
+  }).filter((r) => r.score >= floor).sort((a, b) => b.score - a.score);
+}
+
+/** The single best candidate (or null) — tiers 1–3. */
+export function rankCandidates(query: string, candidates: Candidate[], floor = 0.34): Resolution | null {
+  return rankAll(query, candidates, floor)[0] ?? null;
 }
 
 // ── DB-touching resolvers (RLS-safe — they use the caller's client) ──────────────
@@ -72,6 +73,16 @@ export async function resolveDepartmentId(
   const rows: { id: string; name: string }[] = data ?? [];
   const candidates: Candidate[] = rows.map((r) => ({ raw: r.name, resolved: r.id }));
   return rankCandidates(query, candidates);
+}
+
+/** Ranked department candidates for a name/abbreviation — used by the Clarification
+ *  engine to detect ambiguity (two departments matching nearly equally). */
+export async function resolveDepartmentCandidates(
+  client: any, institutionId: string, query: string,
+): Promise<Resolution[]> {
+  const { data } = await client.from("departments").select("id, name").eq("institution_id", institutionId);
+  const candidates: Candidate[] = (data ?? []).map((r: { id: string; name: string }) => ({ raw: r.name, resolved: r.id }));
+  return rankAll(query, candidates);
 }
 
 /** Resolve a value via the pre-built value index (any entity/column), tiers 1–3. */
