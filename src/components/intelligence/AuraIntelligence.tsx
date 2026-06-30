@@ -165,6 +165,18 @@ function BlockView({ block }: { block: Block }) {
       );
     case "recordGrid":
       return <RecordGrid block={block} />;
+    case "alerts":
+      return <AlertsBlock items={block.items} />;
+    case "forecast":
+      return <ForecastBlock block={block} />;
+    case "timeline":
+      return <TimelineBlock block={block} />;
+    case "heatmap":
+      return <HeatmapBlock block={block} />;
+    case "benchmark":
+      return <BenchmarkBlock block={block} />;
+    case "riskMatrix":
+      return <RiskMatrixBlock block={block} />;
     case "summary":
       return (
         <div className="rounded-2xl border border-violet-200 dark:border-violet-900/50 bg-gradient-to-br from-violet-50 to-indigo-50/60 dark:from-violet-950/30 dark:to-indigo-950/20 p-5">
@@ -308,6 +320,119 @@ function Widget({ widget: w }: { widget: ComputedWidget }) {
         <Bar dataKey="value" radius={[4, 4, 0, 0]}>{data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}</Bar>
       </BarChart>
     </ResponsiveContainer>
+  );
+}
+
+// ── WS8 Response Pattern Library renderers ───────────────────────────────────────
+const SEV: Record<string, string> = {
+  good: "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300",
+  info: "border-sky-200 dark:border-sky-500/30 bg-sky-50 dark:bg-sky-500/10 text-sky-800 dark:text-sky-300",
+  warn: "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-300",
+  critical: "border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-300",
+};
+function AlertsBlock({ items }: { items: { severity: string; text: string }[] }) {
+  return (
+    <div className="space-y-2">
+      {items.map((a, i) => (
+        <div key={i} className={`rounded-xl border px-4 py-2.5 text-sm font-medium flex items-center gap-2.5 ${SEV[a.severity] ?? SEV.info}`}>
+          <span className="w-1.5 h-1.5 rounded-full bg-current shrink-0" /> {a.text}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ForecastBlock({ block }: { block: Extract<Block, { kind: "forecast" }> }) {
+  const data = block.points.map((p) => ({ name: p.period, actual: p.projected ? null : p.value, projected: p.projected ? p.value : null }));
+  const lastActual = block.points.map((p) => p.projected).lastIndexOf(false);
+  if (lastActual >= 0 && lastActual < data.length) data[lastActual].projected = block.points[lastActual].value; // join the lines
+  const nProj = block.points.filter((p) => p.projected).length;
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+      <p className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">{block.title} <span className="text-slate-400 font-medium">· projection</span></p>
+      <ResponsiveContainer width="100%" height={220}>
+        <LineChart data={data}>
+          <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="#94a3b8" /><YAxis tick={{ fontSize: 10 }} stroke="#94a3b8" width={40} /><Tooltip formatter={(v) => Number(v).toLocaleString("en-IN")} />
+          <Line dataKey="actual" stroke="#7c3aed" strokeWidth={2} dot={false} connectNulls />
+          <Line dataKey="projected" stroke="#7c3aed" strokeWidth={2} strokeDasharray="5 5" dot={false} connectNulls />
+        </LineChart>
+      </ResponsiveContainer>
+      <p className="text-[10px] text-slate-400 mt-1">Dashed = deterministic linear projection ({nProj} periods ahead). Not a guarantee.</p>
+    </div>
+  );
+}
+
+function TimelineBlock({ block }: { block: Extract<Block, { kind: "timeline" }> }) {
+  const max = Math.max(...block.events.map((e) => num(e.value)), 1);
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+      <p className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">{block.title}</p>
+      <div className="space-y-2 border-l-2 border-violet-200 dark:border-violet-900/50 pl-4">
+        {block.events.map((e, i) => (
+          <div key={i} className="relative">
+            <span className="absolute -left-[1.35rem] top-1 w-2.5 h-2.5 rounded-full bg-violet-500" />
+            <div className="flex items-center justify-between gap-2 text-xs"><span className="text-slate-600 dark:text-slate-300">{e.label}</span><span className="font-bold tabular-nums text-slate-700 dark:text-slate-200">{num(e.value).toLocaleString("en-IN")}</span></div>
+            <div className="h-1 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mt-0.5"><div className="h-full bg-violet-400" style={{ width: `${(num(e.value) / max) * 100}%` }} /></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function HeatmapBlock({ block }: { block: Extract<Block, { kind: "heatmap" }> }) {
+  const max = Math.max(...block.cells.map((c) => c.value), 1);
+  const at = (x: number, y: number) => block.cells.find((c) => c.x === x && c.y === y)?.value ?? 0;
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm overflow-x-auto">
+      <p className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">{block.title}</p>
+      <table className="text-[10px]"><tbody>
+        {block.yLabels.map((yl, y) => (
+          <tr key={y}>
+            <td className="pr-2 text-right text-slate-500 whitespace-nowrap">{yl}</td>
+            {block.xLabels.map((_, x) => { const v = at(x, y); return <td key={x} className="p-0.5"><div className="w-8 h-7 rounded flex items-center justify-center text-white font-bold" style={{ backgroundColor: `rgba(124,58,237,${0.15 + 0.85 * (v / max)})` }}>{v || ""}</div></td>; })}
+          </tr>
+        ))}
+        <tr><td /> {block.xLabels.map((xl, x) => <td key={x} className="text-center text-slate-500 pt-1 truncate max-w-[2.5rem]">{xl}</td>)}</tr>
+      </tbody></table>
+    </div>
+  );
+}
+
+function BenchmarkBlock({ block }: { block: Extract<Block, { kind: "benchmark" }> }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm space-y-3">
+      <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{block.title}</p>
+      {block.items.map((it, i) => {
+        const ratio = it.target > 0 ? Math.min(1.5, it.value / it.target) : 0;
+        const ok = it.value >= it.target;
+        return (
+          <div key={i}>
+            <div className="flex justify-between text-xs mb-1"><span className="text-slate-600 dark:text-slate-300">{it.label}</span><span className={`font-bold ${ok ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>{fmtCell(it.value, it.format)} <span className="text-slate-400 font-medium">/ {fmtCell(it.target, it.format)}</span></span></div>
+            <div className="relative h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden"><div className={`h-full rounded-full ${ok ? "bg-emerald-500" : "bg-amber-500"}`} style={{ width: `${Math.min(100, ratio * 66.6)}%` }} /><span className="absolute top-0 h-full w-0.5 bg-slate-400" style={{ left: "66.6%" }} /></div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RiskMatrixBlock({ block }: { block: Extract<Block, { kind: "riskMatrix" }> }) {
+  const cellColor = (l: number, im: number) => { const s = l * im; return s >= 6 ? "bg-rose-500/80" : s >= 3 ? "bg-amber-500/70" : "bg-emerald-500/70"; };
+  const items = (l: number, im: number) => block.items.filter((it) => it.likelihood === l && it.impact === im);
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm">
+      <p className="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3">{block.title}</p>
+      <div className="flex gap-2">
+        <div className="flex flex-col justify-around text-[9px] text-slate-400 font-bold uppercase"><span>High</span><span>Med</span><span>Low</span></div>
+        <div className="grid grid-cols-3 gap-1 flex-1">
+          {[3, 2, 1].map((l) => [1, 2, 3].map((im) => (
+            <div key={`${l}-${im}`} className={`rounded h-14 p-1 text-[9px] text-white overflow-hidden ${cellColor(l, im)}`}>{items(l, im).map((it, i) => <div key={i} className="truncate">{it.label}</div>)}</div>
+          )))}
+        </div>
+      </div>
+      <p className="text-[9px] text-slate-400 mt-1 text-center">Impact: Low → High →</p>
+    </div>
   );
 }
 

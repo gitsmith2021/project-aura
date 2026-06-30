@@ -27,6 +27,7 @@ export type Plan = {
   numericMetric: string | null;
   category: string | null;     // distribution category column
   dateField: string | null;    // trend date column
+  forecast: boolean;           // WS8 — project the trend forward
 };
 
 /** Columns to show in a record grid: business-meaningful, metric guaranteed, capped. */
@@ -106,7 +107,7 @@ export function planQueries(x: ExtractedQuery, entity: EntityDef): Plan | null {
   }
 
   if (models.length === 0) return null;
-  return { responseType: recipe.responseType, title: x.title ?? entity.label, models, gridColumns, numericMetric: metric, category, dateField };
+  return { responseType: recipe.responseType, title: x.title ?? entity.label, models, gridColumns, numericMetric: metric, category, dateField, forecast: !!x.forecast };
 }
 
 export { DEFAULT_LIMIT };

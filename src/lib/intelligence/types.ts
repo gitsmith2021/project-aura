@@ -117,6 +117,7 @@ export type ExtractedQuery = {
   sort?: { field: string; dir: "asc" | "desc" } | null;
   limit?: number | null;
   comparison?: boolean;
+  forecast?: boolean;                                // WS8 — project the trend forward
   responseHint?: ResponseType | null;
   title?: string;                                    // human title for the answer
   via?: "llm" | "deterministic";
@@ -143,13 +144,29 @@ export type Clarification = { prompt: string; options: ClarifyOption[] };
 // ── Card / Response-Pattern Library — the Visualization Composer renders these ───
 export type GridColumn = { key: string; label: string; format?: ValueFormat };
 
+// ── CF-3.1 WS8 — Response Pattern Library (reusable across every Aura product) ───
+export type AlertSeverity = "good" | "info" | "warn" | "critical";
+export type AlertItem = { severity: AlertSeverity; text: string };
+export type ForecastPoint = { period: string; value: number; projected: boolean };
+export type TimelineEvent = { label: string; value: number };
+export type BenchmarkItem = { label: string; value: number; target: number; format?: ValueFormat };
+export type HeatmapBlock = { kind: "heatmap"; title: string; xLabels: string[]; yLabels: string[]; cells: { x: number; y: number; value: number }[] };
+export type RiskItem = { label: string; likelihood: 1 | 2 | 3; impact: 1 | 2 | 3 };
+
 export type Block =
   | { kind: "kpiStrip"; kpis: ComputedKpi[] }
   | { kind: "recordGrid"; title: string; columns: GridColumn[]; rows: ResultRow[]; total: number; capped: boolean }
   | { kind: "chart"; widget: ComputedWidget }
   | { kind: "comparison"; title: string; kpis: ComputedKpi[]; periodLabel: string }
   | { kind: "summary"; text: string }
-  | { kind: "recommendations"; items: string[] };
+  | { kind: "recommendations"; items: string[] }
+  // WS8 — extensible visualization primitives (built by lib/intelligence/responsePatterns.ts)
+  | { kind: "alerts"; items: AlertItem[] }
+  | { kind: "forecast"; title: string; valueFormat?: ValueFormat; points: ForecastPoint[] }
+  | { kind: "timeline"; title: string; events: TimelineEvent[] }
+  | HeatmapBlock
+  | { kind: "benchmark"; title: string; items: BenchmarkItem[] }
+  | { kind: "riskMatrix"; title: string; items: RiskItem[] };
 
 export type ComposedView = { title: string; responseType: ResponseType; blocks: Block[]; empty: boolean };
 
