@@ -11,6 +11,7 @@ const TABS = [
   { href: "/admin/billing", label: "Billing", ready: true },           // Phase 7E
   { href: "/admin/dev/ai-lab", label: "AI Lab", ready: true },         // CF-3.1 WS4
   { href: "/admin/dev/ai-metrics", label: "AI Metrics", ready: true }, // CF-3.1 WS5/6
+  { href: "/admin/dev/semantic", label: "Semantic", ready: true },     // CF-3.1 WS7
 ];
 
 export function AdminNav() {
