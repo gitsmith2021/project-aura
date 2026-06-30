@@ -1,6 +1,8 @@
 # Aura Mobile
 
-Native iOS/Android companion app for Aura, built with **Expo (SDK 52) + Expo Router + TypeScript**. It is a **standalone app that shares the web app's Supabase backend** — same Postgres, same auth, same Row-Level Security. There is no separate API server, and no second permission system: whatever a user can see/do is governed by the same RLS policies the web app uses.
+Native Android (v1.0 target) companion app for Aura, built with **Expo (SDK 54) + Expo Router + TypeScript**. It is a **standalone app that shares the web app's Supabase backend** — same Postgres, same auth, same Row-Level Security. There is no separate API server, and no second permission system: whatever a user can see/do is governed by the same RLS policies the web app uses (parent access goes through the authenticated `/api/parent` route instead, since parents have no RLS path).
+
+See [Phase 8 — Mobile & Smart Campus](../docs/AURA_CAMPUS/roadmap/10-phase8-mobile-apps.md) for the current build scope and status.
 
 ## One app, role-adaptive
 
@@ -13,34 +15,34 @@ A single app serves all six roles. After sign-in it reads the user's `institutio
 | HOD | Department read-only snapshot (students/staff counts) |
 | Admin / Principal / Super Admin | Institution read-only snapshot; full tools remain on web |
 
-## ⚠️ Status: foundation, not yet device-verified
+## Status
 
-This was scaffolded in an environment **without** a device, simulator, or Expo toolchain, so it has **not been run or built on a device**. It is structurally complete and type-oriented, but treat the first `expo start` as the real first test. Run on your machine:
+Auth, role-adaptive shell, and the Student/Staff/Parent read-only screens run today in **Expo Go**:
 
 ```bash
 cd aura-mobile
 cp .env.example .env        # fill in the SAME Supabase URL + anon key as the web app
 npm install
-npx expo install --fix      # reconcile any SDK 52 version drift
-npx expo start              # open in Expo Go (auth + read-only screens work here)
-npm run typecheck           # tsc --noEmit
+npx expo start               # open in Expo Go
+npm run typecheck            # tsc --noEmit
 ```
 
-## Deferred (need their dependencies or a native build)
+## Native modules — Expo Dev Client (EAS), not Expo Go
 
-These are intentionally **not** in this build:
-
-- **NFC attendance marking** (`react-native-nfc-manager`) — needs Phase 4F (NFC card→student registry) and a **custom dev client / EAS build** on a physical device. Does not run in Expo Go.
-- **Push notifications** (`expo-notifications`) — needs Phase 3 (notification engine) for the server side.
-- **CCTV / RTSP** (`react-native-vlc-media-player`) and **online fee payment** — later builds; both require native modules + EAS.
-- **Parent app** — needs Phase 6A (Parent Portal), not yet built.
-
-Building these later means switching from Expo Go to an EAS dev client:
+`expo-dev-client` is installed and `eas.json` defines `development` / `preview` / `production` build profiles. Features that need a native module (NFC tap, RTSP/VLC player, in-app Razorpay) **cannot run in Expo Go** — they need a custom dev-client build:
 
 ```bash
 npm install -g eas-cli
-eas build --profile development --platform android   # or ios
+eas login                                              # one-time, any Expo account
+eas init                                                # one-time — writes your real project ID into app.json (extra.eas.projectId)
+eas build --profile development --platform android      # installable APK with the dev client baked in
 ```
+
+> **No paid Expo plan is required.** EAS Build's free tier covers normal dev-client iteration; `eas build --local` (using a local Android SDK/Android Studio install) is also free and doesn't touch EAS cloud at all. Production builds (`production` profile, app bundle, auto-incrementing version) use the same `eas.json` config later with no code changes — only the profile name changes.
+
+- **NFC attendance** (`react-native-nfc-manager`) — Phase 8 P8.2/P8.3. Backing DB (`smart_cards`, `classrooms`, `nfc_tags`, `card_readers`) lives in the web repo's Supabase migrations.
+- **Push notifications** (`expo-notifications`) — Phase 8 P8.5.
+- **CCTV / RTSP** (`react-native-vlc-media-player`) and **in-app Razorpay** — Phase 8 P8.6 / deferred payment flow.
 
 ## Layout
 

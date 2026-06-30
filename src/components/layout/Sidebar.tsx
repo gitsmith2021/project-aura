@@ -40,7 +40,7 @@ const isAcademicPath = (path: string) => ACADEMIC_PATH_FRAGMENTS.some(f => path.
 
 const CAMPUS_PATH_FRAGMENTS = [
   "/library", "/bookings", "/hostels", "/laboratories", "/assets",
-  "/vendors", "/id-cards", "/gate", "/clubs", "/infirmary", "/sports", "/events",
+  "/vendors", "/id-cards", "/classrooms", "/gate", "/clubs", "/infirmary", "/sports", "/events",
   "/transport", "/certificates", "/feedback", "/industry-connect",
 ] as const;
 const isCampusPath = (path: string) => CAMPUS_PATH_FRAGMENTS.some(f => path.includes(f));
@@ -414,6 +414,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
   const assetsHref         = slug ? `/institutions/${slug}/assets`           : "/institutions";
   const vendorsHref        = slug ? `/institutions/${slug}/vendors`          : "/institutions";
   const idCardsHref        = slug ? `/institutions/${slug}/id-cards`         : "/institutions";
+  const classroomsHref     = slug ? `/institutions/${slug}/classrooms`       : "/institutions";
   const gateHref           = slug ? `/institutions/${slug}/gate`             : "/institutions";
   const infirmaryHref      = slug ? `/institutions/${slug}/infirmary`        : "/institutions";
   const sportsHref         = slug ? `/institutions/${slug}/sports`           : "/institutions";
@@ -644,6 +645,7 @@ export function Sidebar({ isCollapsed, toggleSidebar }: { isCollapsed: boolean; 
               <SubLink href={assetsHref}         icon={<Package size={14} />}      label="Assets"         active={pathname.includes("/assets")} />
               <SubLink href={vendorsHref}        icon={<Truck size={14} />}        label="Vendors"        active={pathname.includes("/vendors")} />
               <SubLink href={idCardsHref}        icon={<Nfc size={14} />}          label="ID Cards"       active={pathname.includes("/id-cards")} />
+              <SubLink href={classroomsHref}     icon={<Building2 size={14} />}    label="Classrooms"     active={pathname.includes("/classrooms")} />
               <SubLink href={gateHref}           icon={<DoorOpen size={14} />}     label="Gate & Security" active={pathname.includes("/gate")} />
               <SubLink href={slug ? `/institutions/${slug}/clubs` : "/institutions"} icon={<Award size={14} />} label="Clubs & Groups" active={pathname.includes("/clubs")} />
               <SubLink href={infirmaryHref}      icon={<Stethoscope size={14} />}  label="Infirmary"      active={pathname.includes("/infirmary")} />

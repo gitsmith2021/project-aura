@@ -92,7 +92,8 @@ Fable 5 is included in Pro/Max/Team plans until June 22 — but it counts
 [x] 11  📱  Phase 8A — Aura Mobile foundation (Expo SDK 54 + role-adaptive bottom tabs, all 6 roles + auth + portal screens) — Opus
 [~] 12  📱  Phase 8B/8C/8F screens — staff Leave/Payslip/Schedule, admin+HOD Approvals, student Dashboard/Fees/Attendance, parent Home/Attendance/Results/Fees (authed /api/parent, Expo Go) — Opus
 [x] +   🏛️  Phase 4 Campus Infra COMPLETE (4A Library · 4B Bookings · 4C Hostels · 4D Labs · 4E Assets · 4E-sub Vendors/PO · 4F ID Cards · 4G Gate · 4H Clubs · 4I Infirmary · 4J Sports · 4K Events) — Opus/Sonnet
-[ ] —   ⏳  Remaining (need EAS/device): NFC (Phase 4F + EAS), push (Phase 3 + 8D), in-app Razorpay pay, CCTV, parent self-link OTP
+[x] 13  🏫  Phase 8 Smart Campus Sprint 1 (Foundation) — classrooms/nfc_tags/card_readers entities + RLS, admin Classrooms manager, 5 CF-1 smart_campus.* toggles (Deferred), aura-mobile EAS dev-client scaffolding (eas.json, expo-dev-client, no paid plan) — Sonnet 4.6
+[ ] —   ⏳  Remaining (need EAS/device): NFC tap + reader ingest (P8.2/P8.3, dev-client build), push (Phase 3 + P8.5), in-app Razorpay pay, CCTV (P8.6), parent self-link OTP
 ─────────────────────────────────────────────────────
 After the free window → Switch to Opus 4.8 / Sonnet 4.6 for Tier 2 & 3
 ```
@@ -194,6 +195,7 @@ git commit -m "feat: [Phase X] — [Module Name] complete"
 | NAAC SSR Builder | Fable 5 | ✅ Complete — scaffold `e254e47` + export hub (Excel/AISHE/NIRF/PDF) `3944ed7` | `3944ed7` |
 | React Native Mobile (8A + 8B/8C/8F screens) | Opus 4.8 | ✅ 8A complete · 8B/8C/8F screens built — Expo SDK 54, role-adaptive tabs (6 roles), staff Leave/Payslip/Schedule, admin/HOD Approvals, student Dashboard/Fees/Attendance, **parent app foundation** (parent tier + read-only child Home/Attendance/Results/Fees via authed `/api/parent`, Expo Go). NFC/push/CCTV/in-app-pay deferred (EAS/device) | `301be79` · `fd762bd` · `64246fd` · 8F PR |
 | Phase 4 Campus Infrastructure (4A–4H) | Opus 4.8 | ✅ Library · Bookings · Hostels · Laboratories · Assets · Vendors/PO · ID Cards · Gate · Clubs complete (infirmary/sports/events pending) | `c1a528c` |
+| Phase 8 Smart Campus — Sprint 1 (Foundation) | Sonnet 4.6 | ✅ `classrooms` (managed room asset) + `nfc_tags` + `card_readers` registries + RLS (mirrors `smart_cards`; `card_readers` deliberately separate from Phase 4F `devices`); admin Classrooms manager (create/edit rooms, NFC tag register/replace/deactivate/reassign + health staleness, reader assign/reassign, vendor-independent RFID/NFC/MIFARE/DESFire); 5 CF-1 `smart_campus.*` toggles seeded (Deferred — ingest endpoints ship in later sprints); `aura-mobile` EAS dev-client scaffolding (`eas.json`, `expo-dev-client`), no paid Expo plan required | `20260801000000` |
 | Notifications Infrastructure | Opus/Sonnet | 🔲 Pending | — |
 | Notification Triggers | Opus/Sonnet | 🔲 Pending | — |
 | Resend Email Integration | Opus/Sonnet | 🔲 Pending | — |

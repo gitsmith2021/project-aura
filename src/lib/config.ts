@@ -43,7 +43,7 @@ export const SETTING_CATEGORIES = [
   "Institution", "Admissions", "Academics", "Attendance", "Examination",
   "Finance", "HR", "Student Portal", "Parent Portal", "Faculty Portal",
   "Knowledge Hub", "AI Features", "Notifications", "Integrations", "Security",
-  "Mobile", "Feature Flags",
+  "Mobile", "Smart Campus", "Feature Flags",
 ] as const;
 
 export type SettingCategory = (typeof SETTING_CATEGORIES)[number];
@@ -98,6 +98,14 @@ export const DEFERRED_KEYS: ReadonlySet<string> = new Set<string>([
   "mobile.push_enabled",
   "security.enforce_2fa",
   "security.session_timeout_min",
+  // Smart Campus (Phase 8) — registries exist (classrooms/nfc_tags/card_readers)
+  // but the hardware ingest endpoints, CCTV stream, and push pipeline that these
+  // gate are not built yet (P8.2–P8.6). Add to ENFORCED_KEYS as each ships.
+  "smart_campus.rfid_enabled",
+  "smart_campus.nfc_enabled",
+  "smart_campus.cctv_enabled",
+  "smart_campus.push_notifications_enabled",
+  "smart_campus.smart_attendance_enabled",
 ]);
 
 export function isDeferred(key: string): boolean {

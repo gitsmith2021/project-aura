@@ -74,6 +74,12 @@ All Smart Campus hardware capabilities are **configurable through CF-1** — ins
 Configuration also governs vendor/reader selection (P8.2), notification rules (P8.5 Parent
 Notification Policy), and the Missed-Lecture **grace period** (P8.4).
 
+> ✅ **Sprint 1 — seeded:** all 5 toggles exist as `smart_campus.*` CF-1 settings (`rfid_enabled`,
+> `nfc_enabled`, `cctv_enabled`, `push_notifications_enabled`, `smart_attendance_enabled`),
+> default-on, editable from the Configuration Center. Marked **Deferred** (`src/lib/config.ts`
+> `DEFERRED_KEYS`) — stored & audited, not yet enforced — until each gated capability ships in
+> P8.2–P8.6.
+
 ---
 
 ## User Experience targets
@@ -141,6 +147,7 @@ below; checkboxes reflect **current build status**.
 - [x] `expo-secure-store` (auth token storage — SecureStore-encrypted AsyncStorage, 2 KB-limit-safe)
 - [x] Supabase auth with Expo SecureStore **session persistence** (survives app restarts)
 - [x] Role-adaptive shell (all 7 roles) + read-only portal screens
+- [x] EAS / Dev Client scaffolding — `eas.json` (development/preview/production profiles), `expo-dev-client` installed, `app.json` plugin + `extra.eas.projectId` placeholder; no native modules installed yet (Sprint 1)
 - [ ] `react-native-nfc-manager` (NFC tag scanning — **P8.3**; needs Phase 4F + EAS dev client)
 - [ ] `expo-notifications` (push — **P8.5**; needs Phase 3)
 - [ ] `react-native-vlc-media-player` (CCTV RTSP — **P8.6**; needs EAS)
@@ -236,6 +243,13 @@ devices.** Classroom records are managed from Aura Campus Administration (config
 not code). Other room types in P8.3 (Lab, Library, Office, Seminar/Meeting Hall) are modelled
 as the same managed-location asset.
 
+> ✅ **Sprint 1 (foundation) — done:** `public.classrooms` (building/floor/room/department/
+> capacity) + `public.nfc_tags` + `public.card_readers` (RLS mirrors `smart_cards`), admin
+> **Classrooms** manager at `/institutions/[id]/classrooms` (create/edit rooms, assign NFC tag,
+> assign card reader). CCTV camera assignment is added in **P8.6**. `card_readers` is
+> deliberately separate from the existing Phase 4F `public.devices` table (staff-carried
+> handheld scanner) — different deployment shape, not merged.
+
 ---
 
 # P8.2 — Student Card Attendance (vendor-independent)
@@ -300,11 +314,11 @@ future analytics (and underpins [Missed Lecture detection](#p84--intelligent-tim
 
 All NFC tags are managed from **Aura Campus Administration — without code changes**:
 
-- [ ] **Tag Registration** (bind a tag to a Classroom/location)
-- [ ] **Tag Replacement**
-- [ ] **Tag Deactivation**
-- [ ] **Tag Reassignment**
-- [ ] **Tag Health Status**
+- [x] **Tag Registration** (bind a tag to a Classroom/location) — `assignNfcTag` (Sprint 1)
+- [x] **Tag Replacement** — `replaceTag` (old → `replaced`, new tag bound to same classroom, `replaced_by` linked) (Sprint 1)
+- [x] **Tag Deactivation** — `deactivateTag` (Sprint 1)
+- [x] **Tag Reassignment** — re-running `assignNfcTag` for an existing UID moves it to a new classroom (Sprint 1)
+- [x] **Tag Health Status** — `isStale()` 48h `last_seen_at` staleness signal, surfaced in the Classrooms admin UI (Sprint 1; live ping from a reader is wired in P8.3)
 
 ---
 
