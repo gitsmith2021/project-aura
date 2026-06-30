@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { runPipeline, type PipeCtx } from "@/lib/intelligence/pipeline";
 import { intentsForRole } from "@/lib/intelligence/registry";
-import type { AuraAnswer, Role } from "@/lib/intelligence/types";
+import type { AuraAnswer, Role, Trace } from "@/lib/intelligence/types";
 
 // CF-3 / CF-3.1 — Aura Intelligence server actions. The pipeline lives in
 // lib/intelligence/pipeline.ts (instrumented: trace + confidence + clarification);
@@ -23,12 +23,13 @@ export async function resolveCtx(institutionId: string): Promise<PipeCtx | null>
   return { userId: user.id, role: member.role as Role, institutionId, departmentId: (member.department_id as string | null) ?? null };
 }
 
-async function logQuestion(c: PipeCtx, question: string, answer: AuraAnswer) {
+async function logQuestion(c: PipeCtx, question: string, answer: AuraAnswer, trace: Trace) {
   const supabase = await db();
   const responseType = answer.ok ? answer.view.responseType : answer.reason;
   const intentId = answer.ok ? answer.intentId : null;
   await supabase.from("intelligence_queries").insert({
-    institution_id: c.institutionId, user_id: c.userId, role: c.role, question, intent_id: intentId, response_type: responseType,
+    institution_id: c.institutionId, user_id: c.userId, role: c.role, question, intent_id: intentId,
+    response_type: responseType, confidence: trace.overallConfidence, latency_ms: trace.totalMs, path: trace.path,
   });
 }
 
@@ -39,8 +40,8 @@ export async function askAura(institutionId: string, question: string): Promise<
     const c = await resolveCtx(institutionId);
     if (!c) return { ok: false, reason: "not_authorised", message: "You don't have access to Aura Intelligence for this institution." };
     const supabase = await db();
-    const { answer } = await runPipeline(supabase, c, question);
-    await logQuestion(c, question, answer);
+    const { answer, trace } = await runPipeline(supabase, c, question);
+    await logQuestion(c, question, answer, trace);
     return answer;
   } catch (err) {
     return { ok: false, reason: "error", message: err instanceof Error ? err.message : "Something went wrong." };
