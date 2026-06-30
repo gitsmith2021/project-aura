@@ -53,6 +53,14 @@ async function loadCatalog(supabase: Sb): Promise<EntityDef[]> {
   return (data ?? []).map(mapEntity);
 }
 
+/** DB-managed entity aliases (WS7) — merged with the built-in synonyms. */
+async function loadAliases(supabase: Sb): Promise<Record<string, string[]>> {
+  const { data } = await supabase.from("intelligence_entity_aliases").select("entity_key, alias");
+  const out: Record<string, string[]> = {};
+  for (const r of (data ?? []) as { entity_key: string; alias: string }[]) (out[r.entity_key] ??= []).push(String(r.alias).toLowerCase());
+  return out;
+}
+
 function scopeToDepartment(queries: NamedQueryModel[], c: PipeCtx): NamedQueryModel[] {
   if (!c.departmentId || !isHodRole(c.role)) return queries;
   const cond = { field: "department_id", operator: "eq" as const, value: c.departmentId };
@@ -155,11 +163,11 @@ export async function runPipeline(supabase: Sb, c: PipeCtx, question: string): P
   const finish = (path: Trace["path"], answer: AuraAnswer, overall: number): { answer: AuraAnswer; trace: Trace } =>
     ({ answer, trace: { traceId: cryptoId(), question, path, stages, overallConfidence: overall, totalMs: Date.now() - t0 } });
 
-  const catalog = await loadCatalog(supabase);
-  mark("catalog", undefined, { entities: catalog.length });
+  const [catalog, aliases] = await Promise.all([loadCatalog(supabase), loadAliases(supabase)]);
+  mark("catalog", undefined, { entities: catalog.length, aliases: Object.values(aliases).reduce((s, a) => s + a.length, 0) });
 
-  // 1) Slot extraction (LLM → deterministic fallback).
-  let ex = (llmAvailable() ? await extractQueryLLM(question, catalog) : null) ?? extractQuery(question, catalog);
+  // 1) Slot extraction (LLM → deterministic fallback, with DB aliases).
+  let ex = (llmAvailable() ? await extractQueryLLM(question, catalog) : null) ?? extractQuery(question, catalog, aliases);
   mark("extract", ex?.confidence, ex ? { entity: ex.entity, via: ex.via, responseHint: ex.responseHint, filters: ex.filters, parts: ex.confidenceParts } : { matched: false });
 
   // 2) General analytical path.

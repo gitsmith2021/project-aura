@@ -345,8 +345,17 @@ and the Developer Lab (returns answer + trace). No architectural change: same st
   questions, and the **weakest recognitions** (lowest confidence ≈ "unknown terms" roadmap).
 - `getIntelligenceMetrics` (SUPER_ADMIN) + **`/admin/dev/ai-metrics`** dashboard (AdminNav).
 
+### Semantic Catalog Manager ✅ (WS7)
+- Migration `cf3_1_entity_aliases` adds `intelligence_entity_aliases` (RLS: read by all
+  authenticated, SUPER_ADMIN writes). The extractor merges these DB aliases with the built-in
+  synonyms (`pickEntityScored`/`extractQuery` take an optional `aliases` map; `pipeline.ts`
+  loads them each run) — so **routing is tunable without code changes**.
+- `intelligenceCatalog.ts` (SUPER_ADMIN): list/add/delete aliases, catalog stats, **match
+  inspector** (trigram departments + value-index + vector catalog-term matches), rebuild
+  index (reuses `buildSemanticIndex`), and recent **unrecognized** questions to address.
+- UI: **`/admin/dev/semantic`** (AdminNav). Add an alias → routing updates immediately.
+
 ### Remaining roadmap
-- **WS7 Semantic Catalog Manager** (manage aliases/synonyms, rebuild index, inspect matches).
 - **WS8 Response Pattern Library** (heatmap / map / timeline / risk-matrix / forecast blocks).
 
 > The evaluation suite is the keystone: every change above is gated by "no accuracy regression".

@@ -52,9 +52,13 @@ function parseAmount(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function scoreEntity(e: EntityDef, q: string): number {
+/** Built-in synonyms MERGED with DB-managed aliases (the Semantic Catalog Manager,
+ *  WS7) — so routing can be tuned without code changes. */
+export type Aliases = Record<string, string[]>;
+
+function scoreEntity(e: EntityDef, q: string, aliases: Aliases): number {
   let score = 0;
-  for (const syn of ENTITY_SYNONYMS[e.key] ?? []) if (q.includes(` ${syn} `) || q.includes(`${syn} `) || q.includes(` ${syn}`)) score += syn.includes(" ") ? 3 : 2;
+  for (const syn of [...(ENTITY_SYNONYMS[e.key] ?? []), ...(aliases[e.key] ?? [])]) if (q.includes(` ${syn} `) || q.includes(`${syn} `) || q.includes(` ${syn}`)) score += syn.includes(" ") ? 3 : 2;
   for (const w of e.label.toLowerCase().split(/\s+/)) if (w.length > 2 && q.includes(w)) score += 1;
   for (const c of e.columns) { const cl = c.label.toLowerCase(); if (cl.length > 3 && q.includes(cl)) score += 1; }
   return score;
@@ -64,9 +68,9 @@ export type EntityPick = { entity: EntityDef; score: number; margin: number; swi
 
 /** Score every entity; return the best with its margin over the runner-up (drives
  *  routing confidence). `switched` flags the salary-intent override (a heuristic). */
-export function pickEntityScored(question: string, catalog: EntityDef[]): EntityPick | null {
+export function pickEntityScored(question: string, catalog: EntityDef[], aliases: Aliases = {}): EntityPick | null {
   const q = norm(question);
-  const ranked = catalog.map((e) => ({ e, score: scoreEntity(e, q) })).filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
+  const ranked = catalog.map((e) => ({ e, score: scoreEntity(e, q, aliases) })).filter((x) => x.score > 0).sort((a, b) => b.score - a.score);
   if (ranked.length === 0) return null;
   const top = ranked[0];
   const margin = top.score - (ranked[1]?.score ?? 0);
@@ -80,8 +84,8 @@ export function pickEntityScored(question: string, catalog: EntityDef[]): Entity
 }
 
 /** Score every entity by synonym/label/column overlap; return the best key. */
-export function pickEntity(question: string, catalog: EntityDef[]): EntityDef | null {
-  return pickEntityScored(question, catalog)?.entity ?? null;
+export function pickEntity(question: string, catalog: EntityDef[], aliases: Aliases = {}): EntityDef | null {
+  return pickEntityScored(question, catalog, aliases)?.entity ?? null;
 }
 
 const NUM_COMPARATORS: { re: RegExp; op: FilterOperator }[] = [
@@ -197,8 +201,8 @@ function buildTitle(e: EntityDef, x: Partial<ExtractedQuery>): string {
 }
 
 /** Parse a question → ExtractedQuery (or null if no entity matched). Pure. */
-export function extractQuery(question: string, catalog: EntityDef[]): ExtractedQuery | null {
-  const pick = pickEntityScored(question, catalog);
+export function extractQuery(question: string, catalog: EntityDef[], aliases: Aliases = {}): ExtractedQuery | null {
+  const pick = pickEntityScored(question, catalog, aliases);
   if (!pick) return null;
   const e = pick.entity;
   const q = norm(question);

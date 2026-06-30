@@ -44,6 +44,18 @@ describe("confidence engine", () => {
   });
 });
 
+describe("WS7 — DB aliases tune routing without code changes", () => {
+  it("an unknown phrase matches nothing until an alias is added", () => {
+    expect(extractQuery("how many freshers do we have", catalog)).toBeNull();
+    const ex = extractQuery("how many freshers do we have", catalog, { students: ["freshers"] });
+    expect(ex?.entity).toBe("students");
+    expect(ex?.responseHint).toBe("KPI");
+  });
+  it("aliases merge with built-in synonyms (don't replace them)", () => {
+    expect(extractQuery("total students", catalog, { staff_salary: ["paypacket"] })?.entity).toBe("students");
+  });
+});
+
 describe("clarification — ambiguity detection (rankAll)", () => {
   const AMBIGUITY_MARGIN = 0.12;
   it("flags two near-equal matches as ambiguous", () => {
