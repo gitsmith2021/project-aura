@@ -152,6 +152,8 @@ function OversightHome({ identity, scope }: { identity: Identity; scope: "instit
   const [staff, setStaff] = useState<number | null>(null);
   const [instName, setInstName] = useState<string | null>(null);
   const [depts, setDepts] = useState<DeptRow[]>([]);
+  const [admissions, setAdmissions] = useState<number | null>(null);
+  const [feeCollected, setFeeCollected] = useState<number | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -179,6 +181,16 @@ function OversightHome({ identity, scope }: { identity: Identity; scope: "instit
         setStudents(s.count ?? 0);
         setStaff(st.count ?? 0);
         setInstName(inst.data?.name ?? null);
+        // Institution-level KPIs (admissions + fee collected). These entities aren't
+        // department-scoped, so they're shown for the institution view only.
+        if (scope === "institution") {
+          const [adm, fees] = await Promise.all([
+            supabase.from("admissions").select("id", { count: "exact", head: true }).eq("institution_id", identity.institutionId),
+            supabase.from("fee_payments").select("amount_paid").eq("institution_id", identity.institutionId),
+          ]);
+          setAdmissions(adm.count ?? 0);
+          setFeeCollected((fees.data ?? []).reduce((sum, f) => sum + (Number(f.amount_paid) || 0), 0));
+        }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setDepts(((d.data ?? []) as any[]).map((row) => ({
           id: row.id,
@@ -206,6 +218,13 @@ function OversightHome({ identity, scope }: { identity: Identity; scope: "instit
         <View style={{ width: spacing.md }} />
         <StatCard label={scope === "department" ? "Dept Staff" : "Staff"} value={staff == null ? "—" : String(staff)} accent={colors.amber} />
       </View>
+      {scope === "institution" ? (
+        <View style={styles.statRow}>
+          <StatCard label="Admissions" value={admissions == null ? "—" : intFmt.format(admissions)} accent={colors.violet} />
+          <View style={{ width: spacing.md }} />
+          <StatCard label="Fee Collected" value={feeCollected == null ? "—" : inr.format(feeCollected)} accent={colors.emerald} />
+        </View>
+      ) : null}
       {depts.length > 0 ? (
         <>
           <SectionTitle>{scope === "department" ? "Department" : "Departments"}</SectionTitle>
@@ -230,6 +249,7 @@ function OversightHome({ identity, scope }: { identity: Identity; scope: "instit
       </Card>
       <QuickLinks
         links={[
+          { icon: "sparkles-outline", label: "Ask Aura", href: "/insights", accent: colors.violet },
           { icon: "notifications-outline", label: "Notifications", href: "/notifications", accent: colors.rose },
           { icon: "person-outline", label: "Profile", href: "/profile" },
         ]}

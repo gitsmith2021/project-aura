@@ -215,9 +215,10 @@ Mobile-suitable executive dashboards with quick access to **Institution KPIs · 
 Admissions · Fee Collection · Notifications · CCTV (P8.6)**.
 
 - [x] Read-only HOD/admin snapshot screens (foundation)
-- [ ] **Consume CF-3 (Aura Intelligence)** for ask-a-question executive dashboards on mobile *(pending)*
-- [ ] Quick-access KPI / Admissions / Fee-collection cards *(pending)*
+- [x] **Consume CF-3 (Aura Intelligence)** for ask-a-question executive dashboards on mobile — new **Insights** tab (`app/(app)/insights.tsx` → `ExecutiveInsights` screen) posts to the web `POST /api/executive/ask` bridge (`executiveMobileAuth` bearer → `runPipeline` under the caller's RLS, logged to `/admin/dev/ai-metrics`); renders summary + KPIs + record list + clarification + follow-ups mobile-first (charts stay on web)
+- [x] Quick-access KPI / Admissions / Fee-collection cards — `OversightHome` now shows Students · Staff · **Admissions · Fee Collected** (institution scope) + an "Ask Aura" quick link
 - [ ] CCTV entry point → **P8.6** *(pending)*
+- ⛔ In-app Razorpay pay + native NFC/CCTV player remain **blocked on the EAS dev build** (P0 dev-account purchase); the web fallback (Pay opens the portal) stays
 
 ---
 
