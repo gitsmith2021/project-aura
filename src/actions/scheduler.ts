@@ -175,20 +175,32 @@ export async function clearDepartmentSchedules(
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
-  // Count before deleting so we can report how many were removed
-  const { count } = await supabase
-    .from("schedules")
-    .select("*", { count: "exact", head: true })
-    .eq("tenant_id", institutionId)
+  // The timetable now lives in the unified `class_schedules` table, which also
+  // anchors attendance. Clearing a department must remove only the planner /
+  // generated rows and PRESERVE any class that already has recorded attendance
+  // (its FK is NO ACTION — deleting it would fail — and the history must survive).
+  const { data: deptRows } = await supabase
+    .from("class_schedules")
+    .select("id")
+    .eq("institution_id", institutionId)
     .eq("department_id", departmentId);
+  const ids = (deptRows ?? []).map((r) => r.id as string);
 
-  const { error } = await supabase
-    .from("schedules")
-    .delete()
-    .eq("tenant_id", institutionId)
-    .eq("department_id", departmentId);
+  let deletable = ids;
+  if (ids.length) {
+    const { data: withAtt } = await supabase
+      .from("attendance")
+      .select("schedule_id")
+      .in("schedule_id", ids);
+    const keep = new Set((withAtt ?? []).map((a) => a.schedule_id as string));
+    deletable = ids.filter((id) => !keep.has(id));
+  }
 
-  if (error) return { success: false, count: 0, error: error.message };
+  if (deletable.length) {
+    const { error } = await supabase.from("class_schedules").delete().in("id", deletable);
+    if (error) return { success: false, count: 0, error: error.message };
+  }
+  const count = deletable.length;
 
   // Reset all published drafts for this dept back to DRAFT
   await supabase
@@ -232,9 +244,11 @@ export async function publishDraftSchedule(draftId: string): Promise<PublishResu
     .maybeSingle();
 
   if (prevPublished) {
-    // Remove schedule rows that came from the previous published draft
+    // Remove schedule rows that came from the previous published draft.
+    // Scoped by draft_schedule_id — attendance-linked rows have a null
+    // draft_schedule_id and are never touched.
     await supabase
-      .from("schedules")
+      .from("class_schedules")
       .delete()
       .eq("draft_schedule_id", prevPublished.id);
 
@@ -256,11 +270,11 @@ export async function publishDraftSchedule(draftId: string): Promise<PublishResu
     department_id:     draft.department_id as string,
     subject_name:      e.cohort_name,
     staff_id:          e.staff_id,
-    tenant_id:         draft.institution_id as string,
+    institution_id:    draft.institution_id as string,
     draft_schedule_id: draftId,
   }));
 
-  const { error: insertError } = await supabase.from("schedules").insert(rows);
+  const { error: insertError } = await supabase.from("class_schedules").insert(rows);
   if (insertError) return { success: false, error: insertError.message };
 
   await supabase.from("draft_schedules").update({ status: "PUBLISHED" }).eq("id", draftId);

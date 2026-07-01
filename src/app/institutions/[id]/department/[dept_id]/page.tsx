@@ -218,7 +218,7 @@ export default function DepartmentPage({ params }: { params: Promise<{ id: strin
 
     const today = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
     const { data: scheduleData } = await supabase
-      .from('schedules')
+      .from('class_schedules')
       .select('id, start_time, end_time, status, subject_name, staff:staff(full_name)')
       .eq('department_id', deptId)
       .eq('day_of_week', today)

@@ -55,7 +55,7 @@ export async function getStudentTimetable(
     if (authErr || !user) return { success: false, error: "Unauthorized." };
 
     const { data, error } = await supabase
-      .from("schedules")
+      .from("class_schedules")
       .select("id, day_of_week, start_time, end_time, subject_name, department_id")
       .eq("department_id", departmentId)
       .order("start_time", { ascending: true });
@@ -90,7 +90,7 @@ export async function getStudentAttendanceSummary(
 
     // Fetch schedule details
     const { data: schedules, error: schedErr } = await supabase
-      .from("schedules")
+      .from("class_schedules")
       .select("id, subject_name, day_of_week, start_time, end_time")
       .in("id", scheduleIds);
 
@@ -183,7 +183,7 @@ export async function getStudentDashboardStats(
     const [todaySlots, attendanceResult, feePayments, feeStructures] = await Promise.all([
       // Today's department schedule
       supabase
-        .from("schedules")
+        .from("class_schedules")
         .select("id, day_of_week, start_time, end_time, subject_name, department_id")
         .eq("department_id", departmentId)
         .eq("day_of_week", today)

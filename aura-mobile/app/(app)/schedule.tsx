@@ -36,7 +36,7 @@ export default function Schedule() {
     (async () => {
       try {
         const { data, error } = await supabase
-          .from("schedules")
+          .from("class_schedules")
           .select("id, subject_name, day_of_week, start_time, end_time")
           .eq("staff_id", identity?.staffId ?? "")
           .order("start_time");
