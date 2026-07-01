@@ -37,9 +37,9 @@ scope** for Aura Campus v1.0 (see [Out of Scope](#out-of-scope)).
 | # | Deliverable | Status |
 |---|-------------|--------|
 | **P8.1** | Android Mobile Applications (role-adaptive) | 🟡 In progress — Sprint 2 landed student Results/Profile/Knowledge Hub/Downloads/Notifications + staff CIA Marks Entry/Knowledge Hub/Profile (only in-app Razorpay + executive CF-3 views remain) |
-| **P8.2** | Student Card Attendance (RFID / NFC / MIFARE / DESFire) | 🔲 Not started (new directive) |
-| **P8.3** | NFC Staff Attendance | 🔲 Not started (refines prior NFC plan) |
-| **P8.4** | Intelligent Timetable Validation + Substitute Faculty | 🔲 Not started (new directive) |
+| **P8.2** | Student Card Attendance (RFID / NFC / MIFARE / DESFire) | 🟡 Core done — in-room reader ingest (`api/attendance/card`) records against the live timetable via P8.4 matching (Sprint 3); native tap-app + parent push follow in P8.3/P8.5 |
+| **P8.3** | NFC Staff Attendance | 🔲 Not started (refines prior NFC plan) — validation core (`validateFacultyTap`) + Missed-Lecture detector already built in Sprint 3, awaiting faculty taps to wire the cron |
+| **P8.4** | Intelligent Timetable Validation + Substitute Faculty | 🟡 Core done — validation service (`src/lib/smartAttendance.ts`, reason-coded) + audited Substitute Faculty (`src/actions/substitutions.ts` + drawer) landed Sprint 3; scheduler auto-assign + Missed-Lecture cron deferred to P8.3 |
 | **P8.5** | Mobile Push Notifications (role-specific) | 🔲 Not started (needs Phase 3) |
 | **P8.6** | Campus CCTV Integration (ONVIF / RTSP, no AI) | 🔲 Not started |
 
@@ -271,12 +271,12 @@ providers. (Product clarification only — no implementation change.)
 Aura Campus → Attendance Recorded → Parent Notification *(per CF-1 policy — see P8.5)*.
 
 **Requirements:**
-- [ ] **Vendor-independent reader/card abstraction layer** (adapter per technology: RFID · NFC · MIFARE · DESFire)
-- [ ] Card-attendance integration is **configurable** (enable/disable + reader provider — via CF-1, see [Smart Campus Configuration](#smart-campus-configuration-cf-1))
-- [ ] **Pluggable reader vendors** — no vendor lock-in; institutions choose the hardware provider
-- [ ] Ingest endpoint that records attendance against the live timetable/period (RLS-respecting)
+- [x] **Vendor-independent reader/card abstraction layer** (`card_readers.vendor` ∈ rfid·nfc·mifare·desfire; the ingest endpoint is vendor-agnostic — it keys off `reader_uid`, Sprint 1 + 3)
+- [x] Card-attendance integration is **configurable** (enable/disable via CF-1 `smart_campus.rfid_enabled`, fail-open — see [Smart Campus Configuration](#smart-campus-configuration-cf-1))
+- [x] **Pluggable reader vendors** — no vendor lock-in; institutions choose the hardware provider (reader registry, Sprint 1)
+- [x] Ingest endpoint that records attendance against the live timetable/period — `POST /api/attendance/card` (service-role webhook; classroom→period matching via P8.4; reason-coded rejections; idempotent upsert on `attendance`)
 - [ ] Parent notification on record follows the **CF-1 notification policy** (P8.5)
-- [ ] Reader / card provisioning ties to **Phase 4F** Smart ID / campus cards
+- [x] Reader / card provisioning ties to **Phase 4F** Smart ID / campus cards (`smart_cards`, active + student + tenant checks)
 
 ---
 
@@ -342,8 +342,8 @@ Faculty attendance must **NOT** simply record a tap. Aura must **validate** agai
 - "This lecture has already been completed."
 
 **Requirements:**
-- [ ] Validation service that cross-checks tag location × faculty × period × date against the timetable
-- [ ] Clear, reason-coded rejection messages (no silent failures)
+- [x] Validation service that cross-checks tag location × faculty × period × date against the timetable — `src/lib/smartAttendance.ts` (`matchScheduleForRoom` for readers, `validateFacultyTap` for faculty taps; pure + unit-tested)
+- [x] Clear, reason-coded rejection messages (no silent failures) — `REASON_MESSAGE` map: `no_class` · `ambiguous` · `no_lecture` · `not_assigned_classroom` · `wrong_faculty` · `already_completed`
 
 ## Substitute Faculty *(mandatory)*
 
@@ -357,10 +357,10 @@ After reassignment:
 - **All substitutions must be audited.**
 
 **Requirements:**
-- [ ] Manual substitute assignment (HOD / Principal)
+- [x] Manual substitute assignment (HOD / Principal) — `src/actions/substitutions.ts` (`assignSubstitute` / `removeSubstitute`; RLS gates INST_ADMIN anywhere + HOD to their department) + `SubstituteFacultyPanel` drawer on the Schedules page
 - [ ] Scheduler Engine auto-recommend / auto-assign substitute
-- [ ] Validation (P8.4) honours the active substitution (original blocked, substitute permitted)
-- [ ] **Full audit trail** of every substitution
+- [x] Validation (P8.4) honours the active substitution (original blocked, substitute permitted) — `validateFacultyTap` honours `class_substitutions` (unit-tested)
+- [x] **Full audit trail** of every substitution — every assign/remove writes `audit_logs` via `logAudit` (Dev Rule 13)
 
 ## Missed Lecture Detection (system-generated event)
 
@@ -374,8 +374,8 @@ tapped** → **no substitute assigned** → **grace period exceeded** ⇒ Aura g
 - This is an **operational event** (it feeds the [Attendance Exception Dashboard](#smart-campus-operations-monitoring)), distinct from any push notification.
 
 **Requirements:**
-- [ ] System job evaluates timetable vs. Faculty-Presence/Lecture-Started events after a **configurable grace period** (CF-1)
-- [ ] Emits a **Missed Lecture** operational event when the condition holds
+- [~] System job evaluates timetable vs. Faculty-Presence/Lecture-Started events after a **configurable grace period** (CF-1) — detector built (`src/lib/missedLecture.ts`, pure + unit-tested; grace = `smart_campus.missed_lecture_grace_minutes`); the **cron that runs it is deferred to P8.3** because it needs the faculty taps P8.3 records (until then every past-grace lecture would false-positive)
+- [~] Emits a **Missed Lecture** operational event when the condition holds — target table `attendance_exceptions` created (Sprint 3, leadership-only RLS); rows are written once the P8.3 cron is wired
 - [ ] Surfaced to Principal / HOD / Super Admin
 
 ---
@@ -504,19 +504,19 @@ PPE Detection · Vehicle Tracking.
 
 **Deliverables (directive):**
 - [ ] ✅ Android Mobile Applications (role-adaptive, all 7 roles)
-- [ ] ✅ Student Card Attendance — RFID / NFC / MIFARE / DESFire, vendor-independent (P8.2)
+- [~] ✅ Student Card Attendance — RFID / NFC / MIFARE / DESFire, vendor-independent (P8.2) — server ingest done; parent push (P8.5) pending
 - [ ] ✅ NFC Faculty Attendance — Faculty Presence + Lecture Started events (P8.3)
-- [ ] ✅ Intelligent Timetable Validation (P8.4)
-- [ ] ✅ Substitute Faculty Assignment (P8.4 — audited)
+- [x] ✅ Intelligent Timetable Validation (P8.4) — reason-coded validation service
+- [x] ✅ Substitute Faculty Assignment (P8.4 — audited)
 - [ ] ✅ Push Notifications (P8.5 — role-specific)
 - [ ] ✅ Live CCTV Integration (P8.6 — ONVIF/RTSP, web + Android, no AI)
 
 **Quality gates:**
 - [ ] Expo app runs on **Android** (target) — iOS out of v1.0 scope
-- [ ] Student card attendance works end-to-end via the vendor-independent reader/card layer (reader → record → parent push per CF-1 policy)
+- [~] Student card attendance works end-to-end via the vendor-independent reader/card layer (reader → record ✅; parent push per CF-1 policy pending P8.5)
 - [ ] NFC faculty attendance works end-to-end with **timetable validation** + reason-coded rejections, recording **Faculty Presence** and **Lecture Started** separately
 - [ ] Missed-Lecture event generates after the grace period and surfaces on the Attendance Exception Dashboard
-- [ ] Substitute assignment flips tap permission (original blocked, substitute allowed) and is **audited**
+- [x] Substitute assignment flips tap permission (original blocked, substitute allowed) and is **audited** — enforced in `validateFacultyTap`, unit-tested; assign/remove audited
 - [ ] Push notifications received on device for student, parent, and faculty
 - [ ] CCTV streams play inside web + mobile (or NVR deep-link fallback triggers)
 - [ ] Supabase auth persists across app restarts

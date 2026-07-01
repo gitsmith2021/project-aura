@@ -94,7 +94,8 @@ Fable 5 is included in Pro/Max/Team plans until June 22 — but it counts
 [x] +   🏛️  Phase 4 Campus Infra COMPLETE (4A Library · 4B Bookings · 4C Hostels · 4D Labs · 4E Assets · 4E-sub Vendors/PO · 4F ID Cards · 4G Gate · 4H Clubs · 4I Infirmary · 4J Sports · 4K Events) — Opus/Sonnet
 [x] 13  🏫  Phase 8 Smart Campus Sprint 1 (Foundation) — classrooms/nfc_tags/card_readers entities + RLS, admin Classrooms manager, 5 CF-1 smart_campus.* toggles (Deferred), aura-mobile EAS dev-client scaffolding (eas.json, expo-dev-client, no paid plan) — Sonnet 4.6
 [x] 14  📱  Phase 8 Sprint 2 (P8.1 mobile screens, no schema) — student Results/Profile/Knowledge Hub/Downloads/Notifications + staff CIA Marks Entry (Save via authed /api/staff/cia-marks: CF-1 gate + audit); Expo Go, RLS-direct reads — Sonnet 4.6
-[ ] —   ⏳  Remaining (need EAS/device): NFC tap + reader ingest (P8.2/P8.3, dev-client build), push (Phase 3 + P8.5), in-app Razorpay pay, CCTV (P8.6), parent self-link OTP
+[x] 15  🏫  Phase 8 Sprint 3 (P8.2 + P8.4) — student card ingest POST /api/attendance/card (vendor-independent, CF-1-gated, timetable-matched); pure validation service smartAttendance.ts + missedLecture.ts (cron→P8.3); audited Substitute Faculty (actions + Schedules drawer); migration 20260802000000 (classroom_id + substitutions/faculty-events/exceptions + grace CF-1); 27 unit tests — Opus 4.8
+[ ] —   ⏳  Remaining (need EAS/device): native NFC faculty tap (P8.3, dev-client build) + Missed-Lecture cron activation, push (Phase 3 + P8.5), in-app Razorpay pay, CCTV (P8.6), parent self-link OTP
 ─────────────────────────────────────────────────────
 After the free window → Switch to Opus 4.8 / Sonnet 4.6 for Tier 2 & 3
 ```

@@ -90,6 +90,8 @@ Legend — **Status:** 🔲 open · 🟡 partial · ✅ done. **Priority:** 🔴
 | 8-3 | CCTV RTSP streaming in app | [roadmap/10](roadmap/10-phase8-mobile-apps.md) | Needs native EAS build | Phase 8E | 🟢 | 🔲 |
 | 8-4 | In-app Razorpay pay (student mobile) | [roadmap/10](roadmap/10-phase8-mobile-apps.md) | Native checkout integration | Phase 8C cont. | 🟡 | 🔲 |
 | 8-5 | Parent mobile app | [roadmap/10](roadmap/10-phase8-mobile-apps.md) | Depends on Phase 6A parent portal | Phase 8F | 🟢 | 🔲 |
+| 8-6 | Missed-Lecture cron activation | [roadmap/10](roadmap/10-phase8-mobile-apps.md) | Detector (`src/lib/missedLecture.ts`) + `attendance_exceptions` table built (Sprint 3); scheduled job needs the faculty presence taps only **P8.3** records — activating sooner would false-positive every past-grace lecture | Phase 8.3 | 🟡 | 🔲 |
+| 8-7 | Scheduler auto-recommend/assign substitute | [roadmap/10](roadmap/10-phase8-mobile-apps.md) | Manual + audited assignment shipped (Sprint 3); auto-assign needs Scheduler Engine integration | Phase 8.3+ | 🟢 | 🔲 |
 
 ### Phase 7X — Knowledge Hub (KH-5 AI Layer follow-ups)
 | # | Deferred item | Source | Blocker / reason | Pickup phase | Priority | Status |
