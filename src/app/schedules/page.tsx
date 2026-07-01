@@ -5,12 +5,13 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { ScrollableTabBar } from "@/components/layout/ScrollableTabBar";
 import { useInstitution } from "@/context/InstitutionContext";
 import { createClient } from "@/utils/supabase/client";
-import { Plus, BookOpen, Clock, Users, BookMarked, AlertTriangle, Printer, ChevronDown, X, Wand2 } from "lucide-react";
+import { Plus, BookOpen, Clock, Users, BookMarked, AlertTriangle, Printer, ChevronDown, X, Wand2, UserCheck } from "lucide-react";
 import { AddClassModal } from "@/components/programs/AddClassModal";
 import { ScheduleCalendar, type ClassEntry } from "@/components/programs/ScheduleCalendar";
 import { CurrentClassWidget } from "@/components/dashboard/CurrentClassWidget";
 import { DepartmentFundingBadge } from "@/components/departments/DepartmentFundingBadge";
 import { AutoSchedulerButton } from "@/components/schedules/AutoSchedulerButton";
+import { SubstituteFacultyPanel } from "@/components/schedules/SubstituteFacultyPanel";
 
 type Department = { id: string; name: string; institution_id: string; funding_type?: string | null };
 
@@ -52,6 +53,7 @@ export default function SchedulesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLivePanelOpen, setIsLivePanelOpen] = useState(false);
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
+  const [isSubPanelOpen, setIsSubPanelOpen] = useState(false);
   const [modalDefaults, setModalDefaults] = useState<{ day?: string; startTime?: string }>({});
   const [, setEditingClass] = useState<ClassEntry | null>(null);
 
@@ -212,6 +214,15 @@ export default function SchedulesPage() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               LIVE SESSIONS
+            </button>
+
+            {/* Substitute Faculty */}
+            <button
+              onClick={() => setIsSubPanelOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold rounded-md hover:bg-amber-100 transition-colors shadow-sm"
+            >
+              <UserCheck size={13} />
+              Substitute
             </button>
 
             {/* Print */}
@@ -441,6 +452,10 @@ export default function SchedulesPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {isSubPanelOpen && selectedTenantId && (
+        <SubstituteFacultyPanel institutionId={selectedTenantId} onClose={() => setIsSubPanelOpen(false)} />
       )}
 
       <AddClassModal
