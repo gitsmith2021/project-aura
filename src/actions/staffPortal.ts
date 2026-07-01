@@ -60,7 +60,7 @@ export async function getStaffSchedule(
     if (authErr || !user) return { success: false, error: "Unauthorized." };
 
     const { data, error } = await supabase
-      .from("schedules")
+      .from("class_schedules")
       .select("id, day_of_week, start_time, end_time, subject_name, department_id, departments(name)")
       .eq("staff_id", staffId)
       .order("start_time", { ascending: true });
@@ -86,7 +86,7 @@ export async function getStaffAttendanceSummary(
 
     // Fetch schedules for this staff
     const { data: schedules, error: schedErr } = await supabase
-      .from("schedules")
+      .from("class_schedules")
       .select("id, subject_name, day_of_week, start_time, end_time")
       .eq("staff_id", staffId);
 
@@ -293,7 +293,7 @@ export async function getStaffDashboardStats(
 
     // Fetch schedules first (attendance query needs schedule IDs)
     const { data: allSchedules } = await supabase
-      .from("schedules")
+      .from("class_schedules")
       .select("id, day_of_week, start_time, end_time, subject_name, department_id, departments(name)")
       .eq("staff_id", staffId)
       .order("start_time");

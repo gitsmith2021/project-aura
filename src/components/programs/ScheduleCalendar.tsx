@@ -39,7 +39,7 @@ export type ClassEntry = {
   department_id: string;
   subject_name: string;
   staff_id: string;
-  tenant_id: string | null;
+  institution_id: string | null;
   staff: { full_name: string } | null;
 };
 
@@ -192,7 +192,7 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
     const supabase = createClient();
     await Promise.all(
       Array.from(pendingChanges.entries()).map(([id, changes]) =>
-        supabase.from("schedules").update(changes).eq("id", id)
+        supabase.from("class_schedules").update(changes).eq("id", id)
       )
     );
     setSaving(false);
@@ -282,7 +282,7 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
   const handleDuplicate = async (cls: ClassEntry) => {
     setPopoverOpenId(null);
     const { id, staff, ...rest } = cls;
-    const { data } = await supabase.from("schedules").insert([rest]).select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, tenant_id, staff(full_name)").single();
+    const { data } = await supabase.from("class_schedules").insert([rest]).select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, institution_id, staff(full_name)").single();
     if (data) setItems(prev => [...prev, data as unknown as ClassEntry]);
   };
 
@@ -290,7 +290,7 @@ export function ScheduleCalendar({ classes, allInstitutionClasses, onRefresh, on
   const handleDelete = async (id: string) => {
     setPopoverOpenId(null);
     setItems(prev => prev.filter(c => c.id !== id));
-    await supabase.from("schedules").delete().eq("id", id);
+    await supabase.from("class_schedules").delete().eq("id", id);
   };
 
   // ── Render ────────────────────────────────────────────────────────────────

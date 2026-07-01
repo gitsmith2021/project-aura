@@ -83,8 +83,7 @@ export const SSR_CRITERIA: SSRCriterion[] = [
     title: "Infrastructure & Learning Resources",
     description: "Physical, academic and IT infrastructure; library as learning resource",
     sources: [
-      // schedules is one of two tables still on the legacy tenant_id column
-      { key: "timetable", label: "Classroom & facility utilization via timetable (4.1)", status: "live", table: "schedules", column: "tenant_id" },
+      { key: "timetable", label: "Classroom & facility utilization via timetable (4.1)", status: "live", table: "class_schedules", column: "institution_id" },
       { key: "library", label: "Library automation & volumes (4.2)", status: "pending", phase: "Phase 4A — Library Management System" },
       { key: "labs", label: "Laboratory management (4.1, 4.3)", status: "pending", phase: "Phase 4D — Laboratory Management" },
       { key: "assets", label: "Asset & infrastructure registry (4.4)", status: "pending", phase: "Phase 4E — Asset & Inventory Management" },

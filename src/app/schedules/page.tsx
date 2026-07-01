@@ -62,8 +62,8 @@ export default function SchedulesPage() {
     const supabase = createClient();
     const [{ data: dData }, { data: sData }] = await Promise.all([
       supabase.from("departments").select("id, name, institution_id, funding_type").order("name"),
-      supabase.from("schedules")
-        .select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, tenant_id, staff(full_name)")
+      supabase.from("class_schedules")
+        .select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, institution_id, staff(full_name)")
         .order("start_time"),
     ]);
     if (dData) setAllDepts(dData as Department[]);
@@ -74,8 +74,8 @@ export default function SchedulesPage() {
   const fetchClasses = useCallback(async () => {
     const supabase = createClient();
     const { data } = await supabase
-      .from("schedules")
-      .select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, tenant_id, staff(full_name)")
+      .from("class_schedules")
+      .select("id, day_of_week, start_time, end_time, department_id, subject_name, staff_id, institution_id, staff(full_name)")
       .order("start_time");
     if (data) setClasses(data as unknown as ClassEntry[]);
   }, []);
@@ -96,7 +96,7 @@ export default function SchedulesPage() {
 
   // Classes for the selected institution
   const institutionClasses = useMemo(
-    () => selectedTenantId ? classes.filter(c => c.tenant_id === selectedTenantId) : classes,
+    () => selectedTenantId ? classes.filter(c => c.institution_id === selectedTenantId) : classes,
     [classes, selectedTenantId]
   );
 

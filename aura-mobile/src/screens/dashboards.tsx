@@ -89,7 +89,7 @@ export function StaffHome({ identity }: { identity: Identity }) {
     (async () => {
       try {
         const [sched, leave] = await Promise.all([
-          supabase.from("schedules").select("id", { count: "exact", head: true })
+          supabase.from("class_schedules").select("id", { count: "exact", head: true })
             .eq("staff_id", identity.staffId ?? "").eq("day_of_week", todayName()),
           supabase.from("leave_requests").select("id", { count: "exact", head: true })
             .eq("staff_id", identity.staffId ?? "").eq("status", "pending"),

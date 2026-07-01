@@ -82,10 +82,10 @@ export function AddClassModal({ isOpen, onClose, onSuccess, defaultDepartmentId,
     setLoading(true);
 
     const supabase = createClient();
-    const { error } = await supabase.from("schedules").insert([
+    const { error } = await supabase.from("class_schedules").insert([
       {
         department_id: departmentId,
-        tenant_id: selectedDept?.institution_id ?? null,
+        institution_id: selectedDept?.institution_id ?? null,
         subject_name: subjectName.trim(),
         staff_id: staffId,
         day_of_week: day,

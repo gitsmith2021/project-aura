@@ -31,7 +31,7 @@ export function CurrentClassWidget({ tenantId }: { tenantId?: string }) {
 
       // Step 1 — fetch active schedule rows (no join, avoids FK ambiguity issues)
       let query = supabase
-        .from("schedules")
+        .from("class_schedules")
         .select("id, subject_name, start_time, end_time, staff_id")
         .eq("day_of_week", today)
         .lte("start_time", currentTime)
@@ -39,7 +39,7 @@ export function CurrentClassWidget({ tenantId }: { tenantId?: string }) {
         .order("start_time", { ascending: true });
 
       if (tenantId) {
-        query = query.eq("tenant_id", tenantId);
+        query = query.eq("institution_id", tenantId);
       }
 
       const { data: scheduleData, error: scheduleError } = await query;
