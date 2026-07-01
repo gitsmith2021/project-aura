@@ -29,16 +29,35 @@ npm run typecheck            # tsc --noEmit
 
 ## Native modules — Expo Dev Client (EAS), not Expo Go
 
-`expo-dev-client` is installed and `eas.json` defines `development` / `preview` / `production` build profiles. Features that need a native module (NFC tap, RTSP/VLC player, in-app Razorpay) **cannot run in Expo Go** — they need a custom dev-client build:
+`expo-dev-client` is installed and the project is connected to EAS (**`aura-campus-pro`**, project id `052839cc-5a5b-47f7-aefc-b2f632447c34`, wired in `app.json` → `extra.eas.projectId`). `eas.json` defines three build profiles:
+
+| Profile | Distribution | Artifact | Use |
+|---|---|---|---|
+| `development` | internal | APK (**dev client**) | day-to-day native iteration — NFC tap, RTSP/VLC, in-app pay |
+| `preview` | internal | APK (release JS) | QA / share a testable build (no dev menu) |
+| `production` | store | AAB (auto-incrementing) | Play Store submission (**do not build yet**) |
+
+Features that need a native module (NFC tap, RTSP/VLC player, in-app Razorpay) **cannot run in Expo Go** — they need the dev-client build:
 
 ```bash
 npm install -g eas-cli
-eas login                                              # one-time, any Expo account
-eas init                                                # one-time — writes your real project ID into app.json (extra.eas.projectId)
+eas login                                               # one-time, the aura-campus-pro account
 eas build --profile development --platform android      # installable APK with the dev client baked in
+# then, each iteration:
+npx expo start --dev-client                             # Metro serves JS into the installed dev client
 ```
 
-> **No paid Expo plan is required.** EAS Build's free tier covers normal dev-client iteration; `eas build --local` (using a local Android SDK/Android Studio install) is also free and doesn't touch EAS cloud at all. Production builds (`production` profile, app bundle, auto-incrementing version) use the same `eas.json` config later with no code changes — only the profile name changes.
+> **No paid Expo plan is required.** EAS Build's free tier covers normal dev-client iteration; `eas build --local` (using a local Android SDK/Android Studio install) is also free and doesn't touch EAS cloud. The `production` profile is configured but **should not be built until the app is release-ready** (icons/splash assets, Play Console + a service-account key for `eas submit`).
+
+### Environment variables
+
+The public Supabase URL + anon key are set **per-profile in `eas.json`**, so EAS builds authenticate out of the box. The one deployment-specific var is `EXPO_PUBLIC_API_BASE_URL` (the Aura web URL that backs `/api/parent`, `/api/staff`, `/api/executive`) — set it per environment:
+
+```bash
+eas env:create --environment development --name EXPO_PUBLIC_API_BASE_URL --value https://<your-web-url>
+```
+
+For local `expo start` runs, copy `.env.example` → `.env` and fill the same values.
 
 - **NFC attendance** (`react-native-nfc-manager`) — Phase 8 P8.2/P8.3. Backing DB (`smart_cards`, `classrooms`, `nfc_tags`, `card_readers`) lives in the web repo's Supabase migrations.
 - **Push notifications** (`expo-notifications`) — Phase 8 P8.5.

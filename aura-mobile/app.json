@@ -1,8 +1,9 @@
 {
   "expo": {
-    "name": "Aura",
-    "slug": "aura-mobile",
-    "version": "0.1.0",
+    "name": "Aura Campus",
+    "slug": "aura-campus-pro",
+    "owner": "aura-campus-pro",
+    "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "aura",
     "userInterfaceStyle": "automatic",
@@ -36,7 +37,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+        "projectId": "052839cc-5a5b-47f7-aefc-b2f632447c34"
       }
     }
   }
